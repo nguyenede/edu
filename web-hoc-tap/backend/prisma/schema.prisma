@@ -1,0 +1,312 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  STUDENT
+  TEACHER
+  ADMIN
+}
+
+model User {
+  id            String        @id @default(uuid())
+  email         String        @unique
+  password      String
+  role          Role          @default(STUDENT)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  profile       Profile?
+  classes       Class[]       @relation("TeacherClasses")
+  memberships   ClassMember[]
+  submissions   Submission[]
+  questionBanks QuestionBank[]
+  quizzes       Quiz[]
+  notifications Notification[]
+  auditLogs     AuditLog[]
+  gamePlayers   GamePlayer[]
+  aiChatSessions AiChatSession[]
+  documentFolders DocumentFolder[]
+  documentFiles   DocumentFile[]
+}
+
+model Profile {
+  id          String   @id @default(uuid())
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name        String
+  avatar      String?
+  gender      String?
+  phone       String?
+  birthday    String?
+  language    String   @default("Tiếng Việt (Việt Nam)")
+  homeAddress String?
+  workAddress String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Class {
+  id          String        @id @default(uuid())
+  name        String
+  code        String        @unique
+  teacherId   String
+  teacher     User          @relation("TeacherClasses", fields: [teacherId], references: [id], onDelete: Cascade)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  members     ClassMember[]
+  assignments Assignment[]
+  quizzes     Quiz[]
+}
+
+model ClassMember {
+  id       String   @id @default(uuid())
+  classId  String
+  class    Class    @relation(fields: [classId], references: [id], onDelete: Cascade)
+  studentId String
+  student  User     @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  joinedAt DateTime @default(now())
+
+  @@unique([classId, studentId])
+}
+
+model QuestionBank {
+  id          String     @id @default(uuid())
+  name        String
+  description String?
+  teacherId   String
+  teacher     User       @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  questions   Question[]
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
+
+model Question {
+  id             String           @id @default(uuid())
+  questionBankId String?
+  questionBank   QuestionBank?    @relation(fields: [questionBankId], references: [id], onDelete: SetNull)
+  content        String
+  type           String           // MULTIPLE_CHOICE, MULTIPLE_SELECT, TRUE_FALSE, SHORT_ANSWER, MATCHING, ORDERING, FILL_IN_THE_BLANK
+  difficulty     String           // EASY, MEDIUM, HARD
+  tags           String[]         @default([])
+  points         Float            @default(1.0)
+  explanation    String?
+  timeLimit      Int              @default(30) // in seconds
+  imageUrl       String?
+  audioUrl       String?
+  videoUrl       String?
+  options        QuestionOption[]
+  quizQuestions  QuizQuestion[]
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+}
+
+model QuestionOption {
+  id         String   @id @default(uuid())
+  questionId String
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  content    String
+  isCorrect  Boolean
+  orderIndex Int?
+  matchKey   String?
+}
+
+model Quiz {
+  id            String         @id @default(uuid())
+  title         String
+  description   String?
+  teacherId     String
+  teacher       User           @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  classId       String?
+  class         Class?         @relation(fields: [classId], references: [id], onDelete: SetNull)
+  timeLimit     Int?           // total time in minutes
+  maxAttempts   Int            @default(1)
+  deadline      DateTime?
+  showAnswers   Boolean        @default(true)
+  showScore     Boolean        @default(true)
+  isRealtime    Boolean        @default(false)
+  questions     QuizQuestion[]
+  gameRooms     GameRoom[]
+  assignments   Assignment[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+}
+
+model QuizQuestion {
+  id         String   @id @default(uuid())
+  quizId     String
+  quiz       Quiz     @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  questionId String
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  orderIndex Int
+
+  @@unique([quizId, questionId])
+}
+
+model Assignment {
+  id          String       @id @default(uuid())
+  title       String
+  description String?
+  teacherId   String
+  classId     String
+  class       Class        @relation(fields: [classId], references: [id], onDelete: Cascade)
+  quizId      String?
+  quiz        Quiz?        @relation(fields: [quizId], references: [id], onDelete: SetNull)
+  documentFileId String?
+  documentFile   DocumentFile? @relation(fields: [documentFileId], references: [id], onDelete: SetNull)
+  deadline    DateTime?
+  maxScore    Float        @default(10.0)
+  submissions Submission[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  @@index([documentFileId])
+}
+
+model Submission {
+  id           String             @id @default(uuid())
+  assignmentId String
+  assignment   Assignment         @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  studentId    String
+  student      User               @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  score        Float?
+  feedback     String?
+  status       String             @default("SUBMITTED") // SUBMITTED, GRADED
+  submittedAt  DateTime           @default(now())
+  answers      SubmissionAnswer[]
+}
+
+model SubmissionAnswer {
+  id            String     @id @default(uuid())
+  submissionId  String
+  submission    Submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  questionId    String
+  answerContent String     // Store answers as text or JSON (for optionIds/matching/ordering)
+  isCorrect     Boolean?
+  scoreGained   Float?
+}
+
+model GameRoom {
+  id        String        @id @default(uuid())
+  code      String        @unique
+  quizId    String
+  quiz      Quiz          @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  hostId    String
+  status    String        @default("LOBBY") // LOBBY, PLAYING, ENDED
+  mode      String        @default("CLASSIC") // CLASSIC, CHAOS, TEAM, SURVIVAL
+  players   GamePlayer[]
+  sessions  GameSession[]
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+}
+
+model GamePlayer {
+  id           String       @id @default(uuid())
+  roomId       String
+  room         GameRoom     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  userId       String?
+  user         User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
+  nickname     String
+  socketId     String?
+  score        Float        @default(0.0)
+  accuracy     Float        @default(0.0)
+  correctCount Int          @default(0)
+  wrongCount   Int          @default(0)
+  speed        Float        @default(0.0)
+  isHost       Boolean      @default(false)
+  joinedAt     DateTime     @default(now())
+  answers      GameAnswer[]
+
+  @@unique([roomId, nickname])
+}
+
+model GameSession {
+  id        String    @id @default(uuid())
+  roomId    String
+  room      GameRoom  @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  startTime DateTime  @default(now())
+  endTime   DateTime?
+}
+
+model GameAnswer {
+  id          String     @id @default(uuid())
+  playerId    String
+  player      GamePlayer @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  questionId  String
+  optionId    String?
+  answerText  String?
+  isCorrect   Boolean
+  scoreDelta  Float
+  answeredAt  DateTime   @default(now())
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  content   String
+  isRead    Boolean  @default(false)
+  type      String   // CLASS_INVITE, NEW_ASSIGNMENT, GRADED, GAME_START
+  createdAt DateTime @default(now())
+}
+
+model AuditLog {
+  id          String   @id @default(uuid())
+  userId      String?
+  user        User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  action      String
+  description String
+  ipAddress   String?
+  createdAt   DateTime @default(now())
+}
+
+model AiChatSession {
+  id        String   @id
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  messages  Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId, updatedAt])
+}
+
+model DocumentFolder {
+  id        String   @id @default(uuid())
+  ownerId   String
+  owner     User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  name      String
+  parentId  String?
+  parent    DocumentFolder? @relation("DocumentFolderTree", fields: [parentId], references: [id], onDelete: Cascade)
+  children  DocumentFolder[] @relation("DocumentFolderTree")
+  files     DocumentFile[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([ownerId, parentId])
+}
+
+model DocumentFile {
+  id         String          @id @default(uuid())
+  ownerId    String
+  owner      User            @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  folderId   String?
+  folder     DocumentFolder? @relation(fields: [folderId], references: [id], onDelete: SetNull)
+  name       String
+  fileType   String
+  mimeType   String?
+  size       Int?
+  storageKey String?
+  parsedQuiz Json?
+  assignments Assignment[]
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @updatedAt
+
+  @@index([ownerId, folderId])
+}

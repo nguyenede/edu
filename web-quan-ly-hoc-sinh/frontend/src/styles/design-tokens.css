@@ -1,0 +1,49 @@
+:root {
+  --color-primary-blue: #0071E3;
+  --color-primary-blue-hover: #006EDB;
+  --color-primary-blue-press: #0076DF;
+  --color-interactive-blue-deep: #0077ED;
+
+  --color-text-dominant: #1D1D1F;
+  --color-text-secondary: #333336;
+  --color-text-tertiary: #6E6E73;
+  --color-text-inverse: #000000;
+
+  --color-white: #FFFFFF;
+  --color-surface-light: #EDEDF2;
+  --color-dark-medium: #272729;
+  --color-dark-deep: #18181A;
+
+  --nav-surface: rgba(255, 255, 255, 0.8);
+  --overlay-soft: rgba(0, 0, 0, 0.8);
+
+  --font-text: "SF Pro Text", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-display: "SF Pro Display", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+
+  --container-max: 100%;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-7: 28px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-11: 44px;
+  --space-12: 48px;
+  --space-13: 52px;
+  --space-14: 56px;
+
+  --radius-none: 0px;
+  --radius-input: 8px;
+  --radius-pill: 999px;
+
+  --shadow-subtle: 0 1px 3px rgba(0, 0, 0, 0.12);
+  --shadow-medium: 0 4px 12px rgba(0, 0, 0, 0.15);
+  --shadow-deep: 0 12px 32px rgba(0, 0, 0, 0.16);
+
+  --transition-fast: 160ms cubic-bezier(0.2, 0, 0, 1);
+  --transition-normal: 220ms cubic-bezier(0.2, 0, 0, 1);
+}

@@ -1,0 +1,24 @@
+'use client';
+
+import React, { useEffect, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+
+function DocumentLegacyViewContent() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    const id = searchParams.get('id') || '6a8980105b9083ecaeffdfaa52bd5c46';
+    router.replace(`/app/documents/${encodeURIComponent(id)}/view`);
+  }, [router, searchParams]);
+
+  return null;
+}
+
+export default function DocumentLegacyViewRedirectPage() {
+  return (
+    <Suspense fallback={null}>
+      <DocumentLegacyViewContent />
+    </Suspense>
+  );
+}

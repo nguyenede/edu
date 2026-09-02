@@ -1,0 +1,42 @@
+# Dependencies
+node_modules/
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+local.properties
+*.jks
+*.keystore
+google-services.json
+
+# Build output and caches
+dist/
+build/
+.next/
+.turbo/
+.cache/
+coverage/
+*.tsbuildinfo
+
+# Android/IDE generated files
+.gradle/
+.idea/
+.kotlin/
+.cxx/
+*.apk
+*.aab
+
+# Runtime uploads/logs
+uploads/
+tmp/
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# OS/editor noise
+.DS_Store
+Thumbs.db
+.vscode/

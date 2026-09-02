@@ -1,0 +1,190 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* KaTeX MathML Screen-reader rule (fixes text overlapping bug) */
+.katex-mathml {
+  display: none !important;
+}
+
+.katex-html {
+  display: inline-block !important;
+  vertical-align: middle !important;
+  line-height: normal !important;
+  margin: 0.15em 0.1em !important;
+}
+
+/* KaTeX Font Scaling for Clear Mathematical Readability */
+.katex {
+  font-size: 1.15em !important;
+  text-rendering: auto !important;
+  line-height: normal !important;
+}
+
+.katex-display {
+  font-size: 1.22em !important;
+  margin: 0.6em 0 !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+}
+
+:root {
+  color-scheme: light;
+}
+
+html.dark {
+  color-scheme: dark;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  min-height: 100%;
+  background-color: #f8fafd;
+  user-select: text !important;
+  -webkit-user-select: text !important;
+  -moz-user-select: text !important;
+  -ms-user-select: text !important;
+}
+
+html.dark,
+html.dark body {
+  background-color: #090a0f;
+}
+
+body {
+  @apply text-slate-900 antialiased font-sans select-text;
+}
+
+html.dark body {
+  @apply text-slate-100;
+}
+
+.scrollbar-gutter-stable {
+  scrollbar-gutter: stable;
+}
+
+button:focus,
+input:focus,
+select:focus,
+textarea:focus,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 30px #f1f5f9 inset !important;
+  -webkit-text-fill-color: #0f172a !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+html.dark input:-webkit-autofill,
+html.dark input:-webkit-autofill:hover,
+html.dark input:-webkit-autofill:focus,
+html.dark input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 30px #1e293b inset !important;
+  -webkit-text-fill-color: #f8fafc !important;
+}
+
+/* Custom Scrollbar - 100% Identical to E:\htdocs\shopthoitrang light mode scrollbar */
+*::-webkit-scrollbar {
+  width: 6px !important;
+  height: 6px !important;
+}
+*::-webkit-scrollbar-button {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+*::-webkit-scrollbar-track {
+  background: transparent !important;
+}
+*::-webkit-scrollbar-corner {
+  background: transparent !important;
+}
+*::-webkit-scrollbar-thumb {
+  background: #CBD5E1 !important;
+  border-radius: 999px !important;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: #94A3B8 !important;
+}
+
+/* Firefox scrollbar styles */
+* {
+  scrollbar-width: thin !important;
+  scrollbar-color: #CBD5E1 transparent !important;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+.no-scrollbar {
+  -ms-overflow-style: none !important;
+  scrollbar-width: none !important;
+}
+
+/* ChatCoi Sidebar Custom Scrollbar (Thin 5px track matching screenshot 100%) */
+.chatcoi-scrollbar::-webkit-scrollbar {
+  width: 5px !important;
+  display: block !important;
+}
+.chatcoi-scrollbar::-webkit-scrollbar-button {
+  display: none !important;
+}
+.chatcoi-scrollbar::-webkit-scrollbar-track {
+  background: transparent !important;
+}
+.chatcoi-scrollbar::-webkit-scrollbar-thumb {
+  background: #c4c4c4 !important;
+  border-radius: 9999px !important;
+}
+.chatcoi-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #999999 !important;
+}
+.chatcoi-scrollbar {
+  scrollbar-width: thin !important;
+  scrollbar-color: #c4c4c4 transparent !important;
+}
+html.dark .chatcoi-scrollbar::-webkit-scrollbar-thumb {
+  background: #424242 !important;
+}
+html.dark .chatcoi-scrollbar {
+  scrollbar-color: #424242 transparent !important;
+}
+
+/* Dark Mode Scrollbar Override - Dark Grey Thumb */
+html.dark *::-webkit-scrollbar-thumb {
+  background: #4B5563 !important;
+}
+
+html.dark *::-webkit-scrollbar-thumb:hover {
+  background: #6B7280 !important;
+}
+
+html.dark * {
+  scrollbar-color: #4B5563 transparent !important;
+}
+
+/* Hide scrollbars on mobile/tablet (< 1024px) */
+@media (max-width: 1023px) {
+  *::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+  }
+  * {
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+  }
+}

@@ -1,0 +1,134 @@
+@import './design-tokens.css';
+
+@import "tailwindcss";
+@config "../../tailwind.config.js";
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  :root {
+    color-scheme: light;
+  }
+
+  html {
+    min-height: 100%;
+    overflow-y: auto;
+    background-color: var(--color-white);
+  }
+
+  body {
+    margin: 0;
+    min-height: 100%;
+    color-scheme: light;
+    font-family: var(--font-text);
+    background-color: var(--color-white);
+    color: var(--color-text-dominant);
+    font-size: 17px;
+    line-height: 25px;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    scroll-behavior: smooth;
+    overflow-x: hidden;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display);
+    font-weight: 600;
+  }
+}
+
+button, a, input, select, textarea {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button:focus-visible,
+a:focus-visible,
+[role="button"]:focus-visible {
+  outline: 2px solid rgba(0, 113, 227, 0.2);
+  outline-offset: 1px;
+}
+
+/* Selection */
+::selection {
+  background: rgba(0, 113, 227, 0.18);
+}
+
+/* Custom Components Base */
+@layer components {
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 px-6 py-3 min-h-[44px] rounded-full bg-[#0071E3] text-white font-normal transition-all duration-150;
+  }
+  .btn-primary:hover {
+    @apply bg-[#006EDB] -translate-y-[1px];
+  }
+  .btn-primary:active {
+    @apply bg-[#0076DF] translate-y-0 scale-[0.99];
+  }
+  .btn-primary:disabled {
+    @apply opacity-45 cursor-not-allowed translate-y-0 scale-100;
+  }
+
+  .input-field {
+    @apply h-[44px] w-full px-4 py-3 bg-white border border-[#D5D5D7] rounded-lg outline-none transition-all duration-150;
+  }
+  .input-field:focus {
+    @apply border-[#0071E3];
+  }
+  .input-field.error {
+    @apply border-[#D70015];
+  }
+
+  .card-premium {
+    @apply bg-white border border-[#EDEDF2] p-8 transition-all duration-150;
+  }
+  .card-premium:hover {
+    @apply border-[#0071E3]/25 -translate-y-[1px];
+  }
+
+  .quick-action {
+    @apply min-h-24 flex flex-col items-center justify-center gap-2 p-3 border border-[#EDEDF2] rounded-2xl text-sm font-semibold text-[#1D1D1F] transition-colors hover:bg-[#F5F5F7];
+  }
+
+  .quick-action svg {
+    @apply w-6 h-6 text-[#0071E3];
+  }
+
+  .scrollbar-hidden {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .scrollbar-hidden::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Animations */
+@keyframes modalFadeScaleIn {
+  from { opacity: 0; transform: scale(0.98); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes toastSlideIn {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+.animate-modal {
+  animation: modalFadeScaleIn 180ms cubic-bezier(0.2, 0, 0, 1);
+}
+
+.animate-toast {
+  animation: toastSlideIn 220ms cubic-bezier(0.2, 0, 0, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}
