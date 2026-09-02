@@ -1,6 +1,6 @@
 # Web Quản Lý Học Sinh
 
-Frontend web cho hệ thống quản lý học sinh. Web này dùng backend chung tại `../student-management-backend`.
+Frontend web cho hệ thống quản lý học sinh. Web này dùng backend chung tại `../api-quan-ly-hoc-sinh`.
 
 ## Vai Trò Sử Dụng
 
@@ -34,7 +34,7 @@ Frontend web cho hệ thống quản lý học sinh. Web này dùng backend chun
 Chạy backend trước:
 
 ```bash
-cd ../student-management-backend
+cd ../api-quan-ly-hoc-sinh
 copy .env.example .env
 npm install
 npm run dev

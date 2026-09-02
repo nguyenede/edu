@@ -6,7 +6,7 @@ KiyoEdu là repository tổng hợp hệ sinh thái giáo dục của `0kiyo`. C
 
 ```text
 kiyoedu/
-├── student-management-backend/ # Backend chung cho Web quản lý học sinh và App Android
+├── api-quan-ly-hoc-sinh/ # Backend chung cho Web quản lý học sinh và App Android
 ├── web-quan-ly-hoc-sinh/       # Frontend Web quản lý học sinh
 ├── android-quan-ly-hoc-sinh/   # App Android học sinh/phụ huynh
 ├── web-hoc-tap/                # Web học tập, giữ nguyên
@@ -16,7 +16,7 @@ kiyoedu/
 
 ## 1. Backend Quản Lý Học Sinh
 
-Thư mục: `student-management-backend`
+Thư mục: `api-quan-ly-hoc-sinh`
 
 Đây là API trung tâm của module quản lý học sinh. Cả web và Android đều dùng chung backend này.
 
@@ -39,7 +39,7 @@ Công nghệ:
 Chạy local:
 
 ```bash
-cd student-management-backend
+cd api-quan-ly-hoc-sinh
 copy .env.example .env
 npm install
 npm run dev
@@ -54,16 +54,16 @@ http://localhost:5000/api
 Database nằm trong:
 
 ```text
-student-management-backend/database/schema.sql
-student-management-backend/database/seed.sql
-student-management-backend/database/migration_hardening.sql
+api-quan-ly-hoc-sinh/database/schema.sql
+api-quan-ly-hoc-sinh/database/seed.sql
+api-quan-ly-hoc-sinh/database/migration_hardening.sql
 ```
 
 ## 2. Web Quản Lý Học Sinh
 
 Thư mục: `web-quan-ly-hoc-sinh`
 
-Đây là frontend web cho nhà trường, giáo viên, học sinh và phụ huynh. Web gọi API từ `student-management-backend`.
+Đây là frontend web cho nhà trường, giáo viên, học sinh và phụ huynh. Web gọi API từ `api-quan-ly-hoc-sinh`.
 
 Công nghệ:
 
@@ -110,7 +110,7 @@ Chạy bằng Android Studio:
 
 1. Mở thư mục `android-quan-ly-hoc-sinh`.
 2. Đợi Gradle sync.
-3. Chạy backend `student-management-backend`.
+3. Chạy backend `api-quan-ly-hoc-sinh`.
 4. Run module `app`.
 
 URL backend mặc định cho Android Emulator:

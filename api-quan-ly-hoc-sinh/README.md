@@ -9,7 +9,7 @@ Backend này là API trung tâm của hệ thống quản lý học sinh. Fronte
 ## Cấu Trúc
 
 ```text
-student-management-backend/
+api-quan-ly-hoc-sinh/
 ├── src/
 │   ├── controllers/
 │   ├── middlewares/

@@ -1,6 +1,6 @@
 # Android Quản Lý Học Sinh
 
-App Android dành cho học sinh và phụ huynh trong hệ sinh thái KiyoEdu. App dùng backend chung tại `../student-management-backend`.
+App Android dành cho học sinh và phụ huynh trong hệ sinh thái KiyoEdu. App dùng backend chung tại `../api-quan-ly-hoc-sinh`.
 
 ## Công Nghệ
 
@@ -33,7 +33,7 @@ android-quan-ly-hoc-sinh/
 │       ├── data/
 │       │   ├── mock/      # Dữ liệu mock cho màn hình chưa nối API
 │       │   ├── models/    # Model học sinh/phụ huynh/lịch/điểm
-│       │   ├── remote/    # API client gọi student-management-backend
+│       │   ├── remote/    # API client gọi api-quan-ly-hoc-sinh
 │       │   └── repository/
 │       ├── features/      # Các màn hình theo nghiệp vụ
 │       ├── shared/        # Component dùng chung
@@ -49,7 +49,7 @@ android-quan-ly-hoc-sinh/
 Chạy backend:
 
 ```bash
-cd ../student-management-backend
+cd ../api-quan-ly-hoc-sinh
 copy .env.example .env
 npm install
 npm run dev
@@ -77,7 +77,7 @@ http://192.168.1.10:5000/api
 
 1. Mở thư mục này bằng Android Studio.
 2. Đợi Gradle sync xong.
-3. Chạy `student-management-backend`.
+3. Chạy `api-quan-ly-hoc-sinh`.
 4. Chọn emulator hoặc máy Android thật.
 5. Run module `app`.
 
