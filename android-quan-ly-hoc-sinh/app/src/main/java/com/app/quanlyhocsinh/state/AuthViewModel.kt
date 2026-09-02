@@ -5,8 +5,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import androidx.lifecycle.viewModelScope
+import com.app.quanlyhocsinh.data.remote.ApiException
+import com.app.quanlyhocsinh.data.remote.StudentManagementApi
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.delay
 
 enum class AuthMode {
     LOGIN, REGISTER
@@ -78,14 +79,29 @@ class AuthViewModel : ViewModel() {
             _errorMessage.value = "Mật khẩu xác nhận không khớp"
             return
         }
+        if (_authMode.value == AuthMode.REGISTER) {
+            _errorMessage.value = "Tài khoản học sinh/phụ huynh do nhà trường cấp. Vui lòng liên hệ nhà trường để tạo tài khoản."
+            return
+        }
+        if (_inputMethod.value == AuthInputMethod.PHONE) {
+            _errorMessage.value = "Backend hiện đăng nhập bằng email. Vui lòng chọn Email để tiếp tục."
+            return
+        }
 
         _isLoading.value = true
-        
-        // Mock API call
+
         viewModelScope.launch {
-            delay(1500)
-            _isLoading.value = false
-            onSuccess()
+            try {
+                StudentManagementApi.login(_emailOrPhone.value.trim(), _password.value)
+                _errorMessage.value = null
+                onSuccess()
+            } catch (error: ApiException) {
+                _errorMessage.value = error.message ?: "Đăng nhập thất bại"
+            } catch (error: Exception) {
+                _errorMessage.value = "Không kết nối được backend quản lý học sinh"
+            } finally {
+                _isLoading.value = false
+            }
         }
     }
 }

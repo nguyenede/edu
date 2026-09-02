@@ -14,6 +14,7 @@ android {
         targetSdk = 34
         versionCode = 21
         versionName = "1.2.0"
+        buildConfigField("String", "STUDENT_MANAGEMENT_API_URL", "\"http://10.0.2.2:5000/api\"")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -42,6 +43,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.8"
