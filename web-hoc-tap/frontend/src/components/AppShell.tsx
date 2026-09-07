@@ -48,6 +48,7 @@ export const AppShell: React.FC<AppShellProps> = ({
   const { user, logout } = useAuthStore();
 
   const { sidebarCollapsed, setSidebarCollapsed, toggleSidebar } = useSidebarStore();
+  const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
     try {
@@ -56,6 +57,7 @@ export const AppShell: React.FC<AppShellProps> = ({
         setSidebarCollapsed(saved === 'true');
       }
     } catch (e) {}
+    setIsMounted(true);
   }, [setSidebarCollapsed]);
   const [searchQuery, setSearchQuery] = useState('');
   const [isNewMenuOpen, setIsNewMenuOpen] = useState(false);
@@ -398,9 +400,10 @@ export const AppShell: React.FC<AppShellProps> = ({
       {/* Main Content Area - Fixed frame, only inner content scrolls */}
       <div
         id="main-scroll"
-        className={`absolute inset-0 pt-16 overflow-hidden transition-all duration-300 ease-in-out ${
-          sidebarCollapsed ? 'md:pl-[64px]' : 'md:pl-[200px]'
-        }`}
+        suppressHydrationWarning
+        className={`absolute inset-0 pt-16 overflow-hidden ${
+          isMounted ? 'transition-all duration-300 ease-in-out' : ''
+        } ${sidebarCollapsed ? 'md:pl-[64px]' : 'md:pl-[200px]'}`}
       >
         <div className="mr-0 h-full flex flex-col">
           {/* Inner Google White Sheet Canvas */}

@@ -54,7 +54,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const cooldownTimerRef = useRef<NodeJS.Timeout | null>(null);
   const isWarmRef = useRef<boolean>(false);
 
+  const [isMounted, setIsMounted] = useState(false);
+
   useEffect(() => {
+    setIsMounted(true);
     return () => {
       if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current);
       if (cooldownTimerRef.current) clearTimeout(cooldownTimerRef.current);
@@ -120,7 +123,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
     <aside
       id="app-sidebar"
       aria-label="Điều hướng chính"
-      className={`shrink-0 transition-[width,transform] duration-300 ease-in-out select-none flex flex-col justify-between fixed top-16 left-0 bottom-0 z-50 overflow-y-auto md:overflow-visible bg-white dark:bg-google-card-dark shadow-xl md:bg-google-bg md:dark:bg-google-bg-dark md:shadow-none md:z-50 py-3 px-2.5 ${
+      suppressHydrationWarning
+      className={`shrink-0 ${
+        isMounted ? 'transition-[width,transform] duration-300 ease-in-out' : ''
+      } select-none flex flex-col justify-between fixed top-16 left-0 bottom-0 z-50 overflow-y-auto md:overflow-visible bg-white dark:bg-google-card-dark shadow-xl md:bg-google-bg md:dark:bg-google-bg-dark md:shadow-none md:z-50 py-3 px-2.5 ${
         sidebarCollapsed
           ? 'w-[280px] -translate-x-full md:translate-x-0 md:w-[64px]'
           : 'translate-x-0 w-[280px] md:w-[200px]'

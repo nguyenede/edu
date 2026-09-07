@@ -6,8 +6,20 @@ interface SidebarState {
   toggleSidebar: () => void;
 }
 
+const getInitialCollapsed = (): boolean => {
+  if (typeof window !== 'undefined') {
+    try {
+      const saved = localStorage.getItem('sidebar_collapsed');
+      if (saved !== null) {
+        return saved === 'true';
+      }
+    } catch (e) {}
+  }
+  return true;
+};
+
 export const useSidebarStore = create<SidebarState>((set) => ({
-  sidebarCollapsed: true,
+  sidebarCollapsed: getInitialCollapsed(),
   setSidebarCollapsed: (collapsed: boolean) => {
     if (typeof window !== 'undefined') {
       try {
