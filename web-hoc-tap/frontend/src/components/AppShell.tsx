@@ -147,13 +147,13 @@ export const AppShell: React.FC<AppShellProps> = ({
         <div className={`flex items-center gap-1 shrink min-w-0 w-auto sm:w-[200px] relative z-10 ${isSearchFocused ? 'pointer-events-none' : ''}`}>
           <button
             onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-            className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 shrink-0 cursor-pointer"
+            className="w-11 h-11 flex items-center justify-center rounded-full hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 shrink-0 cursor-pointer"
             title="Menu chính"
             aria-label="Toggle Navigation"
             aria-controls="app-sidebar"
             aria-expanded={!sidebarCollapsed}
           >
-            <Menu size={20} />
+            <Menu size={21} />
           </button>
 
           <div
@@ -389,7 +389,7 @@ export const AppShell: React.FC<AppShellProps> = ({
       <div
         id="main-scroll"
         className={`absolute inset-0 pt-16 overflow-hidden transition-all duration-300 ease-in-out ${
-          sidebarCollapsed ? 'md:pl-[60px]' : 'md:pl-[200px]'
+          sidebarCollapsed ? 'md:pl-[64px]' : 'md:pl-[200px]'
         }`}
       >
         <div className="mr-0 h-full flex flex-col">
