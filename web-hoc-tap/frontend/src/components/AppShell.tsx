@@ -57,7 +57,8 @@ export const AppShell: React.FC<AppShellProps> = ({
         setSidebarCollapsed(saved === 'true');
       }
     } catch (e) {}
-    setIsMounted(true);
+    const timer = setTimeout(() => setIsMounted(true), 60);
+    return () => clearTimeout(timer);
   }, [setSidebarCollapsed]);
   const [searchQuery, setSearchQuery] = useState('');
   const [isNewMenuOpen, setIsNewMenuOpen] = useState(false);

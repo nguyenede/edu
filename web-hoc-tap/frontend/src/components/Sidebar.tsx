@@ -57,8 +57,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
-    setIsMounted(true);
+    const timer = setTimeout(() => setIsMounted(true), 60);
     return () => {
+      clearTimeout(timer);
       if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current);
       if (cooldownTimerRef.current) clearTimeout(cooldownTimerRef.current);
     };
@@ -167,11 +168,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   <div className="w-11 h-11 flex items-center justify-center shrink-0">
                     <Icon size={21} />
                   </div>
-                  {!sidebarCollapsed && (
-                    <span className="truncate text-left whitespace-nowrap overflow-hidden pr-3 text-sm font-medium animate-in fade-in duration-200">
-                      {item.label}
-                    </span>
-                  )}
+                  <span
+                    className={`truncate text-left whitespace-nowrap overflow-hidden pr-3 text-sm font-medium ${
+                      sidebarCollapsed ? 'hidden' : 'inline-block'
+                    }`}
+                  >
+                    {item.label}
+                  </span>
                 </button>
 
                 {/* Floating Tooltip Pill on Hover when Sidebar is Collapsed */}
