@@ -493,7 +493,8 @@ export default function AiChatView({ initialSessionId }: { initialSessionId?: st
   }, [inputPrompt]);
 
   const handleSend = async (overridePrompt?: string) => {
-    const textToSend = overridePrompt || inputPrompt;
+    // Tính năng đang phát triển - vô hiệu hóa gửi tin nhắn
+    return;
     if (!textToSend.trim() || isGenerating) return;
 
     const startTime = Date.now();
@@ -783,14 +784,14 @@ export default function AiChatView({ initialSessionId }: { initialSessionId?: st
 
   const renderInputBox = () => (
     <div className="w-full">
-      {/* Main Rounded Input Box */}
-      <div className="bg-slate-100 dark:bg-[#2f2f2f] rounded-[28px] pl-2.5 sm:pl-3 pr-1.5 py-1.5 flex items-end gap-1.5 sm:gap-2 border-0 outline-none ring-0 shadow-xs min-h-[52px]">
-        {/* Plus Icon */}
+      {/* Main Rounded Input Box - Disabled since feature is in development */}
+      <div className="bg-slate-100 dark:bg-[#2f2f2f] rounded-[28px] pl-2.5 sm:pl-3 pr-1.5 py-1.5 flex items-end gap-1.5 sm:gap-2 border border-slate-200/50 dark:border-slate-800/50 outline-none ring-0 shadow-xs min-h-[52px] cursor-not-allowed opacity-85">
+        {/* Plus Icon (Disabled) */}
         <button
           type="button"
-          onClick={() => {}}
-          className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 self-end mb-0.5 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors cursor-pointer"
-          title="Tải tệp hoặc hình ảnh"
+          disabled
+          className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 self-end mb-0.5 text-slate-400 dark:text-slate-600 cursor-not-allowed opacity-60"
+          title="Tính năng đang phát triển"
         >
           <Plus size={20} className="stroke-[2]" />
         </button>
@@ -798,29 +799,20 @@ export default function AiChatView({ initialSessionId }: { initialSessionId?: st
         <textarea
           ref={textareaRef}
           rows={1}
-          value={inputPrompt}
-          onChange={(e) => setInputPrompt(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-              e.preventDefault();
-              handleSend();
-            }
-          }}
-          placeholder="Nhắn tin cho ChatCoi..."
-          className="w-full text-xs md:text-sm bg-transparent text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 border-0 outline-none ring-0 focus:outline-none focus:ring-0 focus:border-0 resize-none overflow-y-auto max-h-36 py-2 leading-normal [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+          value=""
+          disabled
+          readOnly
+          placeholder="Tính năng đang phát triển..."
+          className="w-full text-xs md:text-sm bg-transparent text-slate-400 dark:text-slate-500 placeholder-slate-400 dark:placeholder-slate-500 border-0 outline-none ring-0 focus:outline-none focus:ring-0 focus:border-0 resize-none overflow-hidden cursor-not-allowed py-2 leading-normal select-none"
           style={{ minHeight: '24px' }}
         />
 
-        {/* Send Button */}
+        {/* Send Button (Disabled) */}
         <button
-          onClick={() => handleSend()}
-          disabled={!inputPrompt.trim() || isGenerating}
-          className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 self-end mb-0.5 transition-colors ${
-            inputPrompt.trim() && !isGenerating
-              ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-md cursor-pointer'
-              : 'bg-slate-300/70 dark:bg-slate-700 text-slate-400 dark:text-slate-500 cursor-not-allowed'
-          }`}
-          title="Gửi câu hỏi"
+          type="button"
+          disabled
+          className="w-9 h-9 rounded-full flex items-center justify-center shrink-0 self-end mb-0.5 bg-slate-200/80 dark:bg-slate-800 text-slate-400 dark:text-slate-600 cursor-not-allowed opacity-70"
+          title="Tính năng đang phát triển"
         >
           <ArrowUp size={18} className="stroke-[2.5]" />
         </button>
