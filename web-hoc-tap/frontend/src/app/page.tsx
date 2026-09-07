@@ -220,8 +220,8 @@ export default function HomePage() {
         {/* How It Works (3 Steps) */}
         <section id="how-it-works" className="space-y-10 text-center">
           <div className="space-y-2 max-w-xl mx-auto">
-            <span className="text-xs font-bold text-google-blue tracking-wider uppercase">
-              QUY TRÌNH TINH GỌN
+            <span className="text-xs font-bold text-google-blue tracking-wide">
+              Quy trình tinh gọn
             </span>
             <h2 className="text-3xl font-extrabold text-slate-900 dark:text-slate-100">
               Bắt đầu với KiyoEdu trong 3 bước

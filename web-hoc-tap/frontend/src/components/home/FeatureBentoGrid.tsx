@@ -29,7 +29,7 @@ export const FeatureBentoGrid: React.FC = () => {
       <div className="text-center space-y-3 max-w-2xl mx-auto">
         <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-50 dark:bg-blue-950/60 text-google-blue rounded-full text-xs font-bold select-none border border-blue-100 dark:border-blue-900/60">
           <Sparkles size={13} />
-          HỆ SINH THÁI TÍNH NĂNG TOÀN DIỆN
+          Hệ sinh thái tính năng toàn diện
         </div>
         <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100">
           Mọi công cụ bạn cần để dạy & học bứt phá
@@ -52,7 +52,7 @@ export const FeatureBentoGrid: React.FC = () => {
             <div className="flex items-center justify-between">
               <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-red-500/20 border border-red-500/30 text-red-400 rounded-full text-xs font-bold">
                 <Flame size={14} className="fill-current text-red-400" />
-                ĐỘC QUYỀN
+                Độc quyền
               </span>
               <span className="text-xs font-mono text-slate-400 flex items-center gap-1">
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
@@ -74,10 +74,10 @@ export const FeatureBentoGrid: React.FC = () => {
           <div className="relative z-10 my-6 bg-slate-800/60 backdrop-blur-md rounded-2xl p-4 border border-slate-700/60">
             <div className="flex items-center justify-between pb-3 border-b border-slate-700/60 text-xs font-mono">
               <span className="text-amber-400 font-bold flex items-center gap-1">
-                ⚡ STREAK: x4
+                ⚡ Chuỗi đúng: x4
               </span>
               <span className="text-emerald-400 font-bold">
-                ĐIỂM: 1,850 PTS (#1)
+                Điểm số: 1,850 (#1)
               </span>
             </div>
             {/* 5x5 Mini Matrix Preview */}

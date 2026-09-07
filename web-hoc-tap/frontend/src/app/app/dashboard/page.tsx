@@ -193,7 +193,7 @@ export default function DashboardPage() {
         {/* Quick Metric Counters */}
         <section className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
           <div className="p-3 sm:p-4 bg-slate-50/80 dark:bg-slate-900/40 rounded-[6px] space-y-1 min-w-0">
-            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider block">
+            <span className="text-xs font-semibold text-slate-500 block">
               Lớp học
             </span>
             <p className="text-2xl font-bold text-slate-950 dark:text-slate-100">
@@ -202,7 +202,7 @@ export default function DashboardPage() {
           </div>
 
           <div className="p-3 sm:p-4 bg-slate-50/80 dark:bg-slate-900/40 rounded-[6px] space-y-1 min-w-0">
-            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider block">
+            <span className="text-xs font-semibold text-slate-500 block">
               {isTeacherUser ? 'Tổng học sinh' : 'Bài đã nộp'}
             </span>
             <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
@@ -213,7 +213,7 @@ export default function DashboardPage() {
           </div>
 
           <div className="p-3 sm:p-4 bg-slate-50/80 dark:bg-slate-900/40 rounded-[6px] space-y-1 min-w-0">
-            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider block">
+            <span className="text-xs font-semibold text-slate-500 block">
               {isTeacherUser ? 'Đề thi đã tạo' : 'Phòng thi đã đấu'}
             </span>
             <p className="text-2xl font-bold text-slate-950 dark:text-slate-100">
@@ -222,7 +222,7 @@ export default function DashboardPage() {
           </div>
 
           <div className="p-3 sm:p-4 bg-slate-50/80 dark:bg-slate-900/40 rounded-[6px] space-y-1 min-w-0">
-            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider block">
+            <span className="text-xs font-semibold text-slate-500 block">
               Trạng thái
             </span>
             <div className="flex items-center gap-1.5 pt-1">
