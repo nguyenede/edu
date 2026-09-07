@@ -161,14 +161,14 @@ function DocumentsPageContent() {
     }
   }, [files, folders]);
 
-  // Open file in a dedicated new tab/page with dynamic route /app/documents/[id]/view
+  // Open file in the current tab with dynamic route /app/documents/[id]/view
   const handleOpenFile = (fileItem: DocumentFileItem) => {
     if (typeof window !== 'undefined') {
       const slicedFiles = Array.isArray(files) ? files.slice(0, 25) : [];
       safeLocalStorageSet('app_documents_files', JSON.stringify(slicedFiles));
       safeLocalStorageSet('app_documents_folders', JSON.stringify(folders));
     }
-    window.open(`/app/documents/${encodeURIComponent(fileItem.id)}/view`, '_blank');
+    router.push(`/app/documents/${encodeURIComponent(fileItem.id)}/view`);
   };
 
   // Search filter
@@ -597,9 +597,6 @@ function DocumentsPageContent() {
     setSelectedFile(null);
     setParsedPreview(null);
     setUploadTitle('');
-
-    // Automatically open in a dedicated new tab/page!
-    handleOpenFile(newDocFile);
   };
 
   const handleDeleteFolder = async (folderId: string, e: React.MouseEvent) => {
