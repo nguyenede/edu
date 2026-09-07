@@ -134,7 +134,7 @@ export const AppShell: React.FC<AppShellProps> = ({
   return (
     <div className="relative h-dvh w-full overflow-hidden bg-google-bg dark:bg-google-bg-dark text-slate-900 dark:text-slate-100 font-sans">
       {/* Top Header (Navbar) - Fixed 100% Frozen at top:0 */}
-      <header className="fixed top-0 left-0 right-0 h-16 shrink-0 pl-2 sm:pl-3 pr-2 flex items-center justify-between select-none z-50 bg-google-bg dark:bg-google-bg-dark gap-1 sm:gap-4">
+      <header className="fixed top-0 left-0 right-0 h-16 shrink-0 pl-2.5 pr-2 flex items-center justify-between select-none z-50 bg-google-bg dark:bg-google-bg-dark gap-1 sm:gap-4">
         {/* Dark Dimmed Backdrop Overlay when Search is Active */}
         {isSearchFocused && (
           <div
@@ -147,7 +147,7 @@ export const AppShell: React.FC<AppShellProps> = ({
         <div className={`flex items-center gap-1 shrink min-w-0 w-auto sm:w-[200px] relative z-10 ${isSearchFocused ? 'pointer-events-none' : ''}`}>
           <button
             onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-            className="w-11 h-11 sm:w-12 sm:h-12 flex items-center justify-center rounded-full hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 shrink-0"
+            className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 shrink-0 cursor-pointer"
             title="Menu chính"
             aria-label="Toggle Navigation"
             aria-controls="app-sidebar"

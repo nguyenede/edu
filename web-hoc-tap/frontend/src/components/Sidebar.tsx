@@ -120,15 +120,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
     <aside
       id="app-sidebar"
       aria-label="Điều hướng chính"
-      className={`shrink-0 transition-[width,transform] duration-300 ease-in-out select-none flex flex-col justify-between fixed top-16 left-0 bottom-0 z-50 overflow-y-auto md:overflow-visible bg-white dark:bg-google-card-dark shadow-xl md:bg-google-bg md:dark:bg-google-bg-dark md:shadow-none md:z-50 ${
+      className={`shrink-0 transition-[width,transform] duration-300 ease-in-out select-none flex flex-col justify-between fixed top-16 left-0 bottom-0 z-50 overflow-y-auto md:overflow-visible bg-white dark:bg-google-card-dark shadow-xl md:bg-google-bg md:dark:bg-google-bg-dark md:shadow-none md:z-50 py-3 px-2.5 ${
         sidebarCollapsed
-          ? 'w-[280px] -translate-x-full md:translate-x-0 md:w-[60px] py-3 px-0 md:items-center'
-          : 'translate-x-0 w-[280px] md:w-[200px] p-3'
+          ? 'w-[280px] -translate-x-full md:translate-x-0 md:w-[60px]'
+          : 'translate-x-0 w-[280px] md:w-[200px]'
       }`}
     >
-      <div className={`space-y-4 ${sidebarCollapsed ? 'w-full flex flex-col items-center' : ''}`}>
+      <div className="space-y-4 w-full">
         {/* Navigation List */}
-        <nav className={`space-y-1 ${sidebarCollapsed ? 'w-full flex flex-col items-center' : ''}`}>
+        <nav className="space-y-1 w-full">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive =
@@ -143,15 +143,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
             return (
               <div
                 key={item.href}
-                className={`relative ${sidebarCollapsed ? 'flex justify-center w-full' : ''}`}
+                className="relative w-full"
                 onMouseEnter={() => handleMouseEnter(item.href)}
                 onMouseLeave={() => handleMouseLeave(item.href)}
               >
                 <button
                   type="button"
                   onClick={() => handleNavClick(item.href)}
-                  className={`h-10 text-sm font-medium transition-colors duration-200 ease-in-out inline-flex items-center rounded-full overflow-hidden shrink-0 cursor-pointer ${
-                    sidebarCollapsed ? 'w-10 justify-center' : ''
+                  className={`h-10 text-sm font-medium transition-colors duration-200 ease-in-out flex items-center rounded-full overflow-hidden shrink-0 cursor-pointer ${
+                    sidebarCollapsed ? 'w-10 justify-center' : 'w-full'
                   } ${
                     isActive
                       ? 'bg-google-pill text-google-pill-text dark:bg-google-pill-dark dark:text-google-pill-dark-text font-bold'
@@ -161,13 +161,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   <div className="w-10 h-10 flex items-center justify-center shrink-0">
                     <Icon size={19} />
                   </div>
-                  <span
-                    className={`truncate text-left whitespace-nowrap overflow-hidden transition-[max-width,opacity,padding] duration-300 ease-in-out ${
-                      sidebarCollapsed ? 'max-w-0 opacity-0 pr-0' : 'max-w-[150px] opacity-100 pr-3.5'
-                    }`}
-                  >
-                    {item.label}
-                  </span>
+                  {!sidebarCollapsed && (
+                    <span className="truncate text-left whitespace-nowrap overflow-hidden pr-3 text-sm font-medium animate-in fade-in duration-200">
+                      {item.label}
+                    </span>
+                  )}
                 </button>
 
                 {/* Floating Tooltip Pill on Hover when Sidebar is Collapsed */}
