@@ -64,15 +64,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
     <aside
       id="app-sidebar"
       aria-label="Điều hướng chính"
-      className={`shrink-0 transition-[width,transform] duration-300 ease-in-out select-none flex flex-col justify-between p-3 fixed top-16 left-0 bottom-0 z-50 overflow-y-auto md:overflow-visible bg-white dark:bg-google-card-dark shadow-xl md:bg-google-bg md:dark:bg-google-bg-dark md:shadow-none md:z-50 ${
+      className={`shrink-0 transition-[width,transform] duration-300 ease-in-out select-none flex flex-col justify-between fixed top-16 left-0 bottom-0 z-50 overflow-y-auto md:overflow-visible bg-white dark:bg-google-card-dark shadow-xl md:bg-google-bg md:dark:bg-google-bg-dark md:shadow-none md:z-50 ${
         sidebarCollapsed
-          ? 'w-[280px] -translate-x-full md:translate-x-0 md:w-[72px]'
-          : 'translate-x-0 w-[280px] md:w-[200px]'
+          ? 'w-[280px] -translate-x-full md:translate-x-0 md:w-[60px] py-3 px-0 md:items-center'
+          : 'translate-x-0 w-[280px] md:w-[200px] p-3'
       }`}
     >
-      <div className="space-y-4">
+      <div className={`space-y-4 ${sidebarCollapsed ? 'w-full flex flex-col items-center' : ''}`}>
         {/* Navigation List */}
-        <nav className="space-y-1">
+        <nav className={`space-y-1 ${sidebarCollapsed ? 'w-full flex flex-col items-center' : ''}`}>
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive =
@@ -87,7 +87,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             return (
               <div
                 key={item.href}
-                className="relative"
+                className={`relative ${sidebarCollapsed ? 'flex justify-center w-full' : ''}`}
                 onMouseEnter={() => {
                   setHoveredKey(item.href);
                 }}
@@ -100,6 +100,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   onClick={() => handleNavClick(item.href)}
                   title={sidebarCollapsed ? item.label : undefined}
                   className={`h-10 text-sm font-medium transition-colors duration-200 ease-in-out inline-flex items-center rounded-full overflow-hidden shrink-0 ${
+                    sidebarCollapsed ? 'w-10 justify-center' : ''
+                  } ${
                     isActive
                       ? 'bg-google-pill text-google-pill-text dark:bg-google-pill-dark dark:text-google-pill-dark-text font-bold'
                       : 'text-slate-700 dark:text-slate-300 hover:bg-google-hover dark:hover:bg-google-hover-dark'

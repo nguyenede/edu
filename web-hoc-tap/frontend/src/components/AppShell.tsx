@@ -389,7 +389,7 @@ export const AppShell: React.FC<AppShellProps> = ({
       <div
         id="main-scroll"
         className={`absolute inset-0 pt-16 overflow-hidden transition-all duration-300 ease-in-out ${
-          sidebarCollapsed ? 'md:pl-[72px]' : 'md:pl-[200px]'
+          sidebarCollapsed ? 'md:pl-[60px]' : 'md:pl-[200px]'
         }`}
       >
         <div className="mr-0 h-full flex flex-col">
