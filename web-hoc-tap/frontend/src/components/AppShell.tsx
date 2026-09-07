@@ -158,20 +158,25 @@ export const AppShell: React.FC<AppShellProps> = ({
 
           <div
             onClick={() => router.push('/app/dashboard')}
-            className="flex items-center gap-2 cursor-pointer whitespace-nowrap ml-1 min-w-0"
+            className="flex items-center gap-2.5 cursor-pointer whitespace-nowrap ml-1 min-w-0"
           >
-            {/* Google Drive / Gmail colorful emblem */}
-            <div className="w-8 h-8 rounded-lg bg-white dark:bg-slate-900 flex items-center justify-center p-1 shrink-0">
-              <svg viewBox="0 0 24 24" className="w-6 h-6">
+            {/* KiyoEdu modern logo */}
+            <div className="w-8 h-8 rounded-xl bg-white dark:bg-slate-900 flex items-center justify-center p-1.5 shrink-0 shadow-sm border border-slate-200/70 dark:border-slate-800">
+              <svg viewBox="0 0 24 24" className="w-full h-full">
                 <path fill="#4285F4" d="M12 2L2 19.7h8.4L12 16.2l3.6 3.5H22L12 2z" />
                 <path fill="#FBBC05" d="M2 19.7h8.4L15.6 12 12 2 2 19.7z" />
                 <path fill="#34A853" d="M12 16.2l3.6 3.5H22L17.2 12 12 16.2z" />
                 <path fill="#EA4335" d="M12 2l5.2 10 4.8 7.7L12 2z" />
               </svg>
             </div>
-            <span className="font-semibold text-base sm:text-lg tracking-tight text-slate-800 dark:text-slate-200 truncate max-w-[132px] sm:max-w-none">
-              HocRealtime
-            </span>
+            <div className="flex items-center gap-1.5">
+              <span className="font-bold text-base sm:text-lg tracking-tight text-slate-900 dark:text-slate-100 truncate max-w-[132px] sm:max-w-none">
+                KiyoEdu
+              </span>
+              <span className="hidden sm:inline-block px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-100 dark:bg-blue-950 text-google-blue">
+                v2.0
+              </span>
+            </div>
           </div>
         </div>
 

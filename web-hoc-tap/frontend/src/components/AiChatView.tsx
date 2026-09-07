@@ -837,29 +837,40 @@ export default function AiChatView({ initialSessionId }: { initialSessionId?: st
     <AppShell>
       {/* 100% Faithful Clean Layout: Left History Sidebar + Right Chat Main Container */}
       <div className="flex w-full h-full min-h-0 flex-1 overflow-hidden bg-white dark:bg-[#212121] relative">
-        {/* LEFT SIDEBAR: Lịch sử Chat 100% giống ảnh mẫu (kích thước gọn gàng) */}
-        <aside className="hidden md:flex md:w-[235px] shrink-0 flex-col h-full bg-[#f9f9f9] dark:bg-[#171717] select-none">
+        {/* LEFT SIDEBAR: Lịch sử Chat */}
+        <aside className="hidden md:flex md:w-[250px] shrink-0 flex-col h-full bg-slate-50/70 dark:bg-[#18181b] border-r border-slate-200/70 dark:border-slate-800 select-none">
           {/* Top: Câu hỏi mới Button */}
-          <div className="p-2 pb-0.5 shrink-0">
+          <div className="p-3 pb-2 shrink-0">
             <button
               type="button"
               onClick={handleCreateNewChat}
-              className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-[6px] text-xs md:text-[13px] font-normal transition-colors cursor-pointer ${
+              className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-xs md:text-sm font-semibold transition-all duration-200 cursor-pointer border shadow-sm ${
                 activeSessionId === null
-                  ? 'bg-[#e3e3e3] dark:bg-[#2f2f2f] text-slate-900 dark:text-white'
-                  : 'text-slate-800 dark:text-[#ececec] hover:bg-[#ebebeb] dark:hover:bg-[#212121]'
+                  ? 'bg-blue-50/80 dark:bg-blue-950/60 border-blue-200 dark:border-blue-900 text-google-blue dark:text-blue-300'
+                  : 'bg-white dark:bg-slate-800/90 border-slate-200/80 dark:border-slate-700/80 text-slate-800 dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800 hover:border-google-blue dark:hover:border-google-blue hover:shadow'
               }`}
             >
-              <SquarePen size={15} className="stroke-[1.75]" />
-              <span>Câu hỏi mới</span>
+              <div className="flex items-center gap-2.5">
+                <div
+                  className={`w-6 h-6 rounded-lg flex items-center justify-center transition-colors ${
+                    activeSessionId === null
+                      ? 'bg-google-blue text-white'
+                      : 'bg-blue-50 dark:bg-blue-950/80 text-google-blue'
+                  }`}
+                >
+                  <SquarePen size={13} className="stroke-[2.2]" />
+                </div>
+                <span>Câu hỏi mới</span>
+              </div>
+              <Plus size={15} className="text-slate-400 group-hover:text-google-blue" />
             </button>
           </div>
 
           {/* Scrollable History List with Dynamic Date Grouping & Right Scrollbar */}
-          <div className="flex-1 overflow-y-auto pl-2 pr-1 space-y-2 chatcoi-scrollbar pt-0.5">
+          <div className="flex-1 overflow-y-auto px-2 space-y-2 chatcoi-scrollbar pt-1">
             {groupedSessions.map((group) => (
-              <div key={group.category} className="space-y-0.5">
-                <div className="px-2.5 pt-1.5 pb-0.5 text-[11px] font-medium text-slate-400 dark:text-[#8e8e8e] shrink-0">
+              <div key={group.category} className="space-y-1">
+                <div className="px-2.5 pt-2 pb-0.5 text-[11px] font-semibold text-slate-400 dark:text-slate-500 shrink-0">
                   {group.category}
                 </div>
                 {group.sessions.map((session) => {
@@ -870,10 +881,10 @@ export default function AiChatView({ initialSessionId }: { initialSessionId?: st
                       key={session.id}
                       type="button"
                       onClick={() => handleSelectSession(session.id)}
-                      className={`w-full text-left px-2.5 py-1 text-xs md:text-[13px] leading-snug truncate rounded-[6px] transition-colors cursor-pointer block font-normal ${
+                      className={`w-full text-left px-3 py-2 text-xs md:text-[13px] leading-snug truncate rounded-xl transition-all cursor-pointer block font-medium ${
                         isActive
-                          ? 'bg-[#e3e3e3] dark:bg-[#2f2f2f] text-slate-900 dark:text-white'
-                          : 'text-slate-700 dark:text-[#ececec] hover:bg-[#ebebeb] dark:hover:bg-[#212121]'
+                          ? 'bg-blue-50 dark:bg-blue-950/60 text-google-blue dark:text-blue-300 font-semibold border border-blue-100 dark:border-blue-900/40 shadow-xs'
+                          : 'text-slate-700 dark:text-slate-300 hover:bg-slate-200/60 dark:hover:bg-slate-800/80'
                       }`}
                       title={cleanTitle}
                     >
@@ -888,13 +899,13 @@ export default function AiChatView({ initialSessionId }: { initialSessionId?: st
 
         {/* RIGHT MAIN CHAT AREA */}
         <main className="flex-1 flex flex-col h-full min-h-0 bg-white dark:bg-[#212121] overflow-hidden relative">
-          <div className="md:hidden shrink-0 px-3 py-2 border-b border-slate-100 dark:border-slate-800 bg-white/95 dark:bg-[#212121]/95">
+          <div className="md:hidden shrink-0 px-3 py-2 border-b border-slate-200/60 dark:border-slate-800 bg-white/95 dark:bg-[#212121]/95">
             <button
               type="button"
               onClick={handleCreateNewChat}
-              className="inline-flex items-center gap-2 rounded-full bg-slate-100 dark:bg-[#2f2f2f] px-3 py-2 text-xs font-medium text-slate-800 dark:text-[#ececec] active:bg-slate-200 dark:active:bg-slate-700"
+              className="inline-flex items-center gap-2 rounded-xl bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-900 px-3.5 py-2 text-xs font-semibold text-google-blue dark:text-blue-300 shadow-xs active:scale-95 transition-all"
             >
-              <SquarePen size={15} className="stroke-[1.75]" />
+              <SquarePen size={14} className="stroke-[2.2]" />
               <span>Câu hỏi mới</span>
             </button>
           </div>
