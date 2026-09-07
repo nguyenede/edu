@@ -9,6 +9,7 @@ import { Modal } from './Modal';
 import { Button } from './Button';
 import { Input } from './Input';
 import { Sidebar } from './Sidebar';
+import { useSidebarStore } from '../store/useSidebarStore';
 import {
   Menu,
   SlidersHorizontal,
@@ -46,7 +47,16 @@ export const AppShell: React.FC<AppShellProps> = ({
   const pathname = usePathname();
   const { user, logout } = useAuthStore();
 
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
+  const { sidebarCollapsed, setSidebarCollapsed, toggleSidebar } = useSidebarStore();
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('sidebar_collapsed');
+      if (saved !== null) {
+        setSidebarCollapsed(saved === 'true');
+      }
+    } catch (e) {}
+  }, [setSidebarCollapsed]);
   const [searchQuery, setSearchQuery] = useState('');
   const [isNewMenuOpen, setIsNewMenuOpen] = useState(false);
 
@@ -146,7 +156,7 @@ export const AppShell: React.FC<AppShellProps> = ({
         {/* Left: Menu & Brand Logo */}
         <div className={`flex items-center gap-1 shrink min-w-0 w-auto sm:w-[200px] relative z-10 ${isSearchFocused ? 'pointer-events-none' : ''}`}>
           <button
-            onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+            onClick={toggleSidebar}
             className="w-11 h-11 flex items-center justify-center rounded-full hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 shrink-0 cursor-pointer"
             title="Menu chính"
             aria-label="Toggle Navigation"
