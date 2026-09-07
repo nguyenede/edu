@@ -64,7 +64,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     <aside
       id="app-sidebar"
       aria-label="Điều hướng chính"
-      className={`shrink-0 transition-[width,transform] duration-300 ease-in-out select-none flex flex-col justify-between p-3 fixed top-16 left-0 bottom-0 z-50 overflow-y-auto overflow-x-visible bg-white dark:bg-google-card-dark shadow-xl md:bg-google-bg md:dark:bg-google-bg-dark md:shadow-none md:z-30 ${
+      className={`shrink-0 transition-[width,transform] duration-300 ease-in-out select-none flex flex-col justify-between p-3 fixed top-16 left-0 bottom-0 z-50 overflow-y-auto md:overflow-visible bg-white dark:bg-google-card-dark shadow-xl md:bg-google-bg md:dark:bg-google-bg-dark md:shadow-none md:z-50 ${
         sidebarCollapsed
           ? 'w-[280px] -translate-x-full md:translate-x-0 md:w-[72px]'
           : 'translate-x-0 w-[280px] md:w-[200px]'
@@ -98,6 +98,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               >
                 <button
                   onClick={() => handleNavClick(item.href)}
+                  title={sidebarCollapsed ? item.label : undefined}
                   className={`h-10 text-sm font-medium transition-colors duration-200 ease-in-out inline-flex items-center rounded-full overflow-hidden shrink-0 ${
                     isActive
                       ? 'bg-google-pill text-google-pill-text dark:bg-google-pill-dark dark:text-google-pill-dark-text font-bold'
@@ -118,14 +119,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
                 {/* Floating Tooltip Pill on Hover when Sidebar is Collapsed */}
                 <div
-                  className={`absolute left-full top-1/2 -translate-y-1/2 ml-3 transition-all duration-150 ease-in-out pointer-events-none z-50 ${
+                  className={`absolute left-full top-1/2 -translate-y-1/2 ml-3.5 transition-all duration-150 ease-out pointer-events-none z-[9999] ${
                     isTooltipVisible
                       ? 'opacity-100 scale-100 translate-x-0'
                       : 'opacity-0 scale-95 -translate-x-2'
                   } hidden md:block`}
                 >
-                  <div className="bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-100 font-semibold text-xs px-4 py-2.5 rounded-2xl shadow-lg whitespace-nowrap flex items-center gap-2">
-                    {item.label}
+                  <div className="bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 font-semibold text-xs px-3.5 py-2 rounded-xl shadow-xl whitespace-nowrap flex items-center gap-1.5 border border-slate-700/50 dark:border-slate-300/50">
+                    <span>{item.label}</span>
                   </div>
                 </div>
               </div>
