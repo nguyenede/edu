@@ -43,7 +43,7 @@ export const FeatureBentoGrid: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-12 gap-6 text-left">
         
         {/* Bento 1: Chaos Quiz Spotlight (Span 7 cols) */}
-        <div className="md:col-span-7 bg-linear-to-br from-slate-900 via-slate-900 to-indigo-950 text-white p-7 sm:p-9 rounded-3xl relative overflow-hidden shadow-xl flex flex-col justify-between border border-slate-800 group">
+        <div className="md:col-span-7 bg-slate-900 bg-gradient-to-br from-slate-900 via-slate-900 to-indigo-950 text-white p-7 sm:p-9 rounded-3xl relative overflow-hidden shadow-xl flex flex-col justify-between border border-slate-800 group">
           {/* Subtle glow background */}
           <div className="absolute -top-24 -right-24 w-72 h-72 bg-google-red/20 rounded-full blur-3xl group-hover:bg-google-red/30 transition-all duration-500 pointer-events-none" />
           <div className="absolute -bottom-24 -left-24 w-72 h-72 bg-blue-600/20 rounded-full blur-3xl pointer-events-none" />
@@ -231,7 +231,7 @@ export const FeatureBentoGrid: React.FC = () => {
                 <div className="w-6 h-6 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-[10px] font-bold shrink-0">
                   Em
                 </div>
-                <div className="bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 text-xs px-3.5 py-2 rounded-2xl rounded-tl-xs">
+                <div className="bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 text-xs px-3.5 py-2 rounded-2xl rounded-tl-none">
                   Thầy ơi, giải thích giúp em tại sao đáp án câu 12 lại là B với ạ?
                 </div>
               </div>
@@ -239,7 +239,7 @@ export const FeatureBentoGrid: React.FC = () => {
                 <div className="w-6 h-6 rounded-full bg-purple-600 text-white flex items-center justify-center text-[10px] font-bold shrink-0">
                   AI
                 </div>
-                <div className="bg-purple-50 dark:bg-purple-950/70 border border-purple-100 dark:border-purple-900/40 text-purple-900 dark:text-purple-200 text-xs px-3.5 py-2 rounded-2xl rounded-tr-xs">
+                <div className="bg-purple-50 dark:bg-purple-950/70 border border-purple-100 dark:border-purple-900/40 text-purple-900 dark:text-purple-200 text-xs px-3.5 py-2 rounded-2xl rounded-tr-none">
                   Chào em! Ở câu 12, theo định lý Pytago trong tam giác vuông: \( a^2 + b^2 = c^2 \). Thay số vào ta có...
                 </div>
               </div>

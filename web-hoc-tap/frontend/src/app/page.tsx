@@ -31,7 +31,7 @@ export default function HomePage() {
       {/* Header */}
       <header className="px-6 py-4 flex justify-between items-center select-none sticky top-0 z-30 bg-google-bg/85 dark:bg-google-bg-dark/85 backdrop-blur-md border-b border-slate-200/60 dark:border-slate-800/60">
         <div className="flex items-center gap-3 cursor-pointer" onClick={() => router.push('/')}>
-          <div className="w-10 h-10 rounded-2xl bg-white dark:bg-slate-900 flex items-center justify-center p-2 shadow-xs border border-slate-200/70 dark:border-slate-800">
+          <div className="w-10 h-10 rounded-2xl bg-white dark:bg-slate-900 flex items-center justify-center p-2 shadow-sm border border-slate-200/70 dark:border-slate-800">
             <svg viewBox="0 0 24 24" className="w-full h-full">
               <path fill="#4285F4" d="M12 2L2 19.7h8.4L12 16.2l3.6 3.5H22L12 2z" />
               <path fill="#FBBC05" d="M2 19.7h8.4L15.6 12 12 2 2 19.7z" />
@@ -123,7 +123,7 @@ export default function HomePage() {
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight text-slate-900 dark:text-slate-100 leading-[1.12]">
               Dạy thông minh, <br className="hidden sm:block" />
               học hào hứng cùng{' '}
-              <span className="text-transparent bg-clip-text bg-linear-to-r from-blue-600 via-indigo-600 to-emerald-500">
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-indigo-600 to-emerald-500">
                 KiyoEdu
               </span>
             </h1>
@@ -175,7 +175,7 @@ export default function HomePage() {
         </section>
 
         {/* Live Metrics Bar */}
-        <section className="w-full bg-white dark:bg-google-card-dark rounded-3xl p-6 sm:p-8 border border-slate-200 dark:border-slate-800 shadow-xs">
+        <section className="w-full bg-white dark:bg-google-card-dark rounded-3xl p-6 sm:p-8 border border-slate-200 dark:border-slate-800 shadow-sm">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
             <div className="space-y-1">
               <div className="text-3xl sm:text-4xl font-extrabold text-google-blue font-mono">
@@ -271,32 +271,30 @@ export default function HomePage() {
         </section>
 
         {/* Final CTA Banner */}
-        <section className="bg-linear-to-r from-blue-600 via-indigo-600 to-blue-700 rounded-3xl p-8 sm:p-14 text-white text-center space-y-6 shadow-xl shadow-blue-500/10 relative overflow-hidden">
+        <section className="bg-blue-600 bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 rounded-3xl p-8 sm:p-14 text-white text-center space-y-6 shadow-xl shadow-blue-500/25 relative overflow-hidden">
           <div className="absolute -top-24 -left-24 w-80 h-80 bg-white/10 rounded-full blur-2xl pointer-events-none" />
           <div className="relative z-10 max-w-2xl mx-auto space-y-4">
-            <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight">
+            <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white">
               Sẵn sàng nâng tầm trải nghiệm dạy và học cùng KiyoEdu?
             </h2>
-            <p className="text-sm sm:text-base text-blue-100 leading-relaxed">
+            <p className="text-sm sm:text-base text-blue-50 leading-relaxed">
               Gia nhập hàng nghìn thầy cô và học sinh trên toàn quốc đang tạo nên những lớp học năng động, hiện đại và hiệu quả.
             </p>
             <div className="pt-4 flex flex-wrap items-center justify-center gap-3">
-              <Button
-                variant="secondary"
-                size="lg"
+              <button
+                type="button"
                 onClick={() => router.push('/register')}
-                className="bg-white text-slate-900 font-bold hover:bg-slate-100 shadow-md cursor-pointer"
+                className="inline-flex items-center justify-center px-6 py-3 rounded-full text-base font-bold bg-white text-slate-900 hover:bg-slate-100 shadow-lg cursor-pointer transition-all gap-2"
               >
                 Đăng ký tài khoản miễn phí <ArrowRight size={16} />
-              </Button>
-              <Button
-                variant="outline"
-                size="lg"
+              </button>
+              <button
+                type="button"
                 onClick={() => router.push('/login')}
-                className="border-white/50 text-white hover:bg-white/10 font-medium cursor-pointer"
+                className="inline-flex items-center justify-center px-6 py-3 rounded-full text-base font-semibold bg-blue-700/80 hover:bg-blue-700 text-white border border-white/40 cursor-pointer transition-all"
               >
                 Đăng nhập ngay
-              </Button>
+              </button>
             </div>
           </div>
         </section>
