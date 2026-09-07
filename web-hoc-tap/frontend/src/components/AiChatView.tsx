@@ -14,6 +14,7 @@ import {
   RotateCcw,
   Volume2,
   VolumeX,
+  Square,
   SquarePen,
   Activity,
   Cpu,
@@ -837,32 +838,24 @@ export default function AiChatView({ initialSessionId }: { initialSessionId?: st
     <AppShell>
       {/* 100% Faithful Clean Layout: Left History Sidebar + Right Chat Main Container */}
       <div className="flex w-full h-full min-h-0 flex-1 overflow-hidden bg-white dark:bg-[#212121] relative">
-        {/* LEFT SIDEBAR: Lịch sử Chat */}
-        <aside className="hidden md:flex md:w-[250px] shrink-0 flex-col h-full bg-slate-50/70 dark:bg-[#18181b] border-r border-slate-200/70 dark:border-slate-800 select-none">
-          {/* Top: Câu hỏi mới Button */}
-          <div className="p-3 pb-2 shrink-0">
+        {/* LEFT SIDEBAR: Lịch sử Chat - Không có đường viền thẳng */}
+        <aside className="hidden md:flex md:w-[230px] shrink-0 flex-col h-full bg-slate-50/40 dark:bg-[#18181b]/40 select-none">
+          {/* Top: Câu hỏi mới Button - Nhỏ gọn, mờ viền/không viền cứng */}
+          <div className="p-2.5 pb-1 shrink-0">
             <button
               type="button"
               onClick={handleCreateNewChat}
-              className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-xs md:text-sm font-semibold transition-all duration-200 cursor-pointer border shadow-sm ${
+              className={`w-full flex items-center justify-between px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-150 cursor-pointer ${
                 activeSessionId === null
-                  ? 'bg-blue-50/80 dark:bg-blue-950/60 border-blue-200 dark:border-blue-900 text-google-blue dark:text-blue-300'
-                  : 'bg-white dark:bg-slate-800/90 border-slate-200/80 dark:border-slate-700/80 text-slate-800 dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800 hover:border-google-blue dark:hover:border-google-blue hover:shadow'
+                  ? 'bg-slate-200/70 dark:bg-slate-800/80 text-slate-900 dark:text-white shadow-xs'
+                  : 'text-slate-700 dark:text-slate-300 hover:bg-slate-200/50 dark:hover:bg-slate-800/50'
               }`}
             >
-              <div className="flex items-center gap-2.5">
-                <div
-                  className={`w-6 h-6 rounded-lg flex items-center justify-center transition-colors ${
-                    activeSessionId === null
-                      ? 'bg-google-blue text-white'
-                      : 'bg-blue-50 dark:bg-blue-950/80 text-google-blue'
-                  }`}
-                >
-                  <SquarePen size={13} className="stroke-[2.2]" />
-                </div>
+              <div className="flex items-center gap-2">
+                <SquarePen size={13} className="text-slate-600 dark:text-slate-400 stroke-[2]" />
                 <span>Câu hỏi mới</span>
               </div>
-              <Plus size={15} className="text-slate-400 group-hover:text-google-blue" />
+              <Plus size={13} className="text-slate-400" />
             </button>
           </div>
 
@@ -1115,18 +1108,35 @@ export default function AiChatView({ initialSessionId }: { initialSessionId?: st
                               </button>
 
                               {/* Speak / Stop Speak */}
-                              <button
-                                type="button"
-                                onClick={() => handleSpeak(msg.id, msg.text)}
-                                className={`p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer ${
-                                  speakingId === msg.id
-                                    ? 'text-amber-500 bg-amber-50 dark:bg-amber-900/30 animate-pulse'
-                                    : 'hover:text-slate-700 dark:hover:text-slate-200'
-                                }`}
-                                title={speakingId === msg.id ? 'Dừng đọc' : 'Đọc câu trả lời'}
-                              >
-                                {speakingId === msg.id ? <VolumeX size={15} /> : <Volume2 size={15} />}
-                              </button>
+                              {speakingId === msg.id ? (
+                                <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-50 dark:bg-blue-950/70 text-google-blue dark:text-blue-300 border border-blue-200/60 dark:border-blue-800/60 shadow-xs animate-fade-in">
+                                  {/* Sound Equalizer Waves Animation */}
+                                  <div className="flex items-center gap-0.5 h-3">
+                                    <span className="w-0.5 h-2 bg-google-blue rounded-full animate-[pulse_0.6s_ease-in-out_infinite]" />
+                                    <span className="w-0.5 h-3.5 bg-google-blue rounded-full animate-[pulse_0.4s_ease-in-out_infinite]" />
+                                    <span className="w-0.5 h-2.5 bg-google-blue rounded-full animate-[pulse_0.8s_ease-in-out_infinite]" />
+                                    <span className="w-0.5 h-1.5 bg-google-blue rounded-full animate-[pulse_0.5s_ease-in-out_infinite]" />
+                                  </div>
+                                  <span className="text-[11px] font-medium">Đang phát...</span>
+                                  <button
+                                    type="button"
+                                    onClick={stopAllSpeech}
+                                    className="p-0.5 hover:bg-blue-200/60 dark:hover:bg-blue-900/60 rounded-full transition-colors cursor-pointer text-google-blue"
+                                    title="Dừng phát âm thanh"
+                                  >
+                                    <Square size={10} className="fill-current" />
+                                  </button>
+                                </div>
+                              ) : (
+                                <button
+                                  type="button"
+                                  onClick={() => handleSpeak(msg.id, msg.text)}
+                                  className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 transition-colors cursor-pointer"
+                                  title="Phát âm thanh câu trả lời"
+                                >
+                                  <Volume2 size={15} />
+                                </button>
+                              )}
                             </div>
                           )}
                         </div>
@@ -1135,6 +1145,29 @@ export default function AiChatView({ initialSessionId }: { initialSessionId?: st
                   ))}
                   <div ref={chatEndRef} />
                 </div>
+
+                {/* Floating "Đang phát" Status Indicator Bar */}
+                {speakingId && (
+                  <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-40 bg-slate-900/90 dark:bg-slate-800/90 text-white backdrop-blur-md px-4 py-2 rounded-full shadow-2xl flex items-center gap-3 border border-slate-700/60 animate-fade-in">
+                    <div className="flex items-center gap-1 h-3.5">
+                      <span className="w-0.5 h-2 bg-emerald-400 rounded-full animate-[pulse_0.6s_ease-in-out_infinite]" />
+                      <span className="w-0.5 h-3.5 bg-emerald-400 rounded-full animate-[pulse_0.4s_ease-in-out_infinite]" />
+                      <span className="w-0.5 h-2.5 bg-emerald-400 rounded-full animate-[pulse_0.8s_ease-in-out_infinite]" />
+                      <span className="w-0.5 h-1.5 bg-emerald-400 rounded-full animate-[pulse_0.5s_ease-in-out_infinite]" />
+                    </div>
+                    <span className="text-xs font-medium text-slate-200">
+                      Đang phát giọng đọc AI
+                    </span>
+                    <button
+                      type="button"
+                      onClick={stopAllSpeech}
+                      className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-red-500/20 hover:bg-red-500/30 text-red-300 border border-red-500/30 transition-colors cursor-pointer flex items-center gap-1"
+                      title="Dừng đọc"
+                    >
+                      <Square size={8} className="fill-current" /> Dừng
+                    </button>
+                  </div>
+                )}
 
                 {/* Bottom Input Area in chat mode */}
                 <div className="sticky bottom-0 bg-white/90 dark:bg-[#212121]/90 backdrop-blur-md pt-2 pb-3">
