@@ -36,32 +36,12 @@ export default function PlansPage() {
   const [copyToast, setCopyToast] = useState<string | null>(null);
 
   React.useEffect(() => {
-    const scrollToPackage = () => {
-      const viewport = document.getElementById('app-main-viewport');
-      const target = document.getElementById('package-cards-grid') || document.getElementById('package');
-      if (target && viewport) {
-        const targetRect = target.getBoundingClientRect();
-        const viewportRect = viewport.getBoundingClientRect();
-        const scrollOffset = targetRect.top - viewportRect.top + viewport.scrollTop - 40;
-        viewport.scrollTo({ top: Math.max(0, scrollOffset), behavior: 'smooth' });
-      } else if (target) {
-        target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }
-    };
-
-    if (typeof window !== 'undefined') {
-      if (window.location.hash === '#package' || (user && (!user.hasSelectedPlan || !user.plan))) {
-        const timer1 = setTimeout(scrollToPackage, 150);
-        const timer2 = setTimeout(scrollToPackage, 400);
-        const timer3 = setTimeout(scrollToPackage, 800);
-        return () => {
-          clearTimeout(timer1);
-          clearTimeout(timer2);
-          clearTimeout(timer3);
-        };
-      }
+    // Giữ trang hiển thị tự nhiên từ trên cùng, không tự động cuộn xuống
+    const viewport = document.getElementById('app-main-viewport');
+    if (viewport) {
+      viewport.scrollTo({ top: 0, behavior: 'instant' });
     }
-  }, [user]);
+  }, []);
 
   const handleCopy = (text: string, label: string) => {
     navigator.clipboard.writeText(text);
