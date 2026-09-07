@@ -866,10 +866,10 @@ export default function AiChatView({ initialSessionId }: { initialSessionId?: st
                       key={session.id}
                       type="button"
                       onClick={() => handleSelectSession(session.id)}
-                      className={`w-full text-left px-3 py-2 text-xs md:text-[13px] leading-snug truncate rounded-xl transition-all cursor-pointer block font-medium ${
+                      className={`w-full text-left px-3 py-2 text-xs md:text-[13px] leading-snug truncate rounded-xl transition-colors duration-150 cursor-pointer block border-0 outline-none ring-0 focus:outline-none focus:ring-0 select-none ${
                         isActive
-                          ? 'bg-blue-50 dark:bg-blue-950/60 text-google-blue dark:text-blue-300 font-semibold border border-blue-100 dark:border-blue-900/40 shadow-xs'
-                          : 'text-slate-700 dark:text-slate-300 hover:bg-slate-200/60 dark:hover:bg-slate-800/80'
+                          ? 'bg-blue-50/90 dark:bg-blue-950/50 text-google-blue dark:text-blue-300 font-semibold'
+                          : 'text-slate-700 dark:text-slate-300 hover:bg-slate-200/60 dark:hover:bg-slate-800/60 font-medium'
                       }`}
                       title={cleanTitle}
                     >
