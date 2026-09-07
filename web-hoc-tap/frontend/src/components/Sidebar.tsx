@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import {
   Plus,
@@ -46,12 +46,68 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const router = useRouter();
   const pathname = usePathname();
 
-  // State-driven hover and click tracking
-  const [hoveredKey, setHoveredKey] = useState<string | null>(null);
+  // State-driven hover and warm tooltip tracking
+  const [activeTooltipKey, setActiveTooltipKey] = useState<string | null>(null);
   const [clickedKey, setClickedKey] = useState<string | null>(null);
+
+  const hoverTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const cooldownTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const isWarmRef = useRef<boolean>(false);
+
+  useEffect(() => {
+    return () => {
+      if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current);
+      if (cooldownTimerRef.current) clearTimeout(cooldownTimerRef.current);
+    };
+  }, []);
+
+  const handleMouseEnter = (href: string) => {
+    // Hủy bộ đếm thời gian nguội nếu người dùng vừa di chuyển từ icon khác sang
+    if (cooldownTimerRef.current) {
+      clearTimeout(cooldownTimerRef.current);
+      cooldownTimerRef.current = null;
+    }
+
+    if (hoverTimerRef.current) {
+      clearTimeout(hoverTimerRef.current);
+      hoverTimerRef.current = null;
+    }
+
+    if (isWarmRef.current) {
+      // Đã hiện tiêu đề rồi -> chuyển sang icon khác trong thanh thì hiện ngay lập tức (0ms)
+      setActiveTooltipKey(href);
+    } else {
+      // Lần đầu di chuột vào: chờ đúng 1.5 giây (1500ms) sau mới cho hiện tiêu đề
+      hoverTimerRef.current = setTimeout(() => {
+        setActiveTooltipKey(href);
+        isWarmRef.current = true;
+      }, 1500);
+    }
+  };
+
+  const handleMouseLeave = (href: string) => {
+    if (hoverTimerRef.current) {
+      clearTimeout(hoverTimerRef.current);
+      hoverTimerRef.current = null;
+    }
+
+    setActiveTooltipKey((current) => (current === href ? null : current));
+    setClickedKey(null);
+
+    // Khi di chuột ra khỏi icon: giữ trạng thái warm trong 400ms để rê sang icon khác thì hiện ngay
+    // Nếu quá 400ms không chạm vào icon nào thì tắt warm (lần sau phải đợi 1.5s)
+    if (cooldownTimerRef.current) clearTimeout(cooldownTimerRef.current);
+    cooldownTimerRef.current = setTimeout(() => {
+      isWarmRef.current = false;
+    }, 400);
+  };
 
   const handleNavClick = (href: string) => {
     setClickedKey(href);
+    setActiveTooltipKey(null);
+    if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current);
+    if (cooldownTimerRef.current) clearTimeout(cooldownTimerRef.current);
+    isWarmRef.current = false;
     onNavigate?.();
     startTopLoading();
     // Allow 130ms for the smooth closing transition (fade-out & scale-down) to finish before pushing route
@@ -81,25 +137,20 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
             const isTooltipVisible =
               sidebarCollapsed &&
-              hoveredKey === item.href &&
+              activeTooltipKey === item.href &&
               clickedKey !== item.href;
 
             return (
               <div
                 key={item.href}
                 className={`relative ${sidebarCollapsed ? 'flex justify-center w-full' : ''}`}
-                onMouseEnter={() => {
-                  setHoveredKey(item.href);
-                }}
-                onMouseLeave={() => {
-                  setHoveredKey(null);
-                  setClickedKey(null);
-                }}
+                onMouseEnter={() => handleMouseEnter(item.href)}
+                onMouseLeave={() => handleMouseLeave(item.href)}
               >
                 <button
+                  type="button"
                   onClick={() => handleNavClick(item.href)}
-                  title={sidebarCollapsed ? item.label : undefined}
-                  className={`h-10 text-sm font-medium transition-colors duration-200 ease-in-out inline-flex items-center rounded-full overflow-hidden shrink-0 ${
+                  className={`h-10 text-sm font-medium transition-colors duration-200 ease-in-out inline-flex items-center rounded-full overflow-hidden shrink-0 cursor-pointer ${
                     sidebarCollapsed ? 'w-10 justify-center' : ''
                   } ${
                     isActive
