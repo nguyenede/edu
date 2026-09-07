@@ -911,9 +911,14 @@ export default function AiChatView({ initialSessionId }: { initialSessionId?: st
                   <Sparkles size={24} />
                 </div>
 
-                <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-slate-900 dark:text-white text-center tracking-tight leading-tight">
-                  Hôm nay bạn muốn hỏi điều gì?
-                </h1>
+                <div className="flex flex-col items-center gap-2.5">
+                  <span className="inline-flex items-center px-3 py-0.5 rounded-full text-xs font-medium bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60 select-none">
+                    Tính năng đang phát triển
+                  </span>
+                  <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-slate-900 dark:text-white text-center tracking-tight leading-tight">
+                    Hôm nay bạn muốn hỏi điều gì?
+                  </h1>
+                </div>
 
                 {/* Centered Input Box directly in middle of screen */}
                 {renderInputBox()}
