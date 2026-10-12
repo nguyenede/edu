@@ -58,11 +58,42 @@ export function getLocalClasses(): ClassItem[] {
   try {
     const parsed = JSON.parse(raw);
     if (!Array.isArray(parsed)) return [];
-    // Filter out dummy/fake initial classes
-    const list = parsed.filter((c) => c && c.id !== 'cls_init_1' && c.id !== 'cls_init_2');
+    // Filter out dummy/fake initial classes and auto-clean any underscore '_' from class IDs
+    let hasCleaned = false;
+    const list = parsed
+      .filter((c) => c && c.id !== 'cls_init_1' && c.id !== 'cls_init_2' && c.id !== 'clsinit1' && c.id !== 'clsinit2')
+      .map((c) => {
+        if (c.id && typeof c.id === 'string' && c.id.includes('_')) {
+          const oldId = c.id;
+          const cleanId = oldId.replace(/_/g, '');
+          hasCleaned = true;
+          if (typeof window !== 'undefined') {
+            const oldMemKey = `app_class_members_${oldId}`;
+            const newMemKey = `app_class_members_${cleanId}`;
+            const memVal = localStorage.getItem(oldMemKey);
+            if (memVal && !localStorage.getItem(newMemKey)) {
+              localStorage.setItem(newMemKey, memVal);
+            }
+            const oldAssignKey = `app_class_assignments_${oldId}`;
+            const newAssignKey = `app_class_assignments_${cleanId}`;
+            const assignVal = localStorage.getItem(oldAssignKey);
+            if (assignVal && !localStorage.getItem(newAssignKey)) {
+              localStorage.setItem(newAssignKey, assignVal);
+            }
+          }
+          return { ...c, id: cleanId };
+        }
+        return c;
+      });
+
+    if (hasCleaned && typeof window !== 'undefined') {
+      safeLocalStorageSet(STORAGE_KEY, JSON.stringify(list));
+    }
+
     return list.map((c) => {
-      const memKey = `app_class_members_${c.id}`;
-      const rawMems = safeLocalStorageGet(memKey);
+      const cleanId = c.id.replace(/_/g, '');
+      const memKey = `app_class_members_${cleanId}`;
+      const rawMems = safeLocalStorageGet(memKey) || safeLocalStorageGet(`app_class_members_${c.id}`);
       let count = c._count?.members ?? 0;
       if (rawMems) {
         try {
@@ -74,6 +105,7 @@ export function getLocalClasses(): ClassItem[] {
       }
       return {
         ...c,
+        id: cleanId,
         _count: {
           members: count,
         },
@@ -160,13 +192,13 @@ export async function createClass(
 
   // Resilient Local Creation (Offline mode)
   const newClass: ClassItem = {
-    id: 'cls_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6),
+    id: 'cls' + Date.now() + Math.random().toString(36).substring(2, 6),
     name: trimmedName,
     code: Math.random().toString(36).substring(2, 8).toUpperCase(),
     schoolYear,
     group,
     sharedWith: [],
-    teacherId: user?.id || 'teacher_local',
+    teacherId: user?.id || 'teacherlocal',
     teacher: {
       profile: {
         name: user?.name || 'Giáo viên',
@@ -195,13 +227,13 @@ export function bulkCreateClasses(
     const trimmed = (item.name || '').trim();
     if (!trimmed) return;
     const newClass: ClassItem = {
-      id: 'cls_' + (Date.now() + idx) + '_' + Math.random().toString(36).substring(2, 6),
+      id: 'cls' + (Date.now() + idx) + Math.random().toString(36).substring(2, 6),
       name: trimmed,
       code: Math.random().toString(36).substring(2, 8).toUpperCase(),
       schoolYear: item.schoolYear || '2026 - 2027',
       group: item.group || 'Khác',
       sharedWith: [],
-      teacherId: user?.id || 'teacher_local',
+      teacherId: user?.id || 'teacherlocal',
       teacher: {
         profile: {
           name: user?.name || 'Giáo viên',
@@ -269,11 +301,11 @@ export async function joinClass(token: string | null, code: string): Promise<Cla
     const classId = matched.id;
     // Add student to the member list of this class
     const studentInfo = {
-      id: 'mem_' + Date.now() + '_' + Math.random().toString(36).substring(2, 5),
+      id: 'mem' + Date.now() + Math.random().toString(36).substring(2, 5),
       joinedAt: new Date().toISOString(),
-      studentId: currentUser?.id || 'student_' + Date.now(),
+      studentId: currentUser?.id || 'student' + Date.now(),
       student: {
-        id: currentUser?.id || 'student_' + Date.now(),
+        id: currentUser?.id || 'student' + Date.now(),
         email: currentUser?.email || 'hocsinh@kiyoedu.com',
         profile: {
           name: currentUser?.name || currentUser?.email || 'Học sinh',
@@ -366,10 +398,17 @@ export async function fetchClassDetail(token: string | null, classId: string): P
 
   if (!detail) {
     const local = getLocalClasses();
-    detail = local.find((c) => c.id === classId || c.code === classId) || {
-      id: classId,
-      name: 'Lớp học ' + classId,
-      code: classId.toUpperCase(),
+    const cleanClassId = classId.replace(/_/g, '');
+    detail = local.find(
+      (c) =>
+        c.id === classId ||
+        c.id === cleanClassId ||
+        c.id.replace(/_/g, '') === cleanClassId ||
+        c.code === classId
+    ) || {
+      id: cleanClassId,
+      name: 'Lớp học ' + cleanClassId,
+      code: cleanClassId.toUpperCase().slice(-6),
       teacher: { profile: { name: 'Giáo viên phụ trách' } },
       _count: { members: 0 },
       createdAt: new Date().toISOString(),
@@ -377,8 +416,9 @@ export async function fetchClassDetail(token: string | null, classId: string): P
   }
 
   // Sync member count from members storage
-  const memKey = `app_class_members_${classId}`;
-  const rawMems = safeLocalStorageGet(memKey);
+  const cleanClassId = classId.replace(/_/g, '');
+  const memKey = `app_class_members_${cleanClassId}`;
+  const rawMems = safeLocalStorageGet(memKey) || safeLocalStorageGet(`app_class_members_${classId}`);
   if (rawMems) {
     try {
       const memList = JSON.parse(rawMems);
@@ -405,8 +445,9 @@ export async function fetchClassAssignments(token: string | null, classId: strin
     }
   } catch (_) {}
 
-  const storageKey = `app_class_assignments_${classId}`;
-  const raw = safeLocalStorageGet(storageKey);
+  const cleanClassId = classId.replace(/_/g, '');
+  const storageKey = `app_class_assignments_${cleanClassId}`;
+  const raw = safeLocalStorageGet(storageKey) || safeLocalStorageGet(`app_class_assignments_${classId}`);
   if (raw) {
     try {
       const parsed = JSON.parse(raw);
@@ -474,8 +515,9 @@ export async function fetchClassMembers(token: string | null, classId: string): 
     }
   } catch (_) {}
 
-  const storageKey = `app_class_members_${classId}`;
-  const raw = safeLocalStorageGet(storageKey);
+  const cleanClassId = classId.replace(/_/g, '');
+  const storageKey = `app_class_members_${cleanClassId}`;
+  const raw = safeLocalStorageGet(storageKey) || safeLocalStorageGet(`app_class_members_${classId}`);
   let localMems: any[] = [];
   if (raw) {
     try {
@@ -506,6 +548,9 @@ export async function fetchClassMembers(token: string | null, classId: string): 
 
   const allMembers = Array.from(mergedMap.values());
   safeLocalStorageSet(storageKey, JSON.stringify(allMembers));
+  if (cleanClassId !== classId) {
+    safeLocalStorageSet(`app_class_members_${classId}`, JSON.stringify(allMembers));
+  }
 
   // Sync member count directly into main classes storage
   const rawClasses = safeLocalStorageGet(STORAGE_KEY);
@@ -514,7 +559,9 @@ export async function fetchClassMembers(token: string | null, classId: string): 
       const clsList: ClassItem[] = JSON.parse(rawClasses);
       if (Array.isArray(clsList)) {
         const updatedCls = clsList.map((c) =>
-          c.id === classId ? { ...c, _count: { members: allMembers.length } } : c
+          (c.id === classId || c.id === cleanClassId || c.id?.replace(/_/g, '') === cleanClassId)
+            ? { ...c, _count: { members: allMembers.length } }
+            : c
         );
         safeLocalStorageSet(STORAGE_KEY, JSON.stringify(updatedCls));
       }
@@ -755,18 +802,19 @@ export async function fetchAssignmentSubmissions(token: string | null, assignmen
   } catch (_) {}
 
   // Check if assignment has associated PIN
+  const cleanAssignmentId = assignmentId.replace(/_/g, '');
   let assocPin = '';
   try {
     const rawHw = safeLocalStorageGet('app_blooket_homeworks');
     if (rawHw) {
       const hwList = JSON.parse(rawHw);
-      const matched = hwList.find((h: any) => h.id === assignmentId || h.pin === assignmentId);
+      const matched = hwList.find((h: any) => h.id === assignmentId || h.id?.replace(/_/g, '') === cleanAssignmentId || h.pin === assignmentId);
       if (matched?.pin) assocPin = matched.pin;
     }
   } catch (_) {}
 
-  const storageKey = `app_assignment_subs_${assignmentId}`;
-  const raw = safeLocalStorageGet(storageKey);
+  const storageKey = `app_assignment_subs_${cleanAssignmentId}`;
+  const raw = safeLocalStorageGet(storageKey) || safeLocalStorageGet(`app_assignment_subs_${assignmentId}`);
   if (raw) {
     try {
       const parsed = JSON.parse(raw);
@@ -877,6 +925,7 @@ export async function fetchAssignmentSubmissions(token: string | null, assignmen
 }
 
 export async function fetchMyAssignmentSubmission(token: string | null, assignmentId: string): Promise<any | null> {
+  const cleanAssignmentId = assignmentId.replace(/_/g, '');
   try {
     const res = await fetch(`/api/assignments/${assignmentId}/submission/me`, {
       headers: token ? { Authorization: `Bearer ${token}` } : {},
@@ -884,8 +933,8 @@ export async function fetchMyAssignmentSubmission(token: string | null, assignme
     if (res.ok) return await res.json();
   } catch (_) {}
 
-  const storageKey = `app_my_assignment_sub_${assignmentId}`;
-  const raw = safeLocalStorageGet(storageKey);
+  const storageKey = `app_my_assignment_sub_${cleanAssignmentId}`;
+  const raw = safeLocalStorageGet(storageKey) || safeLocalStorageGet(`app_my_assignment_sub_${assignmentId}`);
   if (raw) {
     try {
       return JSON.parse(raw);
@@ -967,7 +1016,7 @@ export async function submitAssignment(
   const studentEmail = currentU?.email || 'student@kiyoedu.vn';
 
   const newSub = {
-    id: `sub_my_${Date.now()}`,
+    id: `submy${Date.now()}`,
     status: hasAutoGrading ? 'GRADED' : 'SUBMITTED',
     score: calculatedScore,
     correctCount: hasAutoGrading ? correctCount : undefined,
@@ -1194,7 +1243,7 @@ export async function createClassAssignment(
 
     const generatedPin = Math.floor(100000 + Math.random() * 900000).toString();
     created = {
-      id: `asg_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+      id: `asg${Date.now()}${Math.random().toString(36).slice(2, 6)}`,
       pin: generatedPin,
       title: payload.title.trim(),
       description: payload.description || '',
@@ -1331,9 +1380,9 @@ export function addStudentToClassManual(classId: string, data: ClassStudentData)
   let memList = rawMems ? JSON.parse(rawMems) : [];
   if (!Array.isArray(memList)) memList = [];
 
-  const studentId = 'std_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6);
+  const studentId = 'std' + Date.now() + Math.random().toString(36).substring(2, 6);
   const newMember = {
-    id: 'mem_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6),
+    id: 'mem' + Date.now() + Math.random().toString(36).substring(2, 6),
     studentId,
     joinedAt: new Date().toISOString(),
     studentCode: data.studentCode || ('HS' + Math.floor(1000 + Math.random() * 9000)),
@@ -1375,9 +1424,9 @@ export function bulkAddStudentsToClass(classId: string, students: ClassStudentDa
     const trimmedName = (data.name || '').trim();
     if (!trimmedName) return;
 
-    const studentId = 'std_' + (Date.now() + idx) + '_' + Math.random().toString(36).substring(2, 6);
+    const studentId = 'std' + (Date.now() + idx) + Math.random().toString(36).substring(2, 6);
     const newMember = {
-      id: 'mem_' + (Date.now() + idx) + '_' + Math.random().toString(36).substring(2, 6),
+      id: 'mem' + (Date.now() + idx) + Math.random().toString(36).substring(2, 6),
       studentId,
       joinedAt: new Date().toISOString(),
       studentCode: data.studentCode || ('HS' + Math.floor(1000 + Math.random() * 9000)),
@@ -1436,7 +1485,7 @@ export function getClassPosts(classId: string): ClassPost[] {
 export function createClassPost(classId: string, authorName: string, content: string): ClassPost {
   const posts = getClassPosts(classId);
   const newPost: ClassPost = {
-    id: 'post_' + Date.now(),
+    id: 'post' + Date.now(),
     classId,
     authorName: authorName || 'Giáo viên',
     authorRole: 'Giáo viên',
@@ -1473,7 +1522,7 @@ export function getClassCourses(classId: string): ClassCourseItem[] {
 export function addClassCourse(classId: string, title: string, description: string): ClassCourseItem {
   const courses = getClassCourses(classId);
   const newCourse: ClassCourseItem = {
-    id: 'course_' + Date.now(),
+    id: 'course' + Date.now(),
     title: title.trim(),
     description: description.trim(),
     lessonCount: 1,

@@ -96,7 +96,7 @@ const formatStoragePercent = (bytes: number): string => {
 export default function SettingsPage(props: any) {
   const initialTab: SettingsTabType = props?.initialTab || 'overview';
   const router = useRouter();
-  const { user, token, initialize } = useAuthStore();
+  const { user, token, initialize, logout } = useAuthStore();
 
   // Navigation Tab State
   const [activeTab, setActiveTab] = useState<SettingsTabType>(initialTab);

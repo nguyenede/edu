@@ -262,6 +262,19 @@ export default function AssignmentDetailPage() {
     }
   }, [assignment, playUrl]);
 
+  // Tự động chuyển hướng xóa bỏ dấu gạch dưới '_' trên URL nếu assignmentId chứa '_'
+  useEffect(() => {
+    if (assignmentId && typeof assignmentId === 'string' && assignmentId.includes('_')) {
+      const cleanId = assignmentId.replace(/_/g, '');
+      const currentPath = typeof window !== 'undefined' ? window.location.pathname : '';
+      if (currentPath.includes(assignmentId)) {
+        router.replace(currentPath.replace(assignmentId, cleanId));
+      } else {
+        router.replace(`/app/assignments/${cleanId}`);
+      }
+    }
+  }, [assignmentId, router]);
+
   useEffect(() => {
     fetchData();
   }, [token, assignmentId]);

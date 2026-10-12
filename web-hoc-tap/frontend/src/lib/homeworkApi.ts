@@ -118,7 +118,7 @@ export async function createHomework(
   data: Omit<HomeworkItem, 'id' | 'pin' | 'createdAt' | 'status'>
 ): Promise<HomeworkItem> {
   const pin = generatePinCode();
-  const id = `hw_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+  const id = `hw${Date.now()}${Math.random().toString(36).slice(2, 7)}`;
 
   const item: HomeworkItem = {
     ...data,
@@ -364,7 +364,7 @@ export function getHomeworkSubmissionsSync(homeworkId: string): HomeworkSubmissi
 export async function submitHomework(
   data: Omit<HomeworkSubmission, 'id' | 'submittedAt'>
 ): Promise<HomeworkSubmission> {
-  const id = `sub_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+  const id = `sub${Date.now()}${Math.random().toString(36).slice(2, 7)}`;
   const submission: HomeworkSubmission = {
     ...data,
     id,
@@ -416,12 +416,12 @@ export async function submitHomework(
     violationLogs: submission.violationLogs,
     timeSpentSeconds: submission.timeSpentSeconds,
     student: {
-      id: submission.studentId || `stu_${Date.now()}`,
+      id: submission.studentId || `stu${Date.now()}`,
       profile: { name: submission.studentName },
       email: `${submission.studentName.toLowerCase().replace(/\s+/g, '')}@student.edu`,
     },
     answers: Object.entries(submission.answers).map(([qId, ans]) => ({
-      id: `ans_${qId}`,
+      id: `ans${qId.replace(/_/g, '')}`,
       questionId: qId,
       answerContent: ans.selectedAnswer,
       isCorrect: ans.isCorrect,

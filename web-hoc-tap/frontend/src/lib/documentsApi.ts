@@ -115,7 +115,7 @@ export async function listDocuments(token: string, folderId?: string | null) {
 
 export async function createDocumentFolder(token: string, payload: { name: string; parentId?: string | null }) {
   const newFolder: DocumentFolderItem = {
-    id: 'folder_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7),
+    id: 'folder' + Date.now() + Math.random().toString(36).slice(2, 7),
     name: payload.name,
     parentId: payload.parentId || null,
     createdAt: new Date().toISOString(),
@@ -189,7 +189,7 @@ export async function deleteDocumentFolder(token: string, id: string) {
 
 export async function createDocumentFile(token: string, payload: any): Promise<any> {
   const newFile: DocumentFileItem = {
-    id: payload.id || ('file_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7)),
+    id: payload.id || ('file' + Date.now() + Math.random().toString(36).slice(2, 7)),
     name: payload.name,
     parentId: payload.parentId || null,
     fileType: payload.fileType || 'docx',

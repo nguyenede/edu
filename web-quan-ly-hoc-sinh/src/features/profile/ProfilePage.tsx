@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useAuthStore } from '../../store/authStore';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
-import { User as UserIcon, Mail, Phone, Shield, LogOut, Save, Key } from 'lucide-react';
+import { User as UserIcon, Mail, Phone, Shield, Save, Key } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import api, { BACKEND_URL } from '../../lib/api';
 import { toast } from '../../store/toastStore';
@@ -115,14 +115,6 @@ const ProfilePage: React.FC = () => {
                   <span className="text-[15px]">Tài khoản đã xác minh</span>
                </div>
             </div>
-
-            <Button 
-              variant="secondary" 
-              className="w-full mt-8 gap-2 text-red-500 border-red-500 hover:bg-red-50 hover:border-red-600 hover:text-red-600"
-              onClick={() => { logout(); navigate('/login', { replace: true }); }}
-            >
-              <LogOut className="w-4 h-4" /> Đăng xuất
-            </Button>
           </div>
         </div>
 

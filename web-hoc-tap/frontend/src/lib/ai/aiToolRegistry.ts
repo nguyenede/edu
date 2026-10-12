@@ -48,8 +48,8 @@ export class AiToolRegistry {
           actionType: 'exam',
         };
       }
-      // Clean readable document ID format (e.g. de_lm3x9_k2a1)
-      const examId = params.existingExamId || `de_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 6)}`;
+      // Clean readable document ID format (e.g. delm3x9k2a1)
+      const examId = params.existingExamId || `de${Date.now().toString(36)}${Math.random().toString(36).substring(2, 6)}`;
 
       const title = cleanVietnameseEncoding(params.title || 'Đề thi trắc nghiệm mới');
       const pointPerQuestion = Math.round((10 / sanitizedQuestions.length) * 100) / 100;
@@ -135,7 +135,7 @@ export class AiToolRegistry {
    */
   static createFolder(params: { name: string; parentId?: string | null }): ToolExecutionResult {
     try {
-      const folderId = `folder_${Date.now()}`;
+      const folderId = `folder${Date.now()}`;
       const name = params.name || 'Thư mục mới';
       const parentId = params.parentId || null;
 
@@ -185,14 +185,14 @@ export class AiToolRegistry {
     students?: string[];
   }): ToolExecutionResult {
     try {
-      const classId = `class_${Date.now()}`;
+      const classId = `cls${Date.now()}`;
       const name = params.name || 'Lớp học mới';
       const grade = params.grade || '12';
       const subject = params.subject || 'Tổng hợp';
       const code = `${(params.subject || 'CLASS').toUpperCase().slice(0, 4)}-${Math.floor(1000 + Math.random() * 9000)}`;
 
       const studentList = (params.students || []).map((stName, idx) => ({
-        id: `std_${Date.now()}_${idx}`,
+        id: `std${Date.now()}${idx}`,
         name: stName,
         joinedAt: new Date().toISOString(),
       }));

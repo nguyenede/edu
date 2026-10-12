@@ -109,6 +109,19 @@ export default function ClassDetailPage() {
 
   const isTeacher = user?.role === 'TEACHER';
 
+  // Tự động chuyển hướng xóa bỏ dấu gạch dưới '_' trên URL nếu đường dẫn hiện tại chứa '_'
+  useEffect(() => {
+    if (classId && typeof classId === 'string' && classId.includes('_')) {
+      const cleanId = classId.replace(/_/g, '');
+      const currentPath = typeof window !== 'undefined' ? window.location.pathname : '';
+      if (currentPath.includes(classId)) {
+        router.replace(currentPath.replace(classId, cleanId));
+      } else {
+        router.replace(`/app/classes/${cleanId}`);
+      }
+    }
+  }, [classId, router]);
+
   useEffect(() => {
     const activeToken = token || (typeof window !== 'undefined' ? localStorage.getItem('token') : null);
     if (!activeToken) {
