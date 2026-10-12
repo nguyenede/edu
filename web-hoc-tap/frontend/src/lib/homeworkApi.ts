@@ -1,4 +1,4 @@
-import { safeLocalStorageGet, safeLocalStorageSet } from './safeStorage';
+import { safeLocalStorageGet, safeLocalStorageSet, safeLocalStorageRemove } from './safeStorage';
 
 export interface AntiCheatConfig {
   forceFullscreen: boolean;
@@ -217,7 +217,65 @@ export async function getHomeworkByPin(pin: string): Promise<HomeworkItem | null
   if (!cleanPin) return null;
 
   const list = getAllHomeworksSync();
-  const found = list.find((h) => h.pin === cleanPin);
+  let found = list.find((h) => h.pin === cleanPin);
+
+  // Fallback: Tìm trong app_custom_assignments và app_class_assignments_*
+  if (!found && typeof window !== 'undefined') {
+    try {
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k && (k.startsWith('app_class_assignments_') || k === 'app_custom_assignments')) {
+          const raw = localStorage.getItem(k);
+          if (raw) {
+            const arr = JSON.parse(raw);
+            if (Array.isArray(arr)) {
+              const match = arr.find((item: any) => {
+                if (item.pin === cleanPin) return true;
+                if (item.description && typeof item.description === 'string') {
+                  const m = item.description.match(/"pin":\s*"(\d+)"/);
+                  if (m && m[1] === cleanPin) return true;
+                }
+                return false;
+              });
+              if (match) {
+                const questions = match.quiz?.questions?.map((qq: any) => qq.question || qq) ||
+                  match.documentFile?.parsedQuiz?.questions || [];
+                found = {
+                  id: match.id,
+                  pin: cleanPin,
+                  title: match.title,
+                  description: match.description || '',
+                  classId: match.classId,
+                  className: match.className || match.class?.name || 'Lớp học',
+                  deadline: match.deadline,
+                  durationMinutes: match.durationMinutes || 45,
+                  shuffleQuestions: true,
+                  shuffleOptions: false,
+                  showAnswersAfterSubmit: true,
+                  antiCheating: Boolean(match.antiCheat),
+                  antiCheatConfig: match.antiCheatConfig || {
+                    forceFullscreen: true,
+                    detectTabSwitch: true,
+                    maxViolations: 3,
+                    preventCopyPaste: true,
+                  },
+                  quizData: {
+                    title: match.title,
+                    durationMinutes: match.durationMinutes || 45,
+                    questions,
+                  },
+                  status: 'active',
+                  createdAt: match.createdAt || new Date().toISOString(),
+                };
+                break;
+              }
+            }
+          }
+        }
+      }
+    } catch (_) {}
+  }
+
   if (found) {
     // Cập nhật số lượng bài nộp thực tế
     const subs = getHomeworkSubmissionsSync(found.id);
@@ -245,6 +303,17 @@ export async function getHomeworkById(id: string): Promise<HomeworkItem | null> 
     };
   }
   return null;
+}
+
+/**
+ * Xóa bài tập và các bài nộp liên quan
+ */
+export function deleteHomework(id: string): void {
+  const list = getAllHomeworksSync();
+  const filtered = list.filter((h) => h.id !== id);
+  saveHomeworksSync(filtered);
+  safeLocalStorageRemove(`${STORAGE_SUBMISSIONS_PREFIX}${id}`);
+  safeLocalStorageRemove(`app_assignment_subs_${id}`);
 }
 
 /**

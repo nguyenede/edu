@@ -118,7 +118,11 @@ export default function AssignmentDetailPage() {
     if (!assignment) return;
     const activeToken = token || (typeof window !== 'undefined' ? localStorage.getItem('token') : null);
     await deleteClassAssignment(activeToken, assignment.classId, assignment.id);
-    router.push(`/app/classes/${assignment.classId}`);
+    if (assignment.classId && assignment.classId !== 'public') {
+      router.push(`/app/classes/${assignment.classId}`);
+    } else {
+      router.push('/app/classes');
+    }
   };
 
   const handleStudentSubmit = async () => {
@@ -228,25 +232,42 @@ export default function AssignmentDetailPage() {
   return (
     <AppShell
       title={assignment.title}
-      subtitle={`Lớp: ${assignment.class.name} | Thang điểm: ${assignment.maxScore}`}
+      subtitle={`Lớp: ${assignment.class?.name || assignment.className || 'Toàn trường / Công khai'} | Thang điểm: ${assignment.maxScore || 10}`}
       action={
         <div className="flex items-center gap-2">
           {assignment.pin && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setIsQrModalOpen(true)}
-              className="gap-1.5 text-xs rounded-xl"
-              title="Xem mã QR để học sinh quét làm bài"
-            >
-              <QrCode size={15} /> Mã QR
-            </Button>
+            <>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsQrModalOpen(true)}
+                className="gap-1.5 text-xs rounded-xl"
+                title="Xem mã QR để học sinh quét làm bài"
+              >
+                <QrCode size={15} /> Mã QR
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => window.open(`/play?pin=${assignment.pin}`, '_blank')}
+                className="gap-1.5 text-xs rounded-xl text-google-blue"
+                title="Mở giao diện làm bài thi phong cách Blooket"
+              >
+                Làm thử ngay
+              </Button>
+            </>
           )}
 
           <Button
             variant="secondary"
             size="sm"
-            onClick={() => router.push(`/app/classes/${assignment.classId}`)}
+            onClick={() => {
+              if (assignment.classId && assignment.classId !== 'public') {
+                router.push(`/app/classes/${assignment.classId}`);
+              } else {
+                router.push('/app/classes');
+              }
+            }}
             className="gap-1.5"
           >
             <ArrowLeft size={16} /> Quay lại lớp

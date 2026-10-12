@@ -1,4 +1,4 @@
-import { safeLocalStorageGet, safeLocalStorageSet } from './safeStorage';
+import { safeLocalStorageGet, safeLocalStorageSet, safeLocalStorageRemove } from './safeStorage';
 import { idbGetDocument } from './indexedDbStorage';
 import { getStoredUser } from '@/store/useAuthStore';
 
@@ -392,6 +392,7 @@ export async function fetchClassDetail(token: string | null, classId: string): P
 }
 
 export async function fetchClassAssignments(token: string | null, classId: string): Promise<any[]> {
+  let list: any[] = [];
   try {
     const res = await fetch(`/api/assignments/class/${classId}`, {
       headers: token ? { Authorization: `Bearer ${token}` } : {},
@@ -399,7 +400,7 @@ export async function fetchClassAssignments(token: string | null, classId: strin
     if (res.ok) {
       const data = await res.json();
       if (Array.isArray(data)) {
-        return data.filter((a: any) => !isDummyAssignment(a));
+        list = data.filter((a: any) => !isDummyAssignment(a));
       }
     }
   } catch (_) {}
@@ -410,11 +411,53 @@ export async function fetchClassAssignments(token: string | null, classId: strin
     try {
       const parsed = JSON.parse(raw);
       if (Array.isArray(parsed)) {
-        return parsed.filter((a: any) => !isDummyAssignment(a));
+        parsed.filter((a: any) => !isDummyAssignment(a)).forEach((item) => {
+          if (!list.some((existing) => existing.id === item.id)) {
+            list.push(item);
+          }
+        });
       }
     } catch (_) {}
   }
-  return [];
+
+  // Tự động đồng bộ các bài tập/đề thi giao cho lớp này từ app_blooket_homeworks
+  try {
+    const rawHw = safeLocalStorageGet('app_blooket_homeworks');
+    if (rawHw) {
+      const hwList = JSON.parse(rawHw);
+      if (Array.isArray(hwList)) {
+        hwList.forEach((hw: any) => {
+          if (hw && (hw.classId === classId || (classId === 'public' && !hw.classId))) {
+            if (!list.some((existing) => existing.id === hw.id)) {
+              list.push({
+                id: hw.id,
+                title: hw.title,
+                description: hw.description || '',
+                classId: hw.classId,
+                className: hw.className || '',
+                class: { name: hw.className || '' },
+                pin: hw.pin,
+                deadline: hw.deadline,
+                maxScore: 10,
+                antiCheat: hw.antiCheating,
+                antiCheatConfig: hw.antiCheatConfig,
+                durationMinutes: hw.durationMinutes,
+                quiz: {
+                  id: `quiz_${hw.id}`,
+                  title: hw.quizData?.title || hw.title,
+                  questions: hw.quizData?.questions || [],
+                },
+                _count: { submissions: hw._count?.submissions || 0 },
+                createdAt: hw.createdAt || new Date().toISOString(),
+              });
+            }
+          }
+        });
+      }
+    }
+  } catch (_) {}
+
+  return list;
 }
 
 export async function fetchClassMembers(token: string | null, classId: string): Promise<any[]> {
@@ -529,7 +572,62 @@ export async function fetchAssignmentDetail(token: string | null, assignmentId: 
     }
   }
 
+  // Also check inside app_blooket_homeworks
+  if (!found && typeof window !== 'undefined') {
+    try {
+      const rawHw = safeLocalStorageGet('app_blooket_homeworks');
+      if (rawHw) {
+        const hwList = JSON.parse(rawHw);
+        if (Array.isArray(hwList)) {
+          const matched = hwList.find((h: any) => h.id === assignmentId || h.pin === assignmentId);
+          if (matched) {
+            const questions = (matched.quizData?.questions || []).map((q: any, idx: number) => ({
+              id: `qq_${idx + 1}`,
+              question: {
+                id: q.id || `q_${idx + 1}`,
+                content: q.content,
+                options: (q.options || []).map((opt: any, oIdx: number) => ({
+                  id: `opt_${idx + 1}_${oIdx + 1}`,
+                  content: typeof opt === 'string' ? opt : opt.content,
+                  isCorrect: Boolean(opt.isCorrect),
+                })),
+                type: q.type || 'multiple_choice',
+                points: q.points || 1,
+                explanation: q.explanation,
+              },
+            }));
+
+            found = {
+              id: matched.id,
+              title: matched.title,
+              description: matched.description || '',
+              classId: matched.classId || 'public',
+              className: matched.className || 'Toàn trường / Công khai',
+              class: { name: matched.className || 'Toàn trường / Công khai' },
+              pin: matched.pin,
+              deadline: matched.deadline,
+              maxScore: 10,
+              antiCheat: Boolean(matched.antiCheating),
+              antiCheatConfig: matched.antiCheatConfig,
+              durationMinutes: matched.durationMinutes,
+              quiz: {
+                id: `quiz_${matched.id}`,
+                title: matched.quizData?.title || matched.title,
+                questions,
+              },
+              _count: { submissions: matched._count?.submissions || 0 },
+              createdAt: matched.createdAt,
+            };
+          }
+        }
+      }
+    } catch (_) {}
+  }
+
   if (found) {
+    if (!found.class) {
+      found.class = { name: found.className || 'Toàn trường / Công khai' };
+    }
     if (found.description && typeof found.description === 'string') {
       const match = found.description.match(/<!--CONFIG:([\s\S]*?)-->/);
       if (match) {
@@ -544,6 +642,9 @@ export async function fetchAssignmentDetail(token: string | null, assignmentId: 
           if (cfg.antiCheatConfig) {
             found.antiCheatConfig = cfg.antiCheatConfig;
           }
+          if (cfg.pin && !found.pin) {
+            found.pin = cfg.pin;
+          }
           found.description = found.description.replace(/<!--CONFIG:[\s\S]*?-->/, '').trim();
         } catch (_) {}
       }
@@ -554,6 +655,7 @@ export async function fetchAssignmentDetail(token: string | null, assignmentId: 
 }
 
 export async function fetchAssignmentSubmissions(token: string | null, assignmentId: string): Promise<any[]> {
+  let subs: any[] = [];
   try {
     const res = await fetch(`/api/assignments/${assignmentId}/submissions`, {
       headers: token ? { Authorization: `Bearer ${token}` } : {},
@@ -561,7 +663,7 @@ export async function fetchAssignmentSubmissions(token: string | null, assignmen
     if (res.ok) {
       const data = await res.json();
       if (Array.isArray(data)) {
-        return data.filter((s: any) => !isDummySubmission(s));
+        subs = data.filter((s: any) => !isDummySubmission(s));
       }
     }
   } catch (_) {}
@@ -572,11 +674,52 @@ export async function fetchAssignmentSubmissions(token: string | null, assignmen
     try {
       const parsed = JSON.parse(raw);
       if (Array.isArray(parsed)) {
-        return parsed.filter((s: any) => !isDummySubmission(s));
+        parsed.filter((s: any) => !isDummySubmission(s)).forEach((item) => {
+          if (!subs.some((s) => s.id === item.id)) {
+            subs.push(item);
+          }
+        });
       }
     } catch (_) {}
   }
-  return [];
+
+  // Tự động gộp bài nộp từ hệ thống kiểm tra Blooket / Play (app_homework_subs_${assignmentId})
+  const hwSubsKey = `app_homework_subs_${assignmentId}`;
+  const rawHw = safeLocalStorageGet(hwSubsKey);
+  if (rawHw) {
+    try {
+      const parsedHw = JSON.parse(rawHw);
+      if (Array.isArray(parsedHw)) {
+        parsedHw.forEach((hSub: any) => {
+          if (!subs.some((s) => s.id === hSub.id)) {
+            subs.push({
+              id: hSub.id,
+              status: 'GRADED',
+              score: hSub.score,
+              feedback: null,
+              submittedAt: hSub.submittedAt,
+              violationCount: hSub.violationCount || 0,
+              violationLogs: hSub.violationLogs || [],
+              timeSpentSeconds: hSub.timeSpentSeconds || 0,
+              student: {
+                id: hSub.studentId || `stu_${hSub.id}`,
+                profile: { name: hSub.studentName },
+                email: `${hSub.studentName.toLowerCase().replace(/\s+/g, '')}@student.edu`,
+              },
+              answers: Object.entries(hSub.answers || {}).map(([qId, ans]: [string, any]) => ({
+                id: `ans_${qId}`,
+                questionId: qId,
+                answerContent: ans.selectedAnswer,
+                isCorrect: ans.isCorrect,
+              })),
+            });
+          }
+        });
+      }
+    } catch (_) {}
+  }
+
+  return subs;
 }
 
 export async function fetchMyAssignmentSubmission(token: string | null, assignmentId: string): Promise<any | null> {
@@ -598,29 +741,82 @@ export async function fetchMyAssignmentSubmission(token: string | null, assignme
 }
 
 export async function submitAssignment(token: string | null, assignmentId: string, answersList: any[]): Promise<any> {
+  // Tải chi tiết bài tập để tự động chấm trắc nghiệm
+  let assignment: any = null;
   try {
-    const res = await fetch(`/api/assignments/${assignmentId}/submit`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      },
-      body: JSON.stringify({ answers: answersList }),
-    });
-    if (res.ok) return await res.json();
+    assignment = await fetchAssignmentDetail(token, assignmentId);
   } catch (_) {}
 
-  const newSub = {
-    id: `sub_my_${Date.now()}`,
-    status: 'SUBMITTED',
-    score: null,
-    feedback: null,
-    submittedAt: new Date().toISOString(),
-    answers: answersList.map((a, idx) => ({
+  let correctCount = 0;
+  const totalQuestions = assignment?.quiz?.questions?.length ||
+    assignment?.documentFile?.parsedQuiz?.questions?.length ||
+    answersList.length || 1;
+
+  const gradedAnswers = answersList.map((a, idx) => {
+    let isCorrect: boolean | null = null;
+
+    if (assignment) {
+      if (assignment.quiz?.questions) {
+        const quizQ = assignment.quiz.questions.find(
+          (qq: any) => qq.question?.id === a.questionId || qq.questionId === a.questionId || qq.id === a.questionId
+        );
+        if (quizQ?.question?.options) {
+          const chosenOpt = quizQ.question.options.find(
+            (opt: any) => opt.id === a.answerContent || opt.content === a.answerContent
+          );
+          if (chosenOpt) {
+            isCorrect = Boolean(chosenOpt.isCorrect);
+          }
+        }
+      } else if (assignment.documentFile?.parsedQuiz?.questions) {
+        const docQ = assignment.documentFile.parsedQuiz.questions.find(
+          (q: any, qIdx: number) => (q.id || `q_${qIdx + 1}`) === a.questionId
+        );
+        if (docQ?.options) {
+          const selectedIdx = Number(a.answerContent);
+          if (Number.isInteger(selectedIdx) && docQ.options[selectedIdx]) {
+            isCorrect = Boolean(docQ.options[selectedIdx].isCorrect);
+          } else {
+            const matchedOpt = docQ.options.find((opt: any) => opt.content === a.answerContent);
+            if (matchedOpt) isCorrect = Boolean(matchedOpt.isCorrect);
+          }
+        }
+      }
+    }
+
+    if (isCorrect === true) correctCount++;
+    return {
       id: `ans_my_${idx + 1}`,
       questionId: a.questionId,
       answerContent: a.answerContent,
-    })),
+      isCorrect,
+    };
+  });
+
+  const hasAutoGrading = gradedAnswers.some((a) => a.isCorrect !== null);
+  const maxScore = assignment?.maxScore || 10;
+  const calculatedScore = hasAutoGrading
+    ? Math.round((correctCount / totalQuestions) * maxScore * 10) / 10
+    : null;
+
+  const currentU = getStoredUser();
+  const studentName = currentU?.name || 'Học sinh';
+  const studentEmail = currentU?.email || 'student@kiyoedu.vn';
+
+  const newSub = {
+    id: `sub_my_${Date.now()}`,
+    status: hasAutoGrading ? 'GRADED' : 'SUBMITTED',
+    score: calculatedScore,
+    correctCount: hasAutoGrading ? correctCount : undefined,
+    totalQuestions,
+    feedback: hasAutoGrading ? `Tự động chấm: Đúng ${correctCount}/${totalQuestions} câu` : null,
+    submittedAt: new Date().toISOString(),
+    student: {
+      id: currentU?.id || 'stu_current',
+      profile: { name: studentName },
+      email: studentEmail,
+    },
+    answers: gradedAnswers,
   };
 
   const storageKey = `app_my_assignment_sub_${assignmentId}`;
@@ -632,12 +828,10 @@ export async function submitAssignment(token: string | null, assignmentId: strin
   if (rawSubs) {
     try {
       subs = JSON.parse(rawSubs);
+      if (!Array.isArray(subs)) subs = [];
     } catch (_) {}
   }
-  subs.unshift({
-    ...newSub,
-    student: { id: 'stu_current', profile: { name: 'Tôi (Học sinh)' }, email: 'student@kiyoedu.vn' },
-  });
+  subs.unshift(newSub);
   safeLocalStorageSet(subsKey, JSON.stringify(subs));
 
   return newSub;
@@ -676,6 +870,21 @@ export async function gradeAssignmentSubmission(
       }
     } catch (_) {}
   }
+
+  // Cập nhật cả bên app_homework_subs_${assignmentId}
+  const hwSubsKey = `app_homework_subs_${assignmentId}`;
+  const rawHw = safeLocalStorageGet(hwSubsKey);
+  if (rawHw) {
+    try {
+      const hwSubs: any[] = JSON.parse(rawHw);
+      const targetHw = hwSubs.find((s) => s.id === submissionId);
+      if (targetHw) {
+        targetHw.score = score;
+        safeLocalStorageSet(hwSubsKey, JSON.stringify(hwSubs));
+      }
+    } catch (_) {}
+  }
+
   return true;
 }
 
@@ -802,8 +1011,10 @@ export async function createClassAssignment(
       } catch (_) {}
     }
 
+    const generatedPin = Math.floor(100000 + Math.random() * 900000).toString();
     created = {
       id: `asg_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+      pin: generatedPin,
       title: payload.title.trim(),
       description: payload.description || '',
       classId: payload.classId,
@@ -902,6 +1113,21 @@ export async function deleteClassAssignment(
         }
       }
     } catch (_) {}
+
+    // Xóa cả trong app_blooket_homeworks và dọn dẹp bài nộp
+    try {
+      const rawHw = safeLocalStorageGet('app_blooket_homeworks');
+      if (rawHw) {
+        const hwList = JSON.parse(rawHw);
+        if (Array.isArray(hwList)) {
+          safeLocalStorageSet('app_blooket_homeworks', JSON.stringify(hwList.filter((item: any) => item.id !== assignmentId)));
+        }
+      }
+    } catch (_) {}
+
+    safeLocalStorageRemove(`app_assignment_subs_${assignmentId}`);
+    safeLocalStorageRemove(`app_homework_subs_${assignmentId}`);
+    safeLocalStorageRemove(`app_my_assignment_sub_${assignmentId}`);
   }
 
   return true;

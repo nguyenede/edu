@@ -172,7 +172,8 @@ function AssignPageContent() {
 
   // Config States
   const [title, setTitle] = useState('');
-  const [selectedClassId, setSelectedClassId] = useState<string>('public');
+  const queryClassId = searchParams?.get('classId') || searchParams?.get('assignClassId') || 'public';
+  const [selectedClassId, setSelectedClassId] = useState<string>(queryClassId);
   const [classes, setClasses] = useState<ClassItem[]>([]);
   const [hasDeadline, setHasDeadline] = useState(false);
   const [deadline, setDeadline] = useState('');
@@ -601,7 +602,16 @@ function AssignPageContent() {
             </div>
 
             {/* Actions Footer */}
-            <div className="flex items-center justify-center gap-3 pt-2">
+            <div className="flex items-center justify-center gap-3 pt-2 flex-wrap">
+              {createdHomework.classId && createdHomework.classId !== 'public' && (
+                <Button
+                  variant="primary"
+                  onClick={() => router.push(`/app/classes/${createdHomework.classId}`)}
+                  className="rounded-2xl text-xs gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white"
+                >
+                  <ArrowLeft size={14} /> Về trang lớp học
+                </Button>
+              )}
               <Button
                 variant="outline"
                 onClick={() => router.push(`/app/assignments/${createdHomework.id}`)}

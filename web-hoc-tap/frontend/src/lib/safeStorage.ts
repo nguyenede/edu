@@ -70,3 +70,10 @@ export function safeLocalStorageGet(key: string): string | null {
     return null;
   }
 }
+
+export function safeLocalStorageRemove(key: string): void {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.removeItem(key);
+  } catch {}
+}

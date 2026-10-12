@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { useState, useEffect, useRef, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/Button';
 import { Input } from '@/components/Input';
@@ -87,6 +87,7 @@ function BlooketPlayContent() {
   const [violationLogs, setViolationLogs] = useState<HomeworkViolationLog[]>([]);
   const [warningModalOpen, setWarningModalOpen] = useState(false);
   const [latestWarningMessage, setLatestWarningMessage] = useState('');
+  const lastViolationTimeRef = useRef(0);
 
   // Result States
   const [resultScore, setResultScore] = useState<number>(0);
@@ -195,6 +196,11 @@ function BlooketPlayContent() {
     const maxAllowed = homework.antiCheatConfig?.maxViolations || 3;
 
     const recordViolation = (type: HomeworkViolationLog['type'], message: string) => {
+      if (warningModalOpen) return;
+      const now = Date.now();
+      if (now - lastViolationTimeRef.current < 3500) return;
+      lastViolationTimeRef.current = now;
+
       setViolationCount((prev) => {
         const nextCount = prev + 1;
         const newLog: HomeworkViolationLog = {
@@ -229,6 +235,7 @@ function BlooketPlayContent() {
 
     // 2. Phát hiện mất focus cửa sổ (window blur)
     const handleWindowBlur = () => {
+      if (warningModalOpen) return;
       recordViolation('window_blur', 'Phát hiện chuyển sang cửa sổ hoặc ứng dụng khác');
     };
 

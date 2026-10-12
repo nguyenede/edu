@@ -82,6 +82,15 @@ function DocumentsPageContent() {
   const { user, token } = useAuthStore();
 
   const [currentFolderId, setCurrentFolderId] = useState<string | null>(null);
+  const [targetClassId, setTargetClassId] = useState<string | null>(null);
+  const [targetClassName, setTargetClassName] = useState<string>('');
+
+  useEffect(() => {
+    const cId = searchParams.get('assignClassId') || searchParams.get('classId');
+    const cName = searchParams.get('className');
+    if (cId) setTargetClassId(cId);
+    if (cName) setTargetClassName(cName);
+  }, [searchParams]);
 
   useEffect(() => {
     const fId = searchParams.get('folderId');
@@ -1588,6 +1597,34 @@ function DocumentsPageContent() {
           </div>
         )}
 
+        {targetClassId && (
+          <div className="rounded-xl border border-blue-200 bg-blue-50/90 dark:border-blue-900/50 dark:bg-blue-950/40 p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-sm text-blue-900 dark:text-blue-200">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+                <Send size={16} />
+              </div>
+              <div>
+                <p className="font-semibold text-blue-900 dark:text-blue-100">
+                  Đang chọn đề thi để giao cho lớp: <span className="text-blue-600 dark:text-blue-400 font-bold">{targetClassName || 'Lớp học'}</span>
+                </p>
+                <p className="text-xs text-blue-700/80 dark:text-blue-300/80">
+                  Hãy nhấp vào đề thi bên dưới hoặc mở tùy chọn rồi bấm &quot;Giao cho lớp&quot; để thiết lập bài tập.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => router.push(`/app/classes/${targetClassId}`)}
+                className="text-xs"
+              >
+                Quay lại lớp học
+              </Button>
+            </div>
+          </div>
+        )}
+
         {/* Toast Feedback Notification */}
         {toastMessage && (
           <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2.5 bg-slate-900/95 text-white dark:bg-slate-100 dark:text-slate-900 px-4 py-2.5 rounded-xl shadow-xl text-sm font-medium animate-in fade-in slide-in-from-bottom-2 duration-200 backdrop-blur-sm border border-slate-700/40 dark:border-slate-300/40">
@@ -1859,6 +1896,23 @@ function DocumentsPageContent() {
                         </span>
                       </div>
                     </div>
+
+                    {targetClassId && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          router.push(
+                            `/documents/${encodeURIComponent(fileItem.id)}/assign?classId=${encodeURIComponent(
+                              targetClassId
+                            )}&className=${encodeURIComponent(targetClassName || '')}`
+                          );
+                        }}
+                        className="mt-1 w-full py-1 text-[9px] font-semibold bg-blue-600 hover:bg-blue-700 text-white rounded flex items-center justify-center gap-1 shadow-xs transition-colors cursor-pointer"
+                      >
+                        <Send size={10} /> Giao cho lớp
+                      </button>
+                    )}
                   </div>
                 );
               })}
@@ -2044,13 +2098,18 @@ function DocumentsPageContent() {
 
               <button
                 onClick={() => {
-                  router.push(`/documents/${encodeURIComponent(contextMenu.file!.id)}/assign`);
+                  const assignUrl = targetClassId
+                    ? `/documents/${encodeURIComponent(contextMenu.file!.id)}/assign?classId=${encodeURIComponent(
+                        targetClassId
+                      )}&className=${encodeURIComponent(targetClassName || '')}`
+                    : `/documents/${encodeURIComponent(contextMenu.file!.id)}/assign`;
+                  router.push(assignUrl);
                   setContextMenu((prev) => ({ ...prev, isOpen: false }));
                 }}
                 className="w-full px-3.5 py-2 flex items-center gap-2.5 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-left font-medium text-indigo-600 dark:text-indigo-400 cursor-pointer whitespace-nowrap"
               >
                 <Send size={15} className="shrink-0" />
-                <span>Giao bài tập (Blooket)</span>
+                <span>{targetClassId ? `Giao cho lớp ${targetClassName || ''}` : 'Giao bài tập (Blooket)'}</span>
               </button>
 
               <button

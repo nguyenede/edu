@@ -34,6 +34,7 @@ import * as XLSX from 'xlsx';
 import {
   fetchClassDetail,
   fetchClassAssignments,
+  fetchAssignmentSubmissions,
   fetchClassMembers,
   deleteClass,
   removeStudentFromClass,
@@ -56,6 +57,7 @@ export default function ClassDetailPage() {
   const [clazz, setClazz] = useState<any>(null);
   const [members, setMembers] = useState<any[]>([]);
   const [assignments, setAssignments] = useState<any[]>([]);
+  const [submissionsMap, setSubmissionsMap] = useState<Record<string, any[]>>({});
   const [posts, setPosts] = useState<ClassPost[]>([]);
 
   const [activeTab, setActiveTab] = useState<TabKey>('assignments');
@@ -126,6 +128,22 @@ export default function ClassDetailPage() {
       // 2. Assignments
       const asgs = await fetchClassAssignments(activeToken, cId);
       setAssignments(asgs);
+
+      // Fetch submissions for all assignments for the gradebook
+      try {
+        const subsPromises = asgs.map(async (a: any) => {
+          const subs = await fetchAssignmentSubmissions(activeToken, a.id);
+          return { id: a.id, subs };
+        });
+        const subsResults = await Promise.all(subsPromises);
+        const sMap: Record<string, any[]> = {};
+        subsResults.forEach((r) => {
+          sMap[r.id] = r.subs;
+        });
+        setSubmissionsMap(sMap);
+      } catch (subErr) {
+        console.error('Error fetching submissions for gradebook:', subErr);
+      }
 
       // 3. Members
       const mems = await fetchClassMembers(activeToken, cId);
@@ -395,7 +413,7 @@ export default function ClassDetailPage() {
             <>
               <Button
                 size="sm"
-                onClick={() => router.push('/documents')}
+                onClick={() => router.push(`/documents?assignClassId=${classId}&className=${encodeURIComponent(clazz?.name || '')}`)}
                 className="gap-1.5"
               >
                 <Plus size={16} /> Giao bài tập
@@ -466,11 +484,30 @@ export default function ClassDetailPage() {
         {activeTab === 'assignments' && (
           <div className="space-y-4">
             {assignments.length === 0 ? (
-              <div className="p-12 text-center space-y-2">
+              <div className="p-12 text-center space-y-3">
                 <FileText size={40} className="mx-auto text-slate-300 dark:text-slate-700" />
                 <h3 className="text-sm font-medium text-slate-500 dark:text-slate-400">
-                  Chưa có bài tập nào được giao
+                  Chưa có bài tập nào được giao cho lớp này
                 </h3>
+                {isTeacher && (
+                  <div className="flex items-center justify-center gap-2 pt-2">
+                    <Button
+                      size="sm"
+                      onClick={() => router.push(`/documents?assignClassId=${classId}&className=${encodeURIComponent(clazz?.name || '')}`)}
+                      className="gap-1.5"
+                    >
+                      <Plus size={14} /> Giao từ Kho tài liệu
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => setIsCreateAssignOpen(true)}
+                      className="gap-1.5"
+                    >
+                      Tạo bài tập nhanh
+                    </Button>
+                  </div>
+                )}
               </div>
             ) : (
               <div className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -680,14 +717,49 @@ export default function ClassDetailPage() {
                   <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                     {members.map((m, idx) => {
                       const name = m.student?.profile?.name || m.name || 'Học sinh';
+                      const studentId = m.student?.id || m.studentId || m.id;
+                      const studentEmail = (m.student?.email || m.email || '').toLowerCase().trim();
+                      const cleanName = name.toLowerCase().trim();
+
+                      // Collect graded scores for this student across all class assignments
+                      const scores: number[] = [];
+                      const assignmentCells = assignments.map((asg) => {
+                        const subs = submissionsMap[asg.id] || [];
+                        const sub = subs.find((s: any) => {
+                          if (studentId && (s.studentId === studentId || s.student?.id === studentId)) return true;
+                          if (studentEmail && ((s.student?.email || '').toLowerCase().trim() === studentEmail)) return true;
+                          if (cleanName && ((s.student?.profile?.name || s.studentName || s.student?.name || '').toLowerCase().trim() === cleanName)) return true;
+                          return false;
+                        });
+
+                        if (sub && sub.score !== null && sub.score !== undefined) {
+                          scores.push(Number(sub.score));
+                          return (
+                            <td key={asg.id} className="py-2.5 px-3 text-center font-semibold text-emerald-600 dark:text-emerald-400">
+                              {sub.score}
+                            </td>
+                          );
+                        }
+
+                        return (
+                          <td key={asg.id} className="py-2.5 px-3 text-center text-slate-400">
+                            -
+                          </td>
+                        );
+                      });
+
+                      const avgScore = scores.length > 0
+                        ? (scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(1)
+                        : '-';
+
                       return (
                         <tr key={m.id || idx} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30">
                           <td className="py-2.5 px-3 text-center text-slate-400">{idx + 1}</td>
-                          <td className="py-2.5 px-3 font-medium">{name}</td>
-                          {assignments.map((asg) => (
-                            <td key={asg.id} className="py-2.5 px-3 text-center text-slate-400">-</td>
-                          ))}
-                          <td className="py-2.5 px-3 text-center font-bold text-slate-400">-</td>
+                          <td className="py-2.5 px-3 font-medium text-slate-900 dark:text-slate-100">{name}</td>
+                          {assignmentCells}
+                          <td className="py-2.5 px-3 text-center font-bold text-blue-600 dark:text-blue-400">
+                            {avgScore}
+                          </td>
                         </tr>
                       );
                     })}
