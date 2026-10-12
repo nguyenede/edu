@@ -19,6 +19,7 @@ import {
   idbSaveAllFolders,
   idbDeleteDocument,
   idbDeleteFolder,
+  idbGetAllDocuments,
 } from '@/lib/indexedDbStorage';
 import {
   createDocumentFile,
@@ -30,6 +31,7 @@ import {
   moveDocumentFolder,
   renameDocumentFile,
   renameDocumentFolder,
+  matchDocId,
 } from '@/lib/documentsApi';
 import {
   FolderPlus,
@@ -815,7 +817,13 @@ function DocumentsPageContent() {
 
   // Close context menu on outside interaction, keyboard shortcuts and global context menu interceptor
   useEffect(() => {
-    const handleClose = () => {
+    const handleClose = (e?: MouseEvent) => {
+      if (e) {
+        const target = e.target as HTMLElement | null;
+        if (target?.closest('[data-context-menu]') || target?.closest('[data-menu-trigger]')) {
+          return;
+        }
+      }
       setContextMenu((prev) => (prev.isOpen ? { ...prev, isOpen: false } : prev));
     };
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -1421,19 +1429,26 @@ function DocumentsPageContent() {
     if (e) e.stopPropagation();
 
     // 1. Immediately update UI state
-    setFiles((prev) => prev.filter((f) => f.id !== fileId));
+    setFiles((prev) => prev.filter((f) => f.id !== fileId && !matchDocId(f.id, fileId)));
 
     // 2. Direct local cleanup in IndexedDB & localStorage
     try {
       await idbDeleteDocument(fileId);
+      const allDocs = await idbGetAllDocuments();
+      for (const d of allDocs) {
+        if (d && (d.id === fileId || matchDocId(d.id, fileId))) {
+          await idbDeleteDocument(d.id);
+        }
+      }
+
       const raw = localStorage.getItem('app_documents_files');
       if (raw) {
-        const updated = JSON.parse(raw).filter((f: any) => f.id !== fileId);
+        const updated = JSON.parse(raw).filter((f: any) => f.id !== fileId && !matchDocId(f.id, fileId));
         safeLocalStorageSet('app_documents_files', JSON.stringify(updated));
       }
       const rawCustom = localStorage.getItem('custom_uploaded_files');
       if (rawCustom) {
-        const updatedCustom = JSON.parse(rawCustom).filter((f: any) => f.id !== fileId);
+        const updatedCustom = JSON.parse(rawCustom).filter((f: any) => f.id !== fileId && !matchDocId(f.id, fileId));
         safeLocalStorageSet('custom_uploaded_files', JSON.stringify(updatedCustom));
       }
     } catch (err) {
@@ -1692,19 +1707,39 @@ function DocumentsPageContent() {
                       )}
                     </div>
 
-                    <button
-                      type="button"
-                      data-no-marquee="true"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setSelectedItemId(folder.id);
-                        openContextMenu(e, 'folder', folder);
-                      }}
-                      className="p-1 rounded-full text-slate-600 dark:text-slate-400 hover:bg-slate-300/60 dark:hover:bg-slate-700/70 transition-colors shrink-0 cursor-pointer"
-                      title="Tùy chọn"
-                    >
-                      <MoreVertical size={16} />
-                    </button>
+                    <div className="flex items-center gap-0.5 shrink-0">
+                      <button
+                        type="button"
+                        data-no-marquee="true"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setItemToDelete({
+                            type: 'folder',
+                            id: folder.id,
+                            name: folder.name,
+                          });
+                        }}
+                        className="p-1 rounded-full text-slate-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 transition-colors cursor-pointer"
+                        title="Xóa thư mục"
+                      >
+                        <Trash2 size={13} />
+                      </button>
+                      <button
+                        type="button"
+                        data-no-marquee="true"
+                        data-menu-trigger="true"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          e.nativeEvent?.stopImmediatePropagation?.();
+                          setSelectedItemId(folder.id);
+                          openContextMenu(e, 'folder', folder);
+                        }}
+                        className="p-1 rounded-full text-slate-600 dark:text-slate-400 hover:bg-slate-300/60 dark:hover:bg-slate-700/70 transition-colors shrink-0 cursor-pointer"
+                        title="Tùy chọn"
+                      >
+                        <MoreVertical size={14} />
+                      </button>
+                    </div>
                   </div>
                 );
               })}
@@ -1784,19 +1819,39 @@ function DocumentsPageContent() {
                         </span>
                       </div>
 
-                      <button
-                        type="button"
-                        data-no-marquee="true"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSelectedItemId(fileItem.id);
-                          openContextMenu(e, 'file', undefined, fileItem);
-                        }}
-                        className="p-0.5 rounded-full text-slate-600 dark:text-slate-400 hover:bg-slate-300/60 dark:hover:bg-slate-700/70 transition-colors shrink-0 cursor-pointer"
-                        title="Tùy chọn"
-                      >
-                        <MoreVertical size={14} />
-                      </button>
+                      <div className="flex items-center gap-0.5 shrink-0">
+                        <button
+                          type="button"
+                          data-no-marquee="true"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setItemToDelete({
+                              type: 'file',
+                              id: fileItem.id,
+                              name: fileItem.name,
+                            });
+                          }}
+                          className="p-1 rounded-full text-slate-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 transition-colors cursor-pointer"
+                          title="Xóa tài liệu này"
+                        >
+                          <Trash2 size={13} />
+                        </button>
+                        <button
+                          type="button"
+                          data-no-marquee="true"
+                          data-menu-trigger="true"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            e.nativeEvent?.stopImmediatePropagation?.();
+                            setSelectedItemId(fileItem.id);
+                            openContextMenu(e, 'file', undefined, fileItem);
+                          }}
+                          className="p-1 rounded-full text-slate-600 dark:text-slate-400 hover:bg-slate-300/60 dark:hover:bg-slate-700/70 transition-colors shrink-0 cursor-pointer"
+                          title="Tùy chọn"
+                        >
+                          <MoreVertical size={14} />
+                        </button>
+                      </div>
                     </div>
 
                     {/* Real 100% Document Paper Preview (Trang giấy thuần không viền) */}
@@ -1871,6 +1926,7 @@ function DocumentsPageContent() {
       {contextMenu.isOpen && (
         <div
           ref={menuRef}
+          data-context-menu="true"
           style={{
             top: contextMenu.y,
             left: contextMenu.x,

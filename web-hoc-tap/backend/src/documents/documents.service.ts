@@ -112,13 +112,24 @@ export class DocumentsService {
   }
 
   async deleteFolder(ownerId: string, id: string) {
-    await this.assertFolderOwner(ownerId, id);
+    const folder = await this.prisma.documentFolder.findUnique({ where: { id } });
+    if (!folder) return { success: true };
+    if (folder.ownerId !== ownerId) throw new ForbiddenException('Access denied');
     await this.prisma.documentFolder.delete({ where: { id } });
     return { success: true };
   }
 
   async deleteFile(ownerId: string, id: string) {
-    await this.assertFileOwner(ownerId, id);
+    const file = await this.prisma.documentFile.findUnique({ where: { id } });
+    if (!file) return { success: true };
+    if (file.ownerId !== ownerId) throw new ForbiddenException('Access denied');
+
+    // Safe unlink assignments before deletion
+    await this.prisma.assignment.updateMany({
+      where: { documentFileId: id },
+      data: { documentFileId: null },
+    });
+
     await this.prisma.documentFile.delete({ where: { id } });
     return { success: true };
   }

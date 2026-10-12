@@ -383,10 +383,21 @@ export async function deleteDocumentFile(token: string, id: string) {
   if (typeof window !== 'undefined') {
     try {
       await idbDeleteDocument(id);
+      const allDocs = await idbGetAllDocuments();
+      for (const d of allDocs) {
+        if (d && (d.id === id || matchDocId(d.id, id))) {
+          await idbDeleteDocument(d.id);
+        }
+      }
       const raw = localStorage.getItem('app_documents_files');
       if (raw) {
-        const files = JSON.parse(raw).filter((f: any) => f.id !== id);
+        const files = JSON.parse(raw).filter((f: any) => f.id !== id && !matchDocId(f.id, id));
         safeLocalStorageSet('app_documents_files', JSON.stringify(files));
+      }
+      const rawCustom = localStorage.getItem('custom_uploaded_files');
+      if (rawCustom) {
+        const filesCustom = JSON.parse(rawCustom).filter((f: any) => f.id !== id && !matchDocId(f.id, id));
+        safeLocalStorageSet('custom_uploaded_files', JSON.stringify(filesCustom));
       }
     } catch {}
   }
