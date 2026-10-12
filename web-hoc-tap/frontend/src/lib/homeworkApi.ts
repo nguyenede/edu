@@ -217,7 +217,9 @@ export async function getHomeworkByPin(pin: string): Promise<HomeworkItem | null
   if (!cleanPin) return null;
 
   const list = getAllHomeworksSync();
-  let found = list.find((h) => h.pin === cleanPin);
+  let found = list.find(
+    (h) => h.pin === cleanPin || h.id === cleanPin || String(h.id).replace(/\D/g, '').slice(-6) === cleanPin
+  );
 
   // Fallback: Tìm trong app_custom_assignments và app_class_assignments_*
   if (!found && typeof window !== 'undefined') {
@@ -230,7 +232,8 @@ export async function getHomeworkByPin(pin: string): Promise<HomeworkItem | null
             const arr = JSON.parse(raw);
             if (Array.isArray(arr)) {
               const match = arr.find((item: any) => {
-                if (item.pin === cleanPin) return true;
+                if (item.pin === cleanPin || item.id === cleanPin) return true;
+                if (String(item.id).replace(/\D/g, '').slice(-6) === cleanPin) return true;
                 if (item.description && typeof item.description === 'string') {
                   const m = item.description.match(/"pin":\s*"(\d+)"/);
                   if (m && m[1] === cleanPin) return true;
@@ -238,22 +241,46 @@ export async function getHomeworkByPin(pin: string): Promise<HomeworkItem | null
                 return false;
               });
               if (match) {
-                const questions = match.quiz?.questions?.map((qq: any) => qq.question || qq) ||
-                  match.documentFile?.parsedQuiz?.questions || [];
+                let parsedAntiCheat: boolean = Boolean(match.antiCheat ?? match.antiCheating ?? true);
+                let parsedAntiCheatConfig = match.antiCheatConfig || null;
+                let parsedDuration = match.durationMinutes || 45;
+
+                if (match.description && typeof match.description === 'string') {
+                  const cfgMatch = match.description.match(/<!--CONFIG:([\s\S]*?)-->/);
+                  if (cfgMatch) {
+                    try {
+                      const cfg = JSON.parse(cfgMatch[1]);
+                      if (cfg.antiCheat !== undefined && cfg.antiCheat !== null) {
+                        parsedAntiCheat = Boolean(cfg.antiCheat);
+                      }
+                      if (cfg.antiCheatConfig) {
+                        parsedAntiCheatConfig = cfg.antiCheatConfig;
+                      }
+                      if (cfg.durationMinutes) {
+                        parsedDuration = cfg.durationMinutes;
+                      }
+                    } catch {}
+                  }
+                }
+
+                const questions =
+                  match.quiz?.questions?.map((qq: any) => qq.question || qq) ||
+                  match.documentFile?.parsedQuiz?.questions ||
+                  [];
                 found = {
                   id: match.id,
                   pin: cleanPin,
                   title: match.title,
-                  description: match.description || '',
+                  description: (match.description || '').replace(/<!--CONFIG:[\s\S]*?-->/, '').trim(),
                   classId: match.classId,
                   className: match.className || match.class?.name || 'Lớp học',
                   deadline: match.deadline,
-                  durationMinutes: match.durationMinutes || 45,
+                  durationMinutes: parsedDuration,
                   shuffleQuestions: true,
                   shuffleOptions: false,
                   showAnswersAfterSubmit: true,
-                  antiCheating: Boolean(match.antiCheat),
-                  antiCheatConfig: match.antiCheatConfig || {
+                  antiCheating: parsedAntiCheat,
+                  antiCheatConfig: parsedAntiCheatConfig || {
                     forceFullscreen: true,
                     detectTabSwitch: true,
                     maxViolations: 3,
@@ -261,7 +288,7 @@ export async function getHomeworkByPin(pin: string): Promise<HomeworkItem | null
                   },
                   quizData: {
                     title: match.title,
-                    durationMinutes: match.durationMinutes || 45,
+                    durationMinutes: parsedDuration,
                     questions,
                   },
                   status: 'active',
@@ -345,8 +372,19 @@ export async function submitHomework(
   };
 
   const key = `${STORAGE_SUBMISSIONS_PREFIX}${data.homeworkId}`;
-  const existing = getHomeworkSubmissionsSync(data.homeworkId);
-  existing.unshift(submission);
+  let existing = getHomeworkSubmissionsSync(data.homeworkId);
+  const normalizedStuName = data.studentName.trim().toLowerCase();
+
+  // Replace previous submission from this student if present, otherwise unshift
+  const existingIdx = existing.findIndex((s) =>
+    (data.studentId && s.studentId && s.studentId === data.studentId) ||
+    (s.studentName && s.studentName.trim().toLowerCase() === normalizedStuName)
+  );
+  if (existingIdx >= 0) {
+    existing[existingIdx] = submission;
+  } else {
+    existing.unshift(submission);
+  }
   safeLocalStorageSet(key, JSON.stringify(existing));
 
   // Cập nhật số lượt nộp trong danh sách bài tập
@@ -368,7 +406,7 @@ export async function submitHomework(
     } catch {}
   }
 
-  legacySubs.unshift({
+  const legacyItem = {
     id: submission.id,
     status: 'SUBMITTED',
     score: submission.score,
@@ -388,7 +426,21 @@ export async function submitHomework(
       answerContent: ans.selectedAnswer,
       isCorrect: ans.isCorrect,
     })),
+  };
+
+  const existingLegacyIdx = legacySubs.findIndex((s) => {
+    const sName = (s.student?.profile?.name || s.student?.name || s.studentName || '').trim().toLowerCase();
+    const sId = s.student?.id || s.studentId;
+    return (
+      (data.studentId && sId && sId === data.studentId) ||
+      (sName && sName === normalizedStuName)
+    );
   });
+  if (existingLegacyIdx >= 0) {
+    legacySubs[existingLegacyIdx] = legacyItem;
+  } else {
+    legacySubs.unshift(legacyItem);
+  }
   safeLocalStorageSet(legacyKey, JSON.stringify(legacySubs));
 
   return submission;

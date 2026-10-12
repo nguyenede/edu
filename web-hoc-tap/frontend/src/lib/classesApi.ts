@@ -839,7 +839,41 @@ export async function fetchAssignmentSubmissions(token: string | null, assignmen
     }
   });
 
-  return subs;
+  // Nhóm và gộp theo từng học sinh: Mỗi học sinh chỉ có duy nhất 1 bài nộp mới nhất trong danh sách
+  const studentSubMap = new Map<string, any>();
+  for (const s of subs) {
+    if (!s) continue;
+    const stuName = (s.student?.profile?.name || s.student?.name || s.studentName || '').trim().toLowerCase();
+    const stuId = s.student?.id && !s.student.id.startsWith('stu_my_') && !s.student.id.startsWith('stu_current') && !s.student.id.startsWith('stu_sub_')
+      ? s.student.id
+      : null;
+    const key = stuId || stuName || s.id;
+
+    if (!studentSubMap.has(key)) {
+      studentSubMap.set(key, s);
+    } else {
+      const existing = studentSubMap.get(key);
+      const existingTime = new Date(existing.submittedAt).getTime() || 0;
+      const curTime = new Date(s.submittedAt).getTime() || 0;
+      // Ưu tiên giữ bài nộp mới nhất
+      if (curTime >= existingTime) {
+        studentSubMap.set(key, s);
+      }
+    }
+  }
+
+  const finalSubs = Array.from(studentSubMap.values()).sort(
+    (a, b) => (new Date(b.submittedAt).getTime() || 0) - (new Date(a.submittedAt).getTime() || 0)
+  );
+
+  // Tự động dọn dẹp các bản ghi trùng lặp trong localStorage
+  if (finalSubs.length < subs.length && typeof window !== 'undefined') {
+    try {
+      safeLocalStorageSet(storageKey, JSON.stringify(finalSubs));
+    } catch (_) {}
+  }
+
+  return finalSubs;
 }
 
 export async function fetchMyAssignmentSubmission(token: string | null, assignmentId: string): Promise<any | null> {
@@ -860,7 +894,16 @@ export async function fetchMyAssignmentSubmission(token: string | null, assignme
   return null;
 }
 
-export async function submitAssignment(token: string | null, assignmentId: string, answersList: any[]): Promise<any> {
+export async function submitAssignment(
+  token: string | null,
+  assignmentId: string,
+  answersList: any[],
+  extraMeta?: {
+    violationCount?: number;
+    violationLogs?: any[];
+    timeSpentSeconds?: number;
+  }
+): Promise<any> {
   // Tải chi tiết bài tập để tự động chấm trắc nghiệm
   let assignment: any = null;
   try {
@@ -931,6 +974,9 @@ export async function submitAssignment(token: string | null, assignmentId: strin
     totalQuestions,
     feedback: hasAutoGrading ? `Tự động chấm: Đúng ${correctCount}/${totalQuestions} câu` : null,
     submittedAt: new Date().toISOString(),
+    violationCount: extraMeta?.violationCount || 0,
+    violationLogs: extraMeta?.violationLogs || [],
+    timeSpentSeconds: extraMeta?.timeSpentSeconds || 0,
     student: {
       id: currentU?.id || 'stu_current',
       profile: { name: studentName },
@@ -951,7 +997,22 @@ export async function submitAssignment(token: string | null, assignmentId: strin
       if (!Array.isArray(subs)) subs = [];
     } catch (_) {}
   }
-  subs.unshift(newSub);
+
+  const currentUserId = currentU?.id;
+  const currentNormalizedName = studentName.trim().toLowerCase();
+  const existingSubIdx = subs.findIndex((s) => {
+    const sId = s.student?.id;
+    const sName = (s.student?.profile?.name || s.student?.name || s.studentName || '').trim().toLowerCase();
+    return (
+      (currentUserId && sId && sId === currentUserId) ||
+      (sName && sName === currentNormalizedName)
+    );
+  });
+  if (existingSubIdx >= 0) {
+    subs[existingSubIdx] = newSub;
+  } else {
+    subs.unshift(newSub);
+  }
   safeLocalStorageSet(subsKey, JSON.stringify(subs));
 
   return newSub;

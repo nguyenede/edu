@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState, useMemo, Component, ErrorInfo, ReactNode } from 'react';
+import React, { useEffect, useState, useMemo, useRef, Component, ErrorInfo, ReactNode } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/useAuthStore';
 import { AppShell } from '@/components/AppShell';
@@ -175,6 +175,33 @@ export default function AssignmentDetailPage() {
   const [mySubmission, setMySubmission] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
+  // Danh sách bài nộp được gộp theo từng học sinh (Mỗi học sinh chỉ hiển thị 1 bài nộp mới nhất)
+  const deduplicatedSubmissions = useMemo(() => {
+    const studentMap = new Map<string, any>();
+    for (const sub of submissions) {
+      if (!sub) continue;
+      const stuName = (sub.student?.profile?.name || sub.student?.name || sub.studentName || '').trim().toLowerCase();
+      const stuId = sub.student?.id && !sub.student.id.startsWith('stu_my_') && !sub.student.id.startsWith('stu_current') && !sub.student.id.startsWith('stu_sub_')
+        ? sub.student.id
+        : null;
+      const key = stuId || stuName || sub.id;
+
+      if (!studentMap.has(key)) {
+        studentMap.set(key, sub);
+      } else {
+        const existing = studentMap.get(key);
+        const existingTime = new Date(existing.submittedAt).getTime() || 0;
+        const curTime = new Date(sub.submittedAt).getTime() || 0;
+        if (curTime >= existingTime || (sub.status === 'GRADED' && existing.status !== 'GRADED')) {
+          studentMap.set(key, sub);
+        }
+      }
+    }
+    return Array.from(studentMap.values()).sort(
+      (a, b) => (new Date(b.submittedAt).getTime() || 0) - (new Date(a.submittedAt).getTime() || 0)
+    );
+  }, [submissions]);
+
   // Teacher UI State
   const [teacherTab, setTeacherTab] = useState<'questions' | 'try'>('questions');
 
@@ -183,6 +210,10 @@ export default function AssignmentDetailPage() {
   const [essayContent, setEssayContent] = useState('');
   const [isSubmitConfirmOpen, setIsSubmitConfirmOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [studentViolations, setStudentViolations] = useState<any[]>([]);
+  const [studentViolationCount, setStudentViolationCount] = useState(0);
+  const [antiCheatWarning, setAntiCheatWarning] = useState<string | null>(null);
+  const studentViolationTimeRef = useRef(0);
 
   // Teacher Grading State
   const [selectedSub, setSelectedSub] = useState<any>(null);
@@ -293,7 +324,83 @@ export default function AssignmentDetailPage() {
     a.click();
   };
 
-  const handleStudentSubmit = async () => {
+  // Student Anti-Cheating real-time listener on /assignments/[id]
+  useEffect(() => {
+    if (isTeacher || mySubmission || !assignment?.antiCheat) return;
+
+    const maxAllowed = assignment.antiCheatConfig?.maxViolations || 3;
+
+    const recordStudentViolation = (message: string) => {
+      const now = Date.now();
+      if (now - studentViolationTimeRef.current < 2500) return;
+      studentViolationTimeRef.current = now;
+
+      setStudentViolationCount((prev) => {
+        const nextCount = prev + 1;
+        const newLog = {
+          type: 'tab_switch',
+          timestamp: new Date().toLocaleTimeString('vi-VN'),
+          message: `${message} (Lần ${nextCount}/${maxAllowed})`,
+        };
+        setStudentViolations((prevLogs) => {
+          const updated = [...prevLogs, newLog];
+          if (nextCount >= maxAllowed) {
+            setTimeout(() => {
+              alert(`Bạn đã vi phạm quy chế chống gian lận ${nextCount}/${maxAllowed} lần! Hệ thống tự động nộp bài.`);
+              handleStudentSubmit({
+                violationCount: nextCount,
+                violationLogs: updated,
+              });
+            }, 800);
+          }
+          return updated;
+        });
+
+        setAntiCheatWarning(`⚠️ ${message}! (Vi phạm lần ${nextCount}/${maxAllowed})`);
+        return nextCount;
+      });
+    };
+
+    const handleVisibility = () => {
+      if (document.visibilityState === 'hidden') {
+        recordStudentViolation('Phát hiện rời khỏi tab làm bài thi');
+      }
+    };
+
+    const handleWindowBlur = () => {
+      recordStudentViolation('Phát hiện chuyển sang cửa sổ hoặc ứng dụng khác');
+    };
+
+    const handleCopy = (e: ClipboardEvent) => {
+      const target = e.target as HTMLElement;
+      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA')) return;
+      e.preventDefault();
+      recordStudentViolation('Cố gắng sao chép nội dung đề thi');
+    };
+
+    const handleContextMenu = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA')) return;
+      e.preventDefault();
+      recordStudentViolation('Nhấp chuột phải bị cấm trong phòng thi');
+    };
+
+    document.addEventListener('visibilitychange', handleVisibility);
+    window.addEventListener('blur', handleWindowBlur);
+    document.addEventListener('copy', handleCopy);
+    document.addEventListener('cut', handleCopy);
+    document.addEventListener('contextmenu', handleContextMenu);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibility);
+      window.removeEventListener('blur', handleWindowBlur);
+      document.removeEventListener('copy', handleCopy);
+      document.removeEventListener('cut', handleCopy);
+      document.removeEventListener('contextmenu', handleContextMenu);
+    };
+  }, [isTeacher, mySubmission, assignment?.antiCheat]);
+
+  const handleStudentSubmit = async (overrideMeta?: any) => {
     setSubmitting(true);
     const answersList = normalizedQuestions.length > 0
       ? Object.entries(studentAnswers).map(([questionId, answerContent]) => ({
@@ -303,7 +410,11 @@ export default function AssignmentDetailPage() {
       : [{ questionId: assignment.id, answerContent: essayContent }];
 
     try {
-      await submitAssignment(token, String(assignmentId), answersList);
+      const meta = overrideMeta || {
+        violationCount: studentViolationCount,
+        violationLogs: studentViolations,
+      };
+      await submitAssignment(token, String(assignmentId), answersList, meta);
       setIsSubmitConfirmOpen(false);
       await fetchData();
     } catch (err) {
@@ -415,19 +526,6 @@ export default function AssignmentDetailPage() {
       subtitle={`Lớp: ${classNameDisplay} | Thang điểm: ${assignment.maxScore || 10}đ`}
       action={
         <div className="flex items-center gap-2">
-          {isTeacher && (
-            <Button
-              variant="primary"
-              size="sm"
-              onClick={() => setIsQrModalOpen(true)}
-              className="gap-1.5 rounded-xl text-xs font-semibold bg-google-blue hover:bg-[#1557b0] text-white shadow-xs"
-              title="Mở mã QR và mã PIN cho học sinh làm bài"
-            >
-              <QrCode size={15} />
-              <span>Mã QR & PIN làm bài</span>
-            </Button>
-          )}
-
           <Button
             variant="secondary"
             size="sm"
@@ -663,9 +761,17 @@ export default function AssignmentDetailPage() {
                 /* Student Submission Form */
                 <div className="space-y-5">
                   <div className="flex items-center justify-between">
-                    <h3 className="font-bold text-sm text-slate-950 dark:text-slate-100">
-                      Làm bài tập
-                    </h3>
+                    <div className="space-y-0.5">
+                      <h3 className="font-bold text-sm text-slate-950 dark:text-slate-100">
+                        Làm bài tập
+                      </h3>
+                      {assignment.antiCheat && (
+                        <div className="flex items-center gap-1.5 text-xs text-purple-600 dark:text-purple-400 font-semibold">
+                          <ShieldCheck size={13} />
+                          <span>Chống gian lận đang bật (Vi phạm: {studentViolationCount}/{assignment.antiCheatConfig?.maxViolations || 3})</span>
+                        </div>
+                      )}
+                    </div>
                     {assignment.pin && (
                       <Button
                         size="sm"
@@ -677,6 +783,22 @@ export default function AssignmentDetailPage() {
                       </Button>
                     )}
                   </div>
+
+                  {antiCheatWarning && (
+                    <div className="p-3 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900 rounded-xl text-xs text-red-700 dark:text-red-300 font-semibold flex items-center justify-between shadow-2xs">
+                      <div className="flex items-center gap-2">
+                        <AlertTriangle size={16} className="text-red-600 shrink-0" />
+                        <span>{antiCheatWarning}</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setAntiCheatWarning(null)}
+                        className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-200 text-xs font-bold underline ml-2 cursor-pointer"
+                      >
+                        Đã hiểu
+                      </button>
+                    </div>
+                  )}
 
                   {normalizedQuestions.length > 0 ? (
                     <div className="divide-y divide-slate-100 dark:divide-slate-800/60">
@@ -760,60 +882,15 @@ export default function AssignmentDetailPage() {
         {/* Right 1 Col: Teacher Submissions List & Grading Panel */}
         {isTeacher && (
           <div className="md:col-span-1 space-y-4">
-            {/* Quick PIN & QR Card for Teacher */}
-            <div className="p-4 bg-gradient-to-br from-blue-50/90 to-indigo-50/60 dark:from-blue-950/30 dark:to-indigo-950/20 rounded-2xl border border-blue-200/80 dark:border-blue-900/50 space-y-3.5 shadow-2xs">
-              <div className="flex items-center justify-between">
-                <span className="text-[11px] font-bold text-blue-900 dark:text-blue-300 uppercase tracking-wider flex items-center gap-1.5">
-                  <QrCode size={14} className="text-blue-600 dark:text-blue-400" />
-                  Mã làm bài của học sinh
-                </span>
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-200/70 dark:bg-blue-900/60 text-blue-800 dark:text-blue-200">
-                  PIN & QR
-                </span>
-              </div>
-
-              <div className="flex items-center justify-between gap-2 bg-white dark:bg-slate-900/90 p-3 rounded-xl border border-blue-100 dark:border-blue-900/40 shadow-2xs">
-                <div>
-                  <span className="text-[10px] text-slate-400 dark:text-zinc-500 font-semibold block uppercase">
-                    Mã PIN làm bài:
-                  </span>
-                  <div className="text-2xl font-mono font-black text-blue-600 dark:text-blue-400 tracking-wider">
-                    {displayPin}
-                  </div>
-                </div>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => handleCopyPin(displayPin)}
-                  className="text-xs py-1.5 px-3 rounded-xl gap-1 shrink-0"
-                  title="Sao chép mã PIN"
-                >
-                  {copiedPin ? <Check size={13} className="text-emerald-600" /> : <Copy size={13} />}
-                  <span>{copiedPin ? 'Đã chép' : 'Chép PIN'}</span>
-                </Button>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <Button
-                  size="sm"
-                  onClick={() => setIsQrModalOpen(true)}
-                  className="flex-1 text-xs rounded-xl bg-google-blue hover:bg-[#1557b0] text-white gap-1.5 shadow-xs"
-                >
-                  <QrCode size={14} />
-                  <span>Mở mã QR chiếu TV</span>
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={handleCopyLink}
-                  className="text-xs rounded-xl gap-1 shrink-0"
-                  title="Sao chép link làm bài"
-                >
-                  {copiedLink ? <Check size={13} className="text-emerald-600" /> : <Copy size={13} />}
-                  <span className="hidden sm:inline">{copiedLink ? 'Đã chép' : 'Chép link'}</span>
-                </Button>
-              </div>
-            </div>
+            {/* Nút mở mã mời */}
+            <Button
+              type="button"
+              onClick={() => setIsQrModalOpen(true)}
+              className="w-full text-xs font-semibold py-2.5 rounded-xl bg-google-blue hover:bg-[#1557b0] text-white gap-2 shadow-xs cursor-pointer flex items-center justify-center"
+            >
+              <QrCode size={15} />
+              <span>Mã mời</span>
+            </Button>
 
             {selectedSub ? (
               /* Grading Form Panel */
@@ -913,28 +990,17 @@ export default function AssignmentDetailPage() {
               <div className="space-y-3">
                 <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
                   <h3 className="font-semibold text-sm text-slate-950 dark:text-slate-100">
-                    Danh sách bài nộp ({submissions.length})
+                    Danh sách bài nộp ({deduplicatedSubmissions.length})
                   </h3>
                 </div>
 
-                {submissions.length === 0 ? (
-                  <div className="py-6 text-center space-y-3 bg-slate-50/50 dark:bg-slate-900/20 rounded-2xl border border-slate-100 dark:border-slate-800 p-4">
-                    <p className="text-xs text-slate-400">
-                      Chưa có học sinh nào nộp bài.
-                    </p>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => setIsQrModalOpen(true)}
-                      className="mx-auto text-xs rounded-xl gap-1.5 border-blue-200 dark:border-blue-800 text-blue-600 dark:text-blue-400 bg-blue-50/50 dark:bg-blue-950/30"
-                    >
-                      <QrCode size={14} />
-                      <span>Mở mã QR cho học sinh quét</span>
-                    </Button>
-                  </div>
+                {deduplicatedSubmissions.length === 0 ? (
+                  <p className="text-xs text-slate-400 py-8 text-center">
+                    Chưa có học sinh nào nộp bài.
+                  </p>
                 ) : (
                   <div className="divide-y divide-slate-100 dark:divide-slate-800/70">
-                    {submissions.map((sub) => {
+                    {deduplicatedSubmissions.map((sub) => {
                       const studentName = sub.student?.profile?.name || sub.student?.name || sub.student?.email || 'Học sinh';
                       return (
                         <div

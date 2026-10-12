@@ -88,11 +88,16 @@ function BlooketPlayContent() {
   const [warningModalOpen, setWarningModalOpen] = useState(false);
   const [latestWarningMessage, setLatestWarningMessage] = useState('');
   const lastViolationTimeRef = useRef(0);
+  const warningModalOpenRef = useRef(false);
+  const modalCooldownUntilRef = useRef(0);
+  const hasEnteredFullscreenRef = useRef(false);
 
   // Result States
   const [resultScore, setResultScore] = useState<number>(0);
   const [resultCorrectCount, setResultCorrectCount] = useState<number>(0);
   const [showReview, setShowReview] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const isSubmittingRef = useRef(false);
 
   // Auto-load PIN if provided in query
   useEffect(() => {
@@ -182,6 +187,7 @@ function BlooketPlayContent() {
     try {
       if (document.documentElement.requestFullscreen) {
         await document.documentElement.requestFullscreen();
+        hasEnteredFullscreenRef.current = true;
       }
     } catch (e) {
       console.warn('Không thể vào toàn màn hình tự động:', e);
@@ -196,9 +202,10 @@ function BlooketPlayContent() {
     const maxAllowed = homework.antiCheatConfig?.maxViolations || 3;
 
     const recordViolation = (type: HomeworkViolationLog['type'], message: string) => {
-      if (warningModalOpen) return;
+      if (warningModalOpenRef.current) return;
       const now = Date.now();
-      if (now - lastViolationTimeRef.current < 3500) return;
+      if (now < modalCooldownUntilRef.current) return;
+      if (now - lastViolationTimeRef.current < 2500) return;
       lastViolationTimeRef.current = now;
 
       setViolationCount((prev) => {
@@ -211,6 +218,7 @@ function BlooketPlayContent() {
         setViolationLogs((prevLogs) => [...prevLogs, newLog]);
 
         setLatestWarningMessage(newLog.message);
+        warningModalOpenRef.current = true;
         setWarningModalOpen(true);
 
         // Nếu vượt quá số lần vi phạm -> TỰ ĐỘNG KHÓA VÀ NỘP BÀI
@@ -235,30 +243,53 @@ function BlooketPlayContent() {
 
     // 2. Phát hiện mất focus cửa sổ (window blur)
     const handleWindowBlur = () => {
-      if (warningModalOpen) return;
+      if (warningModalOpenRef.current) return;
       recordViolation('window_blur', 'Phát hiện chuyển sang cửa sổ hoặc ứng dụng khác');
     };
 
     // 3. Phát hiện thoát toàn màn hình (fullscreen exit)
     const handleFullscreenChange = () => {
-      if (!document.fullscreenElement && homework.antiCheatConfig?.forceFullscreen) {
+      if (document.fullscreenElement) {
+        hasEnteredFullscreenRef.current = true;
+      } else if (hasEnteredFullscreenRef.current && homework.antiCheatConfig?.forceFullscreen) {
         recordViolation('exit_fullscreen', 'Phát hiện thoát khỏi chế độ Toàn màn hình');
       }
     };
 
     // 4. Chống sao chép văn bản, chuột phải, phím tắt
-    const handleContextMenu = (e: MouseEvent) => e.preventDefault();
-    const handleCopyCut = (e: ClipboardEvent) => {
-      e.preventDefault();
-      recordViolation('copy_attempt', 'Cố gắng sao chép nội dung câu hỏi');
-    };
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (
-        (e.ctrlKey && ['c', 'v', 'u', 'a'].includes(e.key.toLowerCase())) ||
-        e.key === 'F12'
-      ) {
+    const handleContextMenu = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      const isInput = target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA');
+      if (!isInput) {
         e.preventDefault();
-        recordViolation('copy_attempt', `Nhấn phím tắt bị cấm (${e.key})`);
+        recordViolation('copy_attempt', 'Nhấp chuột phải bị cấm trong phòng thi');
+      }
+    };
+
+    const handleCopyCut = (e: ClipboardEvent) => {
+      const target = e.target as HTMLElement;
+      const isInput = target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA');
+      if (!isInput) {
+        e.preventDefault();
+        recordViolation('copy_attempt', 'Cố gắng sao chép nội dung câu hỏi');
+      }
+    };
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement;
+      const isInput = target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA');
+
+      if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && ['i', 'j', 'c'].includes(e.key.toLowerCase()))) {
+        e.preventDefault();
+        recordViolation('copy_attempt', 'Cố gắng mở công cụ nhà phát triển (DevTools)');
+        return;
+      }
+
+      if (e.ctrlKey && ['c', 'u'].includes(e.key.toLowerCase())) {
+        if (!isInput) {
+          e.preventDefault();
+          recordViolation('copy_attempt', 'Cố gắng sao chép nội dung câu hỏi');
+        }
       }
     };
 
@@ -312,6 +343,10 @@ function BlooketPlayContent() {
   };
 
   const handleFinalSubmit = async (reasonNotice?: string) => {
+    if (isSubmittingRef.current) return;
+    isSubmittingRef.current = true;
+    setIsSubmitting(true);
+
     if (document.fullscreenElement && document.exitFullscreen) {
       try {
         await document.exitFullscreen();
@@ -747,8 +782,12 @@ function BlooketPlayContent() {
               variant="primary"
               onClick={() => {
                 setWarningModalOpen(false);
+                warningModalOpenRef.current = false;
+                modalCooldownUntilRef.current = Date.now() + 2000;
                 if (document.documentElement.requestFullscreen && !document.fullscreenElement) {
-                  document.documentElement.requestFullscreen().catch(() => {});
+                  document.documentElement.requestFullscreen().then(() => {
+                    hasEnteredFullscreenRef.current = true;
+                  }).catch(() => {});
                 }
               }}
               className="w-full py-2.5 bg-red-600 hover:bg-red-700 text-white font-bold text-xs rounded-xl"
@@ -795,14 +834,16 @@ function BlooketPlayContent() {
             <Button
               variant="primary"
               size="sm"
+              disabled={isSubmitting}
               onClick={() => {
+                if (isSubmitting) return;
                 if (confirm('Bạn có chắc chắn muốn nộp bài ngay bây giờ?')) {
                   handleFinalSubmit();
                 }
               }}
-              className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl"
+              className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl disabled:opacity-50"
             >
-              Nộp bài
+              {isSubmitting ? 'Đang nộp bài...' : 'Nộp bài'}
             </Button>
           </div>
         </div>
