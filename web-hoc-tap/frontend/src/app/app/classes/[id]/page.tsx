@@ -395,7 +395,7 @@ export default function ClassDetailPage() {
             <>
               <Button
                 size="sm"
-                onClick={() => setIsCreateAssignOpen(true)}
+                onClick={() => router.push('/documents')}
                 className="gap-1.5"
               >
                 <Plus size={16} /> Giao bài tập
