@@ -1812,22 +1812,6 @@ function DocumentsPageContent() {
                       <button
                         type="button"
                         data-no-marquee="true"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setItemToDelete({
-                            type: 'folder',
-                            id: folder.id,
-                            name: folder.name,
-                          });
-                        }}
-                        className="p-1 rounded-full text-slate-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 transition-colors cursor-pointer"
-                        title="Xóa thư mục"
-                      >
-                        <Trash2 size={13} />
-                      </button>
-                      <button
-                        type="button"
-                        data-no-marquee="true"
                         data-menu-trigger="true"
                         onClick={(e) => {
                           e.stopPropagation();
@@ -1921,23 +1905,6 @@ function DocumentsPageContent() {
                       </div>
 
                       <div className="flex items-center gap-0.5 shrink-0">
-                        <button
-                          type="button"
-                          data-no-marquee="true"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setItemToDelete({
-                              type: 'file',
-                              id: fileItem.id,
-                              name: fileItem.name,
-                              title: fileItem.parsedQuiz?.title,
-                            });
-                          }}
-                          className="p-1 rounded-full text-slate-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 transition-colors cursor-pointer"
-                          title="Xóa tài liệu này"
-                        >
-                          <Trash2 size={13} />
-                        </button>
                         <button
                           type="button"
                           data-no-marquee="true"
