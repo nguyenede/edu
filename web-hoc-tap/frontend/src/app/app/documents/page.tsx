@@ -54,7 +54,6 @@ import {
   FolderOpen,
   Download,
   RotateCw,
-  Eye,
   MoreVertical,
   FolderUp,
   Copy,
@@ -62,7 +61,6 @@ import {
   ClipboardPaste,
   X,
   Check,
-  Send,
   Gamepad2,
 } from 'lucide-react';
 
@@ -2156,28 +2154,6 @@ function DocumentsPageContent() {
 
           {contextMenu.type === 'file' && contextMenu.file && (
             <>
-              <button
-                onClick={() => {
-                  handleOpenFile(contextMenu.file!);
-                  setContextMenu((prev) => ({ ...prev, isOpen: false }));
-                }}
-                className="w-full px-3.5 py-2 flex items-center gap-2.5 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-left font-medium text-google-blue cursor-pointer whitespace-nowrap"
-              >
-                <Eye size={16} className="shrink-0" />
-                <span>Xem chi tiết</span>
-              </button>
-
-              <button
-                onClick={() => {
-                  router.push(`/documents/${encodeURIComponent(contextMenu.file!.id)}/assign`);
-                  setContextMenu((prev) => ({ ...prev, isOpen: false }));
-                }}
-                className="w-full px-3.5 py-2 flex items-center gap-2.5 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-left font-medium text-indigo-600 dark:text-indigo-400 cursor-pointer whitespace-nowrap"
-              >
-                <Send size={15} className="shrink-0" />
-                <span>Giao bài tập (Blooket)</span>
-              </button>
-
               <button
                 onClick={() => {
                   handleCopy('file', contextMenu.file!);
