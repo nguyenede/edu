@@ -743,50 +743,6 @@ export default function AssignmentDetailPage() {
         {/* Right 1 Col: Teacher Submissions List & Grading Panel */}
         {isTeacher && (
           <div className="md:col-span-1 space-y-4">
-            {/* Quick Share Card */}
-            {assignment.pin && (
-              <div className="p-4 rounded-xl border border-blue-100 dark:border-blue-900/40 bg-blue-50/50 dark:bg-blue-950/20 space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-bold text-blue-800 dark:text-blue-300 uppercase tracking-wider">
-                    Mã PIN Blooket
-                  </span>
-                  <button
-                    onClick={() => setIsQrModalOpen(true)}
-                    className="text-[11px] font-semibold text-blue-600 hover:underline flex items-center gap-1 cursor-pointer"
-                  >
-                    <QrCode size={13} /> Mã QR
-                  </button>
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div className="text-2xl font-black font-mono tracking-wider text-blue-600 dark:text-blue-400">
-                    {assignment.pin}
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <Button
-                      size="sm"
-                      variant="secondary"
-                      onClick={() => handleCopyPin(assignment.pin)}
-                      className="text-xs py-1 px-2.5 gap-1"
-                    >
-                      {copiedPin ? <Check size={12} /> : <Copy size={12} />}
-                      <span>{copiedPin ? 'Đã chép' : 'Chép PIN'}</span>
-                    </Button>
-                  </div>
-                </div>
-
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={handleCopyLink}
-                  className="w-full text-xs py-1.5 gap-1.5"
-                >
-                  {copiedLink ? <Check size={13} /> : <ExternalLink size={13} />}
-                  <span>{copiedLink ? 'Đã chép link làm bài' : 'Sao chép link làm bài'}</span>
-                </Button>
-              </div>
-            )}
-
             {selectedSub ? (
               /* Grading Form Panel */
               <div className="p-4 bg-slate-50/90 dark:bg-slate-900/40 rounded-xl border border-slate-100 dark:border-slate-800 space-y-4 sticky top-20 shadow-2xs">
@@ -883,20 +839,16 @@ export default function AssignmentDetailPage() {
             ) : (
               /* Submissions List */
               <div className="space-y-3">
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
                   <h3 className="font-bold text-sm text-slate-950 dark:text-slate-100">
                     Danh sách bài nộp ({submissions.length})
                   </h3>
                 </div>
 
                 {submissions.length === 0 ? (
-                  <div className="p-8 text-center bg-slate-50/60 dark:bg-slate-900/30 rounded-xl border border-slate-100 dark:border-slate-800 space-y-1">
-                    <FileCheck size={28} className="mx-auto text-slate-300 dark:text-slate-600 mb-1" />
-                    <p className="text-xs text-slate-500 font-medium">Chưa có học sinh nào nộp bài.</p>
-                    <p className="text-[11px] text-slate-400">
-                      Chia sẻ mã PIN hoặc link làm bài cho học sinh.
-                    </p>
-                  </div>
+                  <p className="text-xs text-slate-400 py-8 text-center">
+                    Chưa có học sinh nào nộp bài.
+                  </p>
                 ) : (
                   <div className="space-y-2">
                     {submissions.map((sub) => {
