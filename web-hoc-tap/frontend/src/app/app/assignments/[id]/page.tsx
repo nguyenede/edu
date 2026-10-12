@@ -111,65 +111,57 @@ interface NormalizedQuestion {
 function extractNormalizedQuestions(assignment: any): NormalizedQuestion[] {
   if (!assignment) return [];
 
-  // 1. From assignment.quiz?.questions
+  const rawList: any[] = [];
   if (Array.isArray(assignment.quiz?.questions) && assignment.quiz.questions.length > 0) {
-    return assignment.quiz.questions.map((qq: any, idx: number) => {
-      const q = qq.question || qq;
-      const rawOpts = Array.isArray(q.options) ? q.options : [];
-      const options: NormalizedOption[] = rawOpts.map((opt: any, oIdx: number) => ({
-        id: opt?.id || `opt_${idx + 1}_${oIdx + 1}`,
-        content: typeof opt === 'string' ? opt : opt?.content || '',
-        isCorrect: Boolean(opt?.isCorrect),
-      }));
-      return {
-        id: q.id || qq.id || `q_${idx + 1}`,
-        content: q.content || '',
-        options,
-        explanation: q.explanation || '',
-        points: q.points || 1,
-      };
-    });
+    rawList.push(...assignment.quiz.questions);
+  } else if (Array.isArray(assignment.quizData?.questions) && assignment.quizData.questions.length > 0) {
+    rawList.push(...assignment.quizData.questions);
+  } else if (Array.isArray(assignment.documentFile?.parsedQuiz?.questions) && assignment.documentFile.parsedQuiz.questions.length > 0) {
+    rawList.push(...assignment.documentFile.parsedQuiz.questions);
+  } else if (Array.isArray(assignment.parsedQuiz?.questions) && assignment.parsedQuiz.questions.length > 0) {
+    rawList.push(...assignment.parsedQuiz.questions);
+  } else if (Array.isArray(assignment.questions) && assignment.questions.length > 0) {
+    rawList.push(...assignment.questions);
   }
 
-  // 2. From assignment.documentFile?.parsedQuiz?.questions
-  if (Array.isArray(assignment.documentFile?.parsedQuiz?.questions) && assignment.documentFile.parsedQuiz.questions.length > 0) {
-    return assignment.documentFile.parsedQuiz.questions.map((q: any, idx: number) => {
-      const rawOpts = Array.isArray(q.options) ? q.options : [];
-      const options: NormalizedOption[] = rawOpts.map((opt: any, oIdx: number) => ({
-        id: opt?.id || `opt_${idx + 1}_${oIdx + 1}`,
-        content: typeof opt === 'string' ? opt : opt?.content || '',
-        isCorrect: Boolean(opt?.isCorrect),
-      }));
+  return rawList.map((qq: any, idx: number) => {
+    const q = qq.question || qq;
+    const qContent = q.content || q.question || q.title || `Câu hỏi ${idx + 1}`;
+    const rawOpts = Array.isArray(q.options)
+      ? q.options
+      : Array.isArray(q.answers)
+      ? q.answers
+      : [];
+
+    const options: NormalizedOption[] = rawOpts.map((opt: any, oIdx: number) => {
+      const content = typeof opt === 'string'
+        ? opt
+        : opt?.content || opt?.text || opt?.answer || '';
+
+      let isCorrect = false;
+      if (typeof opt === 'object' && opt !== null) {
+        isCorrect = Boolean(opt.isCorrect || opt.correct);
+      }
+      if (!isCorrect && q.correctAnswer !== undefined && q.correctAnswer !== null) {
+        const letter = String.fromCharCode(65 + oIdx);
+        isCorrect = q.correctAnswer === letter || q.correctAnswer === oIdx || q.correctAnswer === content;
+      }
+
       return {
-        id: q.id || `q_${idx + 1}`,
-        content: q.content || '',
-        options,
-        explanation: q.explanation || '',
-        points: q.points || 1,
+        id: opt?.id || `opt_${idx + 1}_${oIdx + 1}`,
+        content,
+        isCorrect,
       };
     });
-  }
 
-  // 3. From direct quizData.questions
-  if (Array.isArray(assignment.quizData?.questions) && assignment.quizData.questions.length > 0) {
-    return assignment.quizData.questions.map((q: any, idx: number) => {
-      const rawOpts = Array.isArray(q.options) ? q.options : [];
-      const options: NormalizedOption[] = rawOpts.map((opt: any, oIdx: number) => ({
-        id: opt?.id || `opt_${idx + 1}_${oIdx + 1}`,
-        content: typeof opt === 'string' ? opt : opt?.content || '',
-        isCorrect: Boolean(opt?.isCorrect),
-      }));
-      return {
-        id: q.id || `q_${idx + 1}`,
-        content: q.content || '',
-        options,
-        explanation: q.explanation || '',
-        points: q.points || 1,
-      };
-    });
-  }
-
-  return [];
+    return {
+      id: q.id || qq.id || `q_${idx + 1}`,
+      content: qContent,
+      options,
+      explanation: q.explanation || '',
+      points: q.points || 1,
+    };
+  });
 }
 
 export default function AssignmentDetailPage() {
@@ -204,7 +196,11 @@ export default function AssignmentDetailPage() {
   const [copiedLink, setCopiedLink] = useState(false);
   const [copiedPin, setCopiedPin] = useState(false);
 
-  const isTeacher = user?.role === 'TEACHER';
+  const isTeacher = useMemo(() => {
+    if (!user) return true;
+    const r = (user.role || '').toUpperCase();
+    return r === 'TEACHER' || r === 'ADMIN' || r === 'GIAOVIEN';
+  }, [user]);
 
   useEffect(() => {
     if (assignment?.pin) {
@@ -367,8 +363,36 @@ export default function AssignmentDetailPage() {
 
   return (
     <AppShell
-      title={assignment.title}
-      subtitle={`Lớp: ${classNameDisplay} | Thang điểm: ${assignment.maxScore || 10}`}
+      title={
+        <div className="flex items-center gap-1 text-2xl font-[450] tracking-tight text-slate-900 dark:text-slate-100 flex-wrap -ml-2">
+          <button
+            type="button"
+            onClick={() => router.push('/app/classes')}
+            className="transition-colors cursor-pointer px-2 py-0.5 rounded-xl hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-900 dark:text-white font-[450]"
+          >
+            Lớp học của tôi
+          </button>
+          <ChevronRight size={14} className="text-slate-400 dark:text-slate-500 shrink-0 stroke-[2]" />
+          {assignment.classId && assignment.classId !== 'public' ? (
+            <button
+              type="button"
+              onClick={() => router.push(`/app/classes/${assignment.classId}`)}
+              className="transition-colors cursor-pointer px-2 py-0.5 rounded-xl hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-900 dark:text-white font-[450]"
+            >
+              {classNameDisplay}
+            </button>
+          ) : (
+            <span className="px-2 py-0.5 rounded-xl text-slate-900 dark:text-white font-[450]">
+              {classNameDisplay}
+            </span>
+          )}
+          <ChevronRight size={14} className="text-slate-400 dark:text-slate-500 shrink-0 stroke-[2]" />
+          <span className="px-2 py-0.5 rounded-xl text-slate-900 dark:text-white font-[450] truncate max-w-md">
+            {assignment.title}
+          </span>
+        </div>
+      }
+      subtitle={`Lớp: ${classNameDisplay} | Thang điểm: ${assignment.maxScore || 10}đ`}
       action={
         <div className="flex items-center gap-2">
           {assignment.pin && (

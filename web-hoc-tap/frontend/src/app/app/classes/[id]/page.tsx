@@ -30,6 +30,7 @@ import {
 } from 'lucide-react';
 import QRCode from 'qrcode';
 import * as XLSX from 'xlsx';
+import { listDocumentFiles } from '@/lib/documentsApi';
 
 import {
   fetchClassDetail,
@@ -103,6 +104,8 @@ export default function ClassDetailPage() {
   const [newDesc, setNewDesc] = useState('');
   const [deadline, setDeadline] = useState('');
   const [maxScore, setMaxScore] = useState(10);
+  const [documentFiles, setDocumentFiles] = useState<any[]>([]);
+  const [linkedDocumentFileId, setLinkedDocumentFileId] = useState('');
 
   const isTeacher = user?.role === 'TEACHER';
 
@@ -153,6 +156,18 @@ export default function ClassDetailPage() {
       const pList = getClassPosts(cId);
       setPosts(pList);
 
+      // 5. Document Files for Assignment Quiz Linking
+      try {
+        const docs = await listDocumentFiles(activeToken || '');
+        setDocumentFiles(
+          Array.isArray(docs)
+            ? docs.filter((doc) => Array.isArray(doc?.parsedQuiz?.questions) && doc.parsedQuiz.questions.length > 0)
+            : []
+        );
+      } catch (docErr) {
+        console.error('Error fetching docs for assignments:', docErr);
+      }
+
       if (detail?.code) {
         const joinUrl = typeof window !== 'undefined' ? `${window.location.origin}/app/classes/join?code=${detail.code}` : detail.code;
         QRCode.toDataURL(joinUrl, { width: 220, margin: 1 }).then((url) => setQrDataUrl(url)).catch(() => {});
@@ -190,6 +205,7 @@ export default function ClassDetailPage() {
         title: newTitle.trim(),
         description: newDesc || undefined,
         classId: String(classId),
+        documentFileId: linkedDocumentFileId || undefined,
         deadline: deadline ? new Date(deadline).toISOString() : undefined,
         maxScore: Number(maxScore),
       });
@@ -198,6 +214,7 @@ export default function ClassDetailPage() {
       setNewTitle('');
       setNewDesc('');
       setDeadline('');
+      setLinkedDocumentFileId('');
       setIsCreateAssignOpen(false);
     } catch (err: any) {
       console.error('Error creating assignment:', err);
@@ -377,16 +394,16 @@ export default function ClassDetailPage() {
   return (
     <AppShell
       title={
-        <div className="flex items-center gap-1 text-2xl font-[450] tracking-tight text-slate-900 dark:text-slate-100 flex-wrap -ml-2">
+        <div className="flex items-center gap-1 text-2xl tracking-tight text-slate-900 dark:text-slate-100 flex-wrap -ml-2">
           <button
             type="button"
             onClick={() => router.push('/app/classes')}
-            className="transition-colors cursor-pointer px-2 py-0.5 rounded-xl hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-900 dark:text-white font-[450]"
+            className="transition-colors cursor-pointer px-2 py-0.5 rounded-xl hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-900 dark:text-white font-bold"
           >
             Lớp học của tôi
           </button>
           <ChevronRight size={14} className="text-slate-400 dark:text-slate-500 shrink-0 stroke-[2]" />
-          <span className="px-2 py-0.5 rounded-xl text-slate-900 dark:text-white font-[450]">
+          <span className="px-2 py-0.5 rounded-xl text-slate-900 dark:text-white font-normal">
             {clazz.name}
           </span>
         </div>
@@ -493,7 +510,7 @@ export default function ClassDetailPage() {
                   <div className="flex items-center justify-center gap-2 pt-2">
                     <Button
                       size="sm"
-                      onClick={() => router.push(`/documents?assignClassId=${classId}&className=${encodeURIComponent(clazz?.name || '')}`)}
+                      onClick={() => router.push('/documents')}
                       className="gap-1.5"
                     >
                       <Plus size={14} /> Giao từ Kho tài liệu
@@ -987,6 +1004,36 @@ export default function ClassDetailPage() {
             />
           </div>
 
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-slate-700 dark:text-slate-300">
+              Đính kèm đề thi từ Kho tài liệu (Tùy chọn)
+            </label>
+            <select
+              value={linkedDocumentFileId}
+              onChange={(e) => {
+                const docId = e.target.value;
+                setLinkedDocumentFileId(docId);
+                if (docId && !newTitle.trim()) {
+                  const matched = documentFiles.find((d) => d.id === docId);
+                  if (matched) {
+                    setNewTitle(matched.parsedQuiz?.title || matched.name);
+                  }
+                }
+              }}
+              className="w-full px-3 py-2 text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#1a1b1d] focus:outline-none focus:ring-1 focus:ring-blue-500"
+            >
+              <option value="">-- Tự nhập / Không đính kèm đề trắc nghiệm --</option>
+              {documentFiles.map((doc) => (
+                <option key={doc.id} value={doc.id}>
+                  {doc.parsedQuiz?.title || doc.name} ({doc.parsedQuiz?.questions?.length || 0} câu)
+                </option>
+              ))}
+            </select>
+            <p className="text-[11px] text-slate-400">
+              Hệ thống sẽ tự động chấm điểm bài làm của học sinh khi đính kèm đề trắc nghiệm.
+            </p>
+          </div>
+
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <label className="text-xs font-medium text-slate-700 dark:text-slate-300">Hạn nộp</label>
@@ -1007,13 +1054,25 @@ export default function ClassDetailPage() {
             />
           </div>
 
-          <div className="flex justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
-            <Button variant="ghost" size="sm" onClick={() => setIsCreateAssignOpen(false)}>
-              Hủy
-            </Button>
-            <Button size="sm" type="submit" disabled={!newTitle.trim()}>
-              Giao bài tập
-            </Button>
+          <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800">
+            <button
+              type="button"
+              onClick={() => {
+                setIsCreateAssignOpen(false);
+                router.push(`/classes/${classId}/assignments/create`);
+              }}
+              className="text-xs text-blue-600 dark:text-blue-400 hover:underline cursor-pointer"
+            >
+              Mở trang soạn đề đầy đủ &rarr;
+            </button>
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" size="sm" type="button" onClick={() => setIsCreateAssignOpen(false)}>
+                Hủy
+              </Button>
+              <Button size="sm" type="submit" disabled={!newTitle.trim()}>
+                Giao bài tập
+              </Button>
+            </div>
           </div>
         </form>
       </Modal>

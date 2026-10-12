@@ -675,6 +675,41 @@ export async function fetchAssignmentDetail(token: string | null, assignmentId: 
               })),
             };
           }
+          if (hw && (!found.classId || found.classId === 'public') && hw.classId) {
+            found.classId = hw.classId;
+            found.className = hw.className;
+            found.class = { name: hw.className };
+          }
+        }
+      } catch (_) {}
+    }
+
+    // If questions are still missing, recover from app_documents_files or custom_uploaded_files
+    if ((!found.quiz?.questions || found.quiz.questions.length === 0) && typeof window !== 'undefined') {
+      try {
+        const rawDocs = safeLocalStorageGet('app_documents_files') || safeLocalStorageGet('custom_uploaded_files');
+        if (rawDocs) {
+          const docList = JSON.parse(rawDocs);
+          if (Array.isArray(docList)) {
+            const cleanTitle = (found.title || '').replace(/^Bài tập:\s*/i, '').trim().toLowerCase();
+            const matchedDoc = docList.find((d: any) => {
+              if (found.documentFileId && d.id === found.documentFileId) return true;
+              if (found.documentId && d.id === found.documentId) return true;
+              const dTitle = (d.parsedQuiz?.title || d.name || '').replace(/\.[^/.]+$/, '').trim().toLowerCase();
+              return dTitle && (dTitle === cleanTitle || cleanTitle.includes(dTitle) || dTitle.includes(cleanTitle));
+            });
+
+            if (matchedDoc?.parsedQuiz?.questions?.length) {
+              found.quiz = {
+                id: `quiz_${found.id}`,
+                title: matchedDoc.parsedQuiz.title || found.title,
+                questions: matchedDoc.parsedQuiz.questions.map((q: any, idx: number) => ({
+                  id: `qq_${idx + 1}`,
+                  question: q,
+                })),
+              };
+            }
+          }
         }
       } catch (_) {}
     }
