@@ -625,9 +625,60 @@ export async function fetchAssignmentDetail(token: string | null, assignmentId: 
   }
 
   if (found) {
+    const localClasses = getLocalClasses();
+    // Resolve classId and className from class assignments storage if needed
+    if ((!found.classId || found.classId === 'public') && typeof window !== 'undefined') {
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k && k.startsWith('app_class_assignments_')) {
+          const cId = k.replace('app_class_assignments_', '');
+          try {
+            const raw = localStorage.getItem(k);
+            if (raw) {
+              const list = JSON.parse(raw);
+              if (Array.isArray(list) && list.some((a: any) => a.id === found.id || a.pin === found.pin)) {
+                found.classId = cId;
+                break;
+              }
+            }
+          } catch (_) {}
+        }
+      }
+    }
+
+    if (found.classId && found.classId !== 'public') {
+      const matchedClass = localClasses.find((c) => c.id === found.classId);
+      if (matchedClass) {
+        found.className = matchedClass.name;
+        found.class = { name: matchedClass.name };
+      }
+    }
+
     if (!found.class) {
       found.class = { name: found.className || 'Toàn trường / Công khai' };
     }
+
+    // If questions are missing in quiz, recover from app_blooket_homeworks
+    if ((!found.quiz?.questions || found.quiz.questions.length === 0) && typeof window !== 'undefined') {
+      try {
+        const rawHw = safeLocalStorageGet('app_blooket_homeworks');
+        if (rawHw) {
+          const hwList = JSON.parse(rawHw);
+          const hw = hwList.find((h: any) => h.id === found.id || h.pin === found.pin);
+          if (hw?.quizData?.questions?.length) {
+            found.quiz = {
+              id: `quiz_${found.id}`,
+              title: hw.quizData.title || found.title,
+              questions: hw.quizData.questions.map((q: any, idx: number) => ({
+                id: `qq_${idx + 1}`,
+                question: q,
+              })),
+            };
+          }
+        }
+      } catch (_) {}
+    }
+
     if (found.description && typeof found.description === 'string') {
       const match = found.description.match(/<!--CONFIG:([\s\S]*?)-->/);
       if (match) {
@@ -668,6 +719,17 @@ export async function fetchAssignmentSubmissions(token: string | null, assignmen
     }
   } catch (_) {}
 
+  // Check if assignment has associated PIN
+  let assocPin = '';
+  try {
+    const rawHw = safeLocalStorageGet('app_blooket_homeworks');
+    if (rawHw) {
+      const hwList = JSON.parse(rawHw);
+      const matched = hwList.find((h: any) => h.id === assignmentId || h.pin === assignmentId);
+      if (matched?.pin) assocPin = matched.pin;
+    }
+  } catch (_) {}
+
   const storageKey = `app_assignment_subs_${assignmentId}`;
   const raw = safeLocalStorageGet(storageKey);
   if (raw) {
@@ -683,41 +745,64 @@ export async function fetchAssignmentSubmissions(token: string | null, assignmen
     } catch (_) {}
   }
 
-  // Tự động gộp bài nộp từ hệ thống kiểm tra Blooket / Play (app_homework_subs_${assignmentId})
-  const hwSubsKey = `app_homework_subs_${assignmentId}`;
-  const rawHw = safeLocalStorageGet(hwSubsKey);
-  if (rawHw) {
-    try {
-      const parsedHw = JSON.parse(rawHw);
-      if (Array.isArray(parsedHw)) {
-        parsedHw.forEach((hSub: any) => {
-          if (!subs.some((s) => s.id === hSub.id)) {
-            subs.push({
-              id: hSub.id,
-              status: 'GRADED',
-              score: hSub.score,
-              feedback: null,
-              submittedAt: hSub.submittedAt,
-              violationCount: hSub.violationCount || 0,
-              violationLogs: hSub.violationLogs || [],
-              timeSpentSeconds: hSub.timeSpentSeconds || 0,
-              student: {
-                id: hSub.studentId || `stu_${hSub.id}`,
-                profile: { name: hSub.studentName },
-                email: `${hSub.studentName.toLowerCase().replace(/\s+/g, '')}@student.edu`,
-              },
-              answers: Object.entries(hSub.answers || {}).map(([qId, ans]: [string, any]) => ({
-                id: `ans_${qId}`,
-                questionId: qId,
-                answerContent: ans.selectedAnswer,
-                isCorrect: ans.isCorrect,
-              })),
-            });
-          }
-        });
-      }
-    } catch (_) {}
+  if (assocPin && assocPin !== assignmentId) {
+    const rawPinSubs = safeLocalStorageGet(`app_assignment_subs_${assocPin}`);
+    if (rawPinSubs) {
+      try {
+        const parsedPin = JSON.parse(rawPinSubs);
+        if (Array.isArray(parsedPin)) {
+          parsedPin.filter((s: any) => !isDummySubmission(s)).forEach((item) => {
+            if (!subs.some((s) => s.id === item.id)) {
+              subs.push(item);
+            }
+          });
+        }
+      } catch (_) {}
+    }
   }
+
+  // Tự động gộp bài nộp từ hệ thống kiểm tra Blooket / Play
+  const keysToCheck = [`app_homework_subs_${assignmentId}`];
+  if (assocPin && assocPin !== assignmentId) {
+    keysToCheck.push(`app_homework_subs_${assocPin}`);
+  }
+
+  keysToCheck.forEach((hwSubsKey) => {
+    const rawHw = safeLocalStorageGet(hwSubsKey);
+    if (rawHw) {
+      try {
+        const parsedHw = JSON.parse(rawHw);
+        if (Array.isArray(parsedHw)) {
+          parsedHw.forEach((hSub: any) => {
+            if (!subs.some((s) => s.id === hSub.id)) {
+              const stuName = hSub.studentName || hSub.student?.profile?.name || 'Học sinh';
+              subs.push({
+                id: hSub.id,
+                status: 'GRADED',
+                score: hSub.score,
+                feedback: hSub.feedback || null,
+                submittedAt: hSub.submittedAt,
+                violationCount: hSub.violationCount || 0,
+                violationLogs: hSub.violationLogs || [],
+                timeSpentSeconds: hSub.timeSpentSeconds || 0,
+                student: {
+                  id: hSub.studentId || `stu_${hSub.id}`,
+                  profile: { name: stuName },
+                  email: `${stuName.toLowerCase().replace(/\s+/g, '')}@student.edu`,
+                },
+                answers: Object.entries(hSub.answers || {}).map(([qId, ans]: [string, any]) => ({
+                  id: `ans_${qId}`,
+                  questionId: qId,
+                  answerContent: typeof ans === 'object' && ans !== null ? ans.selectedAnswer : ans,
+                  isCorrect: typeof ans === 'object' && ans !== null ? Boolean(ans.isCorrect) : true,
+                })),
+              });
+            }
+          });
+        }
+      } catch (_) {}
+    }
+  });
 
   return subs;
 }

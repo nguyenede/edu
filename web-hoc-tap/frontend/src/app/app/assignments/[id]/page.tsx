@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo, Component, ErrorInfo, ReactNode } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/useAuthStore';
 import { AppShell } from '@/components/AppShell';
@@ -25,13 +25,20 @@ import {
   ShieldAlert,
   ShieldCheck,
   AlertTriangle,
-  Maximize2,
-  Minimize2,
   QrCode,
   Copy,
   Check,
+  ExternalLink,
+  BookOpen,
+  HelpCircle,
+  Play,
+  RotateCcw,
 } from 'lucide-react';
 import QRCode from 'qrcode';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
 
 import {
   fetchAssignmentDetail,
@@ -42,6 +49,129 @@ import {
   deleteClassAssignment,
 } from '@/lib/classesApi';
 
+// Error Boundary for Math/KaTeX rendering
+class MathErrorBoundary extends Component<{ fallback: ReactNode; children: ReactNode }, { hasError: boolean }> {
+  constructor(props: { fallback: ReactNode; children: ReactNode }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    console.warn('Math KaTeX rendering error:', error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return this.props.fallback;
+    }
+    return this.props.children;
+  }
+}
+
+function MathRenderer({ text, className = '' }: { text: any; className?: string }) {
+  if (text === null || text === undefined) return null;
+  const rawStr = typeof text === 'string' ? text : typeof text === 'number' ? String(text) : text?.content ? String(text.content) : '';
+  if (!rawStr) return null;
+
+  return (
+    <MathErrorBoundary fallback={<span className={`inline leading-relaxed ${className}`}>{rawStr}</span>}>
+      <span className={`inline ${className}`}>
+        <ReactMarkdown
+          remarkPlugins={[remarkGfm, remarkMath]}
+          rehypePlugins={[[rehypeKatex, { throwOnError: false, errorColor: '#d97706', strict: false }]]}
+          components={{
+            p: ({ children }) => <span className="inline leading-relaxed">{children}</span>,
+          }}
+        >
+          {rawStr}
+        </ReactMarkdown>
+      </span>
+    </MathErrorBoundary>
+  );
+}
+
+interface NormalizedOption {
+  id: string;
+  content: string;
+  isCorrect: boolean;
+}
+
+interface NormalizedQuestion {
+  id: string;
+  content: string;
+  options: NormalizedOption[];
+  explanation?: string;
+  points?: number;
+}
+
+function extractNormalizedQuestions(assignment: any): NormalizedQuestion[] {
+  if (!assignment) return [];
+
+  // 1. From assignment.quiz?.questions
+  if (Array.isArray(assignment.quiz?.questions) && assignment.quiz.questions.length > 0) {
+    return assignment.quiz.questions.map((qq: any, idx: number) => {
+      const q = qq.question || qq;
+      const rawOpts = Array.isArray(q.options) ? q.options : [];
+      const options: NormalizedOption[] = rawOpts.map((opt: any, oIdx: number) => ({
+        id: opt?.id || `opt_${idx + 1}_${oIdx + 1}`,
+        content: typeof opt === 'string' ? opt : opt?.content || '',
+        isCorrect: Boolean(opt?.isCorrect),
+      }));
+      return {
+        id: q.id || qq.id || `q_${idx + 1}`,
+        content: q.content || '',
+        options,
+        explanation: q.explanation || '',
+        points: q.points || 1,
+      };
+    });
+  }
+
+  // 2. From assignment.documentFile?.parsedQuiz?.questions
+  if (Array.isArray(assignment.documentFile?.parsedQuiz?.questions) && assignment.documentFile.parsedQuiz.questions.length > 0) {
+    return assignment.documentFile.parsedQuiz.questions.map((q: any, idx: number) => {
+      const rawOpts = Array.isArray(q.options) ? q.options : [];
+      const options: NormalizedOption[] = rawOpts.map((opt: any, oIdx: number) => ({
+        id: opt?.id || `opt_${idx + 1}_${oIdx + 1}`,
+        content: typeof opt === 'string' ? opt : opt?.content || '',
+        isCorrect: Boolean(opt?.isCorrect),
+      }));
+      return {
+        id: q.id || `q_${idx + 1}`,
+        content: q.content || '',
+        options,
+        explanation: q.explanation || '',
+        points: q.points || 1,
+      };
+    });
+  }
+
+  // 3. From direct quizData.questions
+  if (Array.isArray(assignment.quizData?.questions) && assignment.quizData.questions.length > 0) {
+    return assignment.quizData.questions.map((q: any, idx: number) => {
+      const rawOpts = Array.isArray(q.options) ? q.options : [];
+      const options: NormalizedOption[] = rawOpts.map((opt: any, oIdx: number) => ({
+        id: opt?.id || `opt_${idx + 1}_${oIdx + 1}`,
+        content: typeof opt === 'string' ? opt : opt?.content || '',
+        isCorrect: Boolean(opt?.isCorrect),
+      }));
+      return {
+        id: q.id || `q_${idx + 1}`,
+        content: q.content || '',
+        options,
+        explanation: q.explanation || '',
+        points: q.points || 1,
+      };
+    });
+  }
+
+  return [];
+}
+
 export default function AssignmentDetailPage() {
   const { id: assignmentId } = useParams();
   const router = useRouter();
@@ -51,6 +181,9 @@ export default function AssignmentDetailPage() {
   const [submissions, setSubmissions] = useState<any[]>([]);
   const [mySubmission, setMySubmission] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+
+  // Teacher UI State
+  const [teacherTab, setTeacherTab] = useState<'questions' | 'try'>('questions');
 
   // Student State
   const [studentAnswers, setStudentAnswers] = useState<{ [qId: string]: string }>({});
@@ -69,6 +202,9 @@ export default function AssignmentDetailPage() {
   const [isQrModalOpen, setIsQrModalOpen] = useState(false);
   const [qrCodeUrl, setQrCodeUrl] = useState('');
   const [copiedLink, setCopiedLink] = useState(false);
+  const [copiedPin, setCopiedPin] = useState(false);
+
+  const isTeacher = user?.role === 'TEACHER';
 
   useEffect(() => {
     if (assignment?.pin) {
@@ -85,8 +221,6 @@ export default function AssignmentDetailPage() {
         .catch(() => {});
     }
   }, [assignment?.pin]);
-
-  const isTeacher = user?.role === 'TEACHER';
 
   useEffect(() => {
     fetchData();
@@ -108,11 +242,15 @@ export default function AssignmentDetailPage() {
         setMySubmission(mySub);
       }
     } catch (err) {
-      console.error(err);
+      console.error('Error fetching assignment detail:', err);
     } finally {
       setLoading(false);
     }
   };
+
+  const normalizedQuestions = useMemo(() => {
+    return extractNormalizedQuestions(assignment);
+  }, [assignment]);
 
   const handleDeleteAssignment = async () => {
     if (!assignment) return;
@@ -125,17 +263,23 @@ export default function AssignmentDetailPage() {
     }
   };
 
+  const handleCopyPin = (pin: string) => {
+    navigator.clipboard.writeText(pin);
+    setCopiedPin(true);
+    setTimeout(() => setCopiedPin(false), 2000);
+  };
+
+  const handleCopyLink = () => {
+    if (!assignment?.pin) return;
+    const url = `${window.location.origin}/play?pin=${assignment.pin}`;
+    navigator.clipboard.writeText(url);
+    setCopiedLink(true);
+    setTimeout(() => setCopiedLink(false), 2000);
+  };
+
   const handleStudentSubmit = async () => {
     setSubmitting(true);
-    const linkedDocumentQuestions = Array.isArray(assignment.documentFile?.parsedQuiz?.questions)
-      ? assignment.documentFile.parsedQuiz.questions
-      : [];
-    const answersList = assignment.quiz
-      ? Object.entries(studentAnswers).map(([questionId, answerContent]) => ({
-          questionId,
-          answerContent,
-        }))
-      : linkedDocumentQuestions.length > 0
+    const answersList = normalizedQuestions.length > 0
       ? Object.entries(studentAnswers).map(([questionId, answerContent]) => ({
           questionId,
           answerContent,
@@ -184,24 +328,14 @@ export default function AssignmentDetailPage() {
     setGradeFeedback(sub.feedback || '');
   };
 
-  const documentQuestions = Array.isArray(assignment?.documentFile?.parsedQuiz?.questions)
-    ? assignment.documentFile.parsedQuiz.questions
-    : [];
-
   const formatSubmittedAnswer = (ans: any) => {
-    if (assignment?.quiz) {
-      const quizQuestion = assignment.quiz.questions?.find((qq: any) => qq.questionId === ans.questionId);
-      const option = quizQuestion?.question?.options?.find((opt: any) => opt.id === ans.answerContent);
-      return option?.content || ans.answerContent;
+    if (normalizedQuestions.length > 0) {
+      const question = normalizedQuestions.find((q, idx) => q.id === ans.questionId || `q_${idx + 1}` === ans.questionId);
+      if (question) {
+        const option = question.options.find((opt, oIdx) => opt.id === ans.answerContent || String(oIdx) === String(ans.answerContent));
+        if (option) return option.content;
+      }
     }
-
-    if (documentQuestions.length > 0) {
-      const question = documentQuestions.find((q: any, idx: number) => (q.id || `q_${idx + 1}`) === ans.questionId);
-      const selectedIndex = Number(ans.answerContent);
-      const option = Number.isInteger(selectedIndex) ? question?.options?.[selectedIndex] : null;
-      return option?.content || ans.answerContent;
-    }
-
     return ans.answerContent;
   };
 
@@ -229,10 +363,12 @@ export default function AssignmentDetailPage() {
     );
   }
 
+  const classNameDisplay = assignment.class?.name || assignment.className || 'Lớp học';
+
   return (
     <AppShell
       title={assignment.title}
-      subtitle={`Lớp: ${assignment.class?.name || assignment.className || 'Toàn trường / Công khai'} | Thang điểm: ${assignment.maxScore || 10}`}
+      subtitle={`Lớp: ${classNameDisplay} | Thang điểm: ${assignment.maxScore || 10}`}
       action={
         <div className="flex items-center gap-2">
           {assignment.pin && (
@@ -253,7 +389,7 @@ export default function AssignmentDetailPage() {
                 className="gap-1.5 text-xs rounded-xl text-google-blue"
                 title="Mở giao diện làm bài thi phong cách Blooket"
               >
-                Làm thử ngay
+                <Play size={14} /> Làm thử ngay
               </Button>
             </>
           )}
@@ -287,48 +423,240 @@ export default function AssignmentDetailPage() {
         </div>
       }
     >
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        {/* Left 2 Cols: Assignment Description & Work Area */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* Left 2 Cols: Main Content Area */}
         <div className="md:col-span-2 space-y-6">
-          {/* Assignment Meta */}
-          <div className="space-y-3 pb-4 border-b border-slate-100 dark:border-slate-800">
-            <div className="flex flex-wrap gap-4 items-center text-xs text-slate-500">
-              <span className="flex items-center gap-1">
-                <Calendar size={14} />
-                Hạn nộp:{' '}
-                {assignment.deadline
-                  ? new Date(assignment.deadline).toLocaleString('vi-VN')
-                  : 'Không giới hạn'}
+          {/* Assignment Meta Card */}
+          <div className="p-4 bg-slate-50/90 dark:bg-slate-900/40 rounded-xl border border-slate-100 dark:border-slate-800 space-y-3 shadow-2xs">
+            <div className="flex flex-wrap gap-3 items-center text-xs text-slate-500">
+              <span className="flex items-center gap-1.5">
+                <Calendar size={14} className="text-slate-400" />
+                Hạn nộp:{' ' }
+                <strong className="text-slate-700 dark:text-slate-300">
+                  {assignment.deadline
+                    ? new Date(assignment.deadline).toLocaleString('vi-VN')
+                    : 'Không giới hạn'}
+                </strong>
               </span>
-              <span className="flex items-center gap-1">
-                <Award size={14} /> Điểm tối đa: {assignment.maxScore}
+
+              <span className="flex items-center gap-1.5">
+                <Award size={14} className="text-amber-500" />
+                Thang điểm: <strong className="text-slate-700 dark:text-slate-300">{assignment.maxScore || 10}đ</strong>
               </span>
-              {assignment.quiz && <Badge variant="info">Trắc nghiệm liên kết</Badge>}
-              {assignment.documentFile && <Badge variant="success">Đề từ Kho tài liệu</Badge>}
+
+              {assignment.durationMinutes ? (
+                <span className="flex items-center gap-1.5">
+                  <Clock size={14} className="text-blue-500" />
+                  Thời gian: <strong className="text-slate-700 dark:text-slate-300">{assignment.durationMinutes} phút</strong>
+                </span>
+              ) : null}
+
+              {normalizedQuestions.length > 0 && (
+                <Badge variant="info">Trắc nghiệm ({normalizedQuestions.length} câu)</Badge>
+              )}
+
               {assignment.antiCheat ? (
-                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-300">
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-purple-100 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300">
                   <ShieldCheck size={12} /> Chống gian lận: BẬT
                 </span>
               ) : (
-                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400">
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400">
                   <Shield size={12} /> Chống gian lận: TẮT
                 </span>
               )}
+
               {assignment.pin && (
-                <span className="px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300 font-mono font-bold text-[11px] border border-indigo-200 dark:border-indigo-800">
-                  Mã PIN Blooket: {assignment.pin}
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 font-mono font-bold text-[11px] border border-blue-200 dark:border-blue-800">
+                  PIN Blooket: {assignment.pin}
                 </span>
               )}
             </div>
 
             {assignment.description && (
-              <div className="text-sm text-slate-800 dark:text-slate-200 whitespace-pre-line leading-relaxed">
+              <div className="pt-2 border-t border-slate-200/50 dark:border-slate-800/50 text-xs text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-line">
                 {assignment.description}
               </div>
             )}
           </div>
 
-          {/* Student Interaction Area */}
+          {/* ================= TEACHER VIEW ================= */}
+          {isTeacher && (
+            <div className="space-y-4">
+              {/* Teacher Sub-navigation Tabs */}
+              <div className="flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
+                <button
+                  type="button"
+                  onClick={() => setTeacherTab('questions')}
+                  className={`text-xs font-semibold py-1 px-3 rounded-lg transition-colors cursor-pointer ${
+                    teacherTab === 'questions'
+                      ? 'bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300'
+                      : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+                  }`}
+                >
+                  Đề thi & Danh sách câu hỏi ({normalizedQuestions.length})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setTeacherTab('try')}
+                  className={`text-xs font-semibold py-1 px-3 rounded-lg transition-colors cursor-pointer ${
+                    teacherTab === 'try'
+                      ? 'bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300'
+                      : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+                  }`}
+                >
+                  Làm thử trực tiếp
+                </button>
+              </div>
+
+              {/* Tab 1: Questions Preview (Teacher Inspection) */}
+              {teacherTab === 'questions' && (
+                <div className="space-y-4">
+                  {normalizedQuestions.length === 0 ? (
+                    <div className="p-8 text-center bg-slate-50/50 dark:bg-slate-900/20 rounded-xl space-y-2 border border-slate-100 dark:border-slate-800">
+                      <HelpCircle size={32} className="mx-auto text-slate-300 dark:text-slate-600" />
+                      <p className="text-xs text-slate-500 font-medium">
+                        Bài tập này là bài tập tự luận hoặc chưa có câu hỏi trắc nghiệm liên kết.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {normalizedQuestions.map((q, qIdx) => (
+                        <div
+                          key={q.id || qIdx}
+                          className="p-4 rounded-xl border border-slate-100 dark:border-slate-800 bg-white dark:bg-[#1a1b1d] shadow-2xs space-y-3"
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wide">
+                              Câu {qIdx + 1}
+                            </span>
+                            <span className="text-[11px] text-slate-400">
+                              Trắc nghiệm đơn
+                            </span>
+                          </div>
+
+                          <div className="text-xs font-semibold text-slate-900 dark:text-slate-100 leading-relaxed">
+                            <MathRenderer text={q.content} />
+                          </div>
+
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+                            {q.options.map((opt, optIdx) => {
+                              const label = String.fromCharCode(65 + optIdx);
+                              const isCorrect = opt.isCorrect;
+                              return (
+                                <div
+                                  key={opt.id || optIdx}
+                                  className={`p-2.5 rounded-lg border text-xs flex items-start gap-2.5 transition-colors ${
+                                    isCorrect
+                                      ? 'border-emerald-500/80 bg-emerald-50/60 dark:bg-emerald-950/30 text-emerald-900 dark:text-emerald-100 font-medium ring-1 ring-emerald-500/30'
+                                      : 'border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/40 text-slate-700 dark:text-slate-300'
+                                  }`}
+                                >
+                                  <span
+                                    className={`w-5 h-5 rounded-full flex items-center justify-center font-bold text-[10px] shrink-0 ${
+                                      isCorrect
+                                        ? 'bg-emerald-600 text-white'
+                                        : 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
+                                    }`}
+                                  >
+                                    {label}
+                                  </span>
+                                  <div className="flex-1 leading-relaxed">
+                                    <MathRenderer text={opt.content} />
+                                    {isCorrect && (
+                                      <span className="ml-2 inline-flex items-center gap-0.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
+                                        ✓ Đáp án đúng
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+
+                          {q.explanation && (
+                            <div className="mt-2 p-2.5 rounded-lg bg-blue-50/50 dark:bg-blue-950/30 border border-blue-100 dark:border-blue-900/40 text-[11px] text-blue-900 dark:text-blue-200">
+                              <span className="font-bold block mb-0.5">Lời giải chi tiết:</span>
+                              <MathRenderer text={q.explanation} />
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Tab 2: Try Exam directly (Interactive Preview) */}
+              {teacherTab === 'try' && (
+                <div className="space-y-4">
+                  <div className="p-3 bg-blue-50 dark:bg-blue-950/30 rounded-lg text-xs text-blue-800 dark:text-blue-300 flex items-center justify-between">
+                    <span>
+                      Chế độ làm thử giúp bạn trải nghiệm giao diện làm bài của học sinh. Bạn cũng có thể mở trực tiếp giao diện thi gamified qua mã PIN Blooket.
+                    </span>
+                    {assignment.pin && (
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        onClick={() => window.open(`/play?pin=${assignment.pin}`, '_blank')}
+                        className="gap-1 shrink-0 ml-3"
+                      >
+                        <Play size={12} /> Blooket Play
+                      </Button>
+                    )}
+                  </div>
+
+                  {normalizedQuestions.map((q, qIdx) => (
+                    <div
+                      key={q.id || qIdx}
+                      className="p-4 rounded-xl border border-slate-100 dark:border-slate-800 bg-white dark:bg-[#1a1b1d] shadow-2xs space-y-3"
+                    >
+                      <span className="text-xs font-bold text-blue-600 dark:text-blue-400 block uppercase">
+                        Câu {qIdx + 1}
+                      </span>
+                      <div className="text-xs font-semibold text-slate-900 dark:text-slate-100 leading-relaxed">
+                        <MathRenderer text={q.content} />
+                      </div>
+
+                      <div className="space-y-2 pt-1">
+                        {q.options.map((opt, optIdx) => {
+                          const label = String.fromCharCode(65 + optIdx);
+                          const isSelected = studentAnswers[q.id] === opt.id || studentAnswers[q.id] === String(optIdx);
+                          return (
+                            <label
+                              key={opt.id || optIdx}
+                              className={`flex items-center gap-3 p-2.5 rounded-lg cursor-pointer text-xs font-medium select-none border transition-colors ${
+                                isSelected
+                                  ? 'bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border-blue-400 font-semibold'
+                                  : 'bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-200 border-transparent hover:bg-slate-100 dark:hover:bg-slate-800/60'
+                              }`}
+                            >
+                              <input
+                                type="radio"
+                                name={`try_${q.id}`}
+                                value={opt.id}
+                                checked={isSelected}
+                                onChange={() =>
+                                  setStudentAnswers({
+                                    ...studentAnswers,
+                                    [q.id]: opt.id,
+                                  })
+                                }
+                                className="h-3.5 w-3.5 text-blue-600"
+                              />
+                              <span className="font-bold mr-1">{label}.</span>
+                              <MathRenderer text={opt.content} />
+                            </label>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ================= STUDENT VIEW ================= */}
           {!isTeacher && (
             <div className="space-y-4">
               {mySubmission ? (
@@ -338,7 +666,7 @@ export default function AssignmentDetailPage() {
                     <div className="flex items-center gap-2">
                       <CheckCircle2 size={18} className="text-emerald-600 dark:text-emerald-400" />
                       <span className="font-bold text-sm text-slate-950 dark:text-slate-100">
-                        Bạn đã nộp bài tập này
+                        Bạn đã hoàn thành bài tập này
                       </span>
                     </div>
                     <Badge variant={mySubmission.status === 'GRADED' ? 'success' : 'warning'}>
@@ -365,18 +693,15 @@ export default function AssignmentDetailPage() {
                       Chi tiết bài làm đã gửi
                     </span>
                     <div className="divide-y divide-slate-100 dark:divide-slate-800">
-                      {mySubmission.answers.map((ans: any, idx: number) => (
-                        <div
-                          key={ans.id}
-                          className="py-3 text-xs space-y-1"
-                        >
+                      {(mySubmission.answers || []).map((ans: any, idx: number) => (
+                        <div key={ans.id || idx} className="py-3 text-xs space-y-1">
                           <span className="font-semibold text-slate-700 dark:text-slate-300 block">
-                            {assignment.quiz ? `Câu hỏi ${idx + 1}` : 'Nội dung bài làm'}:
+                            Câu {idx + 1}:
                           </span>
-                          <p className="text-slate-900 dark:text-slate-100 font-mono bg-slate-50 dark:bg-slate-900 p-2.5 rounded-lg">
-                            {formatSubmittedAnswer(ans)}
+                          <p className="text-slate-900 dark:text-slate-100 font-mono bg-slate-50 dark:bg-slate-900 p-2.5 rounded-lg flex items-center justify-between">
+                            <span>{formatSubmittedAnswer(ans)}</span>
                             {typeof ans.isCorrect === 'boolean' && (
-                              <span className={ans.isCorrect ? 'ml-2 text-emerald-600 font-bold' : 'ml-2 text-red-600 font-bold'}>
+                              <span className={ans.isCorrect ? 'text-emerald-600 font-bold ml-2' : 'text-red-600 font-bold ml-2'}>
                                 {ans.isCorrect ? '✓ Đúng' : '✕ Sai'}
                               </span>
                             )}
@@ -387,107 +712,72 @@ export default function AssignmentDetailPage() {
                   </div>
                 </div>
               ) : (
-                /* Submission Form */
+                /* Student Submission Form */
                 <div className="space-y-5">
-                  <h3 className="font-bold text-sm text-slate-950 dark:text-slate-100">
-                    Làm bài tập
-                  </h3>
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-bold text-sm text-slate-950 dark:text-slate-100">
+                      Làm bài tập
+                    </h3>
+                    {assignment.pin && (
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        onClick={() => window.open(`/play?pin=${assignment.pin}`, '_blank')}
+                        className="gap-1.5 text-xs text-blue-600"
+                      >
+                        <Play size={13} /> Làm qua Blooket Game
+                      </Button>
+                    )}
+                  </div>
 
-                  {assignment.quiz ? (
-                    /* Linked Quiz Mode */
-                    <div className="divide-y divide-slate-100 dark:divide-slate-800">
-                      {assignment.quiz.questions.map((qq: any, idx: number) => {
-                        const q = qq.question;
-                        return (
-                          <div
-                            key={q.id}
-                            className="py-4 space-y-3"
-                          >
-                            <span className="text-xs font-bold text-blue-600 dark:text-blue-400 block uppercase">
-                              Câu {idx + 1}
-                            </span>
-                            <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-                              {q.content}
-                            </p>
+                  {normalizedQuestions.length > 0 ? (
+                    <div className="space-y-4">
+                      {normalizedQuestions.map((q, idx) => (
+                        <div
+                          key={q.id}
+                          className="p-4 rounded-xl border border-slate-100 dark:border-slate-800 bg-white dark:bg-[#1a1b1d] shadow-2xs space-y-3"
+                        >
+                          <span className="text-xs font-bold text-blue-600 dark:text-blue-400 block uppercase">
+                            Câu {idx + 1}
+                          </span>
+                          <div className="text-xs font-semibold text-slate-900 dark:text-slate-100 leading-relaxed">
+                            <MathRenderer text={q.content} />
+                          </div>
 
-                            <div className="space-y-2 pt-1">
-                              {q.options.map((opt: any) => (
+                          <div className="space-y-2 pt-1">
+                            {q.options.map((opt, optIdx) => {
+                              const label = String.fromCharCode(65 + optIdx);
+                              const isSelected = studentAnswers[q.id] === opt.id || studentAnswers[q.id] === String(optIdx);
+                              return (
                                 <label
                                   key={opt.id}
-                                  className={`flex items-center gap-3 p-2.5 rounded-lg cursor-pointer text-xs font-medium select-none ${
-                                    studentAnswers[q.id] === opt.id
-                                      ? 'bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 font-semibold ring-1 ring-blue-500'
-                                      : 'bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/60'
+                                  className={`flex items-center gap-3 p-2.5 rounded-lg cursor-pointer text-xs font-medium select-none border transition-colors ${
+                                    isSelected
+                                      ? 'bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border-blue-400 font-semibold ring-1 ring-blue-500/30'
+                                      : 'bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-200 border-transparent hover:bg-slate-100 dark:hover:bg-slate-800/60'
                                   }`}
                                 >
                                   <input
                                     type="radio"
                                     name={q.id}
                                     value={opt.id}
-                                    checked={studentAnswers[q.id] === opt.id}
-                                    onChange={(e) =>
+                                    checked={isSelected}
+                                    onChange={() =>
                                       setStudentAnswers({
                                         ...studentAnswers,
-                                        [q.id]: e.target.value,
+                                        [q.id]: opt.id,
                                       })
                                     }
-                                    className="h-4 w-4 text-blue-600"
+                                    className="h-3.5 w-3.5 text-blue-600"
                                   />
-                                  {opt.content}
+                                  <span className="font-bold mr-1">{label}.</span>
+                                  <MathRenderer text={opt.content} />
                                 </label>
-                              ))}
-                            </div>
+                              );
+                            })}
                           </div>
-                        );
-                      })}
-                    </div>
-                  ) : documentQuestions.length > 0 ? (
-                    <div className="divide-y divide-slate-100 dark:divide-slate-800">
-                      {documentQuestions.map((q: any, idx: number) => {
-                        const questionId = q.id || `q_${idx + 1}`;
-                        const options = Array.isArray(q.options) ? q.options : [];
-                        return (
-                          <div
-                            key={questionId}
-                            className="py-4 space-y-3"
-                          >
-                            <span className="text-xs font-bold text-blue-600 dark:text-blue-400 block uppercase">
-                              Câu {idx + 1}
-                            </span>
-                            <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-                              {q.content}
-                            </p>
-
-                            <div className="space-y-2 pt-1">
-                              {options.map((opt: any, optIdx: number) => (
-                                <label
-                                  key={`${questionId}_${optIdx}`}
-                                  className={`flex items-center gap-3 p-2.5 rounded-lg cursor-pointer text-xs font-medium select-none ${
-                                    studentAnswers[questionId] === String(optIdx)
-                                      ? 'bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 font-semibold ring-1 ring-blue-500'
-                                      : 'bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/60'
-                                  }`}
-                                >
-                                  <input
-                                    type="radio"
-                                    name={questionId}
-                                    value={optIdx}
-                                    checked={studentAnswers[questionId] === String(optIdx)}
-                                    onChange={(e) =>
-                                      setStudentAnswers({
-                                        ...studentAnswers,
-                                        [questionId]: e.target.value,
-                                      })
-                                    }
-                                    className="h-4 w-4 text-blue-600"
-                                  />
-                                  {opt.content}
-                                </label>
-                              ))}
-                            </div>
-                          </div>
-                        );
-                      })}
+                        </div>
+                      ))}
                     </div>
                   ) : (
                     /* Essay Mode */
@@ -497,7 +787,7 @@ export default function AssignmentDetailPage() {
                       </label>
                       <textarea
                         placeholder="Nhập chi tiết lời giải, bài văn hoặc câu trả lời tại đây..."
-                        className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 rounded-lg text-xs focus:ring-1 focus:ring-blue-500 min-h-[160px]"
+                        className="w-full px-3 py-2.5 bg-white dark:bg-[#1a1b1d] text-slate-900 dark:text-slate-100 rounded-lg border border-slate-200 dark:border-slate-700 text-xs focus:ring-1 focus:ring-blue-500 min-h-[160px]"
                         value={essayContent}
                         onChange={(e) => setEssayContent(e.target.value)}
                         required
@@ -522,15 +812,59 @@ export default function AssignmentDetailPage() {
         {/* Right 1 Col: Teacher Submissions List & Grading Panel */}
         {isTeacher && (
           <div className="md:col-span-1 space-y-4">
+            {/* Quick Share Card */}
+            {assignment.pin && (
+              <div className="p-4 rounded-xl border border-blue-100 dark:border-blue-900/40 bg-blue-50/50 dark:bg-blue-950/20 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-bold text-blue-800 dark:text-blue-300 uppercase tracking-wider">
+                    Mã PIN Blooket
+                  </span>
+                  <button
+                    onClick={() => setIsQrModalOpen(true)}
+                    className="text-[11px] font-semibold text-blue-600 hover:underline flex items-center gap-1 cursor-pointer"
+                  >
+                    <QrCode size={13} /> Mã QR
+                  </button>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div className="text-2xl font-black font-mono tracking-wider text-blue-600 dark:text-blue-400">
+                    {assignment.pin}
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      onClick={() => handleCopyPin(assignment.pin)}
+                      className="text-xs py-1 px-2.5 gap-1"
+                    >
+                      {copiedPin ? <Check size={12} /> : <Copy size={12} />}
+                      <span>{copiedPin ? 'Đã chép' : 'Chép PIN'}</span>
+                    </Button>
+                  </div>
+                </div>
+
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={handleCopyLink}
+                  className="w-full text-xs py-1.5 gap-1.5"
+                >
+                  {copiedLink ? <Check size={13} /> : <ExternalLink size={13} />}
+                  <span>{copiedLink ? 'Đã chép link làm bài' : 'Sao chép link làm bài'}</span>
+                </Button>
+              </div>
+            )}
+
             {selectedSub ? (
               /* Grading Form Panel */
-              <div className="space-y-4 sticky top-20 pb-4">
-                <div className="space-y-1 pb-3 border-b border-slate-100 dark:border-slate-800">
+              <div className="p-4 bg-slate-50/90 dark:bg-slate-900/40 rounded-xl border border-slate-100 dark:border-slate-800 space-y-4 sticky top-20 shadow-2xs">
+                <div className="space-y-1 pb-2 border-b border-slate-200/50 dark:border-slate-800/50">
                   <h3 className="font-bold text-sm text-slate-950 dark:text-slate-100">
                     Chấm điểm bài nộp
                   </h3>
                   <p className="text-xs text-slate-500 font-medium">
-                    Học sinh: {selectedSub.student.profile?.name || selectedSub.student.email}
+                    Học sinh: {selectedSub.student?.profile?.name || selectedSub.student?.name || selectedSub.student?.email || 'Học sinh'}
                   </p>
                 </div>
 
@@ -539,14 +873,14 @@ export default function AssignmentDetailPage() {
                   <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider block">
                     Bài làm đã gửi:
                   </span>
-                  <div className="max-h-56 overflow-y-auto p-3 bg-slate-50 dark:bg-slate-900 rounded-lg text-xs space-y-2">
-                    {selectedSub.answers.map((ans: any, idx: number) => (
-                      <div key={ans.id} className="space-y-0.5">
+                  <div className="max-h-52 overflow-y-auto p-3 bg-white dark:bg-[#1a1b1d] rounded-lg border border-slate-100 dark:border-slate-800 text-xs space-y-2.5">
+                    {(selectedSub.answers || []).map((ans: any, idx: number) => (
+                      <div key={ans.id || idx} className="space-y-0.5">
                         <span className="text-[10px] text-slate-400 font-bold block">
-                          {assignment.quiz ? `Câu ${idx + 1}` : 'Nội dung'}:
+                          Câu {idx + 1}:
                         </span>
-                        <p className="font-mono text-slate-800 dark:text-slate-200">
-                          {formatSubmittedAnswer(ans)}
+                        <p className="font-mono text-slate-800 dark:text-slate-200 flex items-center justify-between">
+                          <span>{formatSubmittedAnswer(ans)}</span>
                           {typeof ans.isCorrect === 'boolean' && (
                             <span className={ans.isCorrect ? 'ml-2 text-emerald-600 font-bold' : 'ml-2 text-red-600 font-bold'}>
                               {ans.isCorrect ? '✓ Đúng' : '✕ Sai'}
@@ -562,11 +896,11 @@ export default function AssignmentDetailPage() {
                 {selectedSub.violationLogs && selectedSub.violationLogs.length > 0 && (
                   <div className="p-3 bg-red-50/70 dark:bg-red-950/30 border border-red-200 dark:border-red-900/50 rounded-xl space-y-1.5 text-xs">
                     <div className="font-bold text-red-700 dark:text-red-400 flex items-center gap-1.5">
-                      <ShieldAlert size={14} /> Nhật ký vi phạm chống gian lận ({selectedSub.violationLogs.length} lần):
+                      <ShieldAlert size={14} /> Nhật ký vi phạm ({selectedSub.violationLogs.length} lần):
                     </div>
-                    <div className="space-y-1 max-h-32 overflow-y-auto">
+                    <div className="space-y-1 max-h-28 overflow-y-auto">
                       {selectedSub.violationLogs.map((log: any, lIdx: number) => (
-                        <div key={lIdx} className="text-[11px] text-red-600 dark:text-red-300 flex items-start gap-1">
+                        <div key={lIdx} className="text-[10px] text-red-600 dark:text-red-300 flex items-start gap-1">
                           <span className="font-mono text-slate-400 shrink-0">[{log.timestamp}]</span>
                           <span>{log.message}</span>
                         </div>
@@ -577,11 +911,11 @@ export default function AssignmentDetailPage() {
 
                 <form onSubmit={handleSaveGrade} className="space-y-3">
                   <Input
-                    label={`Điểm số (Tối đa ${assignment.maxScore})`}
+                    label={`Điểm số (Tối đa ${assignment.maxScore || 10})`}
                     type="number"
                     step="0.1"
                     min="0"
-                    max={assignment.maxScore}
+                    max={assignment.maxScore || 10}
                     value={gradeScore}
                     onChange={(e) => setGradeScore(Number(e.target.value))}
                     required
@@ -593,13 +927,13 @@ export default function AssignmentDetailPage() {
                     </label>
                     <textarea
                       placeholder="Nhập nhận xét gửi đến học sinh..."
-                      className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 rounded-lg text-xs focus:ring-1 focus:ring-blue-500 min-h-[80px]"
+                      className="w-full px-3 py-2 bg-white dark:bg-[#1a1b1d] border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-lg text-xs focus:ring-1 focus:ring-blue-500 min-h-[70px]"
                       value={gradeFeedback}
                       onChange={(e) => setGradeFeedback(e.target.value)}
                     />
                   </div>
 
-                  <div className="flex gap-2 pt-2">
+                  <div className="flex gap-2 pt-1">
                     <Button
                       type="button"
                       variant="ghost"
@@ -618,52 +952,50 @@ export default function AssignmentDetailPage() {
             ) : (
               /* Submissions List */
               <div className="space-y-3">
-                <h3 className="font-bold text-sm text-slate-950 dark:text-slate-100 flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
-                  <span>Danh sách bài nộp ({submissions.length})</span>
-                </h3>
+                <div className="flex items-center justify-between">
+                  <h3 className="font-bold text-sm text-slate-950 dark:text-slate-100">
+                    Danh sách bài nộp ({submissions.length})
+                  </h3>
+                </div>
 
                 {submissions.length === 0 ? (
-                  <p className="text-xs text-slate-400 py-8 text-center">
-                    Chưa có học sinh nào nộp bài.
-                  </p>
+                  <div className="p-8 text-center bg-slate-50/60 dark:bg-slate-900/30 rounded-xl border border-slate-100 dark:border-slate-800 space-y-1">
+                    <FileCheck size={28} className="mx-auto text-slate-300 dark:text-slate-600 mb-1" />
+                    <p className="text-xs text-slate-500 font-medium">Chưa có học sinh nào nộp bài.</p>
+                    <p className="text-[11px] text-slate-400">
+                      Chia sẻ mã PIN hoặc link làm bài cho học sinh.
+                    </p>
+                  </div>
                 ) : (
-                  <div className="divide-y divide-slate-100 dark:divide-slate-800">
-                    {submissions.map((sub) => (
-                      <div
-                        key={sub.id}
-                        onClick={() => selectForGrading(sub)}
-                        className="py-3 px-2 flex justify-between items-center cursor-pointer hover:bg-slate-50/50 dark:hover:bg-slate-900/30 rounded-lg transition-colors select-none group"
-                      >
-                        <div className="space-y-0.5">
-                          <span className="font-bold text-xs text-slate-900 dark:text-slate-100 block group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                            {sub.student.profile?.name || sub.student.email}
-                          </span>
-                          <div className="flex items-center gap-2 text-[10px] text-slate-400">
-                            <span>
-                              {new Date(sub.submittedAt).toLocaleTimeString('vi-VN')}{' '}
+                  <div className="space-y-2">
+                    {submissions.map((sub) => {
+                      const studentName = sub.student?.profile?.name || sub.student?.name || sub.student?.email || 'Học sinh';
+                      return (
+                        <div
+                          key={sub.id}
+                          onClick={() => selectForGrading(sub)}
+                          className="p-3 bg-white dark:bg-[#1a1b1d] rounded-xl border border-slate-100 dark:border-slate-800 flex justify-between items-center cursor-pointer hover:border-blue-300 dark:hover:border-blue-700 transition-colors select-none shadow-2xs"
+                        >
+                          <div className="space-y-0.5 min-w-0 pr-2">
+                            <span className="font-bold text-xs text-slate-900 dark:text-slate-100 block truncate">
+                              {studentName}
+                            </span>
+                            <span className="text-[10px] text-slate-400 block">
+                              {new Date(sub.submittedAt).toLocaleTimeString('vi-VN')}{' ' }
                               {new Date(sub.submittedAt).toLocaleDateString('vi-VN')}
                             </span>
-                            {sub.violationCount !== undefined && sub.violationCount > 0 ? (
-                              <span className="text-red-500 font-bold flex items-center gap-0.5">
-                                <ShieldAlert size={10} /> Rời tab {sub.violationCount} lần
-                              </span>
-                            ) : sub.violationCount === 0 ? (
-                              <span className="text-emerald-500 font-semibold flex items-center gap-0.5">
-                                <ShieldCheck size={10} /> 0 vi phạm
-                              </span>
-                            ) : null}
+                          </div>
+
+                          <div className="text-right shrink-0">
+                            <Badge variant={sub.status === 'GRADED' ? 'success' : 'warning'}>
+                              {sub.status === 'GRADED'
+                                ? `${sub.score} / ${assignment.maxScore || 10}đ`
+                                : 'Chờ chấm'}
+                            </Badge>
                           </div>
                         </div>
-
-                        <div className="text-right">
-                          <Badge variant={sub.status === 'GRADED' ? 'success' : 'warning'}>
-                            {sub.status === 'GRADED'
-                              ? `${sub.score} / ${assignment.maxScore}`
-                              : 'Chờ chấm'}
-                          </Badge>
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </div>
@@ -671,6 +1003,65 @@ export default function AssignmentDetailPage() {
           </div>
         )}
       </div>
+
+      {/* Modal QR Code */}
+      <Modal
+        isOpen={isQrModalOpen}
+        onClose={() => setIsQrModalOpen(false)}
+        title="Mã QR & PIN làm bài kiểm tra"
+        maxWidth="md"
+      >
+        <div className="space-y-4 pt-1 text-center">
+          <p className="text-xs text-slate-500">
+            Học sinh có thể quét mã QR bằng camera điện thoại hoặc vào <strong>kiyoedu.com/play</strong> và nhập mã PIN.
+          </p>
+
+          {qrCodeUrl && (
+            <div className="p-3 bg-white rounded-xl inline-block border border-slate-100 mx-auto shadow-xs">
+              <img src={qrCodeUrl} alt="Mã QR làm bài" className="w-52 h-52 mx-auto" />
+            </div>
+          )}
+
+          {assignment.pin && (
+            <div className="flex items-center justify-between p-3 rounded-lg bg-blue-50 dark:bg-blue-950/40 border border-blue-100 dark:border-blue-900/50">
+              <div className="text-left">
+                <span className="text-[10px] text-blue-600 dark:text-blue-400 font-semibold uppercase">Mã PIN Blooket</span>
+                <div className="text-xl font-mono font-black text-blue-700 dark:text-blue-300 tracking-wider">
+                  {assignment.pin}
+                </div>
+              </div>
+              <Button size="sm" onClick={() => handleCopyPin(assignment.pin)} className="gap-1.5">
+                {copiedPin ? <Check size={13} /> : <Copy size={13} />}
+                <span>{copiedPin ? 'Đã chép' : 'Sao chép PIN'}</span>
+              </Button>
+            </div>
+          )}
+
+          <div className="flex items-center justify-between p-3 rounded-lg bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800">
+            <div className="text-left truncate mr-2">
+              <span className="text-[10px] text-slate-400 font-semibold uppercase">Link làm bài</span>
+              <div className="text-xs text-slate-500 truncate">
+                {typeof window !== 'undefined' ? `${window.location.origin}/play?pin=${assignment.pin}` : ''}
+              </div>
+            </div>
+            <Button variant="secondary" size="sm" onClick={handleCopyLink} className="gap-1 shrink-0">
+              {copiedLink ? <Check size={13} /> : <Copy size={13} />}
+              <span>{copiedLink ? 'Đã chép' : 'Chép link'}</span>
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Delete Assignment Confirmation */}
+      <ConfirmDialog
+        isOpen={isDeleteAssignOpen}
+        onClose={() => setIsDeleteAssignOpen(false)}
+        onConfirm={handleDeleteAssignment}
+        title="Xóa bài tập này?"
+        message={`Bạn có chắc chắn muốn xóa bài tập "${assignment.title}"? Dữ liệu bài nộp liên quan sẽ bị xóa vĩnh viễn.`}
+        isDestructive
+        confirmText="Xóa bài tập"
+      />
 
       {/* Student Submit Confirmation */}
       <ConfirmDialog
@@ -682,72 +1073,6 @@ export default function AssignmentDetailPage() {
         confirmText="Xác nhận nộp bài"
         loading={submitting}
       />
-
-      {/* Teacher Delete Assignment Confirmation */}
-      <ConfirmDialog
-        isOpen={isDeleteAssignOpen}
-        onClose={() => setIsDeleteAssignOpen(false)}
-        onConfirm={handleDeleteAssignment}
-        title="Xóa bài tập này?"
-        message={`Bạn có chắc chắn muốn xóa bài tập "${assignment.title}"? Tất cả bài nộp của học sinh đối với bài tập này cũng sẽ bị xóa.`}
-        isDestructive
-        confirmText="Xóa bài tập"
-      />
-
-      {/* QR Code Presentation Modal */}
-      {isQrModalOpen && assignment?.pin && (
-        <Modal
-          isOpen={isQrModalOpen}
-          onClose={() => setIsQrModalOpen(false)}
-          title="Mã QR làm bài tập"
-          maxWidth="md"
-        >
-          <div className="p-6 text-center space-y-4">
-            <div className="space-y-1">
-              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">
-                Mã PIN làm bài
-              </span>
-              <div className="font-mono text-4xl font-extrabold text-google-blue">
-                {assignment.pin.slice(0, 3)} {assignment.pin.slice(3)}
-              </div>
-            </div>
-
-            {qrCodeUrl ? (
-              <div className="p-3 bg-white rounded-2xl border border-slate-200 shadow-sm inline-block mx-auto">
-                <img src={qrCodeUrl} alt="Mã QR" className="w-56 h-56 rounded-xl mx-auto object-contain" />
-              </div>
-            ) : (
-              <div className="w-56 h-56 flex items-center justify-center text-xs text-slate-400 mx-auto">
-                Đang tạo mã QR...
-              </div>
-            )}
-
-            <p className="text-xs text-slate-500 max-w-xs mx-auto">
-              Học sinh dùng điện thoại (Camera hoặc Zalo) quét mã này để vào thẳng phòng thi và làm bài ngay.
-            </p>
-
-            <div className="flex items-center justify-center gap-2 pt-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  const url =
-                    typeof window !== 'undefined'
-                      ? `${window.location.origin}/play?pin=${assignment.pin}`
-                      : `http://localhost:3000/play?pin=${assignment.pin}`;
-                  navigator.clipboard.writeText(url);
-                  setCopiedLink(true);
-                  setTimeout(() => setCopiedLink(false), 2000);
-                }}
-                className="gap-1.5 text-xs rounded-xl"
-              >
-                {copiedLink ? <Check size={14} className="text-emerald-500" /> : <Copy size={14} />}
-                {copiedLink ? 'Đã sao chép link' : 'Sao chép link làm bài'}
-              </Button>
-            </div>
-          </div>
-        </Modal>
-      )}
     </AppShell>
   );
 }
