@@ -295,7 +295,7 @@ export const LuckyWheelGame: React.FC<LuckyWheelGameProps> = ({
   ];
 
   return (
-    <div className="w-full bg-[#f0f4f9] dark:bg-[#282a2c] rounded-2xl shadow-sm border border-slate-200/80 dark:border-white/10 overflow-hidden flex flex-col">
+    <div className="w-full bg-[#f4f7fb] dark:bg-[#151618] rounded-3xl shadow-xl border border-slate-200/90 dark:border-white/10 overflow-hidden flex flex-col transition-all">
       {/* 1. TEACHER CLASSROOM HEADER */}
       <ClassroomTeacherHeader
         title={examTitle}
@@ -322,18 +322,18 @@ export const LuckyWheelGame: React.FC<LuckyWheelGameProps> = ({
       />
 
       {/* 2. VISUAL SPINNING WHEEL STAGE */}
-      <div className="p-4 sm:p-6 flex flex-col items-center justify-center space-y-4">
-        <div className="w-full max-w-4xl bg-gradient-to-b from-purple-100 to-indigo-100 dark:from-purple-950/40 dark:to-indigo-950/40 rounded-2xl p-4 sm:p-6 border border-purple-200 dark:border-purple-800/40 shadow-inner flex flex-col items-center justify-center relative">
+      <div className="p-3.5 sm:p-6 flex flex-col items-center justify-center space-y-5">
+        <div className="w-full max-w-4xl bg-gradient-to-b from-purple-100 via-indigo-100 to-purple-200 dark:from-purple-950/70 dark:via-indigo-950/50 dark:to-purple-950/70 rounded-3xl p-4 sm:p-6 border border-purple-300 dark:border-purple-800/50 shadow-lg flex flex-col items-center justify-center relative">
           <div className="relative mb-2">
-            {/* Top pointer arrow */}
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-2 z-10 w-0 h-0 border-l-[12px] border-l-transparent border-r-[12px] border-r-transparent border-t-[22px] border-t-amber-500 filter drop-shadow-md" />
+            {/* Top pointer arrow with neon drop shadow */}
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-2.5 z-10 w-0 h-0 border-l-[14px] border-l-transparent border-r-[14px] border-r-transparent border-t-[24px] border-t-amber-500 filter drop-shadow-lg" />
 
             {/* Canvas Wheel */}
             <canvas
               ref={canvasRef}
               width={320}
               height={320}
-              className="w-[240px] h-[240px] sm:w-[290px] sm:h-[290px] rounded-full cursor-pointer shadow-lg active:scale-98 transition-transform"
+              className="w-[250px] h-[250px] sm:w-[300px] sm:h-[300px] rounded-full cursor-pointer shadow-2xl active:scale-98 transition-transform border-4 border-white dark:border-zinc-800"
               onClick={spinWheel}
             />
           </div>
@@ -343,14 +343,14 @@ export const LuckyWheelGame: React.FC<LuckyWheelGameProps> = ({
             type="button"
             disabled={isSpinning}
             onClick={spinWheel}
-            className={`mt-2 px-6 py-2.5 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center gap-2 cursor-pointer shadow-md ${
+            className={`mt-2 px-8 py-3 rounded-2xl text-xs sm:text-sm font-black transition-all flex items-center gap-2.5 cursor-pointer shadow-lg active:scale-95 ${
               isSpinning
                 ? 'bg-slate-300 dark:bg-zinc-700 text-slate-500 cursor-not-allowed'
-                : 'bg-purple-600 hover:bg-purple-700 text-white active:scale-95'
+                : 'bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white shadow-purple-500/25 ring-2 ring-purple-400/40'
             }`}
           >
-            <RotateCw size={16} className={isSpinning ? 'animate-spin' : ''} />
-            <span>{isSpinning ? 'Đang quay...' : 'Bắt đầu quay chọn câu'}</span>
+            <RotateCw size={17} className={isSpinning ? 'animate-spin' : ''} />
+            <span>{isSpinning ? 'Đang quay số...' : 'Bắt đầu quay chọn câu 🎡'}</span>
           </button>
         </div>
 

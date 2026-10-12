@@ -7,44 +7,25 @@ import {
   idbGetAllFolders,
   idbDeleteFolder,
   idbSyncAndGetAll,
+  matchDocId,
+  isNameMatch,
+  isDocumentTombstoned,
+  addDeletedDocTombstone,
+  removeDeletedDocTombstone,
   DocumentFileItem,
   DocumentFolderItem,
 } from './indexedDbStorage';
 import { safeLocalStorageSet } from './safeStorage';
 
+export {
+  matchDocId,
+  isNameMatch,
+  isDocumentTombstoned,
+  addDeletedDocTombstone,
+  removeDeletedDocTombstone,
+};
+
 const API_BASE = typeof window !== 'undefined' ? '/api/documents' : 'http://127.0.0.1:5000/api/documents';
-
-/**
- * Thuật toán so khớp mã tài liệu / ID đề thi thông minh (chống sai lệch URL / encoding / typo)
- */
-export function matchDocId(targetId: string, searchId: string): boolean {
-  if (!targetId || !searchId) return false;
-  if (targetId === searchId) return true;
-  if (decodeURIComponent(targetId) === searchId) return true;
-
-  const cleanT = targetId.toLowerCase().replace(/[^a-z0-9]/g, '');
-  const cleanS = searchId.toLowerCase().replace(/[^a-z0-9]/g, '');
-  if (cleanT === cleanS) return true;
-
-  // Khớp nếu cùng chuỗi số timestamp (ví dụ file_1791698305008_... và filc_1791698305008_...)
-  const numPartT = targetId.match(/\d{10,}/)?.[0];
-  const numPartS = searchId.match(/\d{10,}/)?.[0];
-  if (numPartT && numPartS && numPartT === numPartS) {
-    return true;
-  }
-
-  // Khớp nếu phần đuôi (sau tiền tố 4 ký tự: file vs filc) trùng khớp
-  if (cleanT.length >= 10 && cleanS.length >= 10) {
-    if (cleanT.slice(4) === cleanS.slice(4)) return true;
-  }
-
-  // Khớp nếu ID này bao hàm ID kia
-  if (cleanT.includes(cleanS) || cleanS.includes(cleanT)) {
-    return true;
-  }
-
-  return false;
-}
 
 async function safeApiFetch(url: string, options: RequestInit = {}, timeoutMs: number = 800): Promise<Response | null> {
   try {
@@ -80,10 +61,11 @@ export async function listDocuments(token: string, folderId?: string | null) {
   if (typeof window !== 'undefined') {
     try {
       const idbData = await idbSyncAndGetAll();
-      if (idbData.documents.length > 0 || idbData.folders.length > 0) {
+      const validFiles = idbData.documents.filter((f) => f && !isDocumentTombstoned(f.id, f.name, f.parsedQuiz?.title));
+      if (validFiles.length > 0 || idbData.folders.length > 0) {
         return {
           folders: idbData.folders,
-          files: idbData.documents,
+          files: validFiles,
         };
       }
     } catch (err) {
@@ -95,10 +77,13 @@ export async function listDocuments(token: string, folderId?: string | null) {
       const rawFiles = localStorage.getItem('app_documents_files');
       const allFolders = rawFolders ? JSON.parse(rawFolders) : [];
       const allFiles = rawFiles ? JSON.parse(rawFiles) : [];
-      if (allFolders.length > 0 || allFiles.length > 0) {
+      const validLocalFiles = (Array.isArray(allFiles) ? allFiles : []).filter(
+        (f: any) => f && !isDocumentTombstoned(f.id, f.name, f.parsedQuiz?.title)
+      );
+      if (allFolders.length > 0 || validLocalFiles.length > 0) {
         return {
           folders: Array.isArray(allFolders) ? allFolders : [],
-          files: Array.isArray(allFiles) ? allFiles : [],
+          files: validLocalFiles,
         };
       }
     } catch {}
@@ -114,7 +99,13 @@ export async function listDocuments(token: string, folderId?: string | null) {
     if (res && res.ok) {
       const remote = await parseResponse(res);
       if (remote && (Array.isArray(remote.folders) || Array.isArray(remote.files))) {
-        return remote;
+        const cleanRemoteFiles = (Array.isArray(remote.files) ? remote.files : []).filter(
+          (f: any) => f && !isDocumentTombstoned(f.id, f.name, f.parsedQuiz?.title)
+        );
+        return {
+          folders: remote.folders || [],
+          files: cleanRemoteFiles,
+        };
       }
     }
   } catch {}
@@ -208,6 +199,7 @@ export async function createDocumentFile(token: string, payload: any): Promise<a
 
   // 1. LƯU NGAY LẬP TỨC VÀO INDEXEDDB & LOCALSTORAGE (Tốc độ 0ms, không phụ thuộc mạng/backend)
   if (typeof window !== 'undefined') {
+    removeDeletedDocTombstone(newFile.id, newFile.name);
     try {
       await idbSaveDocument(newFile);
       const raw = localStorage.getItem('app_documents_files');
@@ -379,25 +371,80 @@ export async function renameDocumentFile(token: string, id: string, name: string
   return { success: true, name };
 }
 
-export async function deleteDocumentFile(token: string, id: string) {
+export async function deleteDocumentFile(token: string, id: string, name?: string, title?: string) {
   if (typeof window !== 'undefined') {
     try {
-      await idbDeleteDocument(id);
+      addDeletedDocTombstone(id, name, title);
+      await idbDeleteDocument(id, name, title);
       const allDocs = await idbGetAllDocuments();
       for (const d of allDocs) {
-        if (d && (d.id === id || matchDocId(d.id, id))) {
-          await idbDeleteDocument(d.id);
+        if (
+          d &&
+          (d.id === id ||
+            matchDocId(d.id, id) ||
+            (name && isNameMatch(d.name, name)) ||
+            (title && isNameMatch(d.parsedQuiz?.title, title)) ||
+            isDocumentTombstoned(d.id, d.name, d.parsedQuiz?.title))
+        ) {
+          await idbDeleteDocument(d.id, d.name, d.parsedQuiz?.title);
         }
       }
       const raw = localStorage.getItem('app_documents_files');
       if (raw) {
-        const files = JSON.parse(raw).filter((f: any) => f.id !== id && !matchDocId(f.id, id));
+        const files = JSON.parse(raw).filter(
+          (f: any) =>
+            f &&
+            f.id !== id &&
+            !matchDocId(f.id, id) &&
+            !(name && isNameMatch(f.name, name)) &&
+            !(title && isNameMatch(f.parsedQuiz?.title, title)) &&
+            !isDocumentTombstoned(f.id, f.name, f.parsedQuiz?.title)
+        );
         safeLocalStorageSet('app_documents_files', JSON.stringify(files));
       }
       const rawCustom = localStorage.getItem('custom_uploaded_files');
       if (rawCustom) {
-        const filesCustom = JSON.parse(rawCustom).filter((f: any) => f.id !== id && !matchDocId(f.id, id));
+        const filesCustom = JSON.parse(rawCustom).filter(
+          (f: any) =>
+            f &&
+            f.id !== id &&
+            !matchDocId(f.id, id) &&
+            !(name && isNameMatch(f.name, name)) &&
+            !(title && isNameMatch(f.parsedQuiz?.title, title)) &&
+            !isDocumentTombstoned(f.id, f.name, f.parsedQuiz?.title)
+        );
         safeLocalStorageSet('custom_uploaded_files', JSON.stringify(filesCustom));
+      }
+
+      // Purge matching sessions from chatcoi_history_sessions
+      const rawSessions = localStorage.getItem('chatcoi_history_sessions');
+      if (rawSessions) {
+        const sessions = JSON.parse(rawSessions);
+        if (Array.isArray(sessions)) {
+          let changed = false;
+          for (const s of sessions) {
+            for (const msg of s.messages || []) {
+              if (Array.isArray(msg.executedActions)) {
+                msg.executedActions = msg.executedActions.filter((act: any) => {
+                  if (act.actionType === 'exam' && act.data) {
+                    if (
+                      matchDocId(act.data.examId, id) ||
+                      (name && isNameMatch(act.data.title, name)) ||
+                      (title && isNameMatch(act.data.title, title))
+                    ) {
+                      changed = true;
+                      return false;
+                    }
+                  }
+                  return true;
+                });
+              }
+            }
+          }
+          if (changed) {
+            safeLocalStorageSet('chatcoi_history_sessions', JSON.stringify(sessions));
+          }
+        }
       }
     } catch {}
   }

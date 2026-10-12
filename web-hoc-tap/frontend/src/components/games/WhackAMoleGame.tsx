@@ -212,7 +212,7 @@ export const WhackAMoleGame: React.FC<WhackAMoleGameProps> = ({
   ];
 
   return (
-    <div className="w-full bg-[#f0f4f9] dark:bg-[#282a2c] rounded-2xl shadow-sm border border-slate-200/80 dark:border-white/10 overflow-hidden flex flex-col">
+    <div className="w-full bg-[#f4f7fb] dark:bg-[#151618] rounded-3xl shadow-xl border border-slate-200/90 dark:border-white/10 overflow-hidden flex flex-col transition-all">
       {/* 1. TEACHER CLASSROOM HEADER */}
       <ClassroomTeacherHeader
         title={examTitle}
@@ -239,8 +239,8 @@ export const WhackAMoleGame: React.FC<WhackAMoleGameProps> = ({
       />
 
       {/* 2. VISUAL MOLE BURROW ARENA */}
-      <div className="p-4 sm:p-6 flex flex-col items-center justify-center space-y-4">
-        <div className="w-full max-w-4xl bg-gradient-to-b from-amber-100 via-stone-200 to-amber-200 dark:from-stone-900 dark:via-stone-950 dark:to-stone-900 rounded-2xl p-4 sm:p-6 border border-amber-300 dark:border-stone-700 shadow-inner flex flex-col justify-between min-h-[220px]">
+      <div className="p-3.5 sm:p-6 flex flex-col items-center justify-center space-y-5">
+        <div className="w-full max-w-4xl bg-gradient-to-b from-amber-100 via-stone-200 to-amber-200 dark:from-stone-900 dark:via-stone-950 dark:to-stone-900 rounded-3xl p-5 sm:p-7 border border-amber-300 dark:border-stone-700 shadow-xl flex flex-col justify-between min-h-[230px] relative overflow-hidden">
           {/* Top Banner */}
           <div className="flex items-center justify-between text-xs sm:text-sm font-bold text-stone-800 dark:text-stone-200">
             <div className="flex items-center gap-2">

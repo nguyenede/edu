@@ -20,6 +20,10 @@ import {
   idbDeleteDocument,
   idbDeleteFolder,
   idbGetAllDocuments,
+  isDocumentTombstoned,
+  addDeletedDocTombstone,
+  removeDeletedDocTombstone,
+  isNameMatch,
 } from '@/lib/indexedDbStorage';
 import {
   createDocumentFile,
@@ -119,6 +123,11 @@ function DocumentsPageContent() {
 
     for (const f of fileList) {
       if (!f || !f.id) continue;
+      // Skip and auto-purge any tombstoned / deleted document
+      if (isDocumentTombstoned(f.id, f.name, f.parsedQuiz?.title)) {
+        duplicateIdsToDelete.push(f.id);
+        continue;
+      }
       if (f.parsedQuiz && Array.isArray(f.parsedQuiz.questions)) {
         for (const q of f.parsedQuiz.questions) {
           if (q && q.explanation) {
@@ -174,7 +183,10 @@ function DocumentsPageContent() {
         if (savedFiles) {
           const parsed = JSON.parse(savedFiles);
           if (Array.isArray(parsed) && parsed.length > 0) {
-            setFiles(deduplicateFiles(parsed));
+            const clean = parsed.filter(
+              (f: any) => f && !isDocumentTombstoned(f.id, f.name, f.parsedQuiz?.title)
+            );
+            setFiles(deduplicateFiles(clean));
           }
         }
         const savedFolders = localStorage.getItem('app_documents_folders');
@@ -670,6 +682,7 @@ function DocumentsPageContent() {
     type: 'folder' | 'file';
     id: string;
     name: string;
+    title?: string;
   } | null>(null);
 
   // Marquee Drag Selection Event Listeners
@@ -765,9 +778,23 @@ function DocumentsPageContent() {
     setBatchDeleteModal(null);
     const totalCount = fileIds.length + folderIds.length;
 
+    // Collect info on files being deleted
+    const deletedFiles = files.filter((f) => fileIds.includes(f.id));
+    for (const df of deletedFiles) {
+      addDeletedDocTombstone(df.id, df.name, df.parsedQuiz?.title);
+    }
+    for (const fId of fileIds) {
+      addDeletedDocTombstone(fId);
+    }
+
     // Optimistic UI updates
     setFiles((prev) =>
-      prev.filter((f) => !fileIds.includes(f.id) && !folderIds.includes(f.parentId || ''))
+      prev.filter(
+        (f) =>
+          !fileIds.includes(f.id) &&
+          !folderIds.includes(f.parentId || '') &&
+          !isDocumentTombstoned(f.id, f.name, f.parsedQuiz?.title)
+      )
     );
     setFolders((prev) =>
       prev.filter((f) => !folderIds.includes(f.id) && !folderIds.includes(f.parentId || ''))
@@ -777,6 +804,9 @@ function DocumentsPageContent() {
 
     // Direct local persistence cleanup in IndexedDB and localStorage
     try {
+      for (const df of deletedFiles) {
+        await idbDeleteDocument(df.id, df.name, df.parsedQuiz?.title);
+      }
       for (const id of fileIds) {
         await idbDeleteDocument(id);
       }
@@ -786,7 +816,10 @@ function DocumentsPageContent() {
       const rawF = localStorage.getItem('app_documents_files');
       if (rawF) {
         const updated = JSON.parse(rawF).filter(
-          (f: any) => !fileIds.includes(f.id) && !folderIds.includes(f.parentId || '')
+          (f: any) =>
+            !fileIds.includes(f.id) &&
+            !folderIds.includes(f.parentId || '') &&
+            !isDocumentTombstoned(f.id, f.name, f.parsedQuiz?.title)
         );
         safeLocalStorageSet('app_documents_files', JSON.stringify(updated));
       }
@@ -797,6 +830,16 @@ function DocumentsPageContent() {
         );
         safeLocalStorageSet('app_documents_folders', JSON.stringify(updated));
       }
+      const rawCustom = localStorage.getItem('custom_uploaded_files');
+      if (rawCustom) {
+        const updatedCustom = JSON.parse(rawCustom).filter(
+          (f: any) =>
+            !fileIds.includes(f.id) &&
+            !folderIds.includes(f.parentId || '') &&
+            !isDocumentTombstoned(f.id, f.name, f.parsedQuiz?.title)
+        );
+        safeLocalStorageSet('custom_uploaded_files', JSON.stringify(updatedCustom));
+      }
     } catch (e) {
       console.warn('Batch delete storage purge error:', e);
     }
@@ -806,6 +849,7 @@ function DocumentsPageContent() {
     if (token) {
       try {
         await Promise.all([
+          ...deletedFiles.map((df) => deleteDocumentFile(token, df.id, df.name, df.parsedQuiz?.title)),
           ...fileIds.map((id) => deleteDocumentFile(token, id)),
           ...folderIds.map((id) => deleteDocumentFolder(token, id)),
         ]);
@@ -859,7 +903,7 @@ function DocumentsPageContent() {
           const file = files.find((f) => f.id === selectedItemId);
           if (file) {
             e.preventDefault();
-            setItemToDelete({ type: 'file', id: file.id, name: file.name });
+            setItemToDelete({ type: 'file', id: file.id, name: file.name, title: file.parsedQuiz?.title });
             return;
           }
           const folder = folders.find((f) => f.id === selectedItemId);
@@ -1368,6 +1412,8 @@ function DocumentsPageContent() {
       },
     };
 
+    removeDeletedDocTombstone(newDocFile.id, newDocFile.name);
+
     if (token) {
       try {
         newDocFile = await createDocumentFile(token, newDocFile);
@@ -1425,40 +1471,95 @@ function DocumentsPageContent() {
     showToast('Đã xóa thư mục thành công');
   };
 
-  const handleDeleteFile = async (fileId: string, e?: React.MouseEvent) => {
+  const handleDeleteFile = async (fileId: string, fileName?: string, fileTitle?: string, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
 
-    // 1. Immediately update UI state
-    setFiles((prev) => prev.filter((f) => f.id !== fileId && !matchDocId(f.id, fileId)));
+    const targetFile = files.find((f) => f.id === fileId || matchDocId(f.id, fileId));
+    const resolvedName = fileName || targetFile?.name;
+    const resolvedTitle = fileTitle || targetFile?.parsedQuiz?.title;
 
-    // 2. Direct local cleanup in IndexedDB & localStorage
+    // 1. Immediately record tombstone
+    addDeletedDocTombstone(fileId, resolvedName, resolvedTitle);
+
+    // 2. Immediately update UI state
+    setFiles((prev) =>
+      prev.filter((f) => {
+        if (!f) return false;
+        if (f.id === fileId || matchDocId(f.id, fileId)) return false;
+        if (resolvedName && isNameMatch(f.name, resolvedName)) return false;
+        if (resolvedTitle && isNameMatch(f.parsedQuiz?.title, resolvedTitle)) return false;
+        if (isDocumentTombstoned(f.id, f.name, f.parsedQuiz?.title)) return false;
+        return true;
+      })
+    );
+
+    // 3. Direct local cleanup in IndexedDB & localStorage
     try {
-      await idbDeleteDocument(fileId);
-      const allDocs = await idbGetAllDocuments();
-      for (const d of allDocs) {
-        if (d && (d.id === fileId || matchDocId(d.id, fileId))) {
-          await idbDeleteDocument(d.id);
-        }
-      }
+      await idbDeleteDocument(fileId, resolvedName, resolvedTitle);
 
       const raw = localStorage.getItem('app_documents_files');
       if (raw) {
-        const updated = JSON.parse(raw).filter((f: any) => f.id !== fileId && !matchDocId(f.id, fileId));
+        const updated = JSON.parse(raw).filter((f: any) => {
+          if (!f) return false;
+          if (f.id === fileId || matchDocId(f.id, fileId)) return false;
+          if (resolvedName && isNameMatch(f.name, resolvedName)) return false;
+          if (resolvedTitle && isNameMatch(f.parsedQuiz?.title, resolvedTitle)) return false;
+          if (isDocumentTombstoned(f.id, f.name, f.parsedQuiz?.title)) return false;
+          return true;
+        });
         safeLocalStorageSet('app_documents_files', JSON.stringify(updated));
       }
       const rawCustom = localStorage.getItem('custom_uploaded_files');
       if (rawCustom) {
-        const updatedCustom = JSON.parse(rawCustom).filter((f: any) => f.id !== fileId && !matchDocId(f.id, fileId));
+        const updatedCustom = JSON.parse(rawCustom).filter((f: any) => {
+          if (!f) return false;
+          if (f.id === fileId || matchDocId(f.id, fileId)) return false;
+          if (resolvedName && isNameMatch(f.name, resolvedName)) return false;
+          if (resolvedTitle && isNameMatch(f.parsedQuiz?.title, resolvedTitle)) return false;
+          if (isDocumentTombstoned(f.id, f.name, f.parsedQuiz?.title)) return false;
+          return true;
+        });
         safeLocalStorageSet('custom_uploaded_files', JSON.stringify(updatedCustom));
+      }
+
+      // Purge matching sessions from chatcoi_history_sessions
+      const rawSessions = localStorage.getItem('chatcoi_history_sessions');
+      if (rawSessions) {
+        const sessions = JSON.parse(rawSessions);
+        if (Array.isArray(sessions)) {
+          let changed = false;
+          for (const s of sessions) {
+            for (const msg of s.messages || []) {
+              if (Array.isArray(msg.executedActions)) {
+                msg.executedActions = msg.executedActions.filter((act: any) => {
+                  if (act.actionType === 'exam' && act.data) {
+                    if (
+                      matchDocId(act.data.examId, fileId) ||
+                      (resolvedName && isNameMatch(act.data.title, resolvedName)) ||
+                      (resolvedTitle && isNameMatch(act.data.title, resolvedTitle))
+                    ) {
+                      changed = true;
+                      return false;
+                    }
+                  }
+                  return true;
+                });
+              }
+            }
+          }
+          if (changed) {
+            safeLocalStorageSet('chatcoi_history_sessions', JSON.stringify(sessions));
+          }
+        }
       }
     } catch (err) {
       console.warn('Local delete file error:', err);
     }
 
-    // 3. Remote server sync
+    // 4. Remote server sync
     if (token) {
       try {
-        await deleteDocumentFile(token, fileId);
+        await deleteDocumentFile(token, fileId, resolvedName, resolvedTitle);
         setSyncError(null);
       } catch (err: any) {
         console.warn('Server delete document warning:', err);
@@ -1472,7 +1573,7 @@ function DocumentsPageContent() {
     if (itemToDelete.type === 'folder') {
       await handleDeleteFolder(itemToDelete.id);
     } else {
-      await handleDeleteFile(itemToDelete.id);
+      await handleDeleteFile(itemToDelete.id, itemToDelete.name, itemToDelete.title);
     }
     if (selectedItemId === itemToDelete.id) {
       setSelectedItemId(null);
@@ -1829,6 +1930,7 @@ function DocumentsPageContent() {
                               type: 'file',
                               id: fileItem.id,
                               name: fileItem.name,
+                              title: fileItem.parsedQuiz?.title,
                             });
                           }}
                           className="p-1 rounded-full text-slate-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 transition-colors cursor-pointer"
@@ -2168,6 +2270,7 @@ function DocumentsPageContent() {
                       type: 'file',
                       id: contextMenu.file!.id,
                       name: contextMenu.file!.name,
+                      title: contextMenu.file?.parsedQuiz?.title,
                     });
                   }
                   setContextMenu((prev) => ({ ...prev, isOpen: false }));

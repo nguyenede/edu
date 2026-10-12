@@ -217,7 +217,7 @@ export const BubblePopGame: React.FC<BubblePopGameProps> = ({
   ];
 
   return (
-    <div className="w-full bg-[#f0f4f9] dark:bg-[#282a2c] rounded-2xl shadow-sm border border-slate-200/80 dark:border-white/10 overflow-hidden flex flex-col">
+    <div className="w-full bg-[#f4f7fb] dark:bg-[#151618] rounded-3xl shadow-xl border border-slate-200/90 dark:border-white/10 overflow-hidden flex flex-col transition-all">
       {/* 1. TEACHER CLASSROOM HEADER */}
       <ClassroomTeacherHeader
         title={examTitle}
@@ -244,8 +244,8 @@ export const BubblePopGame: React.FC<BubblePopGameProps> = ({
       />
 
       {/* 2. VISUAL OCEAN REEF BUBBLE ARENA */}
-      <div className="p-4 sm:p-6 flex flex-col items-center justify-center space-y-4">
-        <div className="w-full max-w-4xl bg-gradient-to-b from-sky-300 via-teal-200 to-blue-400 dark:from-sky-950/60 dark:via-teal-950/40 dark:to-blue-950/50 rounded-2xl p-4 sm:p-6 border border-sky-300 dark:border-sky-800/40 shadow-inner flex flex-col justify-between min-h-[220px]">
+      <div className="p-3.5 sm:p-6 flex flex-col items-center justify-center space-y-5">
+        <div className="w-full max-w-4xl bg-gradient-to-b from-sky-300 via-teal-200 to-blue-400 dark:from-sky-950/70 dark:via-teal-950/50 dark:to-blue-950/60 rounded-3xl p-5 sm:p-7 border border-sky-300 dark:border-sky-800/40 shadow-xl flex flex-col justify-between min-h-[230px] relative overflow-hidden">
           {/* Top Banner */}
           <div className="flex items-center justify-between text-xs sm:text-sm font-bold text-sky-950 dark:text-sky-200">
             <div className="flex items-center gap-2">

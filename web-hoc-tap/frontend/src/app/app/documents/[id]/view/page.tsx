@@ -306,9 +306,15 @@ function DocumentDynamicViewPageContent() {
 
       if (typeof window !== 'undefined') {
         try {
-          const { idbGetAllDocuments, idbGetDocument } = await import('@/lib/indexedDbStorage');
+          const { idbGetAllDocuments, idbGetDocument, isDocumentTombstoned } = await import('@/lib/indexedDbStorage');
+          if (isDocumentTombstoned(fileId)) {
+            return null;
+          }
           const directIdb = await idbGetDocument(fileId);
           if (directIdb) {
+            if (isDocumentTombstoned(directIdb.id, directIdb.name, directIdb.parsedQuiz?.title)) {
+              return null;
+            }
             try {
               const cleaned = normalizeDocItem(directIdb, fileId);
               const { idbSaveDocument } = await import('@/lib/indexedDbStorage');
@@ -347,7 +353,10 @@ function DocumentDynamicViewPageContent() {
       }
 
       // 1. Check direct list match
-      const found = allFiles.find((f) => f && matchDocId(f.id, fileId));
+      const { isDocumentTombstoned } = await import('@/lib/indexedDbStorage');
+      const found = allFiles.find(
+        (f) => f && matchDocId(f.id, fileId) && !isDocumentTombstoned(f.id, f.name, f.parsedQuiz?.title)
+      );
       if (found) {
         try {
           return normalizeDocItem(found, fileId);

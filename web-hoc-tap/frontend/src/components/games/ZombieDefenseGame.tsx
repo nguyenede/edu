@@ -200,7 +200,7 @@ export const ZombieDefenseGame: React.FC<ZombieDefenseGameProps> = ({
   ];
 
   return (
-    <div className="w-full bg-[#f0f4f9] dark:bg-[#282a2c] rounded-2xl shadow-sm border border-slate-200/80 dark:border-white/10 overflow-hidden flex flex-col">
+    <div className="w-full bg-[#f4f7fb] dark:bg-[#151618] rounded-3xl shadow-xl border border-slate-200/90 dark:border-white/10 overflow-hidden flex flex-col transition-all">
       {/* 1. TEACHER CLASSROOM HEADER */}
       <ClassroomTeacherHeader
         title={examTitle}
@@ -227,8 +227,8 @@ export const ZombieDefenseGame: React.FC<ZombieDefenseGameProps> = ({
       />
 
       {/* 2. VISUAL CASTLE DEFENSE STAGE */}
-      <div className="p-4 sm:p-6 flex flex-col items-center justify-center space-y-4">
-        <div className="w-full max-w-4xl bg-gradient-to-b from-slate-800 via-zinc-900 to-stone-900 rounded-2xl p-4 sm:p-6 border border-zinc-700 shadow-inner flex flex-col justify-between min-h-[220px] text-white">
+      <div className="p-3.5 sm:p-6 flex flex-col items-center justify-center space-y-5">
+        <div className="w-full max-w-4xl bg-gradient-to-b from-slate-900 via-zinc-950 to-neutral-950 rounded-3xl p-5 sm:p-7 border border-emerald-500/30 shadow-2xl flex flex-col justify-between min-h-[230px] text-white relative overflow-hidden">
           {/* Top Status */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">

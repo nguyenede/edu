@@ -33,6 +33,7 @@ import {
   HelpCircle,
   Play,
   RotateCcw,
+  Download,
 } from 'lucide-react';
 import QRCode from 'qrcode';
 import ReactMarkdown from 'react-markdown';
@@ -202,21 +203,33 @@ export default function AssignmentDetailPage() {
     return r === 'TEACHER' || r === 'ADMIN' || r === 'GIAOVIEN';
   }, [user]);
 
+  const displayPin = useMemo(() => {
+    return (
+      assignment?.pin ||
+      assignment?.pinCode ||
+      (assignment?.id ? String(assignment.id).replace(/\D/g, '').slice(-6) : '') ||
+      '123456'
+    );
+  }, [assignment]);
+
+  const playUrl = useMemo(() => {
+    if (typeof window !== 'undefined') {
+      return `${window.location.origin}/play?pin=${displayPin}`;
+    }
+    return `http://localhost:3000/play?pin=${displayPin}`;
+  }, [displayPin]);
+
   useEffect(() => {
-    if (assignment?.pin) {
-      const playUrl =
-        typeof window !== 'undefined'
-          ? `${window.location.origin}/play?pin=${assignment.pin}`
-          : `http://localhost:3000/play?pin=${assignment.pin}`;
+    if (assignment) {
       QRCode.toDataURL(playUrl, {
-        width: 320,
+        width: 360,
         margin: 2,
         color: { dark: '#0f172a', light: '#ffffff' },
       })
         .then((url) => setQrCodeUrl(url))
         .catch(() => {});
     }
-  }, [assignment?.pin]);
+  }, [assignment, playUrl]);
 
   useEffect(() => {
     fetchData();
@@ -259,18 +272,25 @@ export default function AssignmentDetailPage() {
     }
   };
 
-  const handleCopyPin = (pin: string) => {
-    navigator.clipboard.writeText(pin);
+  const handleCopyPin = (pin?: string) => {
+    const p = pin || displayPin;
+    navigator.clipboard.writeText(p);
     setCopiedPin(true);
     setTimeout(() => setCopiedPin(false), 2000);
   };
 
   const handleCopyLink = () => {
-    if (!assignment?.pin) return;
-    const url = `${window.location.origin}/play?pin=${assignment.pin}`;
-    navigator.clipboard.writeText(url);
+    navigator.clipboard.writeText(playUrl);
     setCopiedLink(true);
     setTimeout(() => setCopiedLink(false), 2000);
+  };
+
+  const handleDownloadQr = () => {
+    if (!qrCodeUrl) return;
+    const a = document.createElement('a');
+    a.href = qrCodeUrl;
+    a.download = `QR_${displayPin}_${(assignment?.title || 'BaiTap').slice(0, 20)}.png`;
+    a.click();
   };
 
   const handleStudentSubmit = async () => {
@@ -395,6 +415,19 @@ export default function AssignmentDetailPage() {
       subtitle={`Lớp: ${classNameDisplay} | Thang điểm: ${assignment.maxScore || 10}đ`}
       action={
         <div className="flex items-center gap-2">
+          {isTeacher && (
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={() => setIsQrModalOpen(true)}
+              className="gap-1.5 rounded-xl text-xs font-semibold bg-google-blue hover:bg-[#1557b0] text-white shadow-xs"
+              title="Mở mã QR và mã PIN cho học sinh làm bài"
+            >
+              <QrCode size={15} />
+              <span>Mã QR & PIN làm bài</span>
+            </Button>
+          )}
+
           <Button
             variant="secondary"
             size="sm"
@@ -727,6 +760,60 @@ export default function AssignmentDetailPage() {
         {/* Right 1 Col: Teacher Submissions List & Grading Panel */}
         {isTeacher && (
           <div className="md:col-span-1 space-y-4">
+            {/* Quick PIN & QR Card for Teacher */}
+            <div className="p-4 bg-gradient-to-br from-blue-50/90 to-indigo-50/60 dark:from-blue-950/30 dark:to-indigo-950/20 rounded-2xl border border-blue-200/80 dark:border-blue-900/50 space-y-3.5 shadow-2xs">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-bold text-blue-900 dark:text-blue-300 uppercase tracking-wider flex items-center gap-1.5">
+                  <QrCode size={14} className="text-blue-600 dark:text-blue-400" />
+                  Mã làm bài của học sinh
+                </span>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-200/70 dark:bg-blue-900/60 text-blue-800 dark:text-blue-200">
+                  PIN & QR
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between gap-2 bg-white dark:bg-slate-900/90 p-3 rounded-xl border border-blue-100 dark:border-blue-900/40 shadow-2xs">
+                <div>
+                  <span className="text-[10px] text-slate-400 dark:text-zinc-500 font-semibold block uppercase">
+                    Mã PIN làm bài:
+                  </span>
+                  <div className="text-2xl font-mono font-black text-blue-600 dark:text-blue-400 tracking-wider">
+                    {displayPin}
+                  </div>
+                </div>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => handleCopyPin(displayPin)}
+                  className="text-xs py-1.5 px-3 rounded-xl gap-1 shrink-0"
+                  title="Sao chép mã PIN"
+                >
+                  {copiedPin ? <Check size={13} className="text-emerald-600" /> : <Copy size={13} />}
+                  <span>{copiedPin ? 'Đã chép' : 'Chép PIN'}</span>
+                </Button>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Button
+                  size="sm"
+                  onClick={() => setIsQrModalOpen(true)}
+                  className="flex-1 text-xs rounded-xl bg-google-blue hover:bg-[#1557b0] text-white gap-1.5 shadow-xs"
+                >
+                  <QrCode size={14} />
+                  <span>Mở mã QR chiếu TV</span>
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={handleCopyLink}
+                  className="text-xs rounded-xl gap-1 shrink-0"
+                  title="Sao chép link làm bài"
+                >
+                  {copiedLink ? <Check size={13} className="text-emerald-600" /> : <Copy size={13} />}
+                  <span className="hidden sm:inline">{copiedLink ? 'Đã chép' : 'Chép link'}</span>
+                </Button>
+              </div>
+            </div>
 
             {selectedSub ? (
               /* Grading Form Panel */
@@ -831,9 +918,20 @@ export default function AssignmentDetailPage() {
                 </div>
 
                 {submissions.length === 0 ? (
-                  <p className="text-xs text-slate-400 py-8 text-center">
-                    Chưa có học sinh nào nộp bài.
-                  </p>
+                  <div className="py-6 text-center space-y-3 bg-slate-50/50 dark:bg-slate-900/20 rounded-2xl border border-slate-100 dark:border-slate-800 p-4">
+                    <p className="text-xs text-slate-400">
+                      Chưa có học sinh nào nộp bài.
+                    </p>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setIsQrModalOpen(true)}
+                      className="mx-auto text-xs rounded-xl gap-1.5 border-blue-200 dark:border-blue-800 text-blue-600 dark:text-blue-400 bg-blue-50/50 dark:bg-blue-950/30"
+                    >
+                      <QrCode size={14} />
+                      <span>Mở mã QR cho học sinh quét</span>
+                    </Button>
+                  </div>
                 ) : (
                   <div className="divide-y divide-slate-100 dark:divide-slate-800/70">
                     {submissions.map((sub) => {
@@ -880,41 +978,78 @@ export default function AssignmentDetailPage() {
         maxWidth="md"
       >
         <div className="space-y-4 pt-1 text-center">
-          <p className="text-xs text-slate-500">
-            Học sinh có thể quét mã QR bằng camera điện thoại hoặc vào <strong>kiyoedu.com/play</strong> và nhập mã PIN.
+          <p className="text-xs text-slate-500 dark:text-zinc-400">
+            Học sinh có thể quét mã QR bằng Camera điện thoại / Zalo hoặc vào <strong>kiyoedu.com/play</strong> và nhập mã PIN.
           </p>
 
-          {qrCodeUrl && (
-            <div className="p-3 bg-white dark:bg-slate-900 rounded-2xl inline-block mx-auto shadow-sm">
-              <img src={qrCodeUrl} alt="Mã QR làm bài" className="w-52 h-52 mx-auto" />
+          {qrCodeUrl ? (
+            <div className="p-4 bg-white rounded-3xl inline-block mx-auto shadow-md border border-slate-200/80">
+              <img src={qrCodeUrl} alt="Mã QR làm bài" className="w-56 h-56 mx-auto object-contain" />
+              <span className="text-[11px] font-bold text-slate-500 mt-1 block">
+                Quét bằng Camera điện thoại hoặc Zalo
+              </span>
+            </div>
+          ) : (
+            <div className="w-56 h-56 bg-slate-100 dark:bg-slate-800 rounded-2xl flex items-center justify-center mx-auto text-xs text-slate-400">
+              Đang tạo mã QR...
             </div>
           )}
 
-          {assignment.pin && (
-            <div className="flex items-center justify-between p-3.5 rounded-xl bg-blue-50/80 dark:bg-blue-950/40">
-              <div className="text-left">
-                <span className="text-[10px] text-blue-600 dark:text-blue-400 font-semibold uppercase">Mã PIN Blooket</span>
-                <div className="text-xl font-mono font-black text-blue-700 dark:text-blue-300 tracking-wider">
-                  {assignment.pin}
-                </div>
+          {/* PIN box */}
+          <div className="flex items-center justify-between p-3.5 rounded-2xl bg-blue-50/90 dark:bg-blue-950/40 border border-blue-200/70 dark:border-blue-900/60">
+            <div className="text-left">
+              <span className="text-[10px] text-blue-600 dark:text-blue-400 font-bold uppercase tracking-wider block">
+                Mã PIN làm bài
+              </span>
+              <div className="text-2xl sm:text-3xl font-mono font-black text-blue-700 dark:text-blue-300 tracking-wider">
+                {displayPin}
               </div>
-              <Button size="sm" onClick={() => handleCopyPin(assignment.pin)} className="gap-1.5">
-                {copiedPin ? <Check size={13} /> : <Copy size={13} />}
-                <span>{copiedPin ? 'Đã chép' : 'Sao chép PIN'}</span>
-              </Button>
             </div>
-          )}
+            <Button size="sm" onClick={() => handleCopyPin(displayPin)} className="gap-1.5 rounded-xl">
+              {copiedPin ? <Check size={14} /> : <Copy size={14} />}
+              <span>{copiedPin ? 'Đã sao chép' : 'Sao chép PIN'}</span>
+            </Button>
+          </div>
 
-          <div className="flex items-center justify-between p-3.5 rounded-xl bg-slate-50 dark:bg-slate-900/50">
+          {/* Link box */}
+          <div className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/70 dark:border-white/10">
             <div className="text-left truncate mr-2">
-              <span className="text-[10px] text-slate-400 font-semibold uppercase">Link làm bài</span>
-              <div className="text-xs text-slate-500 truncate">
-                {typeof window !== 'undefined' ? `${window.location.origin}/play?pin=${assignment.pin}` : ''}
+              <span className="text-[10px] text-slate-400 font-semibold uppercase block">
+                Đường dẫn trực tiếp
+              </span>
+              <div className="text-xs text-slate-600 dark:text-zinc-300 font-medium truncate">
+                {playUrl}
               </div>
             </div>
-            <Button variant="secondary" size="sm" onClick={handleCopyLink} className="gap-1 shrink-0">
-              {copiedLink ? <Check size={13} /> : <Copy size={13} />}
+            <Button variant="secondary" size="sm" onClick={handleCopyLink} className="gap-1 shrink-0 rounded-xl">
+              {copiedLink ? <Check size={14} /> : <Copy size={14} />}
               <span>{copiedLink ? 'Đã chép' : 'Chép link'}</span>
+            </Button>
+          </div>
+
+          {/* Action buttons */}
+          <div className="flex items-center justify-center gap-2 pt-1 flex-wrap">
+            {qrCodeUrl && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleDownloadQr}
+                className="rounded-xl text-xs gap-1.5"
+                title="Tải ảnh QR về máy để in hoặc gửi lên nhóm"
+              >
+                <Download size={14} />
+                <span>Tải ảnh QR về máy</span>
+              </Button>
+            )}
+
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={() => window.open(playUrl, '_blank')}
+              className="rounded-xl text-xs gap-1.5 bg-google-blue hover:bg-[#1557b0] text-white"
+            >
+              <ExternalLink size={14} />
+              <span>Mở làm thử ngay</span>
             </Button>
           </div>
         </div>
