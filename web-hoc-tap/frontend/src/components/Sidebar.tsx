@@ -109,7 +109,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
             const normHref = item.href.replace(/^\/app(?=\/|$)/, '') || '/dashboard';
             const isActive =
               normPath === normHref ||
-              (normHref !== '/dashboard' && normPath.startsWith(normHref));
+              (normHref !== '/dashboard' && normPath.startsWith(normHref)) ||
+              (normHref === '/classes' && (normPath.startsWith('/classes') || normPath.startsWith('/assignments')));
 
             const isTooltipVisible =
               sidebarCollapsed &&

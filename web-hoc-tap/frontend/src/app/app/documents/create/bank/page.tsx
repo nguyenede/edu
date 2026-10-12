@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -118,11 +118,11 @@ function BankQuizCreateContent() {
   return (
     <AppShell
       title={
-        <div className="flex items-center gap-1 text-2xl font-[450] tracking-tight text-slate-900 dark:text-slate-100 flex-wrap -ml-2">
+        <div className="flex items-center gap-1 text-2xl tracking-tight text-slate-900 dark:text-slate-100 flex-wrap -ml-2">
           <button
             type="button"
             onClick={() => router.push('/app/documents')}
-            className="transition-colors cursor-pointer px-2 py-0.5 rounded-xl hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-900 dark:text-white font-[450]"
+            className="transition-colors cursor-pointer px-2 py-0.5 rounded-xl hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-900 dark:text-white font-semibold"
           >
             Tài liệu của tôi
           </button>
@@ -135,7 +135,7 @@ function BankQuizCreateContent() {
               <button
                 type="button"
                 onClick={() => router.push(`/app/documents?folderId=${folderId || ''}`)}
-                className="transition-colors cursor-pointer px-2 py-0.5 rounded-xl hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-900 dark:text-white font-[450]"
+                className="transition-colors cursor-pointer px-2 py-0.5 rounded-xl hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-900 dark:text-white font-normal"
               >
                 {folderName}
               </button>
@@ -153,7 +153,7 @@ function BankQuizCreateContent() {
           <button
             type="button"
             onClick={() => router.push('/app/documents/create' + targetQuery)}
-            className="transition-colors cursor-pointer px-2 py-0.5 rounded-xl hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-900 dark:text-white font-[450]"
+            className="transition-colors cursor-pointer px-2 py-0.5 rounded-xl hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-900 dark:text-white font-normal"
           >
             Tạo đề thi
           </button>
@@ -167,7 +167,7 @@ function BankQuizCreateContent() {
               { label: 'Nhập thủ công', href: `/app/documents/create/manual${targetQuery}` },
             ]}
           />
-          <span className="px-2 py-0.5 rounded-xl text-slate-900 dark:text-white font-[450]">
+          <span className="px-2 py-0.5 rounded-xl text-slate-900 dark:text-white font-normal">
             Ngân hàng câu hỏi
           </span>
         </div>

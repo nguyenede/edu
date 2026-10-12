@@ -78,7 +78,7 @@ export default function CreateAssignmentPage() {
           <button
             type="button"
             onClick={() => router.push('/app/classes')}
-            className="transition-colors cursor-pointer px-2 py-0.5 rounded-xl hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-normal"
+            className="transition-colors cursor-pointer px-2 py-0.5 rounded-xl hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-900 dark:text-white font-bold"
           >
             Lớp học của tôi
           </button>

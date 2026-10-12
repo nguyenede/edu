@@ -398,7 +398,7 @@ export default function ClassDetailPage() {
           <button
             type="button"
             onClick={() => router.push('/app/classes')}
-            className="transition-colors cursor-pointer px-2 py-0.5 rounded-xl hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-900 dark:text-white font-bold"
+            className="transition-colors cursor-pointer px-2 py-0.5 rounded-xl hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-900 dark:text-white font-semibold"
           >
             Lớp học của tôi
           </button>
@@ -506,25 +506,6 @@ export default function ClassDetailPage() {
                 <h3 className="text-sm font-medium text-slate-500 dark:text-slate-400">
                   Chưa có bài tập nào được giao cho lớp này
                 </h3>
-                {isTeacher && (
-                  <div className="flex items-center justify-center gap-2 pt-2">
-                    <Button
-                      size="sm"
-                      onClick={() => router.push('/documents')}
-                      className="gap-1.5"
-                    >
-                      <Plus size={14} /> Giao từ Kho tài liệu
-                    </Button>
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      onClick={() => setIsCreateAssignOpen(true)}
-                      className="gap-1.5"
-                    >
-                      Tạo bài tập nhanh
-                    </Button>
-                  </div>
-                )}
               </div>
             ) : (
               <div className="divide-y divide-slate-100 dark:divide-slate-800">

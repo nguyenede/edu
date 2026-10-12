@@ -438,14 +438,14 @@ export default function GamesHubPage() {
     <AppShell
       title={
         playingLesson ? (
-          <div className="flex items-center gap-1 text-2xl font-[450] tracking-tight text-slate-900 dark:text-slate-100 flex-wrap -ml-2">
+          <div className="flex items-center gap-1 text-2xl tracking-tight text-slate-900 dark:text-slate-100 flex-wrap -ml-2">
             <button
               type="button"
               onClick={() => {
                 setPlayingLesson(null);
                 setActiveCategory(null);
               }}
-              className="transition-colors cursor-pointer px-2 py-0.5 rounded-xl hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-900 dark:text-white font-[450]"
+              className="transition-colors cursor-pointer px-2 py-0.5 rounded-xl hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-900 dark:text-white font-semibold"
             >
               Trò chơi lớp học
             </button>
@@ -462,21 +462,21 @@ export default function GamesHubPage() {
             <button
               type="button"
               onClick={() => setPlayingLesson(null)}
-              className="transition-colors cursor-pointer px-2 py-0.5 rounded-xl hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-900 dark:text-white font-[450]"
+              className="transition-colors cursor-pointer px-2 py-0.5 rounded-xl hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-900 dark:text-white font-normal"
             >
               {getCategoryMeta(activeCategory).title}
             </button>
             <BreadcrumbChevron fallbackToStaticChevron={true} />
-            <span className="px-2 py-0.5 rounded-xl text-slate-900 dark:text-white font-[450] truncate max-w-xs sm:max-w-md">
+            <span className="px-2 py-0.5 rounded-xl text-slate-900 dark:text-white font-normal truncate max-w-xs sm:max-w-md">
               {playingLesson.title}
             </span>
           </div>
         ) : activeCategory ? (
-          <div className="flex items-center gap-1 text-2xl font-[450] tracking-tight text-slate-900 dark:text-slate-100 flex-wrap -ml-2">
+          <div className="flex items-center gap-1 text-2xl tracking-tight text-slate-900 dark:text-slate-100 flex-wrap -ml-2">
             <button
               type="button"
               onClick={() => setActiveCategory(null)}
-              className="transition-colors cursor-pointer px-2 py-0.5 rounded-xl hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-900 dark:text-white font-[450]"
+              className="transition-colors cursor-pointer px-2 py-0.5 rounded-xl hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-900 dark:text-white font-semibold"
             >
               Trò chơi lớp học
             </button>
@@ -487,13 +487,13 @@ export default function GamesHubPage() {
                 onClick: () => setActiveCategory(g.id),
               }))}
             />
-            <span className="px-2 py-0.5 rounded-xl text-slate-900 dark:text-white font-[450]">
+            <span className="px-2 py-0.5 rounded-xl text-slate-900 dark:text-white font-normal">
               {getCategoryMeta(activeCategory).title}
             </span>
           </div>
         ) : (
-          <div className="flex items-center gap-1 text-2xl font-[450] tracking-tight text-slate-900 dark:text-slate-100 flex-wrap -ml-2">
-            <span className="px-2 py-0.5 rounded-xl text-slate-900 dark:text-white font-[450]">
+          <div className="flex items-center gap-1 text-2xl tracking-tight text-slate-900 dark:text-slate-100 flex-wrap -ml-2">
+            <span className="px-2 py-0.5 rounded-xl text-slate-900 dark:text-white font-semibold">
               Trò chơi lớp học
             </span>
           </div>

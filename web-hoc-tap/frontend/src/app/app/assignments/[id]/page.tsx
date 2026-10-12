@@ -395,29 +395,6 @@ export default function AssignmentDetailPage() {
       subtitle={`Lớp: ${classNameDisplay} | Thang điểm: ${assignment.maxScore || 10}đ`}
       action={
         <div className="flex items-center gap-2">
-          {assignment.pin && (
-            <>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setIsQrModalOpen(true)}
-                className="gap-1.5 text-xs rounded-xl"
-                title="Xem mã QR để học sinh quét làm bài"
-              >
-                <QrCode size={15} /> Mã QR
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => window.open(`/play?pin=${assignment.pin}`, '_blank')}
-                className="gap-1.5 text-xs rounded-xl text-google-blue"
-                title="Mở giao diện làm bài thi phong cách Blooket"
-              >
-                <Play size={14} /> Làm thử ngay
-              </Button>
-            </>
-          )}
-
           <Button
             variant="secondary"
             size="sm"
@@ -450,54 +427,61 @@ export default function AssignmentDetailPage() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Left 2 Cols: Main Content Area */}
         <div className="md:col-span-2 space-y-6">
-          {/* Assignment Meta Card */}
-          <div className="p-4 bg-slate-50/90 dark:bg-slate-900/40 rounded-xl border border-slate-100 dark:border-slate-800 space-y-3 shadow-2xs">
-            <div className="flex flex-wrap gap-3 items-center text-xs text-slate-500">
+          {/* Assignment Meta Header */}
+          <div className="pb-3 border-b border-slate-100 dark:border-slate-800 space-y-2.5">
+            <div className="flex flex-wrap gap-2.5 items-center text-xs text-slate-500">
               <span className="flex items-center gap-1.5">
-                <Calendar size={14} className="text-slate-400" />
-                Hạn nộp:{' ' }
-                <strong className="text-slate-700 dark:text-slate-300">
+                <Calendar size={13} className="text-slate-400" />
+                Hạn nộp:{' '}
+                <span className="font-semibold text-slate-800 dark:text-slate-200">
                   {assignment.deadline
                     ? new Date(assignment.deadline).toLocaleString('vi-VN')
                     : 'Không giới hạn'}
-                </strong>
+                </span>
               </span>
 
+              <span className="text-slate-300 dark:text-slate-700">•</span>
+
               <span className="flex items-center gap-1.5">
-                <Award size={14} className="text-amber-500" />
-                Thang điểm: <strong className="text-slate-700 dark:text-slate-300">{assignment.maxScore || 10}đ</strong>
+                <Award size={13} className="text-amber-500" />
+                Thang điểm:{' '}
+                <span className="font-semibold text-slate-800 dark:text-slate-200">{assignment.maxScore || 10}đ</span>
               </span>
 
               {assignment.durationMinutes ? (
-                <span className="flex items-center gap-1.5">
-                  <Clock size={14} className="text-blue-500" />
-                  Thời gian: <strong className="text-slate-700 dark:text-slate-300">{assignment.durationMinutes} phút</strong>
-                </span>
+                <>
+                  <span className="text-slate-300 dark:text-slate-700">•</span>
+                  <span className="flex items-center gap-1.5">
+                    <Clock size={13} className="text-blue-500" />
+                    Thời gian:{' '}
+                    <span className="font-semibold text-slate-800 dark:text-slate-200">{assignment.durationMinutes} phút</span>
+                  </span>
+                </>
               ) : null}
 
               {normalizedQuestions.length > 0 && (
-                <Badge variant="info">Trắc nghiệm ({normalizedQuestions.length} câu)</Badge>
+                <>
+                  <span className="text-slate-300 dark:text-slate-700">•</span>
+                  <span className="text-blue-600 dark:text-blue-400 font-medium">
+                    Trắc nghiệm ({normalizedQuestions.length} câu)
+                  </span>
+                </>
               )}
 
-              {assignment.antiCheat ? (
-                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-purple-100 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300">
-                  <ShieldCheck size={12} /> Chống gian lận: BẬT
-                </span>
-              ) : (
-                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400">
-                  <Shield size={12} /> Chống gian lận: TẮT
-                </span>
+              {assignment.antiCheat && (
+                <>
+                  <span className="text-slate-300 dark:text-slate-700">•</span>
+                  <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-purple-600 dark:text-purple-400">
+                    <ShieldCheck size={12} /> Chống gian lận
+                  </span>
+                </>
               )}
 
-              {assignment.pin && (
-                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 font-mono font-bold text-[11px] border border-blue-200 dark:border-blue-800">
-                  PIN Blooket: {assignment.pin}
-                </span>
-              )}
+
             </div>
 
             {assignment.description && (
-              <div className="pt-2 border-t border-slate-200/50 dark:border-slate-800/50 text-xs text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-line">
+              <div className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed whitespace-pre-line">
                 {assignment.description}
               </div>
             )}
@@ -507,27 +491,27 @@ export default function AssignmentDetailPage() {
           {isTeacher && (
             <div className="space-y-4">
               <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
-                <h3 className="font-bold text-sm text-slate-900 dark:text-slate-100">
+                <h3 className="font-semibold text-sm text-slate-900 dark:text-slate-100">
                   Đề thi & Danh sách câu hỏi ({normalizedQuestions.length})
                 </h3>
               </div>
 
               {normalizedQuestions.length === 0 ? (
-                <div className="p-8 text-center bg-slate-50/50 dark:bg-slate-900/20 rounded-xl space-y-2 border border-slate-100 dark:border-slate-800">
+                <div className="py-12 text-center space-y-2">
                   <HelpCircle size={32} className="mx-auto text-slate-300 dark:text-slate-600" />
                   <p className="text-xs text-slate-500 font-medium">
                     Bài tập này là bài tập tự luận hoặc chưa có câu hỏi trắc nghiệm liên kết.
                   </p>
                 </div>
               ) : (
-                <div className="space-y-4">
+                <div className="divide-y divide-slate-100 dark:divide-slate-800/60">
                   {normalizedQuestions.map((q, qIdx) => (
                     <div
                       key={q.id || qIdx}
-                      className="p-4 rounded-xl border border-slate-100 dark:border-slate-800 bg-white dark:bg-[#1a1b1d] shadow-2xs space-y-3"
+                      className="py-4 first:pt-1 space-y-2.5"
                     >
                       <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wide">
+                        <span className="text-xs font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wide">
                           Câu {qIdx + 1}
                         </span>
                         <span className="text-[11px] text-slate-400">
@@ -535,28 +519,28 @@ export default function AssignmentDetailPage() {
                         </span>
                       </div>
 
-                      <div className="text-xs font-semibold text-slate-900 dark:text-slate-100 leading-relaxed">
+                      <div className="text-xs font-medium text-slate-900 dark:text-slate-100 leading-relaxed">
                         <MathRenderer text={q.content} />
                       </div>
 
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1.5 pt-1">
                         {q.options.map((opt, optIdx) => {
                           const label = String.fromCharCode(65 + optIdx);
                           const isCorrect = opt.isCorrect;
                           return (
                             <div
                               key={opt.id || optIdx}
-                              className={`p-2.5 rounded-lg border text-xs flex items-start gap-2.5 transition-colors ${
+                              className={`py-1.5 px-2 rounded-lg text-xs flex items-start gap-2 transition-colors ${
                                 isCorrect
-                                  ? 'border-emerald-500/80 bg-emerald-50/60 dark:bg-emerald-950/30 text-emerald-900 dark:text-emerald-100 font-medium ring-1 ring-emerald-500/30'
-                                  : 'border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/40 text-slate-700 dark:text-slate-300'
+                                  ? 'text-emerald-600 dark:text-emerald-400 font-medium'
+                                  : 'text-slate-700 dark:text-slate-300'
                               }`}
                             >
                               <span
                                 className={`w-5 h-5 rounded-full flex items-center justify-center font-bold text-[10px] shrink-0 ${
                                   isCorrect
                                     ? 'bg-emerald-600 text-white'
-                                    : 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
+                                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
                                 }`}
                               >
                                 {label}
@@ -564,7 +548,7 @@ export default function AssignmentDetailPage() {
                               <div className="flex-1 leading-relaxed">
                                 <MathRenderer text={opt.content} />
                                 {isCorrect && (
-                                  <span className="ml-2 inline-flex items-center gap-0.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
+                                  <span className="ml-1.5 inline-flex items-center gap-0.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
                                     ✓ Đáp án đúng
                                   </span>
                                 )}
@@ -575,8 +559,8 @@ export default function AssignmentDetailPage() {
                       </div>
 
                       {q.explanation && (
-                        <div className="mt-2 p-2.5 rounded-lg bg-blue-50/50 dark:bg-blue-950/30 border border-blue-100 dark:border-blue-900/40 text-[11px] text-blue-900 dark:text-blue-200">
-                          <span className="font-bold block mb-0.5">Lời giải chi tiết:</span>
+                        <div className="mt-2 pl-3 py-1 border-l-2 border-blue-500/70 text-[11px] text-slate-600 dark:text-slate-400">
+                          <span className="font-semibold text-blue-600 dark:text-blue-400 mr-1.5">Lời giải:</span>
                           <MathRenderer text={q.explanation} />
                         </div>
                       )}
@@ -743,11 +727,12 @@ export default function AssignmentDetailPage() {
         {/* Right 1 Col: Teacher Submissions List & Grading Panel */}
         {isTeacher && (
           <div className="md:col-span-1 space-y-4">
+
             {selectedSub ? (
               /* Grading Form Panel */
-              <div className="p-4 bg-slate-50/90 dark:bg-slate-900/40 rounded-xl border border-slate-100 dark:border-slate-800 space-y-4 sticky top-20 shadow-2xs">
-                <div className="space-y-1 pb-2 border-b border-slate-200/50 dark:border-slate-800/50">
-                  <h3 className="font-bold text-sm text-slate-950 dark:text-slate-100">
+              <div className="p-4 bg-slate-50/70 dark:bg-slate-900/40 rounded-2xl space-y-4 sticky top-20">
+                <div className="space-y-1 pb-2 border-b border-slate-200/60 dark:border-slate-800/60">
+                  <h3 className="font-semibold text-sm text-slate-950 dark:text-slate-100">
                     Chấm điểm bài nộp
                   </h3>
                   <p className="text-xs text-slate-500 font-medium">
@@ -760,7 +745,7 @@ export default function AssignmentDetailPage() {
                   <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider block">
                     Bài làm đã gửi:
                   </span>
-                  <div className="max-h-52 overflow-y-auto p-3 bg-white dark:bg-[#1a1b1d] rounded-lg border border-slate-100 dark:border-slate-800 text-xs space-y-2.5">
+                  <div className="max-h-52 overflow-y-auto p-2.5 bg-white/80 dark:bg-[#1a1b1d]/80 rounded-xl text-xs space-y-2">
                     {(selectedSub.answers || []).map((ans: any, idx: number) => (
                       <div key={ans.id || idx} className="space-y-0.5">
                         <span className="text-[10px] text-slate-400 font-bold block">
@@ -781,8 +766,8 @@ export default function AssignmentDetailPage() {
 
                 {/* Anti-Cheating Audit Logs */}
                 {selectedSub.violationLogs && selectedSub.violationLogs.length > 0 && (
-                  <div className="p-3 bg-red-50/70 dark:bg-red-950/30 border border-red-200 dark:border-red-900/50 rounded-xl space-y-1.5 text-xs">
-                    <div className="font-bold text-red-700 dark:text-red-400 flex items-center gap-1.5">
+                  <div className="p-2.5 bg-red-50/70 dark:bg-red-950/30 rounded-xl space-y-1.5 text-xs">
+                    <div className="font-semibold text-red-700 dark:text-red-400 flex items-center gap-1.5">
                       <ShieldAlert size={14} /> Nhật ký vi phạm ({selectedSub.violationLogs.length} lần):
                     </div>
                     <div className="space-y-1 max-h-28 overflow-y-auto">
@@ -840,7 +825,7 @@ export default function AssignmentDetailPage() {
               /* Submissions List */
               <div className="space-y-3">
                 <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
-                  <h3 className="font-bold text-sm text-slate-950 dark:text-slate-100">
+                  <h3 className="font-semibold text-sm text-slate-950 dark:text-slate-100">
                     Danh sách bài nộp ({submissions.length})
                   </h3>
                 </div>
@@ -850,21 +835,21 @@ export default function AssignmentDetailPage() {
                     Chưa có học sinh nào nộp bài.
                   </p>
                 ) : (
-                  <div className="space-y-2">
+                  <div className="divide-y divide-slate-100 dark:divide-slate-800/70">
                     {submissions.map((sub) => {
                       const studentName = sub.student?.profile?.name || sub.student?.name || sub.student?.email || 'Học sinh';
                       return (
                         <div
                           key={sub.id}
                           onClick={() => selectForGrading(sub)}
-                          className="p-3 bg-white dark:bg-[#1a1b1d] rounded-xl border border-slate-100 dark:border-slate-800 flex justify-between items-center cursor-pointer hover:border-blue-300 dark:hover:border-blue-700 transition-colors select-none shadow-2xs"
+                          className="py-2.5 px-2 rounded-lg flex justify-between items-center cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-900/40 transition-colors select-none"
                         >
                           <div className="space-y-0.5 min-w-0 pr-2">
-                            <span className="font-bold text-xs text-slate-900 dark:text-slate-100 block truncate">
+                            <span className="font-semibold text-xs text-slate-900 dark:text-slate-100 block truncate">
                               {studentName}
                             </span>
                             <span className="text-[10px] text-slate-400 block">
-                              {new Date(sub.submittedAt).toLocaleTimeString('vi-VN')}{' ' }
+                              {new Date(sub.submittedAt).toLocaleTimeString('vi-VN')}{' '}
                               {new Date(sub.submittedAt).toLocaleDateString('vi-VN')}
                             </span>
                           </div>
@@ -900,13 +885,13 @@ export default function AssignmentDetailPage() {
           </p>
 
           {qrCodeUrl && (
-            <div className="p-3 bg-white rounded-xl inline-block border border-slate-100 mx-auto shadow-xs">
+            <div className="p-3 bg-white dark:bg-slate-900 rounded-2xl inline-block mx-auto shadow-sm">
               <img src={qrCodeUrl} alt="Mã QR làm bài" className="w-52 h-52 mx-auto" />
             </div>
           )}
 
           {assignment.pin && (
-            <div className="flex items-center justify-between p-3 rounded-lg bg-blue-50 dark:bg-blue-950/40 border border-blue-100 dark:border-blue-900/50">
+            <div className="flex items-center justify-between p-3.5 rounded-xl bg-blue-50/80 dark:bg-blue-950/40">
               <div className="text-left">
                 <span className="text-[10px] text-blue-600 dark:text-blue-400 font-semibold uppercase">Mã PIN Blooket</span>
                 <div className="text-xl font-mono font-black text-blue-700 dark:text-blue-300 tracking-wider">
@@ -920,7 +905,7 @@ export default function AssignmentDetailPage() {
             </div>
           )}
 
-          <div className="flex items-center justify-between p-3 rounded-lg bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800">
+          <div className="flex items-center justify-between p-3.5 rounded-xl bg-slate-50 dark:bg-slate-900/50">
             <div className="text-left truncate mr-2">
               <span className="text-[10px] text-slate-400 font-semibold uppercase">Link làm bài</span>
               <div className="text-xs text-slate-500 truncate">

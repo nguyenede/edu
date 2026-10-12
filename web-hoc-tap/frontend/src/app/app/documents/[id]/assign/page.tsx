@@ -419,14 +419,14 @@ function AssignPageContent() {
   return (
     <AppShell
       title={
-        <div className="flex items-center gap-1 text-2xl font-[450] tracking-tight text-slate-900 dark:text-slate-100 flex-wrap -ml-2">
+        <div className="flex items-center gap-1 text-2xl tracking-tight text-slate-900 dark:text-slate-100 flex-wrap -ml-2">
           <button
             type="button"
             onClick={() => {
               if (typeof window !== 'undefined') sessionStorage.removeItem('app_active_folder_id');
               router.push('/documents');
             }}
-            className="transition-colors cursor-pointer px-2 py-0.5 rounded-xl hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-900 dark:text-white font-[450]"
+            className="transition-colors cursor-pointer px-2 py-0.5 rounded-xl hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-900 dark:text-white font-semibold"
           >
             Tài liệu của tôi
           </button>
@@ -447,7 +447,7 @@ function AssignPageContent() {
                   if (typeof window !== 'undefined') sessionStorage.setItem('app_active_folder_id', folder.id);
                   router.push('/documents');
                 }}
-                className="transition-colors cursor-pointer px-2 py-0.5 rounded-xl hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-900 dark:text-white font-[450]"
+                className="transition-colors cursor-pointer px-2 py-0.5 rounded-xl hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-900 dark:text-white font-normal"
               >
                 {folder.name}
               </button>
@@ -463,12 +463,12 @@ function AssignPageContent() {
           <button
             type="button"
             onClick={() => router.push(`/documents/${encodeURIComponent(fileId)}`)}
-            className="transition-colors cursor-pointer px-2 py-0.5 rounded-xl hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-900 dark:text-white font-[450] truncate max-w-xs md:max-w-md"
+            className="transition-colors cursor-pointer px-2 py-0.5 rounded-xl hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-900 dark:text-white font-normal truncate max-w-xs md:max-w-md"
           >
             {displayTitle}
           </button>
           <BreadcrumbChevron isStatic={true} />
-          <span className="px-2 py-0.5 rounded-xl text-slate-900 dark:text-white font-[450]">
+          <span className="px-2 py-0.5 rounded-xl text-slate-900 dark:text-white font-normal">
             Giao bài tập
           </span>
         </div>
@@ -495,7 +495,7 @@ function AssignPageContent() {
               </div>
 
               <div className="space-y-1">
-                <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
+                <h1 className="text-2xl font-normal tracking-tight text-slate-900 dark:text-slate-100">
                   Giao bài tập thành công!
                 </h1>
                 <p className="text-xs text-slate-500 dark:text-slate-400">

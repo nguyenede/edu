@@ -404,11 +404,11 @@ export default function ResultsPage() {
   return (
     <AppShell
       title={
-        <div className="flex items-center gap-1 text-2xl font-[450] tracking-tight text-slate-900 dark:text-slate-100 flex-wrap -ml-2">
+        <div className="flex items-center gap-1 text-2xl tracking-tight text-slate-900 dark:text-slate-100 flex-wrap -ml-2">
           <button
             type="button"
             onClick={() => setSelectedClassId('')}
-            className="transition-colors cursor-pointer px-2 py-0.5 rounded-xl hover:bg-slate-200/70 dark:hover:bg-slate-800 font-[450] text-slate-900 dark:text-white"
+            className="transition-colors cursor-pointer px-2 py-0.5 rounded-xl hover:bg-slate-200/70 dark:hover:bg-slate-800 font-semibold text-slate-900 dark:text-white"
           >
             Báo cáo
           </button>
@@ -421,7 +421,7 @@ export default function ResultsPage() {
                   onClick: () => setSelectedClassId(c.id),
                 }))}
               />
-              <span className="px-2 py-0.5 rounded-xl text-slate-900 dark:text-white font-[450] truncate max-w-xs md:max-w-md">
+              <span className="px-2 py-0.5 rounded-xl text-slate-900 dark:text-white font-normal truncate max-w-xs md:max-w-md">
                 {selectedClass.name}
               </span>
             </>
@@ -457,7 +457,7 @@ export default function ResultsPage() {
                     variant="primary"
                     size="sm"
                     onClick={() => router.push('/app/classes')}
-                    className="flex items-center gap-1.5 text-xs font-bold"
+                    className="flex items-center gap-1.5 text-xs font-normal"
                   >
                     <Plus size={14} />
                     <span>Tạo lớp học mới</span>

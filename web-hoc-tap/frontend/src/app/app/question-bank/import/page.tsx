@@ -54,11 +54,11 @@ export default function ImportQuestionPage() {
   return (
     <AppShell
       title={
-        <div className="flex items-center gap-1 text-2xl font-[450] tracking-tight text-slate-900 dark:text-slate-100 flex-wrap -ml-2">
+        <div className="flex items-center gap-1 text-2xl tracking-tight text-slate-900 dark:text-slate-100 flex-wrap -ml-2">
           <button
             type="button"
             onClick={() => router.push('/app/question-bank')}
-            className="transition-colors cursor-pointer px-2 py-0.5 rounded-xl hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-900 dark:text-white font-[450]"
+            className="transition-colors cursor-pointer px-2 py-0.5 rounded-xl hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-900 dark:text-white font-semibold"
           >
             Ngân hàng câu hỏi
           </button>
@@ -70,7 +70,7 @@ export default function ImportQuestionPage() {
               { label: 'Nhập câu hỏi từ file', href: '/app/question-bank/import' },
             ]}
           />
-          <span className="px-2 py-0.5 rounded-xl text-slate-900 dark:text-white font-[450]">
+          <span className="px-2 py-0.5 rounded-xl text-slate-900 dark:text-white font-normal">
             Nhập câu hỏi hàng loạt
           </span>
         </div>

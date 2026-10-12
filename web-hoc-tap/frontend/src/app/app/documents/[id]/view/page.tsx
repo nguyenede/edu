@@ -623,11 +623,11 @@ function DocumentDynamicViewPageContent() {
   return (
     <AppShell
       title={
-        <div className="flex items-center gap-1 text-2xl font-[450] tracking-tight text-slate-900 dark:text-slate-100 flex-wrap -ml-2">
+        <div className="flex items-center gap-1 text-2xl tracking-tight text-slate-900 dark:text-slate-100 flex-wrap -ml-2">
           <button
             type="button"
             onClick={() => router.push('/documents')}
-            className="transition-colors cursor-pointer px-2 py-0.5 rounded-xl hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-900 dark:text-white font-[450]"
+            className="transition-colors cursor-pointer px-2 py-0.5 rounded-xl hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-900 dark:text-white font-semibold"
           >
             Tài liệu của tôi
           </button>
@@ -651,7 +651,7 @@ function DocumentDynamicViewPageContent() {
                       if (typeof window !== 'undefined') sessionStorage.setItem('app_active_folder_id', folder.id);
                       router.push('/documents');
                     }}
-                    className="transition-colors cursor-pointer px-2 py-0.5 rounded-xl hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-900 dark:text-white font-[450]"
+                    className="transition-colors cursor-pointer px-2 py-0.5 rounded-xl hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-900 dark:text-white font-normal"
                   >
                     {folder.name}
                   </button>
@@ -669,7 +669,7 @@ function DocumentDynamicViewPageContent() {
             }}
             onNavigateFile={(id) => router.push(`/documents/${id}`)}
           />
-          <span className="px-2 py-0.5 rounded-xl text-slate-900 dark:text-white font-[450] truncate max-w-xs md:max-w-md">
+          <span className="px-2 py-0.5 rounded-xl text-slate-900 dark:text-white font-normal truncate max-w-xs md:max-w-md">
             {displayTitle}
           </span>
         </div>
@@ -714,7 +714,7 @@ function DocumentDynamicViewPageContent() {
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="space-y-1.5 flex-1 min-w-0">
               <div className="flex items-center gap-2">
-                <div className="w-6 h-6 rounded bg-[#185abd] text-white flex items-center justify-center font-bold text-[11px] shrink-0 shadow-2xs">
+                <div className="w-6 h-6 rounded bg-[#185abd] text-white flex items-center justify-center font-normal text-[11px] shrink-0 shadow-2xs">
                   W
                 </div>
                 <span className="text-xs font-semibold text-google-blue uppercase tracking-wider">

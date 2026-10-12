@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -425,11 +425,11 @@ function DocumentCreateContent() {
   return (
     <AppShell
       title={
-        <div className="flex items-center gap-1 text-2xl font-[450] tracking-tight text-slate-900 dark:text-slate-100 flex-wrap -ml-2">
+        <div className="flex items-center gap-1 text-2xl tracking-tight text-slate-900 dark:text-slate-100 flex-wrap -ml-2">
           <button
             type="button"
             onClick={() => router.push('/app/documents')}
-            className="transition-colors cursor-pointer px-2 py-0.5 rounded-xl hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-900 dark:text-white font-[450]"
+            className="transition-colors cursor-pointer px-2 py-0.5 rounded-xl hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-900 dark:text-white font-semibold"
           >
             Tài liệu của tôi
           </button>
@@ -442,7 +442,7 @@ function DocumentCreateContent() {
               <button
                 type="button"
                 onClick={() => router.push(`/app/documents?folderId=${folderId || ''}`)}
-                className="transition-colors cursor-pointer px-2 py-0.5 rounded-xl hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-900 dark:text-white font-[450]"
+                className="transition-colors cursor-pointer px-2 py-0.5 rounded-xl hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-900 dark:text-white font-normal"
               >
                 {folderName}
               </button>
@@ -457,7 +457,7 @@ function DocumentCreateContent() {
               onNavigateFolder={(id) => router.push(`/app/documents?folderId=${id}`)}
             />
           )}
-          <span className="px-2 py-0.5 rounded-xl text-slate-900 dark:text-white font-[450]">
+          <span className="px-2 py-0.5 rounded-xl text-slate-900 dark:text-white font-normal">
             Tạo đề thi
           </span>
         </div>
@@ -503,7 +503,7 @@ function DocumentCreateContent() {
 
               {/* Title & Description Lines */}
               <div className="space-y-2 max-w-xl mx-auto">
-                <h3 className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white">
+                <h3 className="text-xl md:text-2xl font-normal text-slate-900 dark:text-white">
                   Chọn File hoặc kéo thả File vào đây
                 </h3>
                 <p className="text-xs md:text-sm text-slate-500 font-medium">

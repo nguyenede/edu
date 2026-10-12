@@ -86,11 +86,11 @@ export default function PlansPage() {
   return (
     <AppShell
       title={
-        <div className="flex items-center gap-1 text-2xl font-[450] tracking-tight text-slate-900 dark:text-slate-100 flex-wrap -ml-2">
+        <div className="flex items-center gap-1 text-2xl tracking-tight text-slate-900 dark:text-slate-100 flex-wrap -ml-2">
           <button
             type="button"
             onClick={() => router.push('/app/settings')}
-            className="transition-colors cursor-pointer px-2 py-0.5 rounded-xl hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-900 dark:text-white font-[450]"
+            className="transition-colors cursor-pointer px-2 py-0.5 rounded-xl hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-900 dark:text-white font-semibold"
           >
             Cài đặt
           </button>
@@ -104,7 +104,7 @@ export default function PlansPage() {
               { label: 'Gói dịch vụ & Nâng cấp', href: '/app/settings/plans' },
             ]}
           />
-          <span className="px-2 py-0.5 rounded-xl text-slate-900 dark:text-white font-[450]">
+          <span className="px-2 py-0.5 rounded-xl text-slate-900 dark:text-white font-normal">
             Ủng hộ nhà phát triển & Gói Pro
           </span>
         </div>
@@ -146,7 +146,7 @@ export default function PlansPage() {
                 {/* 1. Ngân hàng */}
                 <div className="p-3.5 md:p-4 bg-white dark:bg-slate-800/80 rounded-2xl border border-slate-200/90 dark:border-slate-700/60 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5 shadow-xs">
                   <span className="text-xs text-slate-500 font-medium">Ngân hàng</span>
-                  <span className="text-sm md:text-base font-bold text-slate-900 dark:text-white break-words sm:text-right">
+                  <span className="text-sm md:text-base font-normal text-slate-900 dark:text-white break-words sm:text-right">
                     MB - Ngân hàng TMCP Quân đội
                   </span>
                 </div>

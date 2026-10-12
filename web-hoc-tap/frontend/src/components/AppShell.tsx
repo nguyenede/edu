@@ -287,7 +287,7 @@ export const AppShell: React.FC<AppShellProps> = ({
       >
         <div className="mr-0 h-full flex flex-col">
           {/* Inner Google White Sheet Canvas */}
-          <div className="bg-white dark:bg-[#1e1f20] rounded-none md:rounded-tl-2xl md:rounded-tr-none md:rounded-b-none shadow-none flex-1 flex flex-col overflow-hidden">
+          <div className="bg-white dark:bg-[#1e1f20] rounded-none shadow-none flex-1 flex flex-col overflow-hidden md:border-l md:border-slate-200/60 md:dark:border-slate-800/80">
             {/* Page Body Viewport - Title and content scroll together smoothly */}
             <main
               id="app-main-viewport"
@@ -304,11 +304,11 @@ export const AppShell: React.FC<AppShellProps> = ({
                   <div className="min-w-0">
                     {title &&
                       (typeof title === 'string' ? (
-                        <h1 className="text-xl sm:text-2xl font-[450] tracking-tight text-slate-900 dark:text-slate-100 leading-tight break-words">
+                        <h1 className="text-xl sm:text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100 leading-tight break-words">
                           {title}
                         </h1>
                       ) : (
-                        <div className="font-[450]">{title}</div>
+                        <div className="text-slate-900 dark:text-slate-100">{title}</div>
                       ))}
                   </div>
                   {action && <div className="flex w-full sm:w-auto min-w-0 items-center gap-2 [&>*]:min-w-0 [&>*]:flex-wrap">{action}</div>}
