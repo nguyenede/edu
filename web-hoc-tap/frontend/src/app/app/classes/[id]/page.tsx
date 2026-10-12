@@ -48,7 +48,7 @@ import {
   ClassPost,
 } from '@/lib/classesApi';
 
-type TabKey = 'assignments' | 'students' | 'feed' | 'gradebook';
+type TabKey = 'assignments' | 'students' | 'gradebook';
 
 export default function ClassDetailPage() {
   const { id: classId } = useParams();
@@ -474,16 +474,7 @@ export default function ClassDetailPage() {
             Danh sách Học sinh ({members.length})
           </button>
 
-          <button
-            onClick={() => setActiveTab('feed')}
-            className={`text-sm transition-colors whitespace-nowrap cursor-pointer ${
-              activeTab === 'feed'
-                ? 'text-blue-600 dark:text-blue-400 font-bold'
-                : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 font-medium'
-            }`}
-          >
-            Bảng tin ({posts.length})
-          </button>
+
 
           <button
             onClick={() => setActiveTab('gradebook')}
@@ -646,50 +637,7 @@ export default function ClassDetailPage() {
           </div>
         )}
 
-        {/* Tab 3: Feed / Bảng tin */}
-        {activeTab === 'feed' && (
-          <div className="space-y-4">
-            {isTeacher && (
-              <form onSubmit={handleCreatePost} className="space-y-2">
-                <textarea
-                  rows={3}
-                  placeholder="Chia sẻ thông báo hoặc hướng dẫn với lớp học..."
-                  value={newPostContent}
-                  onChange={(e) => setNewPostContent(e.target.value)}
-                  className="w-full text-xs p-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#1a1b1d] text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500 resize-none"
-                />
-                <div className="flex justify-end">
-                  <Button size="sm" type="submit" disabled={!newPostContent.trim()} className="gap-1.5">
-                    <Send size={13} />
-                    <span>Đăng thông báo</span>
-                  </Button>
-                </div>
-              </form>
-            )}
 
-            {posts.length === 0 ? (
-              <p className="text-xs text-slate-400 py-8 text-center">Chưa có thông báo nào trên bảng tin.</p>
-            ) : (
-              <div className="divide-y divide-slate-100 dark:divide-slate-800">
-                {posts.map((post) => (
-                  <div key={post.id} className="py-4 space-y-1">
-                    <div className="flex items-center justify-between">
-                      <span className="font-semibold text-xs text-slate-900 dark:text-slate-100">
-                        {post.authorName} ({post.authorRole})
-                      </span>
-                      <span className="text-[10px] text-slate-400">
-                        {new Date(post.createdAt).toLocaleString('vi-VN')}
-                      </span>
-                    </div>
-                    <p className="text-xs text-slate-700 dark:text-slate-300 whitespace-pre-line">
-                      {post.content}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
 
         {/* Tab 4: Gradebook / Bảng điểm */}
         {activeTab === 'gradebook' && (

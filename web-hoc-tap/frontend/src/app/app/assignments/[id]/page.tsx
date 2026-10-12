@@ -523,24 +523,24 @@ export default function AssignmentDetailPage() {
                         <MathRenderer text={q.content} />
                       </div>
 
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1.5 pt-1">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
                         {q.options.map((opt, optIdx) => {
                           const label = String.fromCharCode(65 + optIdx);
                           const isCorrect = opt.isCorrect;
                           return (
                             <div
                               key={opt.id || optIdx}
-                              className={`py-1.5 px-2 rounded-lg text-xs flex items-start gap-2 transition-colors ${
+                              className={`p-2.5 rounded-lg border text-xs flex items-start gap-2.5 transition-colors ${
                                 isCorrect
-                                  ? 'text-emerald-600 dark:text-emerald-400 font-medium'
-                                  : 'text-slate-700 dark:text-slate-300'
+                                  ? 'border-emerald-500/80 bg-emerald-50/60 dark:bg-emerald-950/30 text-emerald-900 dark:text-emerald-100 font-medium ring-1 ring-emerald-500/30'
+                                  : 'border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/40 text-slate-700 dark:text-slate-300'
                               }`}
                             >
                               <span
                                 className={`w-5 h-5 rounded-full flex items-center justify-center font-bold text-[10px] shrink-0 ${
                                   isCorrect
                                     ? 'bg-emerald-600 text-white'
-                                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
+                                    : 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
                                 }`}
                               >
                                 {label}
@@ -548,7 +548,7 @@ export default function AssignmentDetailPage() {
                               <div className="flex-1 leading-relaxed">
                                 <MathRenderer text={opt.content} />
                                 {isCorrect && (
-                                  <span className="ml-1.5 inline-flex items-center gap-0.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
+                                  <span className="ml-2 inline-flex items-center gap-0.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
                                     ✓ Đáp án đúng
                                   </span>
                                 )}
@@ -646,16 +646,16 @@ export default function AssignmentDetailPage() {
                   </div>
 
                   {normalizedQuestions.length > 0 ? (
-                    <div className="space-y-4">
+                    <div className="divide-y divide-slate-100 dark:divide-slate-800/60">
                       {normalizedQuestions.map((q, idx) => (
                         <div
                           key={q.id}
-                          className="p-4 rounded-xl border border-slate-100 dark:border-slate-800 bg-white dark:bg-[#1a1b1d] shadow-2xs space-y-3"
+                          className="py-4 first:pt-1 space-y-2.5"
                         >
-                          <span className="text-xs font-bold text-blue-600 dark:text-blue-400 block uppercase">
+                          <span className="text-xs font-semibold text-blue-600 dark:text-blue-400 block uppercase">
                             Câu {idx + 1}
                           </span>
-                          <div className="text-xs font-semibold text-slate-900 dark:text-slate-100 leading-relaxed">
+                          <div className="text-xs font-medium text-slate-900 dark:text-slate-100 leading-relaxed">
                             <MathRenderer text={q.content} />
                           </div>
 
@@ -669,7 +669,7 @@ export default function AssignmentDetailPage() {
                                   className={`flex items-center gap-3 p-2.5 rounded-lg cursor-pointer text-xs font-medium select-none border transition-colors ${
                                     isSelected
                                       ? 'bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border-blue-400 font-semibold ring-1 ring-blue-500/30'
-                                      : 'bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-200 border-transparent hover:bg-slate-100 dark:hover:bg-slate-800/60'
+                                      : 'bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-200 border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800/60'
                                   }`}
                                 >
                                   <input
