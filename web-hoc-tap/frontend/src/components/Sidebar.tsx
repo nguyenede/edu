@@ -94,7 +94,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       suppressHydrationWarning
       className={`shrink-0 ${
         isMounted ? 'transition-[width,transform] duration-300 ease-in-out' : ''
-      } select-none flex flex-col justify-between fixed top-16 left-0 bottom-0 z-50 overflow-y-auto md:overflow-visible bg-white dark:bg-[#1e1f20] shadow-xl md:bg-google-bg md:dark:bg-[#131314] md:shadow-none md:z-50 py-3 px-2.5 ${
+      } select-none flex flex-col justify-between fixed top-16 left-0 bottom-0 z-50 overflow-y-auto md:overflow-visible bg-white dark:bg-[#1e1f20] shadow-xl md:bg-google-bg md:dark:bg-[#131314] md:shadow-none md:z-50 py-3 px-2 ${
         sidebarCollapsed
           ? 'w-[280px] -translate-x-full md:translate-x-0 md:w-[64px]'
           : 'translate-x-0 w-[280px] md:w-[200px]'
@@ -125,20 +125,23 @@ export const Sidebar: React.FC<SidebarProps> = ({
               >
                 <button
                   type="button"
+                  title={item.label}
                   onClick={() => handleNavClick(item.href)}
-                  className={`h-11 text-sm font-medium transition-colors duration-200 ease-in-out flex items-center rounded-full overflow-hidden shrink-0 cursor-pointer ${
+                  className={`h-11 transition-colors duration-200 ease-in-out flex items-center rounded-full overflow-hidden shrink-0 cursor-pointer ${
                     sidebarCollapsed ? 'w-11 justify-center' : 'w-full'
                   } ${
                     isActive
-                      ? 'bg-google-pill text-google-pill-text dark:bg-[#2d2f31] dark:text-[#f1f3f4] font-bold'
-                      : 'text-slate-700 dark:text-slate-300 hover:bg-google-hover dark:hover:bg-[#282a2c]'
+                      ? 'bg-google-pill text-google-pill-text dark:bg-[#2d2f31] dark:text-[#f1f3f4] font-[550]'
+                      : 'text-slate-700 dark:text-slate-300 hover:bg-google-hover dark:hover:bg-[#282a2c] font-normal'
                   }`}
                 >
-                  <div className="w-11 h-11 flex items-center justify-center shrink-0">
-                    <Icon size={21} />
+                  <div className={`${sidebarCollapsed ? 'w-11' : 'w-10 pl-0.5'} h-11 flex items-center justify-center shrink-0`}>
+                    <Icon size={20} />
                   </div>
                   <span
-                    className={`truncate text-left whitespace-nowrap overflow-hidden pr-3 text-sm font-medium ${
+                    className={`truncate text-left whitespace-nowrap overflow-hidden pr-2 text-[13.5px] tracking-tight ${
+                      isActive ? 'font-[550]' : 'font-normal'
+                    } ${
                       sidebarCollapsed ? 'hidden' : 'inline-block'
                     }`}
                   >

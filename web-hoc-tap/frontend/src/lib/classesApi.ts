@@ -6,6 +6,9 @@ export interface ClassItem {
   id: string;
   name: string;
   code: string;
+  schoolYear?: string;
+  group?: string;
+  sharedWith?: string[];
   teacherId?: string;
   teacher?: {
     email?: string;
@@ -20,6 +23,30 @@ export interface ClassItem {
 }
 
 const STORAGE_KEY = 'app_classes_data';
+const GROUPS_STORAGE_KEY = 'app_class_groups_data';
+export const DEFAULT_GROUPS = ['Khác'];
+
+export function getLocalClassGroups(): string[] {
+  const raw = safeLocalStorageGet(GROUPS_STORAGE_KEY);
+  if (!raw) return DEFAULT_GROUPS;
+  try {
+    const list = JSON.parse(raw);
+    if (Array.isArray(list) && list.length > 0) return list;
+  } catch (_) {}
+  return DEFAULT_GROUPS;
+}
+
+export function addClassGroup(groupName: string): string[] {
+  const name = groupName.trim();
+  if (!name) return getLocalClassGroups();
+  const current = getLocalClassGroups();
+  if (!current.includes(name)) {
+    const updated = [...current, name];
+    safeLocalStorageSet(GROUPS_STORAGE_KEY, JSON.stringify(updated));
+    return updated;
+  }
+  return current;
+}
 
 const DEFAULT_CLASSES: ClassItem[] = [];
 
@@ -95,8 +122,16 @@ export async function fetchClasses(token: string | null, isTeacher: boolean): Pr
   return getLocalClasses();
 }
 
-export async function createClass(token: string | null, name: string, user: any): Promise<ClassItem> {
+export async function createClass(
+  token: string | null,
+  name: string,
+  user: any,
+  options?: { schoolYear?: string; group?: string }
+): Promise<ClassItem> {
   const trimmedName = name.trim();
+  const schoolYear = options?.schoolYear || '2026 - 2027';
+  const group = options?.group || 'Khác';
+
   try {
     const res = await fetch('/api/classes', {
       method: 'POST',
@@ -104,14 +139,20 @@ export async function createClass(token: string | null, name: string, user: any)
         'Content-Type': 'application/json',
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
-      body: JSON.stringify({ name: trimmedName }),
+      body: JSON.stringify({ name: trimmedName, schoolYear, group }),
     });
     if (res.ok) {
       const created = await res.json();
+      const enriched = {
+        ...created,
+        schoolYear: created.schoolYear || schoolYear,
+        group: created.group || group,
+        sharedWith: created.sharedWith || [],
+      };
       const local = getLocalClasses();
-      const updated = [created, ...local.filter((c) => c.id !== created.id)];
+      const updated = [enriched, ...local.filter((c) => c.id !== enriched.id)];
       safeLocalStorageSet(STORAGE_KEY, JSON.stringify(updated));
-      return created;
+      return enriched;
     }
   } catch (_) {
     // Server offline fallback
@@ -122,6 +163,9 @@ export async function createClass(token: string | null, name: string, user: any)
     id: 'cls_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6),
     name: trimmedName,
     code: Math.random().toString(36).substring(2, 8).toUpperCase(),
+    schoolYear,
+    group,
+    sharedWith: [],
     teacherId: user?.id || 'teacher_local',
     teacher: {
       profile: {
@@ -138,6 +182,61 @@ export async function createClass(token: string | null, name: string, user: any)
   const updated = [newClass, ...current];
   safeLocalStorageSet(STORAGE_KEY, JSON.stringify(updated));
   return newClass;
+}
+
+export function bulkCreateClasses(
+  items: Array<{ name: string; schoolYear?: string; group?: string }>,
+  user: any
+): ClassItem[] {
+  const current = getLocalClasses();
+  const newlyCreated: ClassItem[] = [];
+
+  items.forEach((item, idx) => {
+    const trimmed = (item.name || '').trim();
+    if (!trimmed) return;
+    const newClass: ClassItem = {
+      id: 'cls_' + (Date.now() + idx) + '_' + Math.random().toString(36).substring(2, 6),
+      name: trimmed,
+      code: Math.random().toString(36).substring(2, 8).toUpperCase(),
+      schoolYear: item.schoolYear || '2026 - 2027',
+      group: item.group || 'Khác',
+      sharedWith: [],
+      teacherId: user?.id || 'teacher_local',
+      teacher: {
+        profile: {
+          name: user?.name || 'Giáo viên',
+        },
+      },
+      _count: {
+        members: 0,
+      },
+      createdAt: new Date().toISOString(),
+    };
+    newlyCreated.push(newClass);
+  });
+
+  const updated = [...newlyCreated, ...current];
+  safeLocalStorageSet(STORAGE_KEY, JSON.stringify(updated));
+  return newlyCreated;
+}
+
+export function updateClassInfo(
+  classId: string,
+  updates: Partial<ClassItem>
+): ClassItem | null {
+  const current = getLocalClasses();
+  let updatedItem: ClassItem | null = null;
+  const next = current.map((c) => {
+    if (c.id === classId) {
+      updatedItem = { ...c, ...updates };
+      return updatedItem;
+    }
+    return c;
+  });
+  if (updatedItem) {
+    safeLocalStorageSet(STORAGE_KEY, JSON.stringify(next));
+  }
+  return updatedItem;
 }
 
 export async function joinClass(token: string | null, code: string): Promise<ClassItem> {
@@ -806,5 +905,175 @@ export async function deleteClassAssignment(
   }
 
   return true;
+}
+
+// ==================== STUDENT MANAGEMENT ====================
+export interface ClassStudentData {
+  id?: string;
+  name: string;
+  email?: string;
+  phone?: string;
+  gender?: string;
+  dob?: string;
+  studentCode?: string;
+}
+
+export function addStudentToClassManual(classId: string, data: ClassStudentData): any {
+  const memKey = `app_class_members_${classId}`;
+  const rawMems = safeLocalStorageGet(memKey);
+  let memList = rawMems ? JSON.parse(rawMems) : [];
+  if (!Array.isArray(memList)) memList = [];
+
+  const studentId = 'std_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6);
+  const newMember = {
+    id: 'mem_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6),
+    studentId,
+    joinedAt: new Date().toISOString(),
+    studentCode: data.studentCode || ('HS' + Math.floor(1000 + Math.random() * 9000)),
+    phone: data.phone || '',
+    gender: data.gender || 'Nam',
+    dob: data.dob || '',
+    student: {
+      id: studentId,
+      email: data.email || `${studentId}@kiyoedu.com`,
+      phone: data.phone || '',
+      profile: {
+        name: data.name.trim(),
+        avatar: null,
+      },
+    },
+  };
+
+  memList.unshift(newMember);
+  safeLocalStorageSet(memKey, JSON.stringify(memList));
+
+  // Sync class member count
+  const local = getLocalClasses();
+  const updatedClasses = local.map((c) =>
+    c.id === classId ? { ...c, _count: { members: memList.length } } : c
+  );
+  safeLocalStorageSet(STORAGE_KEY, JSON.stringify(updatedClasses));
+
+  return newMember;
+}
+
+export function bulkAddStudentsToClass(classId: string, students: ClassStudentData[]): number {
+  const memKey = `app_class_members_${classId}`;
+  const rawMems = safeLocalStorageGet(memKey);
+  let memList = rawMems ? JSON.parse(rawMems) : [];
+  if (!Array.isArray(memList)) memList = [];
+
+  let addedCount = 0;
+  students.forEach((data, idx) => {
+    const trimmedName = (data.name || '').trim();
+    if (!trimmedName) return;
+
+    const studentId = 'std_' + (Date.now() + idx) + '_' + Math.random().toString(36).substring(2, 6);
+    const newMember = {
+      id: 'mem_' + (Date.now() + idx) + '_' + Math.random().toString(36).substring(2, 6),
+      studentId,
+      joinedAt: new Date().toISOString(),
+      studentCode: data.studentCode || ('HS' + Math.floor(1000 + Math.random() * 9000)),
+      phone: data.phone || '',
+      gender: data.gender || 'Nam',
+      dob: data.dob || '',
+      student: {
+        id: studentId,
+        email: data.email || `${studentId}@kiyoedu.com`,
+        phone: data.phone || '',
+        profile: {
+          name: trimmedName,
+          avatar: null,
+        },
+      },
+    };
+    memList.push(newMember);
+    addedCount++;
+  });
+
+  safeLocalStorageSet(memKey, JSON.stringify(memList));
+
+  // Sync class member count
+  const local = getLocalClasses();
+  const updatedClasses = local.map((c) =>
+    c.id === classId ? { ...c, _count: { members: memList.length } } : c
+  );
+  safeLocalStorageSet(STORAGE_KEY, JSON.stringify(updatedClasses));
+
+  return addedCount;
+}
+
+// ==================== CLASS POSTS / ANNOUNCEMENTS ====================
+export interface ClassPost {
+  id: string;
+  classId: string;
+  authorName: string;
+  authorRole: string;
+  content: string;
+  createdAt: string;
+  comments?: Array<{ id: string; authorName: string; content: string; createdAt: string }>;
+}
+
+export function getClassPosts(classId: string): ClassPost[] {
+  const key = `app_class_posts_${classId}`;
+  const raw = safeLocalStorageGet(key);
+  if (!raw) return [];
+  try {
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+export function createClassPost(classId: string, authorName: string, content: string): ClassPost {
+  const posts = getClassPosts(classId);
+  const newPost: ClassPost = {
+    id: 'post_' + Date.now(),
+    classId,
+    authorName: authorName || 'Giáo viên',
+    authorRole: 'Giáo viên',
+    content: content.trim(),
+    createdAt: new Date().toISOString(),
+    comments: [],
+  };
+  const updated = [newPost, ...posts];
+  safeLocalStorageSet(`app_class_posts_${classId}`, JSON.stringify(updated));
+  return newPost;
+}
+
+// ==================== CLASS COURSES / LESSONS ====================
+export interface ClassCourseItem {
+  id: string;
+  title: string;
+  description: string;
+  lessonCount: number;
+  createdAt: string;
+}
+
+export function getClassCourses(classId: string): ClassCourseItem[] {
+  const key = `app_class_courses_${classId}`;
+  const raw = safeLocalStorageGet(key);
+  if (!raw) return [];
+  try {
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+export function addClassCourse(classId: string, title: string, description: string): ClassCourseItem {
+  const courses = getClassCourses(classId);
+  const newCourse: ClassCourseItem = {
+    id: 'course_' + Date.now(),
+    title: title.trim(),
+    description: description.trim(),
+    lessonCount: 1,
+    createdAt: new Date().toISOString(),
+  };
+  const updated = [newCourse, ...courses];
+  safeLocalStorageSet(`app_class_courses_${classId}`, JSON.stringify(updated));
+  return newCourse;
 }
 

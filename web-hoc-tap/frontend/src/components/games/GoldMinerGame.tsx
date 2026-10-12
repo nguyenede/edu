@@ -85,6 +85,10 @@ export const GoldMinerGame: React.FC<GoldMinerGameProps> = ({
       return;
     }
 
+    if (timerSeconds <= 5 && timerSeconds > 0) {
+      gameAudio.playTick();
+    }
+
     const timer = setInterval(() => {
       setTimerSeconds((prev) => (prev !== null && prev > 0 ? prev - 1 : 0));
     }, 1000);
@@ -137,20 +141,30 @@ export const GoldMinerGame: React.FC<GoldMinerGameProps> = ({
       setTimeout(() => setIsPulling(false), 800);
     } else {
       gameAudio.playIncorrect();
-      setActiveTeamId(activeTeamId === 'team1' ? 'team2' : 'team1');
     }
   };
 
   const handleNextQuestion = () => {
-    if (currentIndex + 1 < questions.length) {
-      setCurrentIndex((i) => i + 1);
-      setAnsweredOptionIdx(null);
-      setIsAnswerRevealed(false);
-      setTimerSeconds(initialTime);
-      setActiveTeamId(activeTeamId === 'team1' ? 'team2' : 'team1');
-    } else {
+    const solvedCount = Object.keys(questionStatuses).length;
+    if (solvedCount >= questions.length || winnerTeamId) {
       setIsVictoryModalOpen(true);
+      return;
     }
+
+    let nextIdx = (currentIndex + 1) % questions.length;
+    for (let i = 0; i < questions.length; i++) {
+      const checkIdx = (currentIndex + 1 + i) % questions.length;
+      if (!questionStatuses[checkIdx]) {
+        nextIdx = checkIdx;
+        break;
+      }
+    }
+
+    setCurrentIndex(nextIdx);
+    setAnsweredOptionIdx(null);
+    setIsAnswerRevealed(false);
+    setTimerSeconds(initialTime);
+    setActiveTeamId(activeTeamId === 'team1' ? 'team2' : 'team1');
   };
 
   const handleSelectQuestionFromGrid = (index: number) => {
@@ -293,7 +307,7 @@ export const GoldMinerGame: React.FC<GoldMinerGameProps> = ({
               onSelectOption={handleSelectOption}
               onNextQuestion={handleNextQuestion}
               onOpenQuestionGrid={() => setIsGridOpen(true)}
-              isLastQuestion={currentIndex + 1 >= questions.length}
+              isLastQuestion={Object.keys(questionStatuses).length >= questions.length || winnerTeamId !== null}
             />
           </div>
         ) : (

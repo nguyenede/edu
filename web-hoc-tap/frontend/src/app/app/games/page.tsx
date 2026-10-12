@@ -20,7 +20,10 @@ import {
   GameQuestion,
   DEFAULT_GAME_CONFIG,
 } from '@/components/games/GameConfigModal';
-import { normalizeGameQuestion } from '@/lib/gameQuestionHelper';
+import {
+  normalizeGameQuestion,
+  DEFAULT_CLASSROOM_TRIAL_QUESTIONS,
+} from '@/lib/gameQuestionHelper';
 import {
   Gamepad2,
   Sparkles,
@@ -297,26 +300,33 @@ export default function GamesHubPage() {
     return savedLessons.filter((l) => l.gameType === activeCategory);
   }, [savedLessons, activeCategory]);
 
-  // Generate trial run card if real exam is available
+  // Generate trial run card (always available)
   const trialLesson: CustomGameLesson | null = React.useMemo(() => {
-    if (!activeCategory || !selectedExam || !selectedExam.questions || selectedExam.questions.length === 0) {
-      return null;
-    }
+    if (!activeCategory) return null;
     const meta = getCategoryMeta(activeCategory);
+    const hasRealExam =
+      selectedExam &&
+      Array.isArray(selectedExam.questions) &&
+      selectedExam.questions.length > 0;
+
+    const examQuestions = hasRealExam
+      ? selectedExam.questions.map((q, idx) => normalizeGameQuestion(q, idx))
+      : DEFAULT_CLASSROOM_TRIAL_QUESTIONS;
+    const examTitle = hasRealExam ? selectedExam.title : 'Bộ câu hỏi khởi động mẫu';
+    const examId = hasRealExam ? selectedExam.id : 'trial_exam_default';
+
     return {
       id: `trial_${activeCategory}`,
       gameType: activeCategory,
       title: `${meta.shortName} - Bản Chạy Thử`,
       isTrial: true,
-      examId: selectedExam.id,
-      examTitle: selectedExam.title,
+      examId,
+      examTitle,
       config: {
         ...DEFAULT_GAME_CONFIG,
         title: `${meta.shortName} - Bản Chạy Thử`,
       },
-      questions: selectedExam.questions.map((q, idx) =>
-        normalizeGameQuestion(q, idx)
-      ),
+      questions: examQuestions,
       createdAt: Date.now(),
     };
   }, [activeCategory, selectedExam]);
@@ -330,11 +340,13 @@ export default function GamesHubPage() {
       ...DEFAULT_GAME_CONFIG,
       title: `${meta.shortName} - ${selectedExam?.title || 'Bài tập mới'}`,
     });
-    // Populate questions from current exam
-    if (selectedExam) {
+    // Populate questions from current exam or default trial questions
+    if (selectedExam && Array.isArray(selectedExam.questions) && selectedExam.questions.length > 0) {
       setCustomQuestions(
         selectedExam.questions.map((q, idx) => normalizeGameQuestion(q, idx))
       );
+    } else {
+      setCustomQuestions(DEFAULT_CLASSROOM_TRIAL_QUESTIONS);
     }
     setIsConfigModalOpen(true);
   };
@@ -500,7 +512,7 @@ export default function GamesHubPage() {
         ) : undefined
       }
     >
-      <div className="space-y-5">
+      <div className="space-y-4">
         {/* LEVEL 3: ACTIVE PLAYING GAME */}
         {playingLesson ? (
           <div>
@@ -699,27 +711,36 @@ export default function GamesHubPage() {
           </div>
         ) : (
           /* LEVEL 1: OVERALL 8 GAMES CATALOG HUB */
-          <div>
-            {exams.length === 0 && !isLoading ? (
-              <div className="py-24 text-center select-none flex flex-col items-center justify-center max-w-md mx-auto px-4">
-                <div className="w-16 h-16 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-zinc-500 flex items-center justify-center mb-3 shadow-2xs">
-                  <Gamepad2 size={32} strokeWidth={1.75} />
-                </div>
-                <h3 className="text-base font-semibold text-slate-800 dark:text-zinc-200 mb-1">
-                  Chưa có đề thi trong kho tài liệu
-                </h3>
-                <p className="text-xs text-slate-500 dark:text-zinc-400 leading-relaxed">
-                  Trò chơi sử dụng câu hỏi thật từ kho tài liệu. Vui lòng tạo đề thi mới với Trợ lý SI hoặc tải tệp tài liệu lên để bắt đầu.
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                <div className="flex items-center justify-between text-xs text-slate-500 dark:text-zinc-400 px-1">
-                  <span>
-                    Bấm vào trò chơi để mở trang quản lý và tạo các bài chơi tương tác của bạn.
+          <div className="space-y-4">
+            {exams.length === 0 && !isLoading && (
+              <div className="p-4 rounded-2xl bg-blue-50/80 dark:bg-blue-950/30 border border-blue-200/80 dark:border-blue-900/50 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-blue-900 dark:text-blue-200">
+                <div className="flex items-center gap-2.5">
+                  <span className="w-8 h-8 rounded-xl bg-blue-500/15 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold text-sm shrink-0">
+                    <Sparkles size={16} />
                   </span>
-                  <span>{GAME_LIST.length} trò chơi</span>
+                  <div>
+                    <span className="font-bold">Đã sẵn sàng Bản Chạy Thử cho tất cả 8 trò chơi!</span>
+                    <p className="text-[11px] text-blue-700/80 dark:text-blue-300/80">
+                      Bạn có thể bấm vào trò chơi để chơi ngay lập tức, hoặc tải đề thi lên Kho tài liệu để thi đấu với câu hỏi của lớp mình.
+                    </p>
+                  </div>
                 </div>
+                <button
+                  type="button"
+                  onClick={() => router.push('/documents')}
+                  className="px-3.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold whitespace-nowrap cursor-pointer transition-colors shadow-xs self-end sm:self-center text-xs"
+                >
+                  Kho tài liệu ➔
+                </button>
+              </div>
+            )}
+
+            <div className="flex items-center justify-between text-xs text-slate-500 dark:text-zinc-400 px-1">
+              <span>
+                Bấm vào trò chơi để mở trang quản lý và tạo các bài chơi tương tác của bạn.
+              </span>
+              <span>{GAME_LIST.length} trò chơi</span>
+            </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
                   {GAME_LIST.map((game) => (
@@ -764,8 +785,6 @@ export default function GamesHubPage() {
                   ))}
                 </div>
               </div>
-            )}
-          </div>
         )}
       </div>
 

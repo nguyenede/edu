@@ -85,7 +85,15 @@ export const BubblePopGame: React.FC<BubblePopGameProps> = ({
     }
 
     const timer = setInterval(() => {
-      setTimerSeconds((prev) => (prev !== null && prev > 0 ? prev - 1 : 0));
+      setTimerSeconds((prev) => {
+        if (prev !== null && prev > 0) {
+          if (prev <= 6 && prev > 1) {
+            gameAudio.playTick();
+          }
+          return prev - 1;
+        }
+        return 0;
+      });
     }, 1000);
 
     return () => clearInterval(timer);
@@ -136,18 +144,34 @@ export const BubblePopGame: React.FC<BubblePopGameProps> = ({
       setTimeout(() => setIsPopped(false), 800);
     } else {
       gameAudio.playIncorrect();
-      setActiveTeamId(activeTeamId === 'team1' ? 'team2' : 'team1');
     }
   };
 
   const handleNextQuestion = () => {
-    if (currentIndex + 1 < questions.length) {
-      setCurrentIndex((i) => i + 1);
+    const nextUnopenedIndex = questions.findIndex(
+      (_, idx) => !questionStatuses[idx] && idx !== currentIndex
+    );
+    const hasUnopened = nextUnopenedIndex !== -1;
+
+    if (hasUnopened) {
+      let targetIndex = (currentIndex + 1) % questions.length;
+      for (let i = 0; i < questions.length; i++) {
+        const candidate = (currentIndex + 1 + i) % questions.length;
+        if (!questionStatuses[candidate]) {
+          targetIndex = candidate;
+          break;
+        }
+      }
+      setCurrentIndex(targetIndex);
       setAnsweredOptionIdx(null);
       setIsAnswerRevealed(false);
       setTimerSeconds(initialTime);
-      setActiveTeamId(activeTeamId === 'team1' ? 'team2' : 'team1');
+      setActiveTeamId((curr) => (curr === 'team1' ? 'team2' : 'team1'));
     } else {
+      const winner =
+        team1Score > team2Score ? 'team1' : team2Score > team1Score ? 'team2' : null;
+      setWinnerTeamId(winner);
+      gameAudio.playVictory();
       setIsVictoryModalOpen(true);
     }
   };
@@ -288,7 +312,7 @@ export const BubblePopGame: React.FC<BubblePopGameProps> = ({
               onSelectOption={handleSelectOption}
               onNextQuestion={handleNextQuestion}
               onOpenQuestionGrid={() => setIsGridOpen(true)}
-              isLastQuestion={currentIndex + 1 >= questions.length}
+              isLastQuestion={Object.keys(questionStatuses).length >= questions.length || winnerTeamId !== null}
             />
           </div>
         ) : (
