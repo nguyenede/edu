@@ -1,83 +1,247 @@
 'use client';
 
-import React, { useState, Suspense } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { AppShell } from '@/components/AppShell';
+import { BreadcrumbChevron } from '@/components/BreadcrumbChevron';
 import { Button } from '@/components/Button';
-import { Camera, Check, Upload, Image as ImageIcon, ChevronRight, AlertCircle } from 'lucide-react';
+import {
+  Camera,
+  Check,
+  Upload,
+  Image as ImageIcon,
+  ChevronRight,
+  AlertCircle,
+  Sparkles,
+  FileText,
+  CheckCircle2,
+  ArrowRight,
+  RefreshCw,
+} from 'lucide-react';
 import { AiToolRegistry } from '@/lib/ai/aiToolRegistry';
 import { useAuthStore } from '@/store/useAuthStore';
 import { syncExamActionToDocument } from '@/lib/examDocumentSync';
+import { idbSaveDocument } from '@/lib/indexedDbStorage';
+import { validateDeterministicResult, parseExamFileStructure } from '@/lib/examStructureParser';
+import { extractFileForAi } from '@/lib/fileExtractor';
 
 function OcrQuizCreateContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const folderId = searchParams.get('folderId');
-  const folderName = searchParams.get('folderName');
-  const targetQuery = folderId && folderName ? `?folderId=${folderId}&folderName=${encodeURIComponent(folderName)}` : '';
+  const rawFolderId = searchParams.get('folderId');
+  const rawFolderName = searchParams.get('folderName');
+
+  const [folderId, setFolderId] = useState<string | null>(null);
+  const [folderName, setFolderName] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const storedId = sessionStorage.getItem('app_active_folder_id');
+      const storedName = sessionStorage.getItem('app_active_folder_name');
+      const effId = rawFolderId || storedId || null;
+      const effName = rawFolderName || storedName || null;
+      setFolderId(effId);
+      setFolderName(effName);
+      if (effId) sessionStorage.setItem('app_active_folder_id', effId);
+      if (effName) sessionStorage.setItem('app_active_folder_name', effName);
+
+      if (window.location.search) {
+        window.history.replaceState(null, '', '/app/documents/create/ocr');
+      }
+    }
+  }, [rawFolderId, rawFolderName]);
+
+  const targetQuery = '';
   const token = useAuthStore((state) => state.token);
 
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [docSubject, setDocSubject] = useState('Toán');
-  const [docGrade, setDocGrade] = useState('12');
+  const [docSubject, setDocSubject] = useState('');
+  const [docGrade, setDocGrade] = useState('');
   const [isScanning, setIsScanning] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      setSelectedImage(file);
+  // Kết quả sau khi quét và xác thực 100% dữ liệu thật
+  const [scannedExamData, setScannedExamData] = useState<{
+    title: string;
+    subject: string;
+    grade: string;
+    durationMinutes: number;
+    questions: any[];
+  } | null>(null);
+
+  const handleProcessImageFile = (file: File) => {
+    setSelectedImage(file);
+    setErrorMessage(null);
+    setScannedExamData(null);
+    if (file.type.startsWith('image/')) {
       const reader = new FileReader();
       reader.onload = () => {
         setImagePreview(reader.result as string);
       };
       reader.readAsDataURL(file);
+    } else {
+      setImagePreview(null);
+    }
+  };
+
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      handleProcessImageFile(e.target.files[0]);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      const file = e.dataTransfer.files[0];
+      handleProcessImageFile(file);
     }
   };
 
   const handleStartOcr = async () => {
-    if (!selectedImage || !imagePreview) {
-      alert('Vui lòng chọn hoặc tải ảnh đề thi!');
+    if (!selectedImage) {
+      setErrorMessage('Vui lòng chọn hoặc tải ảnh/tài liệu đề thi!');
+      setToastMessage('Vui lòng chọn hoặc tải ảnh/tài liệu đề thi!');
+      setTimeout(() => setToastMessage(null), 3000);
       return;
     }
 
     setIsScanning(true);
     setErrorMessage(null);
+    setScannedExamData(null);
 
     try {
+      // 1. CHẠY THUẬT TOÁN ĐẦU TIÊN: 100% dữ liệu thật từ file (0ms, không tốn AI)
+      try {
+        const deterministicResult = await parseExamFileStructure(selectedImage);
+        const isAlgoValid = validateDeterministicResult(deterministicResult);
+        if (isAlgoValid && deterministicResult && deterministicResult.questions.length > 0) {
+          const validResult = {
+            title: deterministicResult.title || `Đề thi từ file (${selectedImage.name.replace(/\.[^/.]+$/, '')})`,
+            subject: deterministicResult.subject || docSubject || 'Kiến thức tổng hợp',
+            grade: deterministicResult.grade || docGrade || 'Tự do',
+            durationMinutes: deterministicResult.durationMinutes || 45,
+            questions: deterministicResult.questions,
+          };
+          setScannedExamData(validResult);
+          setToastMessage(`Thuật toán đã nhận diện thành công ${deterministicResult.questions.length} câu hỏi thật từ file!`);
+          return;
+        }
+      } catch (algoErr) {
+        console.warn('Thuật toán không thể phân tích trực tiếp, chuyển sang SI:', algoErr);
+      }
+
+      // 2. CHỈ KHI THUẬT TOÁN KHÔNG PHÂN TÍCH ĐƯỢC (Ảnh chụp, scan, viết tay) -> MỚI DÙNG SI
+      const extracted = await extractFileForAi(selectedImage);
+
       const res = await fetch('/api/ai/generate-exam', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          mode: 'ocr',
-          subject: docSubject,
-          grade: docGrade,
-          imageBase64: imagePreview,
+          mode: extracted.type === 'image' ? 'ocr' : 'document',
+          subject: docSubject || '',
+          grade: docGrade || '',
+          imageBase64: extracted.imageBase64 || imagePreview || null,
+          documentText: extracted.text || '',
+          fileName: selectedImage.name,
+          model: 'gemini-3.5-flash-lite',
         }),
       });
 
       const data = await res.json();
 
       if (!res.ok || !data.success || !data.exam) {
-        throw new Error(data.error || 'AI không thể nhận diện được câu hỏi từ bức ảnh này');
+        throw new Error(data.error || 'SI không thể nhận diện được câu hỏi từ tài liệu này. 100% không làm giả dữ liệu.');
       }
 
       const generatedExam = data.exam;
+      const rawQuestions = Array.isArray(generatedExam.questions) ? generatedExam.questions : [];
 
-      // Save to document library
-      let result = AiToolRegistry.createExam({
-        title: generatedExam.title || `Đề thi bóc tách từ ảnh (${selectedImage.name})`,
-        subject: generatedExam.subject || docSubject,
-        grade: generatedExam.grade || docGrade,
+      // KIỂM TRA & LỌC NGHIÊM NGẶT: TUYỆT ĐỐI KHÔNG CHẤP NHẬN DỮ LIỆU GIẢ
+      const filteredQuestions = rawQuestions.filter((q: any) => {
+        const rawContent = String(q.content || q.question || '').trim();
+        const content = rawContent
+          .replace(/^(?:(?:Câu|câu|CÂU|Question|QUESTION|Bài\s*tập|BÀI\s*TẬP|Bài|BÀI|CH|Ví\s*dụ|VÍ\s*DỤ|Luyện\s*tập|Vận\s*dụng|Dạng)\s*(?:\d+|[IVXLCDM]+)[\s:.-]*|(?:\d+)[\.\)]\s+)/i, '')
+          .replace(/^[:.-]+\s*/, '')
+          .trim();
+        if (content.length < 5) return false;
+
+        if (Array.isArray(q.options) && q.options.length > 0) {
+          // Bắt buộc các phương án phải có chữ thật, không được chứa "Phương án A/B/C/D"
+          const hasDummy = q.options.some((o: any) => {
+            const str = typeof o === 'string' ? o : o?.content || o?.text || '';
+            const trimmed = str.trim();
+            return (
+              trimmed.length === 0 ||
+              /^Phương án\s*[A-D0-9]?$/i.test(trimmed) ||
+              /^Lựa chọn\s*[A-D0-9]?$/i.test(trimmed) ||
+              trimmed === 'Phương án đúng chính xác'
+            );
+          });
+          if (hasDummy) return false;
+        }
+        return true;
+      });
+
+      if (filteredQuestions.length === 0) {
+        throw new Error('Ảnh đề thi không chứa câu hỏi hợp lệ hoặc bị mờ. Hệ thống tuyệt đối không tạo dữ liệu giả!');
+      }
+
+      const validResult = {
+        title: generatedExam.title || `Đề thi nhận diện từ ảnh (${selectedImage.name.replace(/\.[^/.]+$/, '')})`,
+        subject: generatedExam.subject || docSubject || 'Kiến thức tổng hợp',
+        grade: generatedExam.grade || docGrade || 'Tự do',
         durationMinutes: generatedExam.durationMinutes || 45,
-        questions: generatedExam.questions,
+        questions: filteredQuestions,
+      };
+
+      setScannedExamData(validResult);
+      setToastMessage(`Đã bóc tách thành công ${filteredQuestions.length} câu hỏi thật từ ảnh!`);
+    } catch (err: any) {
+      console.error('Error in SI OCR quiz scan:', err);
+      setErrorMessage(err.message || 'Có lỗi xảy ra khi nhận diện ảnh đề thi.');
+    } finally {
+      setIsScanning(false);
+    }
+  };
+
+  const handleSaveScannedExam = async () => {
+    if (!scannedExamData) return;
+
+    try {
+      setIsScanning(true);
+      let result = AiToolRegistry.createExam({
+        title: scannedExamData.title,
+        subject: scannedExamData.subject,
+        grade: scannedExamData.grade,
+        durationMinutes: scannedExamData.durationMinutes,
+        questions: scannedExamData.questions,
         folderId: folderId || undefined,
       });
+
       result = await syncExamActionToDocument(token, result);
 
-      setToastMessage(`AI Vision đã nhận diện & tạo thành công ${generatedExam.questions.length} câu hỏi!`);
+      if (result.data?.examId) {
+        await idbSaveDocument({
+          id: result.data.examId,
+          name: `${scannedExamData.title}.docx`,
+          parentId: folderId || null,
+          fileType: 'docx',
+          createdAt: new Date().toISOString(),
+          parsedQuiz: {
+            title: scannedExamData.title,
+            description: `Đề thi môn ${scannedExamData.subject} nhận diện từ ảnh`,
+            durationMinutes: scannedExamData.durationMinutes,
+            questions: scannedExamData.questions,
+          },
+        });
+      }
+
+      setToastMessage('Đã lưu đề thi thành công vào thư viện!');
 
       setTimeout(() => {
         if (result.data?.examUrl) {
@@ -85,11 +249,10 @@ function OcrQuizCreateContent() {
         } else {
           router.push(folderId ? `/app/documents?folderId=${folderId}` : '/app/documents');
         }
-      }, 1000);
+      }, 500);
     } catch (err: any) {
-      console.error('Error in AI OCR quiz scan:', err);
-      setErrorMessage(err.message || 'Có lỗi xảy ra khi nhận diện ảnh đề thi.');
-    } finally {
+      console.error('Error saving scanned exam:', err);
+      setErrorMessage(err.message || 'Lỗi khi lưu đề thi vào hệ thống');
       setIsScanning(false);
     }
   };
@@ -97,37 +260,48 @@ function OcrQuizCreateContent() {
   return (
     <AppShell
       title={
-        <div className="flex items-center gap-1 text-2xl font-normal tracking-tight text-slate-900 dark:text-slate-100 flex-wrap -ml-2">
+        <div className="flex items-center gap-1 text-2xl font-[450] tracking-tight text-slate-900 dark:text-slate-100 flex-wrap -ml-2">
           <button
             type="button"
             onClick={() => router.push('/app/documents')}
-            className="transition-colors cursor-pointer px-2 py-0.5 rounded-xl hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-normal"
+            className="transition-colors cursor-pointer px-2 py-0.5 rounded-xl hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-900 dark:text-white font-[450]"
           >
             Tài liệu của tôi
           </button>
-          {folderName && (
+          {folderName ? (
             <>
-              <ChevronRight size={20} className="text-slate-400 dark:text-slate-500 shrink-0 stroke-[1.75]" />
+              <BreadcrumbChevron
+                folderId={null}
+                onNavigateFolder={(id) => router.push(`/app/documents?folderId=${id}`)}
+              />
               <button
                 type="button"
                 onClick={() => router.push(`/app/documents?folderId=${folderId || ''}`)}
-                className="transition-colors cursor-pointer px-2 py-0.5 rounded-xl hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-normal"
+                className="transition-colors cursor-pointer px-2 py-0.5 rounded-xl hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-900 dark:text-white font-[450]"
               >
                 {folderName}
               </button>
+              <BreadcrumbChevron
+                folderId={folderId || null}
+                onNavigateFolder={(id) => router.push(`/app/documents?folderId=${id}`)}
+              />
             </>
+          ) : (
+            <BreadcrumbChevron
+              folderId={null}
+              onNavigateFolder={(id) => router.push(`/app/documents?folderId=${id}`)}
+            />
           )}
-          <ChevronRight size={20} className="text-slate-400 dark:text-slate-500 shrink-0 stroke-[1.75]" />
           <button
             type="button"
             onClick={() => router.push('/app/documents/create' + targetQuery)}
-            className="transition-colors cursor-pointer px-2 py-0.5 rounded-xl hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-normal"
+            className="transition-colors cursor-pointer px-2 py-0.5 rounded-xl hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-900 dark:text-white font-[450]"
           >
             Tạo đề thi
           </button>
-          <ChevronRight size={20} className="text-slate-400 dark:text-slate-500 shrink-0 stroke-[1.75]" />
-          <span className="px-2 py-0.5 rounded-xl text-slate-900 dark:text-white font-normal">
-            Nhận diện từ ảnh (AI OCR)
+          <ChevronRight size={14} className="text-slate-400 dark:text-slate-500 shrink-0 stroke-[2]" />
+          <span className="px-2 py-0.5 rounded-xl text-slate-900 dark:text-white font-[450]">
+            Nhận diện từ ảnh (SI OCR)
           </span>
         </div>
       }
@@ -140,16 +314,16 @@ function OcrQuizCreateContent() {
         </div>
       )}
 
-      <div className="max-w-2xl mx-auto space-y-6 pt-2 pb-16">
+      <div className="max-w-3xl mx-auto space-y-6 pt-2 pb-16">
         <div className="space-y-6">
           <div className="flex items-center gap-3 p-4 bg-purple-50/70 dark:bg-purple-950/30 rounded-2xl border border-purple-200/60">
             <Camera size={24} className="text-purple-600 shrink-0" />
             <div>
               <h2 className="text-sm font-bold text-slate-900 dark:text-white">
-                Nhận diện đề thi từ hình ảnh bằng AI Multimodal Vision
+                Nhận diện đề thi từ hình ảnh bằng SI Multimodal Vision
               </h2>
               <p className="text-xs text-slate-500">
-                Tải lên ảnh chụp đề thi in giấy hoặc bài tập viết tay, AI sẽ bóc tách câu hỏi, đáp án và lời giải tự động
+                100% dữ liệu thật từ ảnh, hỗ trợ công thức toán học LaTeX, tuyệt đối không tạo dữ liệu giả
               </p>
             </div>
           </div>
@@ -164,13 +338,14 @@ function OcrQuizCreateContent() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1">
               <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                Môn học đề thi
+                Môn học đề thi (Tùy chọn)
               </label>
               <select
                 value={docSubject}
                 onChange={(e) => setDocSubject(e.target.value)}
                 className="w-full text-xs p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl font-medium focus:ring-1 focus:ring-purple-500"
               >
+                <option value="">Tự động nhận diện từ ảnh</option>
                 <option value="Toán">Toán</option>
                 <option value="Tiếng Anh">Tiếng Anh</option>
                 <option value="Ngữ văn">Ngữ văn</option>
@@ -186,13 +361,14 @@ function OcrQuizCreateContent() {
 
             <div className="space-y-1">
               <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                Khối lớp
+                Khối lớp (Tùy chọn)
               </label>
               <select
                 value={docGrade}
                 onChange={(e) => setDocGrade(e.target.value)}
                 className="w-full text-xs p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl font-medium focus:ring-1 focus:ring-purple-500"
               >
+                <option value="">Tự động nhận diện từ ảnh</option>
                 <option value="12">Lớp 12</option>
                 <option value="11">Lớp 11</option>
                 <option value="10">Lớp 10</option>
@@ -209,14 +385,26 @@ function OcrQuizCreateContent() {
             </div>
           </div>
 
-          <div className="p-8 border-2 border-dashed border-purple-300 dark:border-purple-800 rounded-3xl bg-purple-50/30 dark:bg-slate-800/30 text-center space-y-4">
+          <div
+            onDragOver={(e) => {
+              e.preventDefault();
+              setIsDragging(true);
+            }}
+            onDragLeave={() => setIsDragging(false)}
+            onDrop={handleDrop}
+            className={`p-8 border-2 border-dashed rounded-3xl text-center space-y-4 transition-colors ${
+              isDragging
+                ? 'border-purple-600 bg-purple-100/50 dark:bg-purple-900/30'
+                : 'border-purple-300 dark:border-purple-800 bg-purple-50/30 dark:bg-slate-800/30'
+            }`}
+          >
             <ImageIcon size={36} className="mx-auto text-purple-600" />
             <div className="space-y-1">
               <p className="text-xs font-bold text-slate-900 dark:text-white">
-                Chọn ảnh chụp đề thi (.png, .jpg, .jpeg)
+                Chọn ảnh hoặc kéo thả ảnh đề thi vào đây (.png, .jpg, .jpeg, .webp)
               </p>
               <p className="text-[11px] text-slate-400">
-                Khuyến nghị ảnh chụp rõ nét, đủ ánh sáng và không bị mờ
+                Hệ thống bóc tách đúng nội dung câu hỏi, công thức toán và đáp án có sẵn trong ảnh
               </p>
             </div>
 
@@ -228,11 +416,11 @@ function OcrQuizCreateContent() {
             />
 
             {selectedImage && imagePreview && (
-              <div className="pt-2 max-w-xs mx-auto space-y-2">
+              <div className="pt-2 max-w-sm mx-auto space-y-2">
                 <img
                   src={imagePreview}
                   alt="Ảnh đề thi đã chọn"
-                  className="w-full max-h-48 object-cover rounded-xl border border-purple-300 dark:border-purple-800 shadow-xs"
+                  className="w-full max-h-56 object-contain rounded-xl border border-purple-300 dark:border-purple-800 shadow-xs bg-black/5 dark:bg-white/5"
                 />
                 <p className="text-xs font-bold text-purple-600">
                   Đã chọn ảnh: {selectedImage.name}
@@ -245,26 +433,113 @@ function OcrQuizCreateContent() {
             <div className="p-6 text-center space-y-2 bg-purple-50/50 dark:bg-purple-950/20 rounded-2xl border border-purple-200/50">
               <div className="animate-spin rounded-full h-7 w-7 border-b-2 border-purple-600 mx-auto" />
               <p className="text-xs text-purple-600 dark:text-purple-400 font-semibold">
-                AI Vision đang phân tích hình ảnh và bóc tách từng câu hỏi...
+                SI Vision đang phân tích hình ảnh và bóc tách từng câu hỏi...
               </p>
               <p className="text-[11px] text-slate-400">
-                Đang nhận dạng chữ viết, các phương án A/B/C/D và giải chi tiết
+                100% bám sát nội dung ảnh thật, bảo toàn công thức toán học, tuyệt đối không tạo dữ liệu giả
               </p>
             </div>
           )}
 
-          <div className="flex justify-end gap-2 pt-4">
-            <Button variant="ghost" onClick={() => router.push('/app/documents/create' + targetQuery)} disabled={isScanning}>
-              Hủy
-            </Button>
-            <Button
-              className="bg-purple-600 hover:bg-purple-700 text-white font-bold"
-              onClick={handleStartOcr}
-              disabled={!selectedImage || isScanning}
-            >
-              <Camera size={16} className="mr-1.5" /> {isScanning ? 'AI Đang Quét...' : 'Quét OCR & Tạo Đề Thi'}
-            </Button>
-          </div>
+          {/* PREVIEW KẾT QUẢ BÓC TÁCH */}
+          {scannedExamData && (
+            <div className="space-y-4 p-5 bg-white dark:bg-slate-900 rounded-3xl border border-purple-200 dark:border-purple-800 shadow-sm animate-in fade-in duration-300">
+              <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+                <div className="flex items-center gap-2 text-google-green">
+                  <CheckCircle2 size={18} />
+                  <span className="text-xs font-bold">
+                    {(scannedExamData as any).method === 'algorithm'
+                      ? `⚡ Thuật toán bóc tách thành công ${scannedExamData.questions.length} câu hỏi thật từ file (0ms, không dùng AI)`
+                      : `✨ SI Vision đã bóc tách thành công ${scannedExamData.questions.length} câu hỏi thật từ ảnh`}
+                  </span>
+                </div>
+                <span className="text-[11px] font-semibold text-slate-500">
+                  Môn: {scannedExamData.subject} • {scannedExamData.grade}
+                </span>
+              </div>
+
+              <div className="space-y-3 max-h-96 overflow-y-auto pr-1">
+                {scannedExamData.questions.map((q: any, idx: number) => (
+                  <div
+                    key={idx}
+                    className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200/60 dark:border-slate-800 text-xs space-y-2"
+                  >
+                    <div className="font-bold text-slate-900 dark:text-slate-100 flex items-start gap-1.5">
+                      <span className="text-purple-600 shrink-0">Câu {idx + 1}:</span>
+                      <span className="whitespace-pre-wrap">{q.content}</span>
+                    </div>
+
+                    {Array.isArray(q.options) && q.options.length > 0 && (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 pt-1 pl-4">
+                        {q.options.map((opt: any, oIdx: number) => {
+                          const letter = String.fromCharCode(65 + oIdx);
+                          const isCorrect = Boolean(opt?.isCorrect);
+                          const content = typeof opt === 'string' ? opt : opt?.content || '';
+                          return (
+                            <div
+                              key={oIdx}
+                              className={`p-1.5 rounded-lg border text-[11px] flex items-center gap-1.5 ${
+                                isCorrect
+                                  ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-300 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 font-semibold'
+                                  : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300'
+                              }`}
+                            >
+                              <span className="font-bold">{letter}.</span>
+                              <span className="truncate">{content}</span>
+                              {isCorrect && <Check size={12} className="ml-auto shrink-0 text-emerald-600" />}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+
+                    {q.explanation && (
+                      <div className="text-[11px] text-slate-500 bg-white/60 dark:bg-slate-900/60 p-2 rounded-xl border border-slate-100 dark:border-slate-800">
+                        <span className="font-semibold text-purple-600">Lời giải: </span>
+                        {q.explanation}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              <div className="pt-2 flex items-center justify-end gap-2 border-t border-slate-100 dark:border-slate-800">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setScannedExamData(null)}
+                >
+                  <RefreshCw size={14} className="mr-1" /> Quét lại ảnh khác
+                </Button>
+                <Button
+                  size="sm"
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold"
+                  onClick={handleSaveScannedExam}
+                >
+                  <Check size={14} className="mr-1" /> Xác nhận & Mở Đề Thi
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {!scannedExamData && (
+            <div className="flex justify-end gap-2 pt-4">
+              <Button
+                variant="ghost"
+                onClick={() => router.push('/app/documents/create' + targetQuery)}
+                disabled={isScanning}
+              >
+                Hủy
+              </Button>
+              <Button
+                className="bg-purple-600 hover:bg-purple-700 text-white font-bold"
+                onClick={handleStartOcr}
+                disabled={!selectedImage || isScanning}
+              >
+                <Camera size={16} className="mr-1.5" /> {isScanning ? 'SI Đang Quét...' : 'Quét OCR & Bóc Tách'}
+              </Button>
+            </div>
+          )}
         </div>
       </div>
     </AppShell>

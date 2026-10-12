@@ -3,10 +3,12 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { AppShell } from '@/components/AppShell';
+import { BreadcrumbChevron } from '@/components/BreadcrumbChevron';
 import { useAuthStore } from '@/store/useAuthStore';
 import { Button } from '@/components/Button';
 import { Input } from '@/components/Input';
-import { ArrowLeft, Users, Check } from 'lucide-react';
+import { ArrowLeft, Users, Check, ChevronRight } from 'lucide-react';
+import { joinClass } from '@/lib/classesApi';
 
 export default function JoinClassPage() {
   const router = useRouter();
@@ -22,21 +24,11 @@ export default function JoinClassPage() {
     setErrorMsg(null);
     setLoading(true);
     try {
-      const res = await fetch('/api/classes/join', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ code: joinCode.trim().toUpperCase() }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || 'Không thể tham gia lớp');
-
+      await joinClass(token, joinCode.trim().toUpperCase());
       setToast(true);
       setTimeout(() => {
-        router.push('/classes');
-      }, 1000);
+        router.push('/app/classes');
+      }, 800);
     } catch (err: any) {
       setErrorMsg(err.message || 'Lỗi tham gia lớp');
     } finally {
@@ -45,7 +37,30 @@ export default function JoinClassPage() {
   };
 
   return (
-    <AppShell>
+    <AppShell
+      title={
+        <div className="flex items-center gap-1 text-2xl font-[450] tracking-tight text-slate-900 dark:text-slate-100 flex-wrap -ml-2">
+          <button
+            type="button"
+            onClick={() => router.push('/app/classes')}
+            className="transition-colors cursor-pointer px-2 py-0.5 rounded-xl hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-900 dark:text-white font-[450]"
+          >
+            Lớp học của tôi
+          </button>
+          <BreadcrumbChevron
+            menuTitle="Lớp học của tôi"
+            items={[
+              { label: 'Danh sách lớp học', href: '/app/classes' },
+              { label: 'Tạo lớp học mới', href: '/app/classes/create' },
+              { label: 'Tham gia lớp học', href: '/app/classes/join' },
+            ]}
+          />
+          <span className="px-2 py-0.5 rounded-xl text-slate-900 dark:text-white font-[450]">
+            Tham gia lớp học
+          </span>
+        </div>
+      }
+    >
       <div className="max-w-2xl mx-auto space-y-6 pt-2 pb-12">
         {toast && (
           <div className="fixed bottom-6 right-6 z-50 bg-slate-900 text-white dark:bg-white dark:text-slate-900 px-5 py-3 rounded-2xl shadow-2xl font-medium text-xs flex items-center gap-2 animate-bounce">
@@ -53,22 +68,6 @@ export default function JoinClassPage() {
             Đã tham gia lớp học thành công
           </div>
         )}
-
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => router.back()}
-            className="p-2 rounded-full hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 transition-all"
-            title="Quay lại"
-          >
-            <ArrowLeft size={20} />
-          </button>
-          <div>
-            <h1 className="text-xl font-normal tracking-tight text-slate-900 dark:text-slate-100 flex items-center gap-2">
-              <Users size={22} className="text-google-blue" />
-              Tham gia Lớp học mới
-            </h1>
-          </div>
-        </div>
 
         <div className="pt-2">
           <form onSubmit={handleSubmit} className="space-y-6">

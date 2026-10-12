@@ -1,0 +1,942 @@
+'use client';
+
+import React, { useState, useEffect, Suspense } from 'react';
+import { useRouter, useParams, useSearchParams } from 'next/navigation';
+import { AppShell } from '@/components/AppShell';
+import { BreadcrumbChevron } from '@/components/BreadcrumbChevron';
+import { Button } from '@/components/Button';
+import { Input } from '@/components/Input';
+import { Badge } from '@/components/Badge';
+import {
+  Send,
+  Shield,
+  ShieldAlert,
+  ShieldCheck,
+  Clock,
+  Calendar,
+  Shuffle,
+  Eye,
+  Copy,
+  Check,
+  ExternalLink,
+  Users,
+  QrCode,
+  Download,
+  Sparkles,
+  ArrowLeft,
+  FileText,
+  Loader2,
+  AlertTriangle,
+} from 'lucide-react';
+import { createHomework, HomeworkItem } from '@/lib/homeworkApi';
+import { getLocalClasses, ClassItem } from '@/lib/classesApi';
+import { getDocumentFile } from '@/lib/documentsApi';
+import { useAuthStore } from '@/store/useAuthStore';
+import QRCode from 'qrcode';
+import { cleanLeakedOleGarbage } from '@/lib/mtefParser';
+import { cleanAndEnrichMathFormulas } from '@/lib/examStructureParser';
+import { normalizeMathFormulas, cleanVietnameseEncoding } from '@/lib/questionValidator';
+
+interface DocumentFolderItem {
+  id: string;
+  name: string;
+  parentId: string | null;
+  createdAt: string;
+}
+
+function matchDocId(targetId: string, searchId: string): boolean {
+  if (!targetId || !searchId) return false;
+  if (targetId === searchId) return true;
+  if (decodeURIComponent(targetId) === searchId) return true;
+  if (targetId === decodeURIComponent(searchId)) return true;
+
+  const cleanT = targetId.toLowerCase().replace(/[^a-z0-9]/g, '');
+  const cleanS = searchId.toLowerCase().replace(/[^a-z0-9]/g, '');
+  if (cleanT === cleanS) return true;
+
+  const numPartT = targetId.match(/\d{10,}/)?.[0];
+  const numPartS = searchId.match(/\d{10,}/)?.[0];
+  if (numPartT && numPartS && numPartT === numPartS) {
+    return true;
+  }
+
+  if (cleanT.length >= 10 && cleanS.length >= 10) {
+    if (cleanT.slice(4) === cleanS.slice(4)) return true;
+  }
+
+  if (cleanT.includes(cleanS) || cleanS.includes(cleanT)) {
+    return true;
+  }
+
+  return false;
+}
+
+function normalizeDocItem(raw: any, fallbackId: string): any {
+  const id = raw?.id || fallbackId;
+  const name = raw?.name || (raw?.parsedQuiz?.title ? `${raw.parsedQuiz.title}.docx` : 'Đề thi trắc nghiệm.docx');
+  const parentId = raw?.parentId || null;
+  const fileType = raw?.fileType || 'docx';
+  const createdAt = raw?.createdAt || new Date().toISOString();
+
+  const title = raw?.parsedQuiz?.title || raw?.name?.replace(/\.[^/.]+$/, '') || 'Đề thi trắc nghiệm';
+  const description = raw?.parsedQuiz?.description || '';
+  const durationMinutes = Number(raw?.parsedQuiz?.durationMinutes) || 45;
+
+  const rawQuestions = Array.isArray(raw?.parsedQuiz?.questions)
+    ? raw?.parsedQuiz.questions
+    : Array.isArray(raw?.questions)
+    ? raw.questions
+    : [];
+
+  const normalizedQuestions = rawQuestions.map((q: any, idx: number) => {
+    let qContent = typeof q === 'string' ? q : q?.content || `Câu hỏi ${idx + 1}`;
+    qContent = cleanLeakedOleGarbage(qContent);
+    qContent = normalizeMathFormulas(cleanVietnameseEncoding(cleanAndEnrichMathFormulas(qContent)));
+    qContent = cleanLeakedOleGarbage(qContent);
+    const qPoints = typeof q?.points === 'number' ? q.points : 0.25;
+
+    let options: any[] = [];
+    if (Array.isArray(q?.options)) {
+      options = q.options.map((opt: any, oIdx: number) => {
+        let content = typeof opt === 'string' ? opt : (opt?.content || opt?.text || '');
+        const letter = String.fromCharCode(65 + oIdx);
+
+        content = cleanLeakedOleGarbage(content);
+        content = cleanAndEnrichMathFormulas(content, { isOption: true, optLetter: letter, questionText: qContent });
+        content = normalizeMathFormulas(cleanVietnameseEncoding(content));
+        content = cleanLeakedOleGarbage(content);
+
+        const isCorrect = typeof opt === 'object' && opt !== null
+          ? Boolean(opt.isCorrect || opt.correct)
+          : false;
+
+        return {
+          content,
+          isCorrect,
+        };
+      }).filter((o: any) => o.content && o.content.trim().length > 0);
+    }
+
+    let qExplanation = q?.explanation ? cleanAndEnrichMathFormulas(q.explanation) : '';
+    qExplanation = cleanLeakedOleGarbage(qExplanation);
+    qExplanation = normalizeMathFormulas(cleanVietnameseEncoding(qExplanation));
+    qExplanation = cleanLeakedOleGarbage(qExplanation);
+
+    // Xóa hoàn toàn các đoạn boilerplate giải thích giả
+    if (qExplanation) {
+      qExplanation = qExplanation
+        .replace(/\*\*?Lời giải chi tiết & Phân tích chuyên sâu[:\*\s\S]*$/gi, '')
+        .replace(/\*\*?Phân tích từng phương án lựa chọn[:\*\s\S]*$/gi, '')
+        .replace(/[-*+]\s*\*\*?Phương án (?:đúng|sai)[^\n]*/gi, '')
+        .replace(/[-*+]\s*\*\*?Kết luận: Chọn đáp án[^\n]*/gi, '')
+        .trim();
+    }
+
+    return {
+      id: q?.id || `q_${idx + 1}`,
+      rawLabel: q?.rawLabel,
+      content: qContent,
+      points: qPoints,
+      options,
+      explanation: qExplanation || '',
+      type: q?.type || (options.length >= 2 ? 'multiple_choice' : 'essay'),
+      answer: q?.answer ? normalizeMathFormulas(cleanVietnameseEncoding(cleanAndEnrichMathFormulas(q.answer))) : undefined,
+    };
+  });
+
+  return {
+    id,
+    name: cleanVietnameseEncoding(name),
+    parentId,
+    fileType,
+    createdAt,
+    parsedQuiz: {
+      title: cleanVietnameseEncoding(title),
+      description: cleanVietnameseEncoding(description),
+      durationMinutes,
+      questions: normalizedQuestions,
+    },
+  };
+}
+
+function AssignPageContent() {
+  const router = useRouter();
+  const params = useParams();
+  const searchParams = useSearchParams();
+  const fileId = (params?.id as string) || '';
+  const { token } = useAuthStore();
+
+  const [isLoading, setIsLoading] = useState(true);
+  const [fileItem, setFileItem] = useState<any>(null);
+  const [folders, setFolders] = useState<DocumentFolderItem[]>([]);
+
+  // Config States
+  const [title, setTitle] = useState('');
+  const [selectedClassId, setSelectedClassId] = useState<string>('public');
+  const [classes, setClasses] = useState<ClassItem[]>([]);
+  const [hasDeadline, setHasDeadline] = useState(false);
+  const [deadline, setDeadline] = useState('');
+  const [durationMinutes, setDurationMinutes] = useState<number>(45);
+  const [shuffleQuestions, setShuffleQuestions] = useState(true);
+  const [shuffleOptions, setShuffleOptions] = useState(false);
+  const [showAnswersAfterSubmit, setShowAnswersAfterSubmit] = useState(true);
+
+  // Anti-cheating State (NÚT BẬT / TẮT)
+  const [antiCheating, setAntiCheating] = useState(true);
+  const [maxViolations, setMaxViolations] = useState(3);
+
+  // Loading & Created State
+  const [creating, setCreating] = useState(false);
+  const [createdHomework, setCreatedHomework] = useState<HomeworkItem | null>(null);
+  const [qrCodeUrl, setQrCodeUrl] = useState<string>('');
+  const [copiedPin, setCopiedPin] = useState(false);
+  const [copiedLink, setCopiedLink] = useState(false);
+
+  // Load document and classes
+  useEffect(() => {
+    if (!fileId) {
+      setIsLoading(false);
+      return;
+    }
+
+    let didCancel = false;
+
+    const loadData = async () => {
+      try {
+        // Load classes
+        const localCls = getLocalClasses();
+        setClasses(localCls);
+
+        // Load folders
+        if (typeof window !== 'undefined') {
+          try {
+            const savedFolders = localStorage.getItem('app_documents_folders');
+            if (savedFolders) {
+              const parsed = JSON.parse(savedFolders);
+              if (Array.isArray(parsed)) setFolders(parsed);
+            }
+          } catch {}
+        }
+
+        // Load document from IDB first
+        let foundDoc: any = null;
+        if (typeof window !== 'undefined') {
+          try {
+            const { idbGetDocument, idbGetAllDocuments } = await import('@/lib/indexedDbStorage');
+            foundDoc = await idbGetDocument(fileId);
+            if (!foundDoc) {
+              const allIdb = await idbGetAllDocuments();
+              foundDoc = allIdb.find((d: any) => d && matchDocId(d.id, fileId));
+            }
+          } catch {}
+
+          if (!foundDoc) {
+            try {
+              const rawFiles = localStorage.getItem('app_documents_files');
+              if (rawFiles) {
+                const list = JSON.parse(rawFiles);
+                foundDoc = list.find((d: any) => d && matchDocId(d.id, fileId));
+              }
+            } catch {}
+          }
+        }
+
+        // Fallback remote
+        if (!foundDoc && token) {
+          try {
+            foundDoc = await getDocumentFile(token, fileId);
+          } catch {}
+        }
+
+        if (didCancel) return;
+
+        if (foundDoc) {
+          const cleanedDoc = normalizeDocItem(foundDoc, fileId);
+          setFileItem(cleanedDoc);
+          const defaultTitle =
+            cleanedDoc.parsedQuiz?.title ||
+            cleanedDoc.name?.replace(/\.[^/.]+$/, '') ||
+            'Bài tập trắc nghiệm';
+          setTitle(`Bài tập: ${defaultTitle}`);
+          setDurationMinutes(cleanedDoc.parsedQuiz?.durationMinutes || 45);
+        }
+      } catch (err) {
+        console.error('Lỗi tải dữ liệu giao bài:', err);
+      } finally {
+        if (!didCancel) setIsLoading(false);
+      }
+    };
+
+    loadData();
+
+    return () => {
+      didCancel = true;
+    };
+  }, [fileId, token]);
+
+  // Sinh mã QR khi bài tập được tạo
+  useEffect(() => {
+    if (createdHomework) {
+      const playUrl = getPlayUrl(createdHomework.pin);
+      QRCode.toDataURL(playUrl, {
+        width: 340,
+        margin: 2,
+        color: {
+          dark: '#0f172a',
+          light: '#ffffff',
+        },
+      })
+        .then((url) => setQrCodeUrl(url))
+        .catch((err) => console.error('Lỗi sinh mã QR:', err));
+    }
+  }, [createdHomework]);
+
+  const getPlayUrl = (pin: string) => {
+    if (typeof window !== 'undefined') {
+      return `${window.location.origin}/play?pin=${pin}`;
+    }
+    return `http://localhost:3000/play?pin=${pin}`;
+  };
+
+  const handleCopyPin = (pin: string) => {
+    navigator.clipboard.writeText(pin);
+    setCopiedPin(true);
+    setTimeout(() => setCopiedPin(false), 2000);
+  };
+
+  const handleCopyLink = (pin: string) => {
+    navigator.clipboard.writeText(getPlayUrl(pin));
+    setCopiedLink(true);
+    setTimeout(() => setCopiedLink(false), 2000);
+  };
+
+  const handleDownloadQr = () => {
+    if (!qrCodeUrl || !createdHomework) return;
+    const a = document.createElement('a');
+    a.href = qrCodeUrl;
+    a.download = `QR_${createdHomework.pin}_${createdHomework.title.slice(0, 20)}.png`;
+    a.click();
+  };
+
+  const handleCreate = async () => {
+    if (!title.trim() || !fileItem) return;
+    setCreating(true);
+
+    try {
+      const selectedClass = classes.find((c) => c.id === selectedClassId);
+      const questions = fileItem.parsedQuiz?.questions || [];
+
+      const hw = await createHomework({
+        title: title.trim(),
+        description: fileItem.parsedQuiz?.description || `Bài tập từ tài liệu ${fileItem.name}`,
+        documentId: fileItem.id,
+        classId: selectedClassId === 'public' ? null : selectedClassId,
+        className: selectedClass ? selectedClass.name : 'Công khai / Mã PIN',
+        deadline: hasDeadline && deadline ? new Date(deadline).toISOString() : null,
+        durationMinutes: Number(durationMinutes),
+        shuffleQuestions,
+        shuffleOptions,
+        showAnswersAfterSubmit,
+        antiCheating,
+        antiCheatConfig: {
+          forceFullscreen: true,
+          detectTabSwitch: true,
+          maxViolations: Number(maxViolations) || 3,
+          preventCopyPaste: true,
+        },
+        quizData: {
+          title: fileItem.parsedQuiz?.title || title,
+          durationMinutes: Number(durationMinutes),
+          questions,
+        },
+      });
+
+      setCreatedHomework(hw);
+    } catch (err) {
+      console.error('Error creating homework:', err);
+    } finally {
+      setCreating(false);
+    }
+  };
+
+  const getFolderPath = (): DocumentFolderItem[] => {
+    if (!fileItem) return [];
+    const path: DocumentFolderItem[] = [];
+    let curr = fileItem.parentId || null;
+    let guard = 0;
+    while (curr && guard < 10) {
+      guard++;
+      const f = folders.find((item) => item.id === curr);
+      if (f) {
+        path.unshift(f);
+        curr = f.parentId || null;
+      } else {
+        break;
+      }
+    }
+    return path;
+  };
+
+  const folderPath = getFolderPath();
+  const displayTitle = (fileItem?.name || 'Đề thi').replace(/\.[^/.]+$/, '');
+  const questionsCount = fileItem?.parsedQuiz?.questions?.length || 0;
+
+  if (isLoading) {
+    return (
+      <AppShell>
+        <div className="p-16 text-center space-y-3">
+          <Loader2 size={36} className="animate-spin text-google-blue mx-auto" />
+          <p className="text-xs text-slate-500 font-medium">Đang tải thông tin tài liệu...</p>
+        </div>
+      </AppShell>
+    );
+  }
+
+  if (!fileItem) {
+    return (
+      <AppShell>
+        <div className="max-w-md mx-auto my-16 p-8 bg-white dark:bg-[#1e1f20] rounded-3xl border border-slate-200/80 dark:border-slate-800 text-center space-y-4">
+          <AlertTriangle size={36} className="text-amber-500 mx-auto" />
+          <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">
+            Không tìm thấy tài liệu
+          </h2>
+          <p className="text-xs text-slate-500">
+            Tài liệu này không tồn tại hoặc đã bị xóa. Vui lòng quay lại danh sách tài liệu.
+          </p>
+          <Button
+            variant="primary"
+            onClick={() => router.push('/documents')}
+            className="rounded-xl text-xs bg-google-blue text-white"
+          >
+            Quay lại Tài liệu của tôi
+          </Button>
+        </div>
+      </AppShell>
+    );
+  }
+
+  return (
+    <AppShell
+      title={
+        <div className="flex items-center gap-1 text-2xl font-[450] tracking-tight text-slate-900 dark:text-slate-100 flex-wrap -ml-2">
+          <button
+            type="button"
+            onClick={() => {
+              if (typeof window !== 'undefined') sessionStorage.removeItem('app_active_folder_id');
+              router.push('/documents');
+            }}
+            className="transition-colors cursor-pointer px-2 py-0.5 rounded-xl hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-900 dark:text-white font-[450]"
+          >
+            Tài liệu của tôi
+          </button>
+          {folderPath.map((folder, idx) => (
+            <React.Fragment key={folder.id || idx}>
+              <BreadcrumbChevron
+                folderId={idx === 0 ? null : folderPath[idx - 1].id}
+                allFolders={folders}
+                fallbackToStaticChevron={true}
+                onNavigateFolder={(id) => {
+                  if (typeof window !== 'undefined') sessionStorage.setItem('app_active_folder_id', id);
+                  router.push('/documents');
+                }}
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  if (typeof window !== 'undefined') sessionStorage.setItem('app_active_folder_id', folder.id);
+                  router.push('/documents');
+                }}
+                className="transition-colors cursor-pointer px-2 py-0.5 rounded-xl hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-900 dark:text-white font-[450]"
+              >
+                {folder.name}
+              </button>
+            </React.Fragment>
+          ))}
+          <BreadcrumbChevron
+            folderId={folderPath.length > 0 ? folderPath[folderPath.length - 1].id : null}
+            allFolders={folders}
+            fallbackToStaticChevron={true}
+            onNavigateFolder={() => router.push('/documents')}
+            onNavigateFile={(id) => router.push(`/documents/${id}`)}
+          />
+          <button
+            type="button"
+            onClick={() => router.push(`/documents/${encodeURIComponent(fileId)}`)}
+            className="transition-colors cursor-pointer px-2 py-0.5 rounded-xl hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-900 dark:text-white font-[450] truncate max-w-xs md:max-w-md"
+          >
+            {displayTitle}
+          </button>
+          <BreadcrumbChevron isStatic={true} />
+          <span className="px-2 py-0.5 rounded-xl text-slate-900 dark:text-white font-[450]">
+            Giao bài tập
+          </span>
+        </div>
+      }
+      action={
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => router.push(`/documents/${encodeURIComponent(fileId)}`)}
+          className="rounded-xl text-xs gap-1.5"
+        >
+          <ArrowLeft size={15} /> Xem đề thi
+        </Button>
+      }
+    >
+      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20 pt-2 space-y-8">
+        {createdHomework ? (
+          /* TRANG THÀNH CÔNG: SHOWCASE MÃ PIN & MÃ QR SCANNABLE (KHÔNG KHUNG) */
+          <div className="space-y-8 animate-in fade-in duration-300 max-w-3xl mx-auto">
+            {/* Header */}
+            <div className="text-center space-y-3">
+              <div className="w-14 h-14 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 flex items-center justify-center mx-auto">
+                <Check size={32} className="stroke-[2.5]" />
+              </div>
+
+              <div className="space-y-1">
+                <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
+                  Giao bài tập thành công!
+                </h1>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  Học sinh có thể quét mã QR bằng Camera điện thoại / Zalo hoặc nhập mã PIN để vào làm bài ngay.
+                </p>
+              </div>
+            </div>
+
+            {/* Showcase Box: PIN & QR Code */}
+            <div className="p-8 bg-slate-50/80 dark:bg-slate-900/60 rounded-3xl text-center space-y-6">
+              {/* 1. MÃ PIN */}
+              <div className="space-y-1">
+                <span className="text-xs font-bold text-slate-400 uppercase tracking-widest block">
+                  Mã PIN làm bài
+                </span>
+                <div className="font-mono text-4xl sm:text-5xl font-extrabold tracking-wider text-google-blue select-all">
+                  {createdHomework.pin.slice(0, 3)} {createdHomework.pin.slice(3)}
+                </div>
+              </div>
+
+              {/* 2. MÃ QR SCANNABLE */}
+              <div className="flex flex-col items-center justify-center space-y-2">
+                <div className="p-3 bg-white rounded-2xl shadow-xs inline-block">
+                  {qrCodeUrl ? (
+                    <img
+                      src={qrCodeUrl}
+                      alt="Mã QR làm bài"
+                      className="w-56 h-56 rounded-xl object-contain mx-auto"
+                    />
+                  ) : (
+                    <div className="w-56 h-56 flex items-center justify-center text-xs text-slate-400">
+                      Đang tạo mã QR...
+                    </div>
+                  )}
+                </div>
+                <p className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1.5 justify-center">
+                  <QrCode size={14} className="text-google-blue shrink-0" />
+                  Quét bằng Camera điện thoại hoặc Zalo để vào làm bài ngay
+                </p>
+              </div>
+
+              {/* Quick Share Buttons */}
+              <div className="flex items-center justify-center gap-2.5 flex-wrap pt-1">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleCopyPin(createdHomework.pin)}
+                  className="gap-1.5 text-xs rounded-xl"
+                >
+                  {copiedPin ? <Check size={14} className="text-emerald-500" /> : <Copy size={14} />}
+                  {copiedPin ? 'Đã sao chép PIN' : 'Sao chép mã PIN'}
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleCopyLink(createdHomework.pin)}
+                  className="gap-1.5 text-xs rounded-xl"
+                >
+                  {copiedLink ? <Check size={14} className="text-emerald-500" /> : <Copy size={14} />}
+                  {copiedLink ? 'Đã sao chép link' : 'Sao chép liên kết'}
+                </Button>
+                {qrCodeUrl && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleDownloadQr}
+                    className="gap-1.5 text-xs rounded-xl"
+                    title="Tải ảnh QR về máy để in hoặc chia sẻ"
+                  >
+                    <Download size={14} /> Tải ảnh QR
+                  </Button>
+                )}
+              </div>
+            </div>
+
+            {/* Assignment Overview */}
+            <div className="p-5 bg-slate-50/50 dark:bg-slate-900/30 rounded-2xl space-y-2 text-xs">
+              <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
+                <span>Tiêu đề bài tập:</span>
+                <strong className="text-slate-900 dark:text-slate-100">{createdHomework.title}</strong>
+              </div>
+              <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
+                <span>Số lượng câu hỏi:</span>
+                <strong className="text-slate-900 dark:text-slate-100">{questionsCount} câu</strong>
+              </div>
+              <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
+                <span>Thời gian làm bài:</span>
+                <strong className="text-slate-900 dark:text-slate-100">
+                  {createdHomework.durationMinutes > 0 ? `${createdHomework.durationMinutes} phút` : 'Không giới hạn'}
+                </strong>
+              </div>
+              <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
+                <span>Chống gian lận:</span>
+                {createdHomework.antiCheating ? (
+                  <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-blue-50 text-google-blue dark:bg-blue-950/60 dark:text-blue-300">
+                    Đang BẬT (Tối đa 3 lần)
+                  </span>
+                ) : (
+                  <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400">
+                    Đang TẮT
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* Actions Footer */}
+            <div className="flex items-center justify-center gap-3 pt-2">
+              <Button
+                variant="outline"
+                onClick={() => router.push(`/app/assignments/${createdHomework.id}`)}
+                className="rounded-2xl text-xs gap-1.5"
+              >
+                Xem trang kết quả bài nộp
+              </Button>
+              <Button
+                variant="primary"
+                onClick={() => window.open(getPlayUrl(createdHomework.pin), '_blank')}
+                className="rounded-2xl text-xs gap-1.5 bg-google-blue hover:bg-[#1557b0] text-white"
+              >
+                <ExternalLink size={14} /> Mở làm thử ngay
+              </Button>
+            </div>
+          </div>
+        ) : (
+          /* TRANG CẤU HÌNH GIAO BÀI TẬP (MỞ RỘNG HAI BÊN, KHÔNG KHUNG HỘP) */
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
+            {/* CỘT TRÁI (8 COLS): CÁC CÀI ĐẶT BÀI TẬP (KHÔNG KHUNG) */}
+            <div className="lg:col-span-8 space-y-8">
+              {/* Phần 1: Thông tin bài tập */}
+              <div className="space-y-6 pb-8 border-b border-slate-100 dark:border-slate-800/80">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-7 h-7 rounded-lg bg-blue-50 dark:bg-blue-950 text-google-blue flex items-center justify-center font-bold text-xs">
+                    1
+                  </div>
+                  <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">
+                    Thông tin bài tập
+                  </h2>
+                </div>
+
+                {/* Tiêu đề */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                    Tiêu đề bài tập <span className="text-red-500">*</span>
+                  </label>
+                  <Input
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    placeholder="Nhập tên bài tập..."
+                    className="rounded-xl text-sm"
+                  />
+                </div>
+
+                {/* Hình thức giao */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                    <Users size={14} className="text-slate-400" />
+                    Hình thức giao bài
+                  </label>
+                  <select
+                    value={selectedClassId}
+                    onChange={(e) => setSelectedClassId(e.target.value)}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-xs focus:outline-none focus:ring-1 focus:ring-google-blue"
+                  >
+                    <option value="public">🌐 Giao tự do bằng Mã PIN / Mã QR / Link (Không bắt buộc đăng nhập)</option>
+                    {classes.map((cls) => (
+                      <option key={cls.id} value={cls.id}>
+                        🏫 Giao cho lớp: {cls.name} ({cls.code})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Thời gian & Hạn nộp */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-1">
+                  {/* Thời gian làm bài */}
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                      <Clock size={14} className="text-slate-400" />
+                      Thời gian làm bài
+                    </label>
+                    <select
+                      value={durationMinutes}
+                      onChange={(e) => setDurationMinutes(Number(e.target.value))}
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-xs focus:outline-none focus:ring-1 focus:ring-google-blue"
+                    >
+                      <option value={0}>Không giới hạn thời gian</option>
+                      <option value={15}>15 phút</option>
+                      <option value={30}>30 phút</option>
+                      <option value={45}>45 phút (Mặc định)</option>
+                      <option value={60}>60 phút</option>
+                      <option value={90}>90 phút</option>
+                    </select>
+                  </div>
+
+                  {/* Hạn chót nộp bài */}
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                        <Calendar size={14} className="text-slate-400" />
+                        Hạn chót nộp bài
+                      </label>
+                      <label className="flex items-center gap-1.5 text-[11px] text-slate-500 cursor-pointer select-none">
+                        <input
+                          type="checkbox"
+                          checked={hasDeadline}
+                          onChange={(e) => setHasDeadline(e.target.checked)}
+                          className="rounded text-google-blue focus:ring-0"
+                        />
+                        Đặt hạn nộp
+                      </label>
+                    </div>
+                    {hasDeadline ? (
+                      <Input
+                        type="datetime-local"
+                        value={deadline}
+                        onChange={(e) => setDeadline(e.target.value)}
+                        className="text-xs rounded-xl"
+                      />
+                    ) : (
+                      <div className="py-2.5 text-slate-400 text-xs">
+                        Không giới hạn ngày nộp
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Phần 2: Tùy chọn xáo trộn & Đáp án */}
+              <div className="space-y-5 pb-8 border-b border-slate-100 dark:border-slate-800/80">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-7 h-7 rounded-lg bg-blue-50 dark:bg-blue-950 text-google-blue flex items-center justify-center font-bold text-xs">
+                    2
+                  </div>
+                  <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">
+                    Tùy chọn xáo trộn & Đáp án
+                  </h2>
+                </div>
+
+                <div className="space-y-3.5 text-xs">
+                  <label className="flex items-center gap-3 cursor-pointer select-none group py-1">
+                    <input
+                      type="checkbox"
+                      checked={shuffleQuestions}
+                      onChange={(e) => setShuffleQuestions(e.target.checked)}
+                      className="w-4 h-4 rounded text-google-blue border-slate-300 dark:border-slate-600 focus:ring-google-blue"
+                    />
+                    <span className="text-slate-800 dark:text-slate-200 font-medium group-hover:text-google-blue transition-colors">
+                      Xáo trộn thứ tự câu hỏi trong đề
+                    </span>
+                  </label>
+
+                  <label className="flex items-center gap-3 cursor-pointer select-none group py-1">
+                    <input
+                      type="checkbox"
+                      checked={shuffleOptions}
+                      onChange={(e) => setShuffleOptions(e.target.checked)}
+                      className="w-4 h-4 rounded text-google-blue border-slate-300 dark:border-slate-600 focus:ring-google-blue"
+                    />
+                    <span className="text-slate-800 dark:text-slate-200 font-medium group-hover:text-google-blue transition-colors">
+                      Xáo trộn các phương án lựa chọn (A, B, C, D)
+                    </span>
+                  </label>
+
+                  <label className="flex items-center gap-3 cursor-pointer select-none group py-1">
+                    <input
+                      type="checkbox"
+                      checked={showAnswersAfterSubmit}
+                      onChange={(e) => setShowAnswersAfterSubmit(e.target.checked)}
+                      className="w-4 h-4 rounded text-google-blue border-slate-300 dark:border-slate-600 focus:ring-google-blue"
+                    />
+                    <span className="text-slate-800 dark:text-slate-200 font-medium group-hover:text-google-blue transition-colors">
+                      Cho phép học sinh xem đáp án và lời giải chi tiết sau khi hoàn thành bài nộp
+                    </span>
+                  </label>
+                </div>
+              </div>
+
+              {/* Phần 3: TÍNH NĂNG CHỐNG GIAN LẬN (ANTI-CHEATING) */}
+              <div className="space-y-5">
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <div
+                      className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
+                        antiCheating
+                          ? 'bg-blue-50 dark:bg-blue-950 text-google-blue'
+                          : 'bg-slate-100 dark:bg-slate-800 text-slate-400'
+                      }`}
+                    >
+                      {antiCheating ? <ShieldCheck size={20} /> : <Shield size={20} />}
+                    </div>
+                    <div>
+                      <div className="text-base font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                        Tính năng chống gian lận
+                        {antiCheating ? (
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-google-blue dark:bg-blue-950 dark:text-blue-300 uppercase">
+                            Đang BẬT
+                          </span>
+                        ) : (
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400 uppercase">
+                            Đang TẮT
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                        Bảo vệ tính công bằng: Toàn màn hình, phát hiện chuyển tab và chống sao chép đề
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* NÚT BẬT / TẮT (TOGGLE SWITCH) */}
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={antiCheating}
+                    onClick={() => setAntiCheating(!antiCheating)}
+                    className={`relative inline-flex h-7 w-12 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                      antiCheating ? 'bg-google-blue' : 'bg-slate-300 dark:bg-slate-700'
+                    }`}
+                  >
+                    <span
+                      className={`pointer-events-none inline-block h-6 w-6 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
+                        antiCheating ? 'translate-x-5' : 'translate-x-0'
+                      }`}
+                    />
+                  </button>
+                </div>
+
+                {/* Chi tiết cơ chế bảo vệ khi BẬT */}
+                {antiCheating && (
+                  <div className="p-4 sm:p-5 rounded-2xl bg-blue-50/50 dark:bg-blue-950/20 grid grid-cols-1 sm:grid-cols-2 gap-3.5 text-xs text-slate-700 dark:text-slate-300">
+                    <div className="flex items-start gap-2">
+                      <span className="text-google-blue font-bold shrink-0">•</span>
+                      <span><strong>Toàn màn hình bắt buộc:</strong> Học sinh phải làm bài ở chế độ Fullscreen.</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <span className="text-google-blue font-bold shrink-0">•</span>
+                      <span><strong>Giám sát chuyển tab:</strong> Cảnh báo khi học sinh rời màn hình hoặc mở ứng dụng khác.</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <span className="text-google-blue font-bold shrink-0">•</span>
+                      <span><strong>Tự động nộp bài:</strong> Khóa và nộp bài ngay lập tức nếu vi phạm quá <strong>{maxViolations} lần</strong>.</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <span className="text-google-blue font-bold shrink-0">•</span>
+                      <span><strong>Chống copy & chuột phải:</strong> Vô hiệu hóa sao chép văn bản câu hỏi để tìm kiếm đáp án.</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* CỘT PHẢI (4 COLS): TỔNG QUAN TÀI LIỆU & NÚT TẠO (GỌN GÀNG, KHÔNG KHUNG HỘP DÀY) */}
+            <div className="lg:col-span-4 space-y-6 sticky top-6">
+              <div className="bg-slate-50/70 dark:bg-slate-900/40 rounded-3xl p-6 sm:p-7 space-y-5">
+                <div className="space-y-3">
+                  <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
+                    Đề thi gốc
+                  </span>
+                  <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-[#185abd] text-white flex items-center justify-center font-bold text-sm shrink-0">
+                      W
+                    </div>
+                    <div className="min-w-0">
+                      <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 truncate" title={displayTitle}>
+                        {displayTitle}
+                      </h3>
+                      <p className="text-xs text-slate-400 mt-0.5">
+                        {questionsCount} câu hỏi &bull; {fileItem.parsedQuiz?.durationMinutes || 45} phút
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-2.5 text-xs pt-3 border-t border-slate-200/50 dark:border-slate-800">
+                  <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
+                    <span>Số câu hỏi:</span>
+                    <strong className="text-slate-900 dark:text-slate-100">{questionsCount} câu</strong>
+                  </div>
+                  <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
+                    <span>Thời gian làm:</span>
+                    <strong className="text-slate-900 dark:text-slate-100">
+                      {durationMinutes > 0 ? `${durationMinutes} phút` : 'Không giới hạn'}
+                    </strong>
+                  </div>
+                  <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
+                    <span>Hình thức giao:</span>
+                    <strong className="text-slate-900 dark:text-slate-100 truncate max-w-[150px]">
+                      {selectedClassId === 'public' ? 'Mã PIN / QR' : (classes.find(c => c.id === selectedClassId)?.name || 'Lớp học')}
+                    </strong>
+                  </div>
+                  <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
+                    <span>Chế độ bảo mật:</span>
+                    {antiCheating ? (
+                      <span className="text-google-blue font-semibold">Chống gian lận</span>
+                    ) : (
+                      <span className="text-slate-500">Tiêu chuẩn</span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Primary Action Button */}
+                <div className="pt-2 space-y-2.5">
+                  <Button
+                    variant="primary"
+                    onClick={handleCreate}
+                    disabled={creating || !title.trim()}
+                    className="w-full py-3.5 rounded-xl bg-google-blue hover:bg-[#1557b0] text-white font-bold text-sm shadow-xs gap-2"
+                  >
+                    <Send size={16} />
+                    {creating ? 'Đang tạo bài tập...' : 'Tạo mã PIN & Mã QR giao bài'}
+                  </Button>
+
+                  <Button
+                    variant="ghost"
+                    onClick={() => router.push(`/documents/${encodeURIComponent(fileId)}`)}
+                    className="w-full text-xs rounded-xl text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+                  >
+                    Hủy và quay lại
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </AppShell>
+  );
+}
+
+export default function DocumentAssignPage() {
+  return (
+    <Suspense
+      fallback={
+        <AppShell>
+          <div className="p-16 text-center space-y-3">
+            <Loader2 size={36} className="animate-spin text-google-blue mx-auto" />
+            <p className="text-xs text-slate-500 font-medium">Đang tải...</p>
+          </div>
+        </AppShell>
+      }
+    >
+      <AssignPageContent />
+    </Suspense>
+  );
+}

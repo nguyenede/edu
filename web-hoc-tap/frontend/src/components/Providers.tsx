@@ -20,22 +20,15 @@ export const Providers: React.FC<{ children: React.ReactNode }> = ({ children })
   );
 
   const initializeAuth = useAuthStore((state) => state.initialize);
-  const setTheme = useThemeStore((state) => state.setTheme);
+  const initializeTheme = useThemeStore((state) => state.initialize);
 
   useEffect(() => {
     // Load authentication session
     initializeAuth();
 
-    // Load theme
-    const savedTheme = localStorage.getItem('theme') as 'light' | 'dark' | null;
-    if (savedTheme) {
-      setTheme(savedTheme);
-    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-      setTheme('dark');
-    } else {
-      setTheme('light');
-    }
-  }, [initializeAuth, setTheme]);
+    // Load theme & appearance
+    initializeTheme();
+  }, [initializeAuth, initializeTheme]);
 
   return (
     <QueryClientProvider client={queryClient}>

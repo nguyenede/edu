@@ -13,15 +13,14 @@ import {
   FileText,
   Clock,
   Users,
-  Play,
   Plus,
-  Zap,
   MoreVertical,
   ChevronRight,
   Sparkles,
   BookOpen,
   FolderPlus,
 } from 'lucide-react';
+import { fetchClasses, createClass, joinClass } from '@/lib/classesApi';
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -40,7 +39,8 @@ export default function DashboardPage() {
   const isTeacher = user?.role === 'TEACHER';
 
   useEffect(() => {
-    if (!token) {
+    const activeToken = token || (typeof window !== 'undefined' ? localStorage.getItem('token') : null);
+    if (!activeToken) {
       router.push('/login');
       return;
     }
@@ -50,35 +50,25 @@ export default function DashboardPage() {
   const fetchDashboardData = async () => {
     setLoading(true);
     try {
-      const endpoint = isTeacher
-        ? '/api/classes/teacher'
-        : '/api/classes/student';
-
-      const res = await fetch(endpoint, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (res.ok) {
-        const data = await res.json();
-        if (isTeacher) {
-          setClasses(data);
-        } else {
-          setClasses(data.map((m: any) => m.class));
-        }
-      }
+      const activeToken = token || (typeof window !== 'undefined' ? localStorage.getItem('token') : null);
+      const classList = await fetchClasses(activeToken, isTeacher);
+      setClasses(classList);
 
       // History
-      const histRes = await fetch(
-        isTeacher
-          ? '/api/classes/teacher'
-          : '/api/results/history',
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      if (histRes.ok) {
-        const histData = await histRes.json();
-        if (!isTeacher && histData.submissions) {
-          setRecentAssignments(histData.submissions.slice(0, 6));
+      try {
+        const histRes = await fetch(
+          isTeacher
+            ? '/api/classes/teacher'
+            : '/api/results/history',
+          { headers: activeToken ? { Authorization: `Bearer ${activeToken}` } : {} }
+        );
+        if (histRes.ok) {
+          const histData = await histRes.json();
+          if (!isTeacher && histData.submissions) {
+            setRecentAssignments(histData.submissions.slice(0, 6));
+          }
         }
-      }
+      } catch {}
     } catch (err) {
       console.error(err);
     } finally {
@@ -88,47 +78,31 @@ export default function DashboardPage() {
 
   const handleCreateClass = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newClassName.trim() || !token) return;
+    if (!newClassName.trim()) return;
     setFormError(null);
     try {
-      const res = await fetch('/api/classes', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ name: newClassName }),
-      });
-      if (res.ok) {
-        setNewClassName('');
-        setIsCreateClassOpen(false);
-        fetchDashboardData();
-      }
+      const created = await createClass(token, newClassName.trim(), user);
+      setNewClassName('');
+      setIsCreateClassOpen(false);
+      setClasses((prev) => [created, ...prev.filter((c) => c.id !== created.id)]);
+      fetchDashboardData();
     } catch (err: any) {
-      setFormError(err.message);
+      setFormError(err.message || 'Không thể tạo lớp học');
     }
   };
 
   const handleJoinClass = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!joinCode.trim() || !token) return;
+    if (!joinCode.trim()) return;
     setFormError(null);
     try {
-      const res = await fetch('/api/classes/join', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ code: joinCode.trim() }),
-      });
-      if (res.ok) {
-        setJoinCode('');
-        setIsJoinClassOpen(false);
-        fetchDashboardData();
-      }
+      const joined = await joinClass(token, joinCode.trim());
+      setJoinCode('');
+      setIsJoinClassOpen(false);
+      setClasses((prev) => [joined, ...prev.filter((c) => c.id !== joined.id)]);
+      fetchDashboardData();
     } catch (err: any) {
-      setFormError(err.message);
+      setFormError(err.message || 'Không thể tham gia lớp học');
     }
   };
 
@@ -200,32 +174,32 @@ export default function DashboardPage() {
               </div>
 
               <div
-                onClick={() => router.push('/quizzes')}
+                onClick={() => router.push('/app/documents')}
                 className="p-4 bg-google-hover dark:bg-google-hover-dark rounded-2xl cursor-pointer hover:bg-slate-200/70 dark:hover:bg-slate-800 transition-colors flex items-center gap-4"
               >
                 <div className="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-950/60 flex items-center justify-center text-blue-600 dark:text-blue-400 shrink-0">
-                  <Play size={20} />
+                  <FileText size={20} />
                 </div>
                 <div>
                   <h3 className="font-bold text-sm text-slate-900 dark:text-slate-100">
-                    Đề thi & Host Game
+                    Kho tài liệu & Đề thi
                   </h3>
-                  <p className="text-xs text-slate-500">Mở phòng thi đấu realtime</p>
+                  <p className="text-xs text-slate-500">Tạo đề thi & Quản lý file</p>
                 </div>
               </div>
 
               <div
-                onClick={() => router.push('/play')}
+                onClick={() => router.push('/app/ai')}
                 className="p-4 bg-google-hover dark:bg-google-hover-dark rounded-2xl cursor-pointer hover:bg-slate-200/70 dark:hover:bg-slate-800 transition-colors flex items-center gap-4"
               >
-                <div className="w-10 h-10 rounded-xl bg-red-100 dark:bg-red-950/60 flex items-center justify-center text-red-600 dark:text-red-400 shrink-0">
-                  <Zap size={20} />
+                <div className="w-10 h-10 rounded-xl bg-purple-100 dark:bg-purple-950/60 flex items-center justify-center text-purple-600 dark:text-purple-400 shrink-0">
+                  <Sparkles size={20} />
                 </div>
                 <div>
                   <h3 className="font-bold text-sm text-slate-900 dark:text-slate-100">
-                    Chaos Quiz Blitz
+                    Trợ lý SI Soạn đề
                   </h3>
-                  <p className="text-xs text-slate-500">Đấu trường 25 câu hỏi</p>
+                  <p className="text-xs text-slate-500">Tạo đề theo chuẩn Bộ GD&ĐT</p>
                 </div>
               </div>
             </div>
@@ -236,7 +210,7 @@ export default function DashboardPage() {
               {recentAssignments.map((sub: any) => (
                 <div
                   key={sub.id}
-                  onClick={() => router.push(`/assignments/${sub.assignmentId}`)}
+                  onClick={() => router.push(`/app/assignments/${sub.assignmentId}`)}
                   className="p-4 bg-google-hover dark:bg-google-hover-dark rounded-2xl cursor-pointer hover:bg-slate-200/70 dark:hover:bg-slate-800 transition-colors space-y-2"
                 >
                   <div className="flex items-center gap-2">
@@ -286,7 +260,7 @@ export default function DashboardPage() {
               {classes.map((cls) => (
                 <div
                   key={cls.id}
-                  onClick={() => router.push(`/classes/${cls.id}`)}
+                  onClick={() => router.push(`/app/classes/${cls.id}`)}
                   className="p-4 bg-google-hover dark:bg-google-hover-dark hover:bg-slate-200/80 dark:hover:bg-slate-800 rounded-2xl flex items-center justify-between cursor-pointer select-none transition-colors"
                 >
                   <div className="flex items-center gap-3 truncate">

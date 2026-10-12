@@ -1,13 +1,13 @@
 'use client';
 
-import React, { useState, useEffect, Component, ErrorInfo, ReactNode } from 'react';
-import { useRouter, useParams } from 'next/navigation';
+import React, { useState, useEffect, Component, ErrorInfo, ReactNode, Suspense } from 'react';
+import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import { AppShell } from '@/components/AppShell';
+import { BreadcrumbChevron } from '@/components/BreadcrumbChevron';
 import { Button } from '@/components/Button';
 import {
   ArrowLeft,
   ChevronRight,
-  Play,
   Download,
   CheckCircle2,
   FileText,
@@ -16,15 +16,20 @@ import {
   Layers,
   Printer,
   Loader2,
+  Send,
+  Gamepad2,
 } from 'lucide-react';
 import { ParsedQuiz } from '@/lib/docParser';
+import { cleanAndEnrichMathFormulas } from '@/lib/examStructureParser';
+import { normalizeMathFormulas, cleanVietnameseEncoding } from '@/lib/questionValidator';
+import { cleanLeakedOleGarbage } from '@/lib/mtefParser';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import { safeLocalStorageSet } from '@/lib/safeStorage';
 import { useAuthStore } from '@/store/useAuthStore';
-import { getDocumentFile } from '@/lib/documentsApi';
+import { getDocumentFile, listDocuments } from '@/lib/documentsApi';
 
 // Safe Error Boundary for Math / KaTeX rendering
 class MathErrorBoundary extends Component<{ fallback: ReactNode; children: ReactNode }, { hasError: boolean }> {
@@ -54,27 +59,11 @@ function formatMathString(raw: any): string {
   const text = typeof raw === 'string' ? raw : typeof raw === 'number' ? String(raw) : raw?.content ? String(raw.content) : '';
   if (!text) return '';
 
-  let formatted = text;
-  if (
-    (formatted.includes('\\text{') ||
-      formatted.includes('\\dfrac') ||
-      formatted.includes('\\frac') ||
-      formatted.includes('\\lim') ||
-      formatted.includes('\\sqrt') ||
-      formatted.includes('\\alpha') ||
-      formatted.includes('\\beta') ||
-      formatted.includes('\\lambda') ||
-      formatted.includes('\\omega') ||
-      formatted.includes('\\pi') ||
-      formatted.includes('\\in') ||
-      formatted.includes('\\mathbb') ||
-      formatted.includes('\\setminus') ||
-      formatted.includes('\\times') ||
-      formatted.includes('\\dots')) &&
-    !formatted.includes('$')
-  ) {
-    formatted = `$${formatted}$`;
-  }
+  let formatted = cleanLeakedOleGarbage(text);
+  formatted = cleanAndEnrichMathFormulas(formatted);
+  formatted = cleanVietnameseEncoding(formatted);
+  formatted = normalizeMathFormulas(formatted);
+  formatted = cleanLeakedOleGarbage(formatted);
   return formatted;
 }
 
@@ -93,6 +82,24 @@ function MathRenderer({ text, className = '' }: { text: any; className?: string 
           rehypePlugins={[[rehypeKatex, { throwOnError: false, errorColor: '#d97706', strict: false }]]}
           components={{
             p: ({ children }) => <span className="inline leading-relaxed">{children}</span>,
+            img: ({ src, alt }) => (
+              <span className="block my-3 text-center">
+                <img
+                  src={src}
+                  alt={alt || 'Hình vẽ'}
+                  className="max-h-80 max-w-full mx-auto inline-block rounded-xl border border-slate-200/80 dark:border-slate-700/80 shadow-xs object-contain bg-white p-1"
+                  loading="lazy"
+                />
+              </span>
+            ),
+            table: ({ children }) => (
+              <div className="my-3 overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm">
+                <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-700 text-center text-sm">{children}</table>
+              </div>
+            ),
+            thead: ({ children }) => <thead className="bg-slate-50 dark:bg-slate-800/80 font-medium text-slate-800 dark:text-slate-200">{children}</thead>,
+            th: ({ children }) => <th className="px-3 py-2 border-r border-slate-200 dark:border-slate-700 last:border-r-0">{children}</th>,
+            td: ({ children }) => <td className="px-3 py-2 border-r border-t border-slate-200 dark:border-slate-700 last:border-r-0 text-slate-700 dark:text-slate-300 whitespace-nowrap">{children}</td>,
           }}
         >
           {processedText}
@@ -126,7 +133,7 @@ interface DocumentFileItem {
   id: string;
   name: string;
   parentId: string | null;
-  fileType: 'docx' | 'txt' | 'pdf' | 'other';
+  fileType: string;
   parsedQuiz: {
     title: string;
     description?: string;
@@ -157,40 +164,70 @@ function normalizeDocItem(raw: any, fallbackId: string): DocumentFileItem {
     : [];
 
   const normalizedQuestions: NormalizedQuestion[] = rawQuestions.map((q: any, idx: number) => {
-    const qContent = typeof q === 'string' ? q : q?.content || `Câu hỏi ${idx + 1}`;
+    let qContent = typeof q === 'string' ? q : q?.content || `Câu hỏi ${idx + 1}`;
+    qContent = cleanLeakedOleGarbage(qContent);
+    qContent = normalizeMathFormulas(cleanVietnameseEncoding(cleanAndEnrichMathFormulas(qContent)));
+    qContent = cleanLeakedOleGarbage(qContent);
     const qPoints = typeof q?.points === 'number' ? q.points : 0.25;
 
     let options: NormalizedOption[] = [];
     if (Array.isArray(q?.options)) {
       options = q.options.map((opt: any, oIdx: number) => {
-        if (typeof opt === 'string') {
-          return { content: opt, isCorrect: oIdx === 0 };
-        }
+        let content = typeof opt === 'string' ? opt : (opt?.content || opt?.text || '');
+        const letter = String.fromCharCode(65 + oIdx);
+
+        content = cleanLeakedOleGarbage(content);
+        content = cleanAndEnrichMathFormulas(content, { isOption: true, optLetter: letter, questionText: qContent });
+        content = normalizeMathFormulas(cleanVietnameseEncoding(content));
+        content = cleanLeakedOleGarbage(content);
+
+        const isCorrect = typeof opt === 'object' && opt !== null
+          ? Boolean(opt.isCorrect || opt.correct)
+          : false;
+
         return {
-          content: opt?.content || opt?.text || `Lựa chọn ${oIdx + 1}`,
-          isCorrect: Boolean(opt?.isCorrect || opt?.correct),
+          content,
+          isCorrect,
         };
-      });
+      }).filter((o: NormalizedOption) => o.content && o.content.trim().length > 0);
+    }
+
+    let qExplanation = q?.explanation ? cleanAndEnrichMathFormulas(q.explanation) : '';
+    qExplanation = cleanLeakedOleGarbage(qExplanation);
+    qExplanation = normalizeMathFormulas(cleanVietnameseEncoding(qExplanation));
+    qExplanation = cleanLeakedOleGarbage(qExplanation);
+
+    // Loại bỏ triệt để bất kỳ đoạn boilerplate giả ("Lời giải chi tiết & Phân tích chuyên sâu / sai chiều bất đẳng thức")
+    if (qExplanation) {
+      qExplanation = qExplanation
+        .replace(/\*\*?Lời giải chi tiết & Phân tích chuyên sâu[:\*\s\S]*$/gi, '')
+        .replace(/\*\*?Phân tích từng phương án lựa chọn[:\*\s\S]*$/gi, '')
+        .replace(/[-*+]\s*\*\*?Phương án (?:đúng|sai)[^\n]*/gi, '')
+        .replace(/[-*+]\s*\*\*?Kết luận: Chọn đáp án[^\n]*/gi, '')
+        .trim();
     }
 
     return {
       id: q?.id || `q_${idx + 1}`,
+      rawLabel: q?.rawLabel,
       content: qContent,
       points: qPoints,
       options,
-      explanation: q?.explanation || '',
+      explanation: qExplanation || '',
+      type: q?.type || (options.length >= 2 ? 'multiple_choice' : 'essay'),
+      answer: q?.answer ? normalizeMathFormulas(cleanVietnameseEncoding(cleanAndEnrichMathFormulas(q.answer))) : undefined,
     };
   });
 
   return {
     id,
-    name,
+    name: cleanVietnameseEncoding(name),
     parentId,
     fileType,
     createdAt,
     parsedQuiz: {
-      title,
-      description,
+      title: cleanVietnameseEncoding(title),
+      description: cleanVietnameseEncoding(description),
       durationMinutes,
       questions: normalizedQuestions,
     },
@@ -201,24 +238,61 @@ function matchDocId(targetId: string, searchId: string): boolean {
   if (!targetId || !searchId) return false;
   if (targetId === searchId) return true;
   if (decodeURIComponent(targetId) === searchId) return true;
+
   const cleanT = targetId.toLowerCase().replace(/[^a-z0-9]/g, '');
   const cleanS = searchId.toLowerCase().replace(/[^a-z0-9]/g, '');
-  return cleanT === cleanS;
+  if (cleanT === cleanS) return true;
+
+  // Khớp nếu cùng chuỗi số timestamp (ví dụ file_1791698305008_... và filc_1791698305008_...)
+  const numPartT = targetId.match(/\d{10,}/)?.[0];
+  const numPartS = searchId.match(/\d{10,}/)?.[0];
+  if (numPartT && numPartS && numPartT === numPartS) {
+    return true;
+  }
+
+  // Khớp nếu phần đuôi (sau 4 ký tự tiền tố: file vs filc) trùng khớp
+  if (cleanT.length >= 10 && cleanS.length >= 10) {
+    if (cleanT.slice(4) === cleanS.slice(4)) return true;
+  }
+
+  // Khớp nếu ID này chứa ID kia
+  if (cleanT.includes(cleanS) || cleanS.includes(cleanT)) {
+    return true;
+  }
+
+  return false;
 }
 
-export default function DocumentDynamicViewPage() {
+function DocumentDynamicViewPageContent() {
   const router = useRouter();
   const params = useParams();
+  const searchParams = useSearchParams();
   const { token } = useAuthStore();
 
   const fileId = (params?.id as string) || '';
+  const searchFolderId = searchParams?.get('folderId') || null;
+  const searchFolderName = searchParams?.get('folderName') || null;
 
   const [isLoading, setIsLoading] = useState(true);
   const [fileItem, setFileItem] = useState<DocumentFileItem | null>(null);
   const [folders, setFolders] = useState<DocumentFolderItem[]>([]);
   const [showAnswers, setShowAnswers] = useState(true);
 
-  // Full resilient loader: prefer backend, keep localStorage fallback for old/offline data
+  // Auto clean up address bar: remove redundant query params (?folderId=...&folderName=...), /view suffix, and /app/ prefix
+  useEffect(() => {
+    if (fileId && typeof window !== 'undefined') {
+      const cleanUrl = `/documents/${encodeURIComponent(fileId)}`;
+      if (
+        window.location.search ||
+        window.location.pathname.endsWith('/view') ||
+        window.location.pathname.startsWith('/app/')
+      ) {
+        window.history.replaceState(null, '', cleanUrl);
+      }
+    }
+  }, [fileId]);
+
+  // Full resilient loader: checks IndexedDB, localStorage, and backend with zero-hang guarantees
   useEffect(() => {
     if (!fileId) {
       setIsLoading(false);
@@ -227,21 +301,45 @@ export default function DocumentDynamicViewPage() {
 
     let didCancel = false;
 
-    const loadLocalDocument = (): DocumentFileItem | null => {
+    const loadLocalDocument = async (): Promise<DocumentFileItem | null> => {
       let allFiles: any[] = [];
 
       if (typeof window !== 'undefined') {
+        try {
+          const { idbGetAllDocuments, idbGetDocument } = await import('@/lib/indexedDbStorage');
+          const directIdb = await idbGetDocument(fileId);
+          if (directIdb) {
+            try {
+              const cleaned = normalizeDocItem(directIdb, fileId);
+              const { idbSaveDocument } = await import('@/lib/indexedDbStorage');
+              idbSaveDocument(cleaned as any).catch(() => {});
+              return cleaned;
+            } catch {
+              return directIdb as any;
+            }
+          }
+
+          const idbFiles = await idbGetAllDocuments();
+          if (Array.isArray(idbFiles) && idbFiles.length > 0) {
+            allFiles.push(...idbFiles);
+          }
+        } catch (err) {
+          console.warn('Error reading files from IndexedDB in view page:', err);
+        }
+
         try {
           const savedFiles = localStorage.getItem('app_documents_files');
           const customFiles = localStorage.getItem('custom_uploaded_files');
           const list1 = savedFiles ? JSON.parse(savedFiles) : [];
           const list2 = customFiles ? JSON.parse(customFiles) : [];
-          allFiles = [...(Array.isArray(list1) ? list1 : []), ...(Array.isArray(list2) ? list2 : [])];
+          allFiles.push(...(Array.isArray(list1) ? list1 : []), ...(Array.isArray(list2) ? list2 : []));
 
           const savedFolders = localStorage.getItem('app_documents_folders');
           if (savedFolders) {
             const parsedFolders = JSON.parse(savedFolders);
-            if (Array.isArray(parsedFolders)) setFolders(parsedFolders);
+            if (Array.isArray(parsedFolders) && parsedFolders.length > 0) {
+              setFolders(parsedFolders);
+            }
           }
         } catch (err) {
           console.error('Error reading files from localStorage:', err);
@@ -250,7 +348,13 @@ export default function DocumentDynamicViewPage() {
 
       // 1. Check direct list match
       const found = allFiles.find((f) => f && matchDocId(f.id, fileId));
-      if (found) return normalizeDocItem(found, fileId);
+      if (found) {
+        try {
+          return normalizeDocItem(found, fileId);
+        } catch {
+          return found;
+        }
+      }
 
       // 2. Scan chatcoi_history_sessions for any matching exam action
       if (typeof window !== 'undefined') {
@@ -277,7 +381,7 @@ export default function DocumentDynamicViewPage() {
                           createdAt: new Date().toISOString(),
                           parsedQuiz: {
                             title: examData.title || 'Đề thi trắc nghiệm',
-                            description: `Đề thi do AI ChatCoi tạo tự động.`,
+                            description: `Đề thi do SI ChatCoi tạo tự động.`,
                             durationMinutes: Number(examData.durationMinutes) || 45,
                             questions: questionsList.map((q: any, idx: number) => ({
                               id: q.id || `q_${idx + 1}`,
@@ -293,7 +397,7 @@ export default function DocumentDynamicViewPage() {
 
                         const existingDocs = JSON.parse(localStorage.getItem('app_documents_files') || '[]');
                         const filtered = Array.isArray(existingDocs)
-                          ? existingDocs.filter((d: any) => d && !matchDocId(d.id, fileId)).slice(0, 20)
+                          ? existingDocs.filter((d: any) => d && !matchDocId(d.id, fileId))
                           : [];
                         safeLocalStorageSet('app_documents_files', JSON.stringify([recoveredDoc, ...filtered]));
                         return recoveredDoc;
@@ -313,22 +417,69 @@ export default function DocumentDynamicViewPage() {
     };
 
     const loadDocument = async () => {
-      if (token) {
-        try {
-          const remoteFile = await getDocumentFile(token, fileId);
-          if (didCancel) return;
-          setFileItem(normalizeDocItem(remoteFile, fileId));
-          setIsLoading(false);
+      try {
+        // 1. Load folders right away
+        if (typeof window !== 'undefined') {
+          try {
+            const savedFolders = localStorage.getItem('app_documents_folders');
+            if (savedFolders) {
+              const parsedFolders = JSON.parse(savedFolders);
+              if (Array.isArray(parsedFolders) && parsedFolders.length > 0) {
+                setFolders(parsedFolders);
+              }
+            }
+          } catch {}
+        }
+
+        // 2. Fetch document (checks IndexedDB & localStorage FIRST at 0ms, then remote)
+        const [docRes, docsListRes] = await Promise.allSettled([
+          getDocumentFile(token || '', fileId),
+          listDocuments(token || ''),
+        ]);
+
+        if (didCancel) return;
+
+        if (docsListRes.status === 'fulfilled' && docsListRes.value?.folders && Array.isArray(docsListRes.value.folders)) {
+          setFolders(docsListRes.value.folders);
+        }
+
+        if (docRes.status === 'fulfilled' && docRes.value) {
+          let normalized: DocumentFileItem;
+          try {
+            normalized = normalizeDocItem(docRes.value, fileId);
+          } catch {
+            normalized = docRes.value as any;
+          }
+          if (!normalized.parentId && searchFolderId) {
+            normalized.parentId = searchFolderId;
+          }
+          setFileItem(normalized);
+          import('@/lib/indexedDbStorage').then(({ idbSaveDocument }) => idbSaveDocument(normalized as any).catch(() => {}));
           return;
-        } catch (err) {
-          console.warn('Unable to load document from server, falling back to local data:', err);
+        }
+
+        // 3. Fallback to full local scans (IndexedDB + localStorage + chat sessions)
+        const localFile = await loadLocalDocument();
+        if (didCancel) return;
+        if (localFile) {
+          if (!localFile.parentId && searchFolderId) {
+            localFile.parentId = searchFolderId;
+          }
+          setFileItem(localFile);
+          import('@/lib/indexedDbStorage').then(({ idbSaveDocument }) => idbSaveDocument(localFile as any).catch(() => {}));
+          return;
+        }
+
+        // 4. If completely not found
+        setFileItem(null);
+      } catch (err) {
+        console.warn('Unable to load document:', err);
+        setFileItem(null);
+      } finally {
+        if (!didCancel) {
+          setIsLoading(false);
         }
       }
-
-      const localFile = loadLocalDocument();
-      if (didCancel) return;
-      setFileItem(localFile);
-      setIsLoading(false);
     };
 
     setIsLoading(true);
@@ -337,7 +488,7 @@ export default function DocumentDynamicViewPage() {
     return () => {
       didCancel = true;
     };
-  }, [fileId, token]);
+  }, [fileId, token, searchFolderId]);
 
   const handleDownloadJson = () => {
     if (!fileItem) return;
@@ -345,12 +496,16 @@ export default function DocumentDynamicViewPage() {
       title: fileItem.parsedQuiz.title,
       total_questions: fileItem.parsedQuiz.questions.length,
       questions: fileItem.parsedQuiz.questions.map((q, idx) => {
-        const correctOpt = q.options.find((o) => o.isCorrect);
+        const cleanQ = (q.content || '')
+          .replace(/^(?:(?:Câu|câu|CÂU|Question|QUESTION|Bài\s*tập|BÀI\s*TẬP|Bài|BÀI|CH|Ví\s*dụ|VÍ\s*DỤ|Luyện\s*tập|Vận\s*dụng|Dạng)\s*(?:\d+|[IVXLCDM]+)[\s:.-]*|(?:\d+)[\.\)]\s+)/i, '')
+          .replace(/^[:.-]+\s*/, '')
+          .trim();
+        const correctOpt = q.options?.find((o) => o.isCorrect);
         return {
           id: idx + 1,
-          question: q.content,
-          options: q.options.map((o) => o.content),
-          answer: correctOpt ? correctOpt.content : (q.options[0]?.content || ''),
+          question: cleanQ || q.content,
+          options: (q.options || []).map((o) => o.content),
+          answer: correctOpt ? correctOpt.content : ((q as any).answer || ''),
         };
       }),
     };
@@ -378,7 +533,7 @@ export default function DocumentDynamicViewPage() {
           <div className="flex items-center gap-1 text-2xl font-normal tracking-tight text-slate-900 dark:text-slate-100 flex-wrap -ml-2">
             <button
               type="button"
-              onClick={() => router.push('/app/documents')}
+              onClick={() => router.push('/documents')}
               className="transition-colors cursor-pointer px-2 py-0.5 rounded-xl hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-normal"
             >
               Tài liệu của tôi
@@ -405,7 +560,7 @@ export default function DocumentDynamicViewPage() {
           <div className="flex items-center gap-1 text-2xl font-normal tracking-tight text-slate-900 dark:text-slate-100 flex-wrap -ml-2">
             <button
               type="button"
-              onClick={() => router.push('/app/documents')}
+              onClick={() => router.push('/documents')}
               className="transition-colors cursor-pointer px-2 py-0.5 rounded-xl hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-normal"
             >
               Tài liệu của tôi
@@ -425,7 +580,7 @@ export default function DocumentDynamicViewPage() {
           <p className="text-xs text-slate-500 max-w-sm mx-auto">
             Tài liệu này có thể đã bị xóa hoặc đường dẫn không hợp lệ.
           </p>
-          <Button size="sm" onClick={() => router.push('/app/documents')}>
+          <Button size="sm" onClick={() => router.push('/documents')}>
             <ArrowLeft size={16} className="mr-1.5" />
             Quay lại Tài liệu của tôi
           </Button>
@@ -434,11 +589,33 @@ export default function DocumentDynamicViewPage() {
     );
   }
 
-  // Automatically resolve parent folder hierarchy without needing query parameters
-  const matchedFolder = fileItem.parentId ? folders.find((f) => f.id === fileItem.parentId) : null;
-  const resolvedFolderName = matchedFolder?.name;
-  const resolvedFolderId = matchedFolder?.id;
+  // Resolve full folder path
+  const effectiveFolderId = fileItem.parentId || searchFolderId || null;
 
+  const getFolderPath = (): DocumentFolderItem[] => {
+    const path: DocumentFolderItem[] = [];
+    let curr = effectiveFolderId;
+    while (curr) {
+      const f = folders.find((item) => item.id === curr);
+      if (f) {
+        path.unshift(f);
+        curr = f.parentId || null;
+      } else {
+        break;
+      }
+    }
+    if (path.length === 0 && searchFolderId && searchFolderName) {
+      path.push({
+        id: searchFolderId,
+        name: searchFolderName,
+        parentId: null,
+        createdAt: new Date().toISOString(),
+      });
+    }
+    return path;
+  };
+
+  const folderPath = getFolderPath();
   const questions = fileItem.parsedQuiz?.questions || [];
   const totalPoints = Math.round(questions.reduce((sum, q) => sum + (q.points || 1), 0) * 10) / 10;
   const displayTitle = (fileItem.name || 'Đề thi trắc nghiệm').replace(/\.[^/.]+$/, '');
@@ -449,24 +626,49 @@ export default function DocumentDynamicViewPage() {
         <div className="flex items-center gap-1 text-2xl font-[450] tracking-tight text-slate-900 dark:text-slate-100 flex-wrap -ml-2">
           <button
             type="button"
-            onClick={() => router.push('/app/documents')}
-            className="transition-colors cursor-pointer px-2 py-0.5 rounded-xl hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-[450]"
+            onClick={() => router.push('/documents')}
+            className="transition-colors cursor-pointer px-2 py-0.5 rounded-xl hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-900 dark:text-white font-[450]"
           >
             Tài liệu của tôi
           </button>
-          {resolvedFolderName && (
-            <>
-              <ChevronRight size={20} className="text-slate-400 dark:text-slate-500 shrink-0 stroke-[1.75]" />
-              <button
-                type="button"
-                onClick={() => router.push(`/app/documents?folderId=${resolvedFolderId || ''}`)}
-                className="transition-colors cursor-pointer px-2 py-0.5 rounded-xl hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-[450]"
-              >
-                {resolvedFolderName}
-              </button>
-            </>
-          )}
-          <ChevronRight size={20} className="text-slate-400 dark:text-slate-500 shrink-0 stroke-[1.75]" />
+          {folderPath.length > 0 ? (
+            folderPath.map((folder, idx) => {
+              const prevFolderId = idx === 0 ? null : folderPath[idx - 1].id;
+              return (
+                <React.Fragment key={folder.id || idx}>
+                  <BreadcrumbChevron
+                    folderId={prevFolderId}
+                    allFolders={folders}
+                    fallbackToStaticChevron={true}
+                    onNavigateFolder={(id) => {
+                      if (typeof window !== 'undefined') sessionStorage.setItem('app_active_folder_id', id);
+                      router.push('/documents');
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (typeof window !== 'undefined') sessionStorage.setItem('app_active_folder_id', folder.id);
+                      router.push('/documents');
+                    }}
+                    className="transition-colors cursor-pointer px-2 py-0.5 rounded-xl hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-900 dark:text-white font-[450]"
+                  >
+                    {folder.name}
+                  </button>
+                </React.Fragment>
+              );
+            })
+          ) : null}
+          <BreadcrumbChevron
+            folderId={folderPath.length > 0 ? folderPath[folderPath.length - 1].id : null}
+            allFolders={folders}
+            fallbackToStaticChevron={true}
+            onNavigateFolder={(id) => {
+              if (typeof window !== 'undefined') sessionStorage.setItem('app_active_folder_id', id);
+              router.push('/documents');
+            }}
+            onNavigateFile={(id) => router.push(`/documents/${id}`)}
+          />
           <span className="px-2 py-0.5 rounded-xl text-slate-900 dark:text-white font-[450] truncate max-w-xs md:max-w-md">
             {displayTitle}
           </span>
@@ -474,6 +676,16 @@ export default function DocumentDynamicViewPage() {
       }
       action={
         <div className="flex items-center gap-2">
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={() => router.push(`/documents/${encodeURIComponent(fileId)}/assign`)}
+            className="bg-indigo-600 hover:bg-indigo-700 text-white font-medium shadow-xs"
+            title="Giao bài tập phong cách Blooket"
+          >
+            <Send size={15} className="mr-1.5" />
+            Giao bài tập
+          </Button>
           <Button
             variant="outline"
             size="sm"
@@ -491,14 +703,6 @@ export default function DocumentDynamicViewPage() {
           >
             <Printer size={15} className="mr-1.5" />
             In đề
-          </Button>
-          <Button
-            size="sm"
-            onClick={() => router.push('/quizzes')}
-            className="bg-google-blue hover:bg-blue-600 text-white font-medium"
-          >
-            <Play size={15} className="mr-1.5" />
-            Bắt đầu làm bài / Host Chaos
           </Button>
         </div>
       }
@@ -520,14 +724,16 @@ export default function DocumentDynamicViewPage() {
               <h1 className="text-xl md:text-2xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">
                 {displayTitle}
               </h1>
-              {fileItem.parsedQuiz?.description && (
+              {fileItem.parsedQuiz?.description &&
+                !fileItem.parsedQuiz.description.includes('do AI tạo') &&
+                !fileItem.parsedQuiz.description.includes('tạo tự động') && (
                 <p className="text-xs text-slate-500 dark:text-slate-400">
                   {fileItem.parsedQuiz.description}
                 </p>
               )}
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
               <button
                 type="button"
                 onClick={() => setShowAnswers(!showAnswers)}
@@ -574,62 +780,125 @@ export default function DocumentDynamicViewPage() {
 
         {/* Questions List */}
         <div className="space-y-4">
-          {questions.map((q, idx) => (
-            <div
-              key={q.id || idx}
-              className="p-5 md:p-6 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-3xl space-y-4 shadow-xs"
-            >
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex items-start gap-2.5">
-                  <span className="w-7 h-7 rounded-xl bg-blue-50 dark:bg-blue-950 text-google-blue font-bold text-xs flex items-center justify-center shrink-0">
-                    {idx + 1}
-                  </span>
-                  <h4 className="text-base md:text-lg font-semibold text-slate-900 dark:text-slate-100 leading-relaxed">
-                    <MathRenderer text={(q.content || '').replace(/^Câu\s*\d+\s*[:.]\s*/i, '')} />
-                  </h4>
-                </div>
-                <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 shrink-0">
-                  {q.points} điểm
-                </span>
-              </div>
+          {questions.map((q, idx) => {
+            const rawStr = String((q as any).rawLabel || '').trim();
+            const rawNumMatch = rawStr.match(/^\d+$/);
+            let formattedLabel = rawStr;
+            if (!formattedLabel || rawNumMatch) {
+              formattedLabel = `Câu ${rawNumMatch ? rawNumMatch[0] : idx + 1}`;
+            } else if (!/^(?:Câu|Bài|Question|Ví\s*dụ|Dạng)/i.test(formattedLabel)) {
+              formattedLabel = `Câu ${formattedLabel}`;
+            }
+            formattedLabel = formattedLabel.replace(/[:.-]+$/, '').trim();
 
-              {/* Options A, B, C, D */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
-                {(q.options || []).map((opt, optIdx) => {
-                  const letter = String.fromCharCode(65 + optIdx);
-                  const isCorrect = showAnswers && opt.isCorrect;
-                  return (
-                    <div
-                      key={optIdx}
-                      className={`p-3.5 rounded-2xl border flex items-center justify-between transition-all ${
-                        isCorrect
-                          ? 'bg-emerald-500/10 border-emerald-500/50 text-emerald-800 dark:text-emerald-300 font-semibold shadow-xs'
-                          : 'bg-slate-50/70 dark:bg-slate-800/40 border-slate-200/70 dark:border-slate-800 text-slate-700 dark:text-slate-300'
-                      }`}
-                    >
-                      <span className="text-sm md:text-base flex items-center">
-                        <strong className={`mr-2 font-bold ${isCorrect ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-500'}`}>
-                          {letter}.
-                        </strong>
-                        <MathRenderer text={opt.content} />
-                      </span>
-                      {isCorrect && (
-                        <CheckCircle2 size={18} className="text-emerald-500 shrink-0 ml-2" />
-                      )}
+            const qType = (q as any).type || (q.options && q.options.length >= 2 ? 'multiple_choice' : 'essay');
+            const hasOptions = q.options && q.options.length > 0;
+
+            const cleanContent = (q.content || '')
+              .replace(
+                /^(?:(?:Câu|câu|CÂU|Question|QUESTION|Bài\s*tập|BÀI\s*TẬP|Bài|BÀI|CH|Ví\s*dụ|VÍ\s*DỤ|Luyện\s*tập|Vận\s*dụng|Dạng)\s*(?:\d+|[IVXLCDM]+)[\s:.-]*|(?:\d+)[\.\)]\s+)/i,
+                ''
+              )
+              .replace(/^[\s.:\-_–—]+/, '')
+              .trim();
+
+            return (
+              <div
+                key={q.id || idx}
+                className="p-5 md:p-6 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-3xl space-y-4 shadow-xs"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-start gap-3 flex-1 min-w-0">
+                    <span className="w-7 h-7 rounded-xl bg-blue-50 dark:bg-blue-950 text-google-blue font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">
+                      {idx + 1}
+                    </span>
+                    <div className="space-y-1.5 flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-bold text-slate-800 dark:text-slate-200 text-sm">
+                          {formattedLabel}:
+                        </span>
+                        <span
+                          className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${
+                            qType === 'essay'
+                              ? 'bg-purple-100 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300'
+                              : qType === 'fill_blank'
+                              ? 'bg-amber-100 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300'
+                              : 'bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300'
+                          }`}
+                        >
+                          {qType === 'essay'
+                            ? 'Tự luận'
+                            : qType === 'fill_blank'
+                            ? 'Điền từ'
+                            : 'Trắc nghiệm'}
+                        </span>
+                      </div>
+                      <h4 className="text-base md:text-lg font-semibold text-slate-900 dark:text-slate-100 leading-relaxed whitespace-pre-wrap">
+                        <MathRenderer
+                          text={cleanContent}
+                        />
+                      </h4>
                     </div>
-                  );
-                })}
-              </div>
-
-              {/* Explanation (if available) */}
-              {showAnswers && q.explanation && (
-                <div className="p-3 bg-amber-50/50 dark:bg-amber-950/20 border border-amber-200/60 dark:border-amber-800/40 rounded-2xl text-xs text-amber-800 dark:text-amber-300">
-                  <span className="font-bold">Lời giải: </span>
-                  <MathRenderer text={q.explanation} />
+                  </div>
+                  <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 shrink-0">
+                    {q.points} điểm
+                  </span>
                 </div>
-              )}
-            </div>
-          ))}
+
+                {/* Options A, B, C, D (for Multiple Choice) */}
+                {hasOptions && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
+                    {q.options.map((opt, optIdx) => {
+                      const letter = String.fromCharCode(65 + optIdx);
+                      const isCorrect = showAnswers && opt.isCorrect;
+                      return (
+                        <div
+                          key={optIdx}
+                          className={`p-3.5 rounded-2xl border flex items-center justify-between transition-all ${
+                            isCorrect
+                              ? 'bg-emerald-500/10 border-emerald-500/50 text-emerald-800 dark:text-emerald-300 font-semibold shadow-xs'
+                              : 'bg-slate-50/70 dark:bg-slate-800/40 border-slate-200/70 dark:border-slate-800 text-slate-700 dark:text-slate-300'
+                          }`}
+                        >
+                          <span className="text-sm md:text-base flex items-center">
+                            <strong
+                              className={`mr-2 font-bold ${
+                                isCorrect
+                                  ? 'text-emerald-600 dark:text-emerald-400'
+                                  : 'text-slate-500'
+                              }`}
+                            >
+                              {letter}.
+                            </strong>
+                            <MathRenderer text={opt.content} />
+                          </span>
+                          {isCorrect && (
+                            <CheckCircle2 size={18} className="text-emerald-500 shrink-0 ml-2" />
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* Short answer / Đáp án ngắn (for Essay / Fill in blank) */}
+                {showAnswers && (q as any).answer && (
+                  <div className="p-3 bg-blue-50/60 dark:bg-blue-950/20 border border-blue-200/60 dark:border-blue-800/40 rounded-2xl text-xs text-blue-900 dark:text-blue-300">
+                    <span className="font-bold">Đáp án: </span>
+                    <MathRenderer text={(q as any).answer} />
+                  </div>
+                )}
+
+                {/* Explanation / Lời giải (if available) */}
+                {showAnswers && q.explanation && (
+                  <div className="p-3 bg-amber-50/50 dark:bg-amber-950/20 border border-amber-200/60 dark:border-amber-800/40 rounded-2xl text-xs text-amber-800 dark:text-amber-300">
+                    <span className="font-bold">Hướng dẫn giải / Lời giải: </span>
+                    <MathRenderer text={q.explanation} />
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       </div>
 
@@ -714,27 +983,39 @@ export default function DocumentDynamicViewPage() {
 
         {/* List of Questions in Formal Docx Style */}
         <div className="space-y-3 text-[12pt]">
-          {questions.map((q, idx) => (
-            <div key={q.id || idx} className="print-break-avoid mb-3">
-              <p className="leading-snug text-justify">
-                <span className="font-bold">Câu {idx + 1}: </span>
-                <MathRenderer text={(q.content || '').replace(/^Câu\s*\d+\s*[:.]\s*/i, '')} />
-              </p>
+          {questions.map((q, idx) => {
+            const rawLabel = (q as any).rawLabel || `Câu ${idx + 1}`;
+            const hasOptions = q.options && q.options.length > 0;
 
-              {/* 4 options in clean aligned row or 2-column grid */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-1 mt-1 pl-4">
-                {(q.options || []).map((opt, optIdx) => {
-                  const letter = String.fromCharCode(65 + optIdx);
-                  return (
-                    <div key={optIdx} className="leading-snug flex items-center">
-                      <span className="font-bold mr-1">{letter}. </span>
-                      <MathRenderer text={opt.content} />
-                    </div>
-                  );
-                })}
+            return (
+              <div key={q.id || idx} className="print-break-avoid mb-3">
+                <p className="leading-snug text-justify whitespace-pre-wrap">
+                  <span className="font-bold">{rawLabel}: </span>
+                  <MathRenderer
+                    text={(q.content || '').replace(
+                      /^(?:(?:Câu|câu|CÂU|Question|QUESTION|Bài\s*tập|BÀI\s*TẬP|Bài|BÀI|CH|Ví\s*dụ|VÍ\s*DỤ|Luyện\s*tập|Vận\s*dụng|Dạng)\s*(?:\d+|[IVXLCDM]+)[\s:.-]*|(?:\d+)[\.\)]\s+)/i,
+                      ''
+                    )}
+                  />
+                </p>
+
+                {/* 4 options in clean aligned row or 2-column grid */}
+                {hasOptions && (
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-1 mt-1 pl-4">
+                    {q.options.map((opt, optIdx) => {
+                      const letter = String.fromCharCode(65 + optIdx);
+                      return (
+                        <div key={optIdx} className="leading-snug flex items-center">
+                          <span className="font-bold mr-1">{letter}. </span>
+                          <MathRenderer text={opt.content} />
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         {/* End marker */}
@@ -744,5 +1025,20 @@ export default function DocumentDynamicViewPage() {
         </div>
       </div>
     </AppShell>
+  );
+}
+
+export default function DocumentDynamicViewPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="p-16 text-center space-y-3">
+          <Loader2 size={36} className="animate-spin text-google-blue mx-auto" />
+          <p className="text-xs text-slate-500 font-medium">Đang tải và chuẩn bị nội dung đề thi...</p>
+        </div>
+      }
+    >
+      <DocumentDynamicViewPageContent />
+    </Suspense>
   );
 }

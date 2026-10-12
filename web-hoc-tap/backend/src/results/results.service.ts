@@ -76,70 +76,6 @@ export class ResultsService {
     };
   }
 
-  async getQuizStatistics(teacherId: string, quizId: string) {
-    const quiz = await this.prisma.quiz.findUnique({
-      where: { id: quizId },
-      include: {
-        gameRooms: {
-          include: {
-            players: {
-              include: {
-                answers: true,
-              },
-            },
-          },
-        },
-        questions: {
-          include: {
-            question: true,
-          },
-        },
-      },
-    });
-
-    if (!quiz) {
-      throw new NotFoundException('Quiz not found');
-    }
-
-    if (quiz.teacherId !== teacherId) {
-      throw new ForbiddenException('Access denied');
-    }
-
-    let allPlayers: any[] = [];
-    quiz.gameRooms.forEach((room) => {
-      allPlayers = allPlayers.concat(room.players);
-    });
-
-    const totalParticipants = allPlayers.length;
-    const avgAccuracy =
-      totalParticipants > 0
-        ? Number(
-            (
-              allPlayers.reduce((sum, p) => sum + p.accuracy, 0) / totalParticipants
-            ).toFixed(1),
-          )
-        : 0;
-
-    const avgScore =
-      totalParticipants > 0
-        ? Number(
-            (
-              allPlayers.reduce((sum, p) => sum + p.score, 0) / totalParticipants
-            ).toFixed(1),
-          )
-        : 0;
-
-    return {
-      quizId: quiz.id,
-      title: quiz.title,
-      totalRoomsHosted: quiz.gameRooms.length,
-      totalParticipants,
-      avgAccuracy,
-      avgScore,
-      questionsCount: quiz.questions.length,
-    };
-  }
-
   async getStudentHistory(studentId: string) {
     const submissions = await this.prisma.submission.findMany({
       where: { studentId },
@@ -153,22 +89,9 @@ export class ResultsService {
       orderBy: { submittedAt: 'desc' },
     });
 
-    const gameHistory = await this.prisma.gamePlayer.findMany({
-      where: { userId: studentId },
-      include: {
-        room: {
-          include: {
-            quiz: { select: { title: true } },
-          },
-        },
-      },
-      orderBy: { joinedAt: 'desc' },
-      take: 20,
-    });
-
     return {
       submissions,
-      gameHistory,
+      gameHistory: [],
     };
   }
 }

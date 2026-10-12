@@ -42,77 +42,66 @@ export const FeatureBentoGrid: React.FC = () => {
       {/* Bento Grid */}
       <div className="grid grid-cols-1 md:grid-cols-12 gap-6 text-left">
         
-        {/* Bento 1: Chaos Quiz Spotlight (Span 7 cols) */}
+        {/* Bento 1: AI Documents & Tests Spotlight (Span 7 cols) */}
         <div className="md:col-span-7 bg-slate-900 bg-gradient-to-br from-slate-900 via-slate-900 to-indigo-950 text-white p-7 sm:p-9 rounded-3xl relative overflow-hidden shadow-xl flex flex-col justify-between border border-slate-800 group">
           {/* Subtle glow background */}
-          <div className="absolute -top-24 -right-24 w-72 h-72 bg-google-red/20 rounded-full blur-3xl group-hover:bg-google-red/30 transition-all duration-500 pointer-events-none" />
-          <div className="absolute -bottom-24 -left-24 w-72 h-72 bg-blue-600/20 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute -top-24 -right-24 w-72 h-72 bg-blue-600/20 rounded-full blur-3xl group-hover:bg-blue-600/30 transition-all duration-500 pointer-events-none" />
+          <div className="absolute -bottom-24 -left-24 w-72 h-72 bg-indigo-600/20 rounded-full blur-3xl pointer-events-none" />
 
           <div className="relative z-10 space-y-4">
             <div className="flex items-center justify-between">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-red-500/20 border border-red-500/30 text-red-400 rounded-full text-xs font-bold">
-                <Flame size={14} className="fill-current text-red-400" />
-                Độc quyền
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-500/20 border border-blue-500/30 text-blue-300 rounded-full text-xs font-bold">
+                <Sparkles size={14} className="text-blue-300" />
+                Chuẩn Bộ GD&ĐT
               </span>
               <span className="text-xs font-mono text-slate-400 flex items-center gap-1">
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                Socket.IO 0ms delay
+                Ma trận 4 mức độ
               </span>
             </div>
 
             <div className="space-y-2">
               <h3 className="text-2xl sm:text-3xl font-bold tracking-tight text-white flex items-center gap-2">
-                Đấu trường Chaos Quiz 25 Ô
+                Kho Tài Liệu & Đề Thi Thông Minh
               </h3>
               <p className="text-xs sm:text-sm text-slate-300 leading-relaxed max-w-xl">
-                Tạm biệt kiểu trắc nghiệm 1 câu buồn ngủ! 25 câu hỏi xuất hiện đồng thời trên cùng một ma trận. Trả lời đúng +100 điểm, sai -100 điểm, liên tục đảo vị trí khiến cả lớp bùng nổ năng lượng thi đua.
+                Khởi tạo đề kiểm tra phân hóa theo 4 mức độ nhận thức (Nhận biết, Thông hiểu, Vận dụng, Vận dụng cao). Hỗ trợ công thức toán học KaTeX, bóc tách đề từ Word và xuất bản trực tiếp cho học sinh.
               </p>
             </div>
           </div>
 
-          {/* Interactive Simulation Preview of Chaos Grid */}
-          <div className="relative z-10 my-6 bg-slate-800/60 backdrop-blur-md rounded-2xl p-4 border border-slate-700/60">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-700/60 text-xs font-mono">
-              <span className="text-amber-400 font-bold flex items-center gap-1">
-                ⚡ Chuỗi đúng: x4
+          {/* Interactive Simulation Preview of Exam Matrix */}
+          <div className="relative z-10 my-6 bg-slate-800/60 backdrop-blur-md rounded-2xl p-4 border border-slate-700/60 space-y-3">
+            <div className="flex items-center justify-between pb-2 border-b border-slate-700/60 text-xs font-mono">
+              <span className="text-blue-400 font-bold flex items-center gap-1">
+                📄 Đề kiểm tra 15 phút - Đại số 9
               </span>
               <span className="text-emerald-400 font-bold">
-                Điểm số: 1,850 (#1)
+                100% Khớp SGK
               </span>
             </div>
-            {/* 5x5 Mini Matrix Preview */}
-            <div className="grid grid-cols-5 gap-1.5 pt-3">
-              {Array.from({ length: 25 }).map((_, idx) => {
-                const isSolved = idx === 3 || idx === 7 || idx === 12 || idx === 18 || idx === 21;
-                const isHot = idx === 14;
-                return (
-                  <div
-                    key={idx}
-                    className={`h-8 sm:h-9 rounded-lg flex items-center justify-center text-[10px] sm:text-xs font-bold font-mono transition-transform hover:scale-105 cursor-pointer ${
-                      isSolved
-                        ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
-                        : isHot
-                        ? 'bg-red-500 text-white animate-pulse shadow-md shadow-red-500/50'
-                        : 'bg-slate-700/60 hover:bg-slate-700 text-slate-300 border border-slate-600/40'
-                    }`}
-                  >
-                    {isSolved ? '✓' : `Q${idx + 1}`}
-                  </div>
-                );
-              })}
+            <div className="space-y-2 text-xs">
+              <div className="p-2.5 rounded-xl bg-slate-700/50 border border-slate-600/40 flex items-center justify-between">
+                <span className="text-slate-200 truncate font-medium">Câu 1: Giải phương trình bậc hai $ax^2 + bx + c = 0$</span>
+                <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-500/20 text-emerald-300 shrink-0 ml-2">Nhận biết</span>
+              </div>
+              <div className="p-2.5 rounded-xl bg-slate-700/50 border border-slate-600/40 flex items-center justify-between">
+                <span className="text-slate-200 truncate font-medium">Câu 2: Tìm điều kiện để phương trình có hai nghiệm phân biệt</span>
+                <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-blue-500/20 text-blue-300 shrink-0 ml-2">Thông hiểu</span>
+              </div>
             </div>
           </div>
 
           <div className="relative z-10 pt-2 flex items-center justify-between">
             <button
               type="button"
-              onClick={() => router.push('/quizzes')}
+              onClick={() => router.push('/documents')}
               className="inline-flex items-center gap-1.5 text-xs font-bold text-google-pill dark:text-blue-300 hover:text-white transition-colors cursor-pointer"
             >
-              Khám phá phòng Chaos Quiz <ArrowUpRight size={14} />
+              Khám phá Kho tài liệu & Đề thi <ArrowUpRight size={14} />
             </button>
             <span className="text-[11px] text-slate-400">
-              Hỗ trợ 500+ người cùng phòng
+              Xuất Word & PDF chuẩn Quốc gia
             </span>
           </div>
         </div>
@@ -126,7 +115,7 @@ export const FeatureBentoGrid: React.FC = () => {
 
             <div className="space-y-2">
               <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100">
-                Soạn Đề AI & Quét OCR Tự Động
+                Soạn Đề SI & Quét OCR Tự Động
               </h3>
               <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
                 Tải lên tệp PDF đề thi hoặc ảnh chụp bài kiểm tra. Trí tuệ nhân tạo tự động nhận diện câu hỏi, đáp án A/B/C/D và lời giải chi tiết chỉ sau vài giây.
@@ -147,7 +136,7 @@ export const FeatureBentoGrid: React.FC = () => {
               <div className="flex items-center gap-2 p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 text-xs">
                 <BrainCircuit size={16} className="text-purple-500 shrink-0" />
                 <span className="text-slate-700 dark:text-slate-300 font-medium">
-                  AI sinh ma trận đề & độ khó 4 cấp độ
+                  SI sinh ma trận đề & độ khó 4 cấp độ
                 </span>
               </div>
             </div>
@@ -218,10 +207,10 @@ export const FeatureBentoGrid: React.FC = () => {
 
             <div className="space-y-2">
               <h3 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-slate-100">
-                Trợ Lý Gia Sư AI Kiyo Đồng Hành
+                Trợ Lý Gia Sư SI Kiyo Đồng Hành
               </h3>
               <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 leading-relaxed max-w-xl">
-                Không chỉ giải đáp thắc mắc, AI Kiyo còn hướng dẫn phương pháp giải từng bước, gợi mở tư duy logic và tự động tổng hợp tóm tắt kiến thức sau mỗi buổi học.
+                Không chỉ giải đáp thắc mắc, SI Kiyo còn hướng dẫn phương pháp giải từng bước, gợi mở tư duy logic và tự động tổng hợp tóm tắt kiến thức sau mỗi buổi học.
               </p>
             </div>
 
@@ -237,7 +226,7 @@ export const FeatureBentoGrid: React.FC = () => {
               </div>
               <div className="flex items-start gap-2.5 max-w-md ml-auto flex-row-reverse">
                 <div className="w-6 h-6 rounded-full bg-purple-600 text-white flex items-center justify-center text-[10px] font-bold shrink-0">
-                  AI
+                  SI
                 </div>
                 <div className="bg-purple-50 dark:bg-purple-950/70 border border-purple-100 dark:border-purple-900/40 text-purple-900 dark:text-purple-200 text-xs px-3.5 py-2 rounded-2xl rounded-tr-none">
                   Chào em! Ở câu 12, theo định lý Pytago trong tam giác vuông: \( a^2 + b^2 = c^2 \). Thay số vào ta có...
@@ -252,7 +241,7 @@ export const FeatureBentoGrid: React.FC = () => {
               onClick={() => router.push('/ai')}
               className="inline-flex items-center gap-1 text-xs font-bold text-purple-600 dark:text-purple-400 hover:underline cursor-pointer"
             >
-              Trò chuyện cùng AI Kiyo <ArrowUpRight size={14} />
+              Trò chuyện cùng SI Kiyo <ArrowUpRight size={14} />
             </button>
           </div>
         </div>
@@ -306,16 +295,16 @@ export const FeatureBentoGrid: React.FC = () => {
                   <span>Tiết kiệm 80% thời gian</span>
                 </div>
                 <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-                  Soạn đề tự động từ sách giáo khoa, bài tập có sẵn qua OCR và AI. Chấm bài trắc nghiệm và thống kê biểu đồ chỉ bằng 1 click.
+                  Soạn đề tự động từ sách giáo khoa, bài tập có sẵn qua OCR và SI. Chấm bài trắc nghiệm và thống kê biểu đồ chỉ bằng 1 click.
                 </p>
               </div>
               <div className="space-y-2">
                 <div className="flex items-center gap-2 text-google-blue font-bold text-sm">
                   <CheckCircle2 size={18} />
-                  <span>Khuấy động không khí lớp</span>
+                  <span>Ma trận đề chuẩn Quốc gia</span>
                 </div>
                 <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-                  Biến những tiết ôn tập khô khan thành đấu trường thi đua sôi nổi với chế độ Chaos Quiz và Quizizz trực tiếp trên máy chiếu.
+                  Tự động sinh đề kiểm tra phân hóa theo 4 mức độ nhận thức (Nhận biết, Thông hiểu, Vận dụng, Vận dụng cao) chuẩn Bộ GD&ĐT.
                 </p>
               </div>
               <div className="space-y-2">
@@ -333,10 +322,10 @@ export const FeatureBentoGrid: React.FC = () => {
               <div className="space-y-2">
                 <div className="flex items-center gap-2 text-google-green font-bold text-sm">
                   <CheckCircle2 size={18} />
-                  <span>Học tập như chơi game</span>
+                  <span>Ôn luyện trực quan & Hiệu quả</span>
                 </div>
                 <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-                  Leo rank bảng xếp hạng, chuỗi câu trả lời đúng (Streak) và tích lũy điểm thưởng giúp việc ôn thi không còn áp lực.
+                  Theo dõi kết quả làm bài tập, chuỗi câu trả lời đúng (Streak) và tích lũy điểm số giúp việc ôn thi dễ dàng và tiến bộ.
                 </p>
               </div>
               <div className="space-y-2">

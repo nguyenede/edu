@@ -12,14 +12,13 @@ import {
   GraduationCap,
   Users,
   Plus,
-  Play,
   BookOpen,
   FileText,
   Clock,
   Award,
   ChevronRight,
-  Zap,
 } from 'lucide-react';
+import { fetchClasses, createClass, joinClass } from '@/lib/classesApi';
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -39,7 +38,8 @@ export default function DashboardPage() {
   const isTeacher = user?.role === 'TEACHER';
 
   useEffect(() => {
-    if (!token) {
+    const activeToken = token || (typeof window !== 'undefined' ? localStorage.getItem('token') : null);
+    if (!activeToken) {
       router.push('/login');
       return;
     }
@@ -49,36 +49,26 @@ export default function DashboardPage() {
   const fetchDashboardData = async () => {
     setLoading(true);
     try {
-      // 1. Fetch Classes
-      const endpoint = isTeacher
-        ? 'http://localhost:3005/api/classes/teacher'
-        : 'http://localhost:3005/api/classes/student';
-
-      const res = await fetch(endpoint, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (res.ok) {
-        const data = await res.json();
-        if (isTeacher) {
-          setClasses(data);
-        } else {
-          setClasses(data.map((m: any) => m.class));
-        }
-      }
+      const activeToken = token || (typeof window !== 'undefined' ? localStorage.getItem('token') : null);
+      // 1. Fetch Classes (with resilient offline support)
+      const classList = await fetchClasses(activeToken, isTeacher);
+      setClasses(classList);
 
       // 2. Fetch Results / History
-      const histRes = await fetch(
-        isTeacher
-          ? 'http://localhost:3005/api/classes/teacher'
-          : 'http://localhost:3005/api/results/history',
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      if (histRes.ok) {
-        const histData = await histRes.json();
-        if (!isTeacher && histData.submissions) {
-          setRecentAssignments(histData.submissions.slice(0, 5));
+      try {
+        const histRes = await fetch(
+          isTeacher
+            ? '/api/classes/teacher'
+            : '/api/results/history',
+          { headers: activeToken ? { Authorization: `Bearer ${activeToken}` } : {} }
+        );
+        if (histRes.ok) {
+          const histData = await histRes.json();
+          if (!isTeacher && histData.submissions) {
+            setRecentAssignments(histData.submissions.slice(0, 5));
+          }
         }
-      }
+      } catch {}
     } catch (err) {
       console.error('Failed to fetch dashboard data', err);
     } finally {
@@ -92,22 +82,13 @@ export default function DashboardPage() {
     setFormError(null);
 
     try {
-      const res = await fetch('http://localhost:3005/api/classes', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ name: newClassName }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || 'Không thể tạo lớp');
-
+      const created = await createClass(token, newClassName.trim(), user);
       setNewClassName('');
       setIsCreateClassOpen(false);
+      setClasses((prev) => [created, ...prev.filter((c) => c.id !== created.id)]);
       fetchDashboardData();
     } catch (err: any) {
-      setFormError(err.message);
+      setFormError(err.message || 'Không thể tạo lớp học');
     }
   };
 
@@ -117,22 +98,13 @@ export default function DashboardPage() {
     setFormError(null);
 
     try {
-      const res = await fetch('http://localhost:3005/api/classes/join', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ code: joinCode.trim() }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || 'Không thể tham gia lớp');
-
+      const joined = await joinClass(token, joinCode.trim());
       setJoinCode('');
       setIsJoinClassOpen(false);
+      setClasses((prev) => [joined, ...prev.filter((c) => c.id !== joined.id)]);
       fetchDashboardData();
     } catch (err: any) {
-      setFormError(err.message);
+      setFormError(err.message || 'Không thể tham gia lớp học');
     }
   };
 
@@ -145,7 +117,7 @@ export default function DashboardPage() {
       subtitle={
         isTeacherUser
           ? 'Quản lý lớp học, ngân hàng đề thi và theo dõi tiến độ học tập của học sinh'
-          : 'Xem danh sách bài tập được giao, lịch sử làm bài và tham gia phòng game realtime'
+          : 'Xem danh sách bài tập được giao và theo dõi kết quả học tập'
       }
       action={
         <div className="flex w-full sm:w-auto flex-wrap items-center gap-2">
@@ -154,10 +126,10 @@ export default function DashboardPage() {
               <Button
                 variant="secondary"
                 size="sm"
-                onClick={() => router.push('/app/quizzes')}
+                onClick={() => router.push('/app/documents')}
                 className="gap-1.5 flex-1 sm:flex-none"
               >
-                <Play size={15} /> Tạo đề & Host Game
+                <FileText size={15} /> Kho tài liệu & Đề thi
               </Button>
               <Button
                 size="sm"
@@ -168,31 +140,21 @@ export default function DashboardPage() {
               </Button>
             </>
           ) : (
-            <>
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => router.push('/play')}
-                className="gap-1.5 flex-1 sm:flex-none"
-              >
-                <Zap size={15} /> Vào phòng game
-              </Button>
-              <Button
-                size="sm"
-                onClick={() => setIsJoinClassOpen(true)}
-                className="gap-1.5 flex-1 sm:flex-none"
-              >
-                <Plus size={15} /> Nhập mã vào lớp
-              </Button>
-            </>
+            <Button
+              size="sm"
+              onClick={() => setIsJoinClassOpen(true)}
+              className="gap-1.5 flex-1 sm:flex-none"
+            >
+              <Plus size={15} /> Nhập mã vào lớp
+            </Button>
           )}
         </div>
       }
     >
       <div className="space-y-6 sm:space-y-8">
         {/* Quick Metric Counters */}
-        <section className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
-          <div className="p-3 sm:p-4 bg-slate-50/80 dark:bg-slate-900/40 rounded-[6px] space-y-1 min-w-0">
+        <section className="grid grid-cols-2 sm:grid-cols-4 gap-4 py-2">
+          <div className="space-y-1 min-w-0">
             <span className="text-xs font-semibold text-slate-500 block">
               Lớp học
             </span>
@@ -201,7 +163,7 @@ export default function DashboardPage() {
             </p>
           </div>
 
-          <div className="p-3 sm:p-4 bg-slate-50/80 dark:bg-slate-900/40 rounded-[6px] space-y-1 min-w-0">
+          <div className="space-y-1 min-w-0">
             <span className="text-xs font-semibold text-slate-500 block">
               {isTeacherUser ? 'Tổng học sinh' : 'Bài đã nộp'}
             </span>
@@ -212,7 +174,7 @@ export default function DashboardPage() {
             </p>
           </div>
 
-          <div className="p-3 sm:p-4 bg-slate-50/80 dark:bg-slate-900/40 rounded-[6px] space-y-1 min-w-0">
+          <div className="space-y-1 min-w-0">
             <span className="text-xs font-semibold text-slate-500 block">
               {isTeacherUser ? 'Đề thi đã tạo' : 'Phòng thi đã đấu'}
             </span>
@@ -221,7 +183,7 @@ export default function DashboardPage() {
             </p>
           </div>
 
-          <div className="p-3 sm:p-4 bg-slate-50/80 dark:bg-slate-900/40 rounded-[6px] space-y-1 min-w-0">
+          <div className="space-y-1 min-w-0">
             <span className="text-xs font-semibold text-slate-500 block">
               Trạng thái
             </span>
@@ -254,7 +216,7 @@ export default function DashboardPage() {
           {loading ? (
             <p className="text-xs text-slate-400 py-8 text-center">Đang tải lớp học...</p>
           ) : classes.length === 0 ? (
-            <div className="p-5 sm:p-8 bg-slate-50/50 dark:bg-slate-900/20 rounded-[6px] text-center space-y-3">
+            <div className="py-8 text-center space-y-3">
               <p className="text-xs text-slate-500">
                 {isTeacherUser
                   ? 'Bạn chưa tạo lớp học nào. Hãy nhấn nút "Tạo lớp học mới" để bắt đầu.'
@@ -270,20 +232,20 @@ export default function DashboardPage() {
               </Button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="space-y-1">
               {classes.map((cls) => (
                 <div
                   key={cls.id}
-                  onClick={() => router.push(`/classes/${cls.id}`)}
-                  className="p-5 bg-slate-50/80 dark:bg-slate-900/40 rounded-[6px] flex flex-col justify-between cursor-pointer active:bg-slate-100 dark:active:bg-slate-900/80 select-none space-y-4"
+                  onClick={() => router.push(`/app/classes/${cls.id}`)}
+                  className="py-3 px-2 flex justify-between items-center cursor-pointer select-none hover:bg-slate-50/50 dark:hover:bg-[#282a2c]/60 rounded-lg transition-colors group"
                 >
                   <div className="space-y-1">
-                    <h3 className="font-bold text-slate-950 dark:text-slate-100 text-base">
+                    <h3 className="font-bold text-slate-950 dark:text-slate-100 text-sm group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
                       {cls.name}
                     </h3>
                     <p className="text-xs text-slate-500">
                       {isTeacherUser
-                        ? `Mã mời học sinh: `
+                        ? `Mã mời: `
                         : `Giáo viên: ${cls.teacher?.profile?.name || cls.teacher?.email}`}
                       {isTeacherUser && (
                         <span className="font-mono font-bold text-blue-600 dark:text-blue-400">
@@ -293,13 +255,11 @@ export default function DashboardPage() {
                     </p>
                   </div>
 
-                  <div className="flex justify-between items-center text-xs text-slate-500 pt-3 border-t border-slate-200/40 dark:border-slate-800/40">
+                  <div className="flex items-center gap-4 text-xs text-slate-500">
                     <span className="flex items-center gap-1.5 font-medium">
                       <Users size={14} /> {cls._count?.members ?? 0} học sinh
                     </span>
-                    <span className="font-semibold text-blue-600 dark:text-blue-400 flex items-center gap-0.5">
-                      Vào lớp <ChevronRight size={14} />
-                    </span>
+                    <ChevronRight size={16} className="text-slate-400 group-hover:translate-x-0.5 transition-transform" />
                   </div>
                 </div>
               ))}
@@ -309,13 +269,13 @@ export default function DashboardPage() {
 
         {/* Quick Shortcuts for Teacher / Recent for Student */}
         {isTeacherUser ? (
-          <section className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4">
+          <section className="space-y-1 pt-2">
             <div
               onClick={() => router.push('/app/question-bank')}
-              className="p-4 sm:p-5 bg-slate-50/60 dark:bg-slate-900/30 rounded-[6px] cursor-pointer flex items-center justify-between gap-3"
+              className="py-3 px-2 cursor-pointer flex items-center justify-between gap-3 hover:bg-slate-50/50 dark:hover:bg-[#282a2c]/60 rounded-lg transition-colors group"
             >
-              <div className="space-y-1">
-                <h3 className="font-bold text-slate-900 dark:text-slate-100 text-sm flex items-center gap-2">
+              <div className="space-y-0.5">
+                <h3 className="font-bold text-slate-900 dark:text-slate-100 text-sm flex items-center gap-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
                   <BookOpen size={16} className="text-blue-600 dark:text-blue-400" />
                   Ngân hàng câu hỏi
                 </h3>
@@ -323,23 +283,23 @@ export default function DashboardPage() {
                   Tạo câu hỏi trắc nghiệm, quản lý chuyên đề và import từ file
                 </p>
               </div>
-              <ChevronRight size={18} className="text-slate-400 shrink-0" />
+              <ChevronRight size={16} className="text-slate-400 group-hover:translate-x-0.5 transition-transform shrink-0" />
             </div>
 
             <div
-              onClick={() => router.push('/app/quizzes')}
-              className="p-4 sm:p-5 bg-slate-50/60 dark:bg-slate-900/30 rounded-[6px] cursor-pointer flex items-center justify-between gap-3"
+              onClick={() => router.push('/app/documents')}
+              className="py-3 px-2 cursor-pointer flex items-center justify-between gap-3 hover:bg-slate-50/50 dark:hover:bg-[#282a2c]/60 rounded-lg transition-colors group"
             >
-              <div className="space-y-1">
-                <h3 className="font-bold text-slate-900 dark:text-slate-100 text-sm flex items-center gap-2">
-                  <Play size={16} className="text-emerald-600 dark:text-emerald-400" />
-                  Đề trắc nghiệm & Game Realtime
+              <div className="space-y-0.5">
+                <h3 className="font-bold text-slate-900 dark:text-slate-100 text-sm flex items-center gap-2 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+                  <FileText size={16} className="text-emerald-600 dark:text-emerald-400" />
+                  Kho tài liệu & Đề thi SI
                 </h3>
                 <p className="text-xs text-slate-500">
-                  Tạo đề kiểm tra và mở phòng thi đấu Classic / Chaos Quiz
+                  Tạo đề thi tự động với SI chuẩn Bộ GD&ĐT, lưu trữ và xuất bản tài liệu
                 </p>
               </div>
-              <ChevronRight size={18} className="text-slate-400 shrink-0" />
+              <ChevronRight size={16} className="text-slate-400 group-hover:translate-x-0.5 transition-transform shrink-0" />
             </div>
           </section>
         ) : (
@@ -350,32 +310,35 @@ export default function DashboardPage() {
             </h2>
 
             {recentAssignments.length === 0 ? (
-              <p className="text-xs text-slate-400 py-6 text-center bg-slate-50/40 dark:bg-slate-900/20 rounded-[6px]">
+              <p className="text-xs text-slate-400 py-8 text-center">
                 Chưa có lịch sử làm bài tập nào.
               </p>
             ) : (
-              <div className="space-y-2">
+              <div className="space-y-1">
                 {recentAssignments.map((sub: any) => (
                   <div
                     key={sub.id}
-                    onClick={() => router.push(`/assignments/${sub.assignmentId}`)}
-                    className="p-4 bg-slate-50/80 dark:bg-slate-900/40 rounded-[6px] flex justify-between items-center cursor-pointer"
+                    onClick={() => router.push(`/app/assignments/${sub.assignmentId}`)}
+                    className="py-3 px-2 flex justify-between items-center cursor-pointer hover:bg-slate-50/50 dark:hover:bg-[#282a2c]/60 rounded-lg transition-colors group"
                   >
                     <div>
-                      <h4 className="font-bold text-sm text-slate-900 dark:text-slate-100">
+                      <h4 className="font-bold text-sm text-slate-900 dark:text-slate-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
                         {sub.assignment.title}
                       </h4>
                       <p className="text-xs text-slate-500">
                         Lớp: {sub.assignment.class.name}
                       </p>
                     </div>
-                    <div className="text-right">
-                      <span className="text-sm font-bold text-blue-600 dark:text-blue-400">
-                        {sub.score !== null ? `${sub.score} / ${sub.assignment.maxScore}` : 'Chờ chấm'}
-                      </span>
-                      <span className="text-[10px] text-slate-400 block">
-                        {new Date(sub.submittedAt).toLocaleDateString('vi-VN')}
-                      </span>
+                    <div className="text-right flex items-center gap-3">
+                      <div>
+                        <span className="text-sm font-bold text-blue-600 dark:text-blue-400 block">
+                          {sub.score !== null ? `${sub.score} / ${sub.assignment.maxScore}` : 'Chờ chấm'}
+                        </span>
+                        <span className="text-[10px] text-slate-400 block">
+                          {new Date(sub.submittedAt).toLocaleDateString('vi-VN')}
+                        </span>
+                      </div>
+                      <ChevronRight size={16} className="text-slate-400 group-hover:translate-x-0.5 transition-transform" />
                     </div>
                   </div>
                 ))}

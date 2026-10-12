@@ -36,7 +36,7 @@ export default function EditPasswordPage() {
 
     setSaving(true);
     try {
-      const res = await fetch('http://127.0.0.1:3005/api/auth/password', {
+      const res = await fetch('/api/auth/password', {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -85,7 +85,7 @@ export default function EditPasswordPage() {
           </div>
         </div>
 
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-xs">
+        <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-xs">
           <form onSubmit={handleSubmit} className="space-y-4">
             {errorMsg && (
               <div className="p-3 bg-red-50 text-red-700 dark:bg-red-950/30 dark:text-red-400 rounded-xl text-xs font-semibold">

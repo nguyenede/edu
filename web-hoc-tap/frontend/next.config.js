@@ -6,7 +6,21 @@ const nextConfig = {
     return [
       {
         source: '/api/:path*',
-        destination: 'http://127.0.0.1:3005/api/:path*',
+        destination: 'http://127.0.0.1:5000/api/:path*',
+      },
+    ];
+  },
+  async redirects() {
+    return [
+      {
+        source: '/app',
+        destination: '/dashboard',
+        permanent: false,
+      },
+      {
+        source: '/app/:path*',
+        destination: '/:path*',
+        permanent: false,
       },
     ];
   },

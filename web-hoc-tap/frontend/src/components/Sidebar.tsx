@@ -50,69 +50,36 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const [activeTooltipKey, setActiveTooltipKey] = useState<string | null>(null);
   const [clickedKey, setClickedKey] = useState<string | null>(null);
 
-  const hoverTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const cooldownTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const isWarmRef = useRef<boolean>(false);
-
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => setIsMounted(true), 60);
-    return () => {
-      clearTimeout(timer);
-      if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current);
-      if (cooldownTimerRef.current) clearTimeout(cooldownTimerRef.current);
-    };
+    return () => clearTimeout(timer);
   }, []);
 
   const handleMouseEnter = (href: string) => {
-    // Hủy bộ đếm thời gian nguội nếu người dùng vừa di chuyển từ icon khác sang
-    if (cooldownTimerRef.current) {
-      clearTimeout(cooldownTimerRef.current);
-      cooldownTimerRef.current = null;
-    }
-
-    if (hoverTimerRef.current) {
-      clearTimeout(hoverTimerRef.current);
-      hoverTimerRef.current = null;
-    }
-
-    if (isWarmRef.current) {
-      // Đã hiện tiêu đề rồi -> chuyển sang icon khác trong thanh thì hiện ngay lập tức (0ms)
-      setActiveTooltipKey(href);
-    } else {
-      // Lần đầu di chuột vào: chờ đúng 1 giây (1000ms) sau mới cho hiện tiêu đề
-      hoverTimerRef.current = setTimeout(() => {
-        setActiveTooltipKey(href);
-        isWarmRef.current = true;
-      }, 1000);
-    }
+    // Di trỏ chuột vào là hiện lên tiêu đề ngay lập tức (0ms)
+    setActiveTooltipKey(href);
   };
 
   const handleMouseLeave = (href: string) => {
-    if (hoverTimerRef.current) {
-      clearTimeout(hoverTimerRef.current);
-      hoverTimerRef.current = null;
-    }
-
     setActiveTooltipKey((current) => (current === href ? null : current));
     setClickedKey(null);
-
-    // Khi di chuột ra khỏi icon: giữ trạng thái warm trong 400ms để rê sang icon khác thì hiện ngay
-    // Nếu quá 400ms không chạm vào icon nào thì tắt warm (lần sau phải đợi 1s)
-    if (cooldownTimerRef.current) clearTimeout(cooldownTimerRef.current);
-    cooldownTimerRef.current = setTimeout(() => {
-      isWarmRef.current = false;
-    }, 400);
   };
 
   const handleNavClick = (href: string) => {
     setClickedKey(href);
     setActiveTooltipKey(null);
-    if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current);
-    if (cooldownTimerRef.current) clearTimeout(cooldownTimerRef.current);
-    isWarmRef.current = false;
     onNavigate?.();
+
+    const normPath = (pathname || '').replace(/^\/app(?=\/|$)/, '') || '/dashboard';
+    const normHref = href.replace(/^\/app(?=\/|$)/, '') || '/dashboard';
+
+    // If already on the target route, don't trigger loading or navigation
+    if (normPath === normHref) {
+      return;
+    }
+
     startTopLoading();
     // Allow 130ms for the smooth closing transition (fade-out & scale-down) to finish before pushing route
     setTimeout(() => {
@@ -127,7 +94,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       suppressHydrationWarning
       className={`shrink-0 ${
         isMounted ? 'transition-[width,transform] duration-300 ease-in-out' : ''
-      } select-none flex flex-col justify-between fixed top-16 left-0 bottom-0 z-50 overflow-y-auto md:overflow-visible bg-white dark:bg-google-card-dark shadow-xl md:bg-google-bg md:dark:bg-google-bg-dark md:shadow-none md:z-50 py-3 px-2.5 ${
+      } select-none flex flex-col justify-between fixed top-16 left-0 bottom-0 z-50 overflow-y-auto md:overflow-visible bg-white dark:bg-[#1e1f20] shadow-xl md:bg-google-bg md:dark:bg-[#131314] md:shadow-none md:z-50 py-3 px-2.5 ${
         sidebarCollapsed
           ? 'w-[280px] -translate-x-full md:translate-x-0 md:w-[64px]'
           : 'translate-x-0 w-[280px] md:w-[200px]'
@@ -138,9 +105,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <nav className="space-y-1 w-full">
           {navItems.map((item) => {
             const Icon = item.icon;
+            const normPath = pathname?.replace(/^\/app(?=\/|$)/, '') || '/dashboard';
+            const normHref = item.href.replace(/^\/app(?=\/|$)/, '') || '/dashboard';
             const isActive =
-              pathname === item.href ||
-              (item.href !== '/dashboard' && pathname.startsWith(item.href));
+              normPath === normHref ||
+              (normHref !== '/dashboard' && normPath.startsWith(normHref));
 
             const isTooltipVisible =
               sidebarCollapsed &&
@@ -161,8 +130,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     sidebarCollapsed ? 'w-11 justify-center' : 'w-full'
                   } ${
                     isActive
-                      ? 'bg-google-pill text-google-pill-text dark:bg-google-pill-dark dark:text-google-pill-dark-text font-bold'
-                      : 'text-slate-700 dark:text-slate-300 hover:bg-google-hover dark:hover:bg-google-hover-dark'
+                      ? 'bg-google-pill text-google-pill-text dark:bg-[#2d2f31] dark:text-[#f1f3f4] font-bold'
+                      : 'text-slate-700 dark:text-slate-300 hover:bg-google-hover dark:hover:bg-[#282a2c]'
                   }`}
                 >
                   <div className="w-11 h-11 flex items-center justify-center shrink-0">
@@ -185,7 +154,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                       : 'opacity-0 scale-95 -translate-x-1.5'
                   } hidden md:block`}
                 >
-                  <div className="bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 font-medium text-xs px-3 py-1.5 rounded-lg shadow-lg whitespace-nowrap flex items-center border border-slate-700/50 dark:border-slate-300/50">
+                  <div className="bg-slate-900 text-white dark:bg-[#2d2f31] dark:text-[#f1f3f4] font-medium text-xs px-3 py-1.5 rounded-lg shadow-lg whitespace-nowrap flex items-center border border-slate-700/50 dark:border-[#3c4043]">
                     <span>{item.label}</span>
                   </div>
                 </div>

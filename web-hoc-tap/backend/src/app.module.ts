@@ -5,7 +5,6 @@ import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
 import { ClassesModule } from './classes/classes.module';
 import { QuestionsModule } from './questions/questions.module';
-import { QuizzesModule } from './quizzes/quizzes.module';
 import { AssignmentsModule } from './assignments/assignments.module';
 import { RealtimeModule } from './realtime/realtime.module';
 import { NotificationsModule } from './notifications/notifications.module';
@@ -29,7 +28,6 @@ import { DocumentsModule } from './documents/documents.module';
     AuthModule,
     ClassesModule,
     QuestionsModule,
-    QuizzesModule,
     AssignmentsModule,
     RealtimeModule,
     NotificationsModule,

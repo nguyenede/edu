@@ -16,6 +16,9 @@ const config: Config = {
   darkMode: 'class',
   theme: {
     extend: {
+      fontFamily: {
+        sans: ['var(--font-inter)', 'Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+      },
       colors: {
         google: {
           blue: '#1a73e8',
@@ -23,17 +26,17 @@ const config: Config = {
           yellow: '#fbbc04',
           green: '#34a853',
           bg: '#f8fafd',
-          'bg-dark': '#090a0f',
+          'bg-dark': '#131314',
           card: '#ffffff',
-          'card-dark': '#111827',
+          'card-dark': '#1e1f20',
           hover: '#f0f4f9',
-          'hover-dark': '#1f2937',
+          'hover-dark': '#2d2f31',
           pill: '#c2e7ff',
           'pill-text': '#001d35',
-          'pill-dark': '#004a77',
-          'pill-dark-text': '#c2e7ff',
+          'pill-dark': '#2d2f31',
+          'pill-dark-text': '#e3e3e3',
           input: '#e9eef6',
-          'input-dark': '#1f2937',
+          'input-dark': '#282a2c',
         },
       },
       borderRadius: {

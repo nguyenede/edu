@@ -285,7 +285,7 @@ const ReadOnlyInsights: React.FC<ClassroomInsightsProps> = ({ grades }) => {
   let adviseBadge = '';
 
   if (classAvg === 0) {
-    teachingAdvise = 'Vui lòng hoàn tất nhập điểm học sinh để kích hoạt hệ thống gợi ý phương án sư phạm AI.';
+    teachingAdvise = 'Vui lòng hoàn tất nhập điểm học sinh để kích hoạt hệ thống gợi ý phương án sư phạm SI.';
     adviseBadge = 'Chờ dữ liệu';
   } else if (classAvg < 6.0) {
     teachingAdvise = 'Kết quả chung của lớp ở môn học này đang ở mức Trung bình thấp. Đề xuất: 1. Giáo viên chủ động giảm mật độ nội dung lý thuyết, tập trung chữa kỹ bài tập thực hành. 2. Tổ chức nhóm học tập kèm cặp đôi bạn cùng tiến (chia học sinh giỏi kèm học sinh yếu). 3. Tăng cường kiểm tra miệng đầu giờ đối với các phần kiến thức cốt lõi.';
@@ -305,7 +305,7 @@ const ReadOnlyInsights: React.FC<ClassroomInsightsProps> = ({ grades }) => {
           <Sparkles className="w-[18px] h-[18px]" />
         </div>
         <div>
-          <h3 className="font-semibold text-sm text-[#1D1D1F]">AI Classroom Insights & Teaching Advisor</h3>
+          <h3 className="font-semibold text-sm text-[#1D1D1F]">SI Classroom Insights & Teaching Advisor</h3>
           <p className="text-[11px] text-[#6E6E73] mt-0.5">Phân tích chuyên sâu phổ điểm lớp và giải pháp cải thiện.</p>
         </div>
       </div>
@@ -332,7 +332,7 @@ const ReadOnlyInsights: React.FC<ClassroomInsightsProps> = ({ grades }) => {
         <div className="p-5 bg-[#0071E3]/5 rounded-2xl border border-[#0071E3]/10 flex flex-col justify-between">
           <div>
             <h4 className="text-[10px] font-bold text-[#0071E3] uppercase tracking-wider flex items-center gap-1">
-              <Sparkles className="w-3 h-3" /> Gợi ý phương án giảng dạy AI
+              <Sparkles className="w-3 h-3" /> Gợi ý phương án giảng dạy SI
             </h4>
             <p className="text-xs text-[#333336] leading-relaxed mt-3 whitespace-pre-wrap font-medium">{teachingAdvise}</p>
           </div>

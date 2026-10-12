@@ -477,7 +477,7 @@ const StudentDetailPage: React.FC = () => {
             { id: 'docs', label: 'Tài liệu & Hồ sơ', icon: Upload },
             { id: 'health', label: 'Y tế & Sức khỏe', icon: Heart },
             { id: 'behavior', label: 'Khen thưởng & Kỷ luật', icon: Award },
-            { id: 'ai_analytics', label: 'AI Phân tích học tập', icon: Sparkles }
+            { id: 'ai_analytics', label: 'SI Phân tích học tập', icon: Sparkles }
           ].map((tab) => (
             <button
               key={tab.id}
@@ -779,16 +779,16 @@ const StudentDetailPage: React.FC = () => {
             <div>
               <div className="flex items-center justify-between mb-8">
                 <div>
-                  <h3 className="text-lg font-semibold text-[#1D1D1F]">AI Học tập Advisor</h3>
-                  <p className="text-sm text-[#6E6E73] mt-1">Dự đoán kết quả học tập, phân tích rủi ro và đề xuất giải pháp sư phạm tự động bằng AI.</p>
+                  <h3 className="text-lg font-semibold text-[#1D1D1F]">SI Học tập Advisor</h3>
+                  <p className="text-sm text-[#6E6E73] mt-1">Dự đoán kết quả học tập, phân tích rủi ro và đề xuất giải pháp sư phạm tự động bằng SI.</p>
                 </div>
                 <div className="flex items-center gap-1.5 px-3 py-1 bg-[#0071E3]/5 text-[#0071E3] rounded-full text-xs font-semibold">
-                  <Sparkles className="w-3.5 h-3.5" /> AI Engine Active
+                  <Sparkles className="w-3.5 h-3.5" /> SI Engine Active
                 </div>
               </div>
 
               {isLoadingAi ? (
-                <div className="py-12 text-center text-sm text-[#6E6E73]">AI đang phân tích dữ liệu học tập...</div>
+                <div className="py-12 text-center text-sm text-[#6E6E73]">SI đang phân tích dữ liệu học tập...</div>
               ) : aiPrediction ? (
                 <div className="space-y-8">
                   {/* KPI Cards Grid */}
@@ -815,7 +815,7 @@ const StudentDetailPage: React.FC = () => {
                           aiPrediction.risk_level === 'High' ? 'text-[#D70015]' : aiPrediction.risk_level === 'Medium' ? 'text-orange-500' : 'text-[#34C759]'
                         }`}>{aiPrediction.risk_level_vi}</span>
                       </div>
-                      <p className="text-xs text-[#6E6E73] mt-3">Độ tin cậy của AI: {aiPrediction.confidence_score}%</p>
+                      <p className="text-xs text-[#6E6E73] mt-3">Độ tin cậy của SI: {aiPrediction.confidence_score}%</p>
                     </div>
                   </div>
 
@@ -826,7 +826,7 @@ const StudentDetailPage: React.FC = () => {
                         <Sparkles className="w-5 h-5" />
                       </div>
                       <div>
-                        <h4 className="font-semibold text-lg text-[#1D1D1F]">Đánh giá học thuật từ AI Advisor</h4>
+                        <h4 className="font-semibold text-lg text-[#1D1D1F]">Đánh giá học thuật từ SI Advisor</h4>
                         <p className="text-[11px] text-[#6E6E73]">Phân tích dữ liệu lúc: {new Date(aiPrediction.analyzed_at).toLocaleString('vi-VN')}</p>
                       </div>
                     </div>

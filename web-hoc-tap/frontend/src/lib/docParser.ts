@@ -1,5 +1,6 @@
 import mammoth from 'mammoth';
 import JSZip from 'jszip';
+import { cleanLeakedOleGarbage } from './mtefParser';
 
 export interface ParsedQuestionOption {
   content: string;
@@ -7,11 +8,17 @@ export interface ParsedQuestionOption {
   hasFormatting?: boolean;
 }
 
+export type QuestionType = 'multiple_choice' | 'essay' | 'fill_blank' | 'true_false';
+
 export interface ParsedQuestion {
   id: string;
+  rawLabel?: string;
   content: string;
   options: ParsedQuestionOption[];
   points: number;
+  explanation?: string;
+  type?: QuestionType;
+  answer?: string;
 }
 
 export interface ParsedQuiz {
@@ -122,11 +129,18 @@ function extractOptionsFromLine(lineHtml: string): ExtractedOptionItem[] {
     const cleanSegment = rawOptionSegment.replace(/(?:<(?:span|mark|strong|b|em|i|u)[^>]*>)+\s*$/i, '');
     const fmt = getOptionFormatting(cleanSegment);
 
+    // TUYỆT ĐỐI 100% không tự ý điền dữ liệu giả như `Phương án ${curr.letter}`
     results.push({
       letter: curr.letter,
-      content: cleanContent || `Phương án ${curr.letter}`,
+      content: cleanContent,
       ...fmt,
     });
+  }
+
+  // Nếu bất kỳ phương án nào bị rỗng (ví dụ công thức MathType/ảnh không đọc được chữ),
+  // thuật toán từ chối coi đây là câu trắc nghiệm hợp lệ
+  if (results.some((o) => !o.content || o.content.trim().length === 0)) {
+    return [];
   }
 
   return results;
@@ -205,22 +219,23 @@ export function parseExamContent(inputContent: string, titleHint: string = 'Đ�
     let qMatch = cleanLine.match(questionRegex) || cleanLine.match(numberedQuestionRegex);
 
     if (qMatch) {
-      if (currentQuestion && currentQuestion.options.length > 0) {
+      if (currentQuestion) {
         questions.push({
           id: currentQuestion.id,
           content: currentQuestion.content,
           points: currentQuestion.points,
           options: processQuestionOptions(currentQuestion.options),
+          type: currentQuestion.options.length >= 2 ? 'multiple_choice' : 'essay',
         });
       }
 
       qIndex++;
       const qNum = parseInt(qMatch[1], 10) || qIndex;
-      const qContent = qMatch[2] ? qMatch[2].trim() : `Câu hỏi ${qNum}`;
+      const qContent = qMatch[2] ? qMatch[2].trim() : '';
 
       currentQuestion = {
         id: `q_${Date.now()}_${qIndex}`,
-        content: qContent.length > 0 ? qContent : `Câu hỏi ${qNum}`,
+        content: qContent,
         options: [],
         points: 1.0,
       };
@@ -253,12 +268,16 @@ export function parseExamContent(inputContent: string, titleHint: string = 'Đ�
   }
 
   // Push last question if any
-  if (currentQuestion && currentQuestion.options.length > 0) {
+  if (currentQuestion) {
     questions.push({
       id: currentQuestion.id,
-      content: currentQuestion.content,
+      content: cleanLeakedOleGarbage(currentQuestion.content),
       points: currentQuestion.points,
-      options: processQuestionOptions(currentQuestion.options),
+      options: processQuestionOptions(currentQuestion.options).map((opt) => ({
+        ...opt,
+        content: cleanLeakedOleGarbage(opt.content),
+      })),
+      type: currentQuestion.options.length >= 2 ? 'multiple_choice' : 'essay',
     });
   }
 
@@ -286,8 +305,32 @@ export function parseExamContent(inputContent: string, titleHint: string = 'Đ�
  * Parses file object (.docx or .txt) using native JSZip Word document.xml reader
  * for 100% accurate color and highlight extraction!
  */
+import { parseDocxFileStructure } from './examStructureParser';
+
 export async function parseDocxFile(file: File): Promise<ParsedQuiz> {
   const fileName = file.name;
+  try {
+    const res = await parseDocxFileStructure(file);
+    if (res && res.questions.length > 0) {
+      return {
+        title: res.title || fileName.replace(/\.[^/.]+$/, ''),
+        description: `Đề thi bóc tách từ file với ${res.questions.length} câu hỏi`,
+        questions: res.questions.map((q, idx) => ({
+          id: q.id || `q_${idx + 1}`,
+          rawLabel: q.rawLabel,
+          content: q.content,
+          options: q.options || [],
+          points: q.points || 1.0,
+          explanation: q.explanation,
+          type: q.type,
+          answer: q.answer,
+        })),
+      };
+    }
+  } catch (e) {
+    console.warn('parseDocxFileStructure fallback:', e);
+  }
+
   if (fileName.endsWith('.docx')) {
     try {
       const arrayBuffer = await file.arrayBuffer();

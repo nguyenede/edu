@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { ToolExecutionResult } from '@/lib/ai/aiToolRegistry';
 import { safeLocalStorageSet } from '@/lib/safeStorage';
+import { idbSaveDocument } from '@/lib/indexedDbStorage';
 
 export function ActionWidgetRenderer({ action }: { action: ToolExecutionResult }) {
   const router = useRouter();
@@ -99,7 +100,7 @@ export function ActionWidgetRenderer({ action }: { action: ToolExecutionResult }
   if (action.actionType === 'exam' && action.data) {
     const { examId, title, subject, grade, durationMinutes, questionsCount, examUrl } = action.data;
 
-    const handleOpenExam = () => {
+    const handleOpenExam = async () => {
       if (typeof window !== 'undefined' && action.data?.questions && action.data.questions.length > 0) {
         try {
           const totalQ = action.data.questions.length;
@@ -126,14 +127,15 @@ export function ActionWidgetRenderer({ action }: { action: ToolExecutionResult }
             },
           };
 
+          await idbSaveDocument(newDoc);
           const existingDocs = JSON.parse(localStorage.getItem('app_documents_files') || '[]');
-          const filtered = Array.isArray(existingDocs) ? existingDocs.filter((d: any) => d && d.id !== examId).slice(0, 20) : [];
+          const filtered = Array.isArray(existingDocs) ? existingDocs.filter((d: any) => d && d.id !== examId) : [];
           safeLocalStorageSet('app_documents_files', JSON.stringify([newDoc, ...filtered]));
         } catch (e) {
-          console.error('Error ensuring exam in localStorage:', e);
+          console.error('Error ensuring exam in localStorage / IndexedDB:', e);
         }
       }
-      router.push(examUrl || `/app/documents/${examId}/view`);
+      router.push(examUrl || `/documents/${examId}`);
     };
 
     return (

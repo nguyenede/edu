@@ -1,10 +1,10 @@
 'use client';
 
-import React, { useState, Suspense } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { AppShell } from '@/components/AppShell';
+import { BreadcrumbChevron } from '@/components/BreadcrumbChevron';
 import { Button } from '@/components/Button';
-import { Input } from '@/components/Input';
 import { Sparkles, Check, Wand2, ChevronRight, AlertCircle } from 'lucide-react';
 import { AiToolRegistry } from '@/lib/ai/aiToolRegistry';
 import { useAuthStore } from '@/store/useAuthStore';
@@ -13,23 +13,46 @@ import { syncExamActionToDocument } from '@/lib/examDocumentSync';
 function AiQuizCreateContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const folderId = searchParams.get('folderId');
-  const folderName = searchParams.get('folderName');
-  const targetQuery = folderId && folderName ? `?folderId=${folderId}&folderName=${encodeURIComponent(folderName)}` : '';
+  const rawFolderId = searchParams.get('folderId');
+  const rawFolderName = searchParams.get('folderName');
+
+  const [folderId, setFolderId] = useState<string | null>(null);
+  const [folderName, setFolderName] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const storedId = sessionStorage.getItem('app_active_folder_id');
+      const storedName = sessionStorage.getItem('app_active_folder_name');
+      const effId = rawFolderId || storedId || null;
+      const effName = rawFolderName || storedName || null;
+      setFolderId(effId);
+      setFolderName(effName);
+      if (effId) sessionStorage.setItem('app_active_folder_id', effId);
+      if (effName) sessionStorage.setItem('app_active_folder_name', effName);
+
+      if (window.location.search) {
+        window.history.replaceState(null, '', '/app/documents/create/ai');
+      }
+    }
+  }, [rawFolderId, rawFolderName]);
+
+  const targetQuery = '';
   const token = useAuthStore((state) => state.token);
 
   const [aiTopic, setAiTopic] = useState('');
-  const [docGrade, setDocGrade] = useState('12');
-  const [docSubject, setDocSubject] = useState('Toán');
-  const [numQuestions, setNumQuestions] = useState('10');
-  const [difficulty, setDifficulty] = useState('Thông hiểu');
+  const [docGrade, setDocGrade] = useState('');
+  const [docSubject, setDocSubject] = useState('');
+  const [numQuestions, setNumQuestions] = useState('');
+  const [difficulty, setDifficulty] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   const handleGenerate = async () => {
     if (!aiTopic.trim()) {
-      alert('Vui lòng nhập chủ đề hoặc từ khóa bài học!');
+      setErrorMessage('Vui lòng nhập mô tả bài học hoặc chủ đề!');
+      setToastMessage('Vui lòng nhập mô tả bài học hoặc chủ đề!');
+      setTimeout(() => setToastMessage(null), 3000);
       return;
     }
 
@@ -42,11 +65,12 @@ function AiQuizCreateContent() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           mode: 'topic',
-          subject: docSubject,
-          grade: docGrade,
+          subject: docSubject || '',
+          grade: docGrade || '',
           topic: aiTopic.trim(),
-          numQuestions: Number(numQuestions),
-          difficulty,
+          numQuestions: numQuestions ? Number(numQuestions) : 10,
+          difficulty: difficulty || '',
+          model: 'gemini-3.5-flash-lite',
         }),
       });
 
@@ -61,9 +85,9 @@ function AiQuizCreateContent() {
       // Save the real AI generated exam into Document storage
       let result = AiToolRegistry.createExam({
         title: generatedExam.title,
-        subject: generatedExam.subject,
-        grade: generatedExam.grade,
-        durationMinutes: generatedExam.durationMinutes,
+        subject: generatedExam.subject || docSubject || 'Kiến thức tổng hợp',
+        grade: generatedExam.grade || docGrade || 'Tự do',
+        durationMinutes: generatedExam.durationMinutes || 45,
         questions: generatedExam.questions,
         folderId: folderId || undefined,
       });
@@ -89,36 +113,56 @@ function AiQuizCreateContent() {
   return (
     <AppShell
       title={
-        <div className="flex items-center gap-1 text-2xl font-normal tracking-tight text-slate-900 dark:text-slate-100 flex-wrap -ml-2">
+        <div className="flex items-center gap-1 text-2xl font-[450] tracking-tight text-slate-900 dark:text-slate-100 flex-wrap -ml-2">
           <button
             type="button"
             onClick={() => router.push('/app/documents')}
-            className="transition-colors cursor-pointer px-2 py-0.5 rounded-xl hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-normal"
+            className="transition-colors cursor-pointer px-2 py-0.5 rounded-xl hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-900 dark:text-white font-[450]"
           >
             Tài liệu của tôi
           </button>
-          {folderName && (
+          {folderName ? (
             <>
-              <ChevronRight size={20} className="text-slate-400 dark:text-slate-500 shrink-0 stroke-[1.75]" />
+              <BreadcrumbChevron
+                folderId={null}
+                onNavigateFolder={(id) => router.push(`/app/documents?folderId=${id}`)}
+              />
               <button
                 type="button"
                 onClick={() => router.push(`/app/documents?folderId=${folderId || ''}`)}
-                className="transition-colors cursor-pointer px-2 py-0.5 rounded-xl hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-normal"
+                className="transition-colors cursor-pointer px-2 py-0.5 rounded-xl hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-900 dark:text-white font-[450]"
               >
                 {folderName}
               </button>
+              <BreadcrumbChevron
+                folderId={folderId || null}
+                onNavigateFolder={(id) => router.push(`/app/documents?folderId=${id}`)}
+              />
             </>
+          ) : (
+            <BreadcrumbChevron
+              folderId={null}
+              onNavigateFolder={(id) => router.push(`/app/documents?folderId=${id}`)}
+            />
           )}
-          <ChevronRight size={20} className="text-slate-400 dark:text-slate-500 shrink-0 stroke-[1.75]" />
           <button
             type="button"
             onClick={() => router.push('/app/documents/create' + targetQuery)}
-            className="transition-colors cursor-pointer px-2 py-0.5 rounded-xl hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-normal"
+            className="transition-colors cursor-pointer px-2 py-0.5 rounded-xl hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-900 dark:text-white font-[450]"
           >
             Tạo đề thi
           </button>
-          <ChevronRight size={20} className="text-slate-400 dark:text-slate-500 shrink-0 stroke-[1.75]" />
-          <span className="px-2 py-0.5 rounded-xl text-slate-900 dark:text-white font-normal">
+          <BreadcrumbChevron
+            menuTitle="Phương thức tạo đề"
+            items={[
+              { label: 'Tải lên Word/PDF', href: `/app/documents/create${targetQuery}` },
+              { label: 'Tạo đề bằng AI', href: `/app/documents/create/ai${targetQuery}` },
+              { label: 'Nhận diện ảnh (OCR)', href: `/app/documents/create/ocr${targetQuery}` },
+              { label: 'Ngân hàng câu hỏi', href: `/app/documents/create/bank${targetQuery}` },
+              { label: 'Nhập thủ công', href: `/app/documents/create/manual${targetQuery}` },
+            ]}
+          />
+          <span className="px-2 py-0.5 rounded-xl text-slate-900 dark:text-white font-[450]">
             Tạo đề bằng AI
           </span>
         </div>
@@ -154,13 +198,20 @@ function AiQuizCreateContent() {
           )}
 
           <div className="space-y-4">
-            <Input
-              label="Chủ đề bài học / Từ khóa chìa khóa"
-              placeholder="Ví dụ: Đạo hàm và Khảo sát hàm số, Thì Quá khứ đơn, Định luật Newton, Cân bằng hóa học..."
-              value={aiTopic}
-              onChange={(e) => setAiTopic(e.target.value)}
-              required
-            />
+            <div className="w-full flex flex-col gap-1.5">
+              <label className="text-xs font-semibold text-slate-700 dark:text-slate-200">
+                Mô tả
+              </label>
+              <textarea
+                rows={4}
+                placeholder="Mô tả"
+                value={aiTopic}
+                onChange={(e) => setAiTopic(e.target.value)}
+                style={{ resize: 'none' }}
+                className="w-full px-4 py-3 bg-google-input dark:bg-google-input-dark border border-slate-200/60 dark:border-transparent text-slate-900 dark:text-slate-100 rounded-xl text-sm outline-none focus:outline-none placeholder-slate-400 dark:placeholder-slate-500 transition-colors resize-none leading-relaxed"
+                required
+              />
+            </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
               <div className="space-y-1">
@@ -172,6 +223,7 @@ function AiQuizCreateContent() {
                   onChange={(e) => setDocSubject(e.target.value)}
                   className="w-full text-xs p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl font-medium focus:ring-1 focus:ring-amber-500"
                 >
+                  <option value="">Không chọn</option>
                   <option value="Toán">Toán</option>
                   <option value="Tiếng Anh">Tiếng Anh</option>
                   <option value="Ngữ văn">Ngữ văn</option>
@@ -194,6 +246,7 @@ function AiQuizCreateContent() {
                   onChange={(e) => setDocGrade(e.target.value)}
                   className="w-full text-xs p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl font-medium focus:ring-1 focus:ring-amber-500"
                 >
+                  <option value="">Không chọn</option>
                   <option value="12">Lớp 12</option>
                   <option value="11">Lớp 11</option>
                   <option value="10">Lớp 10</option>
@@ -218,6 +271,7 @@ function AiQuizCreateContent() {
                   onChange={(e) => setNumQuestions(e.target.value)}
                   className="w-full text-xs p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl font-medium focus:ring-1 focus:ring-amber-500"
                 >
+                  <option value="">Không chọn</option>
                   <option value="5">5 câu hỏi</option>
                   <option value="10">10 câu hỏi</option>
                   <option value="20">20 câu hỏi</option>
@@ -234,6 +288,7 @@ function AiQuizCreateContent() {
                   onChange={(e) => setDifficulty(e.target.value)}
                   className="w-full text-xs p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl font-medium focus:ring-1 focus:ring-amber-500"
                 >
+                  <option value="">Không chọn</option>
                   <option value="Nhận biết">Nhận biết</option>
                   <option value="Thông hiểu">Thông hiểu</option>
                   <option value="Vận dụng">Vận dụng</option>
@@ -250,7 +305,9 @@ function AiQuizCreateContent() {
                 AI đang suy luận nội dung và khởi tạo đề thi trắc nghiệm...
               </p>
               <p className="text-[11px] text-slate-400">
-                Đang biên soạn các câu hỏi theo chuẩn chương trình GDPT môn {docSubject} Lớp {docGrade}
+                {docSubject || docGrade
+                  ? `Đang biên soạn các câu hỏi theo chuẩn chương trình GDPT${docSubject ? ` môn ${docSubject}` : ''}${docGrade ? ` Lớp ${docGrade}` : ''}`
+                  : 'Đang biên soạn các câu hỏi trắc nghiệm theo nội dung mô tả'}
               </p>
             </div>
           )}

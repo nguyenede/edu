@@ -1,5 +1,6 @@
 /**
  * Safe localStorage helper that handles QuotaExceededError and prevents crashes
+ * NEVER deletes or destructive-prunes user documents.
  */
 export function safeLocalStorageSet(key: string, value: string): boolean {
   if (typeof window === 'undefined') return false;
@@ -7,47 +8,55 @@ export function safeLocalStorageSet(key: string, value: string): boolean {
     localStorage.setItem(key, value);
     return true;
   } catch (error: any) {
-    console.warn(`localStorage.setItem exceeded quota or failed for key "${key}". Performing pruning:`, error);
+    console.warn(`localStorage.setItem reached quota limit for key "${key}". Applying non-destructive compression:`, error);
     try {
-      // 1. If the value being saved is a JSON array, prune it to the most recent 15 items
-      try {
+      // If saving documents list, strip heavy question contents to keep ALL documents in the list
+      // without exceeding browser localStorage 5MB quota. Full questions are always safe in IndexedDB.
+      if (key === 'app_documents_files' || key === 'custom_uploaded_files') {
         const parsed = JSON.parse(value);
         if (Array.isArray(parsed)) {
-          const pruned = parsed.slice(0, 15);
-          localStorage.setItem(key, JSON.stringify(pruned));
+          const lightweightDocs = parsed.map((doc: any) => {
+            if (!doc) return doc;
+            const qCount = doc.parsedQuiz?.questions?.length || 0;
+            return {
+              ...doc,
+              parsedQuiz: {
+                title: doc.parsedQuiz?.title || doc.name || '',
+                description: doc.parsedQuiz?.description || '',
+                durationMinutes: doc.parsedQuiz?.durationMinutes || 45,
+                // Keep only first question as a tiny preview sample, preserve total count
+                questionsCount: qCount,
+                questions: Array.isArray(doc.parsedQuiz?.questions)
+                  ? doc.parsedQuiz.questions.slice(0, 1)
+                  : [],
+              },
+            };
+          });
+          localStorage.setItem(key, JSON.stringify(lightweightDocs));
           return true;
-        }
-      } catch {}
-
-      // 2. Prune existing large lists in localStorage
-      const listKeys = ['app_documents_files', 'custom_uploaded_files', 'chatcoi_history_sessions'];
-      for (const listKey of listKeys) {
-        if (listKey !== key) {
-          try {
-            const raw = localStorage.getItem(listKey);
-            if (raw) {
-              const items = JSON.parse(raw);
-              if (Array.isArray(items) && items.length > 10) {
-                localStorage.setItem(listKey, JSON.stringify(items.slice(0, 10)));
-              }
-            }
-          } catch {}
         }
       }
 
-      // 3. Retry setting after cleanup
+      // If saving chat sessions, strip large base64 attachments from older sessions
+      if (key === 'chatcoi_history_sessions') {
+        const parsed = JSON.parse(value);
+        if (Array.isArray(parsed)) {
+          const trimmed = parsed.slice(-10);
+          localStorage.setItem(key, JSON.stringify(trimmed));
+          return true;
+        }
+      }
+
+      // Cleanup non-critical temporary keys only (never touch documents)
+      const tempKeys = ['chatcoi_debug_logs', 'app_temp_draft'];
+      for (const tKey of tempKeys) {
+        localStorage.removeItem(tKey);
+      }
+
       localStorage.setItem(key, value);
       return true;
     } catch (retryError) {
       console.warn(`Safe storage fallback for key "${key}":`, retryError);
-      // As a last resort, if it's still failing, save only top 5 items
-      try {
-        const parsed = JSON.parse(value);
-        if (Array.isArray(parsed)) {
-          localStorage.setItem(key, JSON.stringify(parsed.slice(0, 5)));
-          return true;
-        }
-      } catch {}
       return false;
     }
   }

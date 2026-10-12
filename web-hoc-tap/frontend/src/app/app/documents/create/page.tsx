@@ -1,12 +1,19 @@
 'use client';
 
-import React, { useState, Suspense } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { AppShell } from '@/components/AppShell';
+import { BreadcrumbChevron } from '@/components/BreadcrumbChevron';
 import { Button } from '@/components/Button';
 import { Input } from '@/components/Input';
 import { Modal } from '@/components/Modal';
 import { parseDocxFile, ParsedQuiz } from '@/lib/docParser';
+import { parseExamFileStructure, validateDeterministicResult } from '@/lib/examStructureParser';
+import { downloadSampleTemplate } from '@/lib/templateGenerator';
+import { extractFileForAi } from '@/lib/fileExtractor';
+import { AiToolRegistry } from '@/lib/ai/aiToolRegistry';
+import { syncExamActionToDocument } from '@/lib/examDocumentSync';
+import { useAuthStore } from '@/store/useAuthStore';
 import {
   ArrowLeft,
   Upload,
@@ -22,7 +29,26 @@ import {
   ChevronRight,
   PenTool,
   Camera,
+  Play,
+  Save,
+  Edit3,
 } from 'lucide-react';
+
+interface ParsedExamQuestion {
+  content: string;
+  options: { content: string; isCorrect: boolean }[];
+  explanation?: string;
+  points?: number;
+}
+
+interface ParsedExamData {
+  title: string;
+  subject: string;
+  grade: string;
+  durationMinutes: number;
+  questions: ParsedExamQuestion[];
+  examUrl: string;
+}
 
 interface ManualQuestion {
   id: string;
@@ -32,35 +58,306 @@ interface ManualQuestion {
   explanation?: string;
 }
 
+function AutoGrowingTextarea({
+  value,
+  onChange,
+  placeholder,
+  className = '',
+}: {
+  value: string;
+  onChange: (val: string) => void;
+  placeholder?: string;
+  className?: string;
+}) {
+  const textareaRef = React.useRef<HTMLTextAreaElement>(null);
+
+  const resize = React.useCallback(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = `${Math.max(46, textareaRef.current.scrollHeight)}px`;
+    }
+  }, []);
+
+  React.useEffect(() => {
+    resize();
+  }, [value, resize]);
+
+  return (
+    <textarea
+      ref={textareaRef}
+      value={value}
+      onChange={(e) => {
+        onChange(e.target.value);
+        resize();
+      }}
+      placeholder={placeholder}
+      className={`w-full resize-none overflow-hidden ${className}`}
+      style={{ overflow: 'hidden' }}
+    />
+  );
+}
+
 function DocumentCreateContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const folderId = searchParams.get('folderId');
-  const folderName = searchParams.get('folderName');
-  const targetQuery = folderId && folderName ? `?folderId=${folderId}&folderName=${encodeURIComponent(folderName)}` : '';
+  const rawFolderId = searchParams.get('folderId');
+  const rawFolderName = searchParams.get('folderName');
+
+  const [folderId, setFolderId] = useState<string | null>(null);
+  const [folderName, setFolderName] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const storedId = sessionStorage.getItem('app_active_folder_id');
+      const storedName = sessionStorage.getItem('app_active_folder_name');
+      const effId = rawFolderId || storedId || null;
+      const effName = rawFolderName || storedName || null;
+      setFolderId(effId);
+      setFolderName(effName);
+      if (effId) sessionStorage.setItem('app_active_folder_id', effId);
+      if (effName) sessionStorage.setItem('app_active_folder_name', effName);
+
+      if (window.location.search) {
+        window.history.replaceState(null, '', '/app/documents/create');
+      }
+    }
+  }, [rawFolderId, rawFolderName]);
+
+  const targetQuery = '';
 
   // Shared Document Metadata
   const [docTitle, setDocTitle] = useState('');
-  const [docSubject, setDocSubject] = useState('Môn Toán');
-  const [docGrade, setDocGrade] = useState('Lớp 12');
+  const [docSubject, setDocSubject] = useState('');
+  const [docGrade, setDocGrade] = useState('');
 
   // Left Side: File Upload State
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isParsing, setIsParsing] = useState(false);
-  const [parsedPreview, setParsedPreview] = useState<ParsedQuiz | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [createdExamResult, setCreatedExamResult] = useState<{
+    title: string;
+    questionCount: number;
+    examUrl: string;
+    subject?: string;
+    grade?: string;
+    method?: 'algorithm' | 'si';
+    parserUsed?: string;
+  } | null>(null);
+  const [parsedExamData, setParsedExamData] = useState<ParsedExamData | null>(null);
+  const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
+  const [isSavingChanges, setIsSavingChanges] = useState(false);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const token = useAuthStore((state) => state.token);
 
-  // Right Side Action Modals / Drawers
-  const [isManualModalOpen, setIsManualModalOpen] = useState(false);
-  const [isAiModalOpen, setIsAiModalOpen] = useState(false);
-  const [isBankModalOpen, setIsBankModalOpen] = useState(false);
-  const [isOcrModalOpen, setIsOcrModalOpen] = useState(false);
+  // Trình nhận diện cấu trúc đề thi đa định dạng (.docx, .xlsx, .tex, .azt, .txt, .pdf, Ảnh)
+  // Ưu tiên 1: Chạy thuật toán nhận diện cấu trúc có sẵn trong file (100% dữ liệu thật, không qua AI)
+  // Ưu tiên 2: Chỉ khi thuật toán KHÔNG nhận diện được cấu trúc mới chuyển qua SI để bóc tách
+  const handleProcessFile = async (file: File) => {
+    setSelectedFile(file);
+    const cleanName = file.name.replace(/\.[^/.]+$/, '');
+    setIsParsing(true);
+    setCreatedExamResult(null);
 
-  // Manual Builder Questions State
-  const [manualQuestions, setManualQuestions] = useState<ManualQuestion[]>([
-    {
-      id: 'q_1',
+    // Watchdog timer: Đảm bảo giao diện không bao giờ bị treo loading vô hạn
+    const watchdogTimer = setTimeout(() => {
+      setIsParsing(false);
+      setToastMessage('Hệ thống mất nhiều thời gian để xử lý file. Vui lòng kiểm tra lại file của bạn.');
+    }, 25000);
+
+    try {
+      // 1. CHẠY THUẬT TOÁN NHẬN DIỆN CẤU TRÚC FILE TRƯỚC (100% dữ liệu thật từ file)
+      const deterministicResult = await parseExamFileStructure(file);
+      const isAlgoValid = validateDeterministicResult(deterministicResult);
+
+      if (isAlgoValid && deterministicResult && deterministicResult.questions.length > 0) {
+        // Nhận diện thành công 100% bằng thuật toán từ file (không dùng AI, 100% dữ liệu thật từ file)
+        const detectedTitle = deterministicResult.title || cleanName;
+        const detectedSubject = deterministicResult.subject || 'Kiến thức tổng hợp';
+        const detectedGrade = deterministicResult.grade || 'Tự do';
+        const durationMinutes = deterministicResult.durationMinutes || 45;
+
+        setDocTitle(detectedTitle);
+        setDocSubject(detectedSubject);
+        setDocGrade(detectedGrade);
+
+        let saveRes = AiToolRegistry.createExam({
+          title: detectedTitle,
+          subject: detectedSubject,
+          grade: detectedGrade,
+          durationMinutes,
+          questions: deterministicResult.questions,
+          folderId: folderId || undefined,
+        });
+
+        saveRes = await syncExamActionToDocument(token, saveRes);
+        const targetUrl = saveRes.data?.examUrl || (folderId ? `/app/documents?folderId=${folderId}` : '/app/documents');
+
+        setCreatedExamResult({
+          title: detectedTitle,
+          subject: detectedSubject,
+          grade: detectedGrade,
+          questionCount: deterministicResult.questions.length,
+          examUrl: targetUrl,
+          method: 'algorithm',
+          parserUsed: deterministicResult.parserUsed,
+        });
+
+        setParsedExamData({
+          title: detectedTitle,
+          subject: detectedSubject,
+          grade: detectedGrade,
+          durationMinutes,
+          questions: deterministicResult.questions,
+          examUrl: targetUrl,
+        });
+
+        setToastMessage(`Thuật toán đã nhận diện thành công ${deterministicResult.questions.length} câu hỏi theo cấu trúc file!`);
+        return;
+      }
+
+      // 2. CHỈ KHI THUẬT TOÁN KHÔNG NHẬN DIỆN ĐƯỢC (0 câu hỏi, ảnh chụp, PDF scan) -> MỚI CHUYỂN QUA SI
+      console.log('Thuật toán không nhận diện được cấu trúc câu hỏi, chuyển qua SI để nhận diện...');
+
+      const extracted = await extractFileForAi(file);
+
+      const aiController = new AbortController();
+      const aiTimeoutId = setTimeout(() => aiController.abort(), 20000);
+
+      const res = await fetch('/api/ai/generate-exam', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        signal: aiController.signal,
+        body: JSON.stringify({
+          mode: extracted.type === 'image' ? 'ocr' : 'document',
+          documentText: extracted.text || '',
+          imageBase64: extracted.imageBase64 || null,
+          fileName: file.name,
+          numQuestions: 15,
+          model: 'gemini-2.5-flash',
+        }),
+      }).finally(() => clearTimeout(aiTimeoutId));
+
+      const data = await res.json();
+      if (!res.ok || !data.success || !data.exam) {
+        throw new Error(data.error || 'SI không thể nhận diện đề thi từ tài liệu này. 100% không làm giả dữ liệu.');
+      }
+
+      const examData = data.exam;
+      if (!Array.isArray(examData.questions) || examData.questions.length === 0) {
+        throw new Error('Không tìm thấy câu hỏi hợp lệ trong tài liệu. Tuyệt đối không tạo dữ liệu giả.');
+      }
+
+      const detectedTitle = examData.title || cleanName;
+      const detectedSubject = examData.subject || 'Kiến thức tổng hợp';
+      const detectedGrade = examData.grade || 'Tự do';
+
+      setDocTitle(detectedTitle);
+      setDocSubject(detectedSubject);
+      setDocGrade(detectedGrade);
+
+      let saveRes = AiToolRegistry.createExam({
+        title: detectedTitle,
+        subject: detectedSubject,
+        grade: detectedGrade,
+        durationMinutes: examData.durationMinutes || 45,
+        questions: examData.questions,
+        folderId: folderId || undefined,
+      });
+
+      saveRes = await syncExamActionToDocument(token, saveRes);
+
+      const targetUrl = saveRes.data?.examUrl || (folderId ? `/app/documents?folderId=${folderId}` : '/app/documents');
+
+      setCreatedExamResult({
+        title: detectedTitle,
+        subject: detectedSubject,
+        grade: detectedGrade,
+        questionCount: examData.questions.length,
+        examUrl: targetUrl,
+        method: 'si',
+      });
+
+      setParsedExamData({
+        title: detectedTitle,
+        subject: detectedSubject,
+        grade: detectedGrade,
+        durationMinutes: examData.durationMinutes || 45,
+        questions: examData.questions,
+        examUrl: targetUrl,
+      });
+
+      setToastMessage(`SI đã nhận diện môn "${detectedSubject}" và tạo thành công ${examData.questions.length} câu hỏi!`);
+    } catch (err: any) {
+      console.error('Error processing file:', err);
+      setToastMessage(err.message || 'Có lỗi xảy ra trong quá trình nhận diện file.');
+    } finally {
+      clearTimeout(watchdogTimer);
+      setIsParsing(false);
+    }
+  };
+
+  // Tải file mẫu chuẩn cho giáo viên (100% định dạng mẫu thật, không tạo dữ liệu giả)
+  const handleDownloadSampleTemplate = async (templateType: 'pdf' | 'docx' | 'excel' | 'tex' | 'zip') => {
+    try {
+      await downloadSampleTemplate(templateType);
+      setToastMessage(`Đã tải xuống file đề mẫu chuẩn (${templateType.toUpperCase()}) thành công!`);
+    } catch (err: any) {
+      console.error('Error downloading template:', err);
+      alert('Lỗi tải file mẫu: ' + (err.message || 'Không thể tải file'));
+    }
+  };
+
+  const handleSelectParsedCorrectOption = (qIdx: number, optIdx: number) => {
+    if (!parsedExamData) return;
+    const updated = [...parsedExamData.questions];
+    updated[qIdx] = {
+      ...updated[qIdx],
+      options: updated[qIdx].options.map((opt, idx) => ({
+        ...opt,
+        isCorrect: idx === optIdx,
+      })),
+    };
+    setParsedExamData({ ...parsedExamData, questions: updated });
+  };
+
+  const handleUpdateParsedQuestionContent = (qIdx: number, newContent: string) => {
+    if (!parsedExamData) return;
+    const updated = [...parsedExamData.questions];
+    updated[qIdx] = { ...updated[qIdx], content: newContent };
+    setParsedExamData({ ...parsedExamData, questions: updated });
+  };
+
+  const handleUpdateParsedOptionContent = (qIdx: number, optIdx: number, newContent: string) => {
+    if (!parsedExamData) return;
+    const updated = [...parsedExamData.questions];
+    const newOptions = [...updated[qIdx].options];
+    newOptions[optIdx] = { ...newOptions[optIdx], content: newContent };
+    updated[qIdx] = { ...updated[qIdx], options: newOptions };
+    setParsedExamData({ ...parsedExamData, questions: updated });
+  };
+
+  const handleUpdateParsedExplanation = (qIdx: number, newExplanation: string) => {
+    if (!parsedExamData) return;
+    const updated = [...parsedExamData.questions];
+    updated[qIdx] = { ...updated[qIdx], explanation: newExplanation };
+    setParsedExamData({ ...parsedExamData, questions: updated });
+  };
+
+  const handleDeleteParsedQuestion = (qIdx: number) => {
+    if (!parsedExamData) return;
+    if (parsedExamData.questions.length <= 1) {
+      alert('Đề thi cần có ít nhất 1 câu hỏi.');
+      return;
+    }
+    const updated = parsedExamData.questions.filter((_, idx) => idx !== qIdx);
+    setParsedExamData({ ...parsedExamData, questions: updated });
+  };
+
+  const handleAddParsedQuestion = () => {
+    if (!parsedExamData) return;
+    const newQ: ParsedExamQuestion = {
       content: '',
-      points: 1.0,
+      points: Number((10 / (parsedExamData.questions.length + 1)).toFixed(2)),
       options: [
         { content: '', isCorrect: true },
         { content: '', isCorrect: false },
@@ -68,148 +365,99 @@ function DocumentCreateContent() {
         { content: '', isCorrect: false },
       ],
       explanation: '',
-    },
-  ]);
-
-  // AI Prompt State
-  const [aiTopic, setAiTopic] = useState('');
-  const [aiNumQuestions, setAiNumQuestions] = useState('10');
-
-  // Toast Notification
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
-
-  const showSuccessToast = (msg: string) => {
-    setToastMessage(msg);
-    setTimeout(() => {
-      setToastMessage(null);
-      router.push('/app/documents');
-    }, 1200);
+    };
+    setParsedExamData({
+      ...parsedExamData,
+      questions: [...parsedExamData.questions, newQ],
+    });
   };
 
-  // Upload File Handler
-  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAddDefaultOptionsToQuestion = (qIdx: number) => {
+    if (!parsedExamData) return;
+    const updated = [...parsedExamData.questions];
+    updated[qIdx] = {
+      ...updated[qIdx],
+      options: [
+        { content: '', isCorrect: true },
+        { content: '', isCorrect: false },
+        { content: '', isCorrect: false },
+        { content: '', isCorrect: false },
+      ],
+    };
+    setParsedExamData({ ...parsedExamData, questions: updated });
+  };
+
+  const handleSaveExamEdits = async () => {
+    if (!parsedExamData) return;
+    setIsSavingChanges(true);
+    try {
+      let saveRes = AiToolRegistry.createExam({
+        title: parsedExamData.title,
+        subject: parsedExamData.subject,
+        grade: parsedExamData.grade,
+        durationMinutes: parsedExamData.durationMinutes,
+        questions: parsedExamData.questions,
+        folderId: folderId || undefined,
+      });
+      saveRes = await syncExamActionToDocument(token, saveRes);
+      setToastMessage('Đã lưu thành công các câu hỏi vào kho tài liệu!');
+    } catch (e: any) {
+      alert('Lỗi lưu thay đổi: ' + e.message);
+    } finally {
+      setIsSavingChanges(false);
+    }
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      setSelectedFile(file);
-      if (!docTitle) {
-        setDocTitle(file.name.replace(/\.(docx|txt|pdf)$/i, ''));
-      }
-      setIsParsing(true);
-      try {
-        const parsed = await parseDocxFile(file);
-        setParsedPreview(parsed);
-      } catch (err) {
-        console.error('Error parsing file:', err);
-      } finally {
-        setIsParsing(false);
-      }
+      handleProcessFile(e.target.files[0]);
     }
   };
 
   const handleConfirmUpload = () => {
-    if (!docTitle) {
-      alert('Vui lòng nhập tên đề thi!');
-      return;
+    if (createdExamResult?.examUrl) {
+      router.push(createdExamResult.examUrl);
+    } else {
+      router.push(folderId ? `/app/documents?folderId=${folderId}` : '/app/documents');
     }
-    showSuccessToast('Đã tải lên và tạo đề thi từ file thành công!');
-  };
-
-  // Manual Question Builder Handlers
-  const handleAddQuestion = () => {
-    setManualQuestions((prev) => [
-      ...prev,
-      {
-        id: `q_${Date.now()}`,
-        content: '',
-        points: 1.0,
-        options: [
-          { content: '', isCorrect: true },
-          { content: '', isCorrect: false },
-          { content: '', isCorrect: false },
-          { content: '', isCorrect: false },
-        ],
-        explanation: '',
-      },
-    ]);
-  };
-
-  const handleRemoveQuestion = (qId: string) => {
-    if (manualQuestions.length <= 1) {
-      alert('Đề thi phải có ít nhất 1 câu hỏi!');
-      return;
-    }
-    setManualQuestions((prev) => prev.filter((q) => q.id !== qId));
-  };
-
-  const handleQuestionChange = (qId: string, field: 'content' | 'explanation', value: string) => {
-    setManualQuestions((prev) =>
-      prev.map((q) => (q.id === qId ? { ...q, [field]: value } : q))
-    );
-  };
-
-  const handleOptionChange = (qId: string, optIdx: number, value: string) => {
-    setManualQuestions((prev) =>
-      prev.map((q) => {
-        if (q.id !== qId) return q;
-        const newOpts = [...q.options];
-        newOpts[optIdx] = { ...newOpts[optIdx], content: value };
-        return { ...q, options: newOpts };
-      })
-    );
-  };
-
-  const handleSelectCorrectOption = (qId: string, optIdx: number) => {
-    setManualQuestions((prev) =>
-      prev.map((q) => {
-        if (q.id !== qId) return q;
-        const newOpts = q.options.map((opt, idx) => ({
-          ...opt,
-          isCorrect: idx === optIdx,
-        }));
-        return { ...q, options: newOpts };
-      })
-    );
-  };
-
-  const handleConfirmManualCreate = () => {
-    if (!docTitle) {
-      alert('Vui lòng nhập tên đề thi!');
-      return;
-    }
-    const hasEmptyQuestion = manualQuestions.some((q) => !q.content.trim());
-    if (hasEmptyQuestion) {
-      alert('Vui lòng điền nội dung cho tất cả các câu hỏi!');
-      return;
-    }
-    setIsManualModalOpen(false);
-    showSuccessToast('Đã tạo đề thi thủ công thành công!');
   };
 
   return (
     <AppShell
       title={
-        <div className="flex items-center gap-1 text-2xl font-normal tracking-tight text-slate-900 dark:text-slate-100 flex-wrap -ml-2">
+        <div className="flex items-center gap-1 text-2xl font-[450] tracking-tight text-slate-900 dark:text-slate-100 flex-wrap -ml-2">
           <button
             type="button"
             onClick={() => router.push('/app/documents')}
-            className="transition-colors cursor-pointer px-2 py-0.5 rounded-xl hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-normal"
+            className="transition-colors cursor-pointer px-2 py-0.5 rounded-xl hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-900 dark:text-white font-[450]"
           >
             Tài liệu của tôi
           </button>
-          {folderName && (
+          {folderName ? (
             <>
-              <ChevronRight size={20} className="text-slate-400 dark:text-slate-500 shrink-0 stroke-[1.75]" />
+              <BreadcrumbChevron
+                folderId={null}
+                onNavigateFolder={(id) => router.push(`/app/documents?folderId=${id}`)}
+              />
               <button
                 type="button"
                 onClick={() => router.push(`/app/documents?folderId=${folderId || ''}`)}
-                className="transition-colors cursor-pointer px-2 py-0.5 rounded-xl hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-normal"
+                className="transition-colors cursor-pointer px-2 py-0.5 rounded-xl hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-900 dark:text-white font-[450]"
               >
                 {folderName}
               </button>
+              <BreadcrumbChevron
+                folderId={folderId || null}
+                onNavigateFolder={(id) => router.push(`/app/documents?folderId=${id}`)}
+              />
             </>
+          ) : (
+            <BreadcrumbChevron
+              folderId={null}
+              onNavigateFolder={(id) => router.push(`/app/documents?folderId=${id}`)}
+            />
           )}
-          <ChevronRight size={20} className="text-slate-400 dark:text-slate-500 shrink-0 stroke-[1.75]" />
-          <span className="px-2 py-0.5 rounded-xl text-slate-900 dark:text-white font-normal">
+          <span className="px-2 py-0.5 rounded-xl text-slate-900 dark:text-white font-[450]">
             Tạo đề thi
           </span>
         </div>
@@ -229,13 +477,31 @@ function DocumentCreateContent() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start w-full">
           {/* LEFT SIDE: KHUNG TẢI FILE LÊN THẬT TO & CAO (7 COLUMNS) */}
           <div className="lg:col-span-7">
-            <div className="min-h-[520px] md:min-h-[580px] p-8 md:p-12 border-2 border-dashed border-google-blue/40 dark:border-google-blue/60 rounded-3xl bg-blue-50/40 dark:bg-slate-800/40 text-center flex flex-col justify-center items-center space-y-5 hover:bg-blue-50/70 transition-all shadow-xs">
+            <div
+              onDragOver={(e) => {
+                e.preventDefault();
+                setIsDragging(true);
+              }}
+              onDragLeave={() => setIsDragging(false)}
+              onDrop={(e) => {
+                e.preventDefault();
+                setIsDragging(false);
+                if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                  handleProcessFile(e.dataTransfer.files[0]);
+                }
+              }}
+              className={`min-h-[520px] md:min-h-[580px] p-8 md:p-12 border-2 border-dashed rounded-3xl text-center flex flex-col justify-center items-center space-y-5 transition-all shadow-xs ${
+                isDragging
+                  ? 'border-amber-500 bg-amber-50/70 dark:bg-amber-950/40 scale-[1.01]'
+                  : 'border-google-blue/40 dark:border-google-blue/60 bg-blue-50/40 dark:bg-slate-800/40 hover:bg-blue-50/70'
+              }`}
+            >
               {/* Cloud Upload Icon */}
               <div className="w-20 h-20 rounded-full bg-blue-100 dark:bg-blue-950 text-google-blue flex items-center justify-center mx-auto shadow-md">
                 <Upload size={40} />
               </div>
 
-              {/* Title & Description Lines (Exact like screenshot) */}
+              {/* Title & Description Lines */}
               <div className="space-y-2 max-w-xl mx-auto">
                 <h3 className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white">
                   Chọn File hoặc kéo thả File vào đây
@@ -244,7 +510,7 @@ function DocumentCreateContent() {
                   Hỗ trợ các định dạng .pdf, .docx, .xlsx, .azt, .tex, .zip, Ảnh
                 </p>
                 <p className="text-xs text-slate-500 font-normal">
-                  Có thể Upload File <strong className="text-slate-800 dark:text-slate-200">Bài tập</strong>, <strong className="text-slate-800 dark:text-slate-200">Đề thi</strong> Hoặc <strong className="text-slate-800 dark:text-slate-200">Bảng đáp án</strong> để chấm offline. <span className="text-google-blue hover:underline cursor-pointer">Tìm hiểu thêm</span>
+                  SI sẽ tự động đọc tài liệu và biên soạn bài tập / đề thi trắc nghiệm hoàn chỉnh.
                 </p>
               </div>
 
@@ -253,7 +519,7 @@ function DocumentCreateContent() {
                 <input
                   type="file"
                   id="custom-doc-file-input"
-                  accept=".docx,.txt,.pdf"
+                  accept=".pdf,.docx,.xlsx,.azt,.tex,.zip,.png,.jpg,.jpeg,.webp,.bmp,image/*"
                   onChange={handleFileSelect}
                   className="hidden"
                 />
@@ -270,45 +536,124 @@ function DocumentCreateContent() {
 
               {/* Sample Template Links Row */}
               <div className="pt-4 text-[11px] md:text-xs font-bold text-google-blue flex flex-wrap items-center justify-center gap-2 max-w-2xl leading-relaxed">
-                <span className="hover:underline cursor-pointer">Đề mẫu Pdf</span>
+                <button
+                  type="button"
+                  onClick={() => handleDownloadSampleTemplate('pdf')}
+                  className="hover:underline cursor-pointer text-google-blue font-bold"
+                >
+                  Đề mẫu Pdf
+                </button>
                 <span className="text-slate-300 font-normal">|</span>
-                <span className="hover:underline cursor-pointer">Đề mẫu Docx</span>
+                <button
+                  type="button"
+                  onClick={() => handleDownloadSampleTemplate('docx')}
+                  className="hover:underline cursor-pointer text-google-blue font-bold"
+                >
+                  Đề mẫu Docx
+                </button>
                 <span className="text-slate-300 font-normal">|</span>
-                <span className="hover:underline cursor-pointer">File Excel bảng đáp án đề Offline</span>
+                <button
+                  type="button"
+                  onClick={() => handleDownloadSampleTemplate('excel')}
+                  className="hover:underline cursor-pointer text-google-blue font-bold"
+                >
+                  File Excel bảng đáp án đề Offline
+                </button>
                 <span className="text-slate-300 font-normal">|</span>
-                <span className="hover:underline cursor-pointer">File Latex mẫu .tex</span>
+                <button
+                  type="button"
+                  onClick={() => handleDownloadSampleTemplate('tex')}
+                  className="hover:underline cursor-pointer text-google-blue font-bold"
+                >
+                  File Latex mẫu .tex
+                </button>
                 <span className="text-slate-300 font-normal">|</span>
-                <span className="hover:underline cursor-pointer">File Latex mẫu .zip</span>
+                <button
+                  type="button"
+                  onClick={() => handleDownloadSampleTemplate('zip')}
+                  className="hover:underline cursor-pointer text-google-blue font-bold"
+                >
+                  File Latex mẫu .zip
+                </button>
               </div>
 
-              {/* Bottom Announcement Text (Frameless) */}
+              {/* Bottom Announcement Text */}
               <p className="text-xs font-semibold text-slate-600 dark:text-slate-300 text-center pt-1">
-                HocRealtime đã hỗ trợ nhận dạng đề từ file ảnh (ảnh chụp đề hoặc viết tay)
+                Hệ thống nhận diện tự động theo cấu trúc file (.docx, .xlsx, .tex, .azt, .txt, .pdf) và chuyển qua SI khi cần
               </p>
             </div>
 
-            {/* File Parsing Loading */}
+            {/* AI File Parsing Status */}
             {isParsing && (
-              <div className="mt-4 p-4 text-center space-y-2 bg-blue-50/60 dark:bg-blue-950/30 rounded-2xl border border-blue-200/50">
-                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-google-blue mx-auto" />
-                <p className="text-xs text-google-blue font-semibold">
-                  Đang bóc tách câu hỏi từ file...
+              <div className="mt-4 p-5 text-center space-y-3 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/40 dark:to-indigo-950/30 rounded-2xl border border-blue-200 dark:border-blue-800 animate-pulse">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-google-blue mx-auto" />
+                <p className="text-sm text-google-blue dark:text-blue-300 font-bold flex items-center justify-center gap-2">
+                  <Sparkles size={18} className="text-google-blue" />
+                  Đang nhận diện đề thi từ {selectedFile?.name}...
+                </p>
+                <p className="text-xs text-slate-500">
+                  Hệ thống đang trích xuất câu hỏi, phương án A/B/C/D, đáp án đúng và lời giải chi tiết
                 </p>
               </div>
             )}
 
-            {/* Parsed Questions Success Notification */}
-            {parsedPreview && (
-              <div className="mt-4 space-y-3">
-                <div className="flex items-center justify-between p-3.5 bg-emerald-50/70 dark:bg-emerald-950/30 rounded-2xl border border-emerald-200 dark:border-emerald-800">
-                  <div className="flex items-center gap-3">
-                    <CheckCircle2 size={22} className="text-google-green shrink-0" />
-                    <span className="text-xs font-bold text-slate-900 dark:text-white">
-                      Đã bóc tách thành công {parsedPreview.questions.length} câu hỏi!
-                    </span>
+            {/* AI Exam Generated Success Box */}
+            {createdExamResult && (
+              <div className="mt-4 p-5 bg-emerald-50/90 dark:bg-emerald-950/40 rounded-2xl border border-emerald-300 dark:border-emerald-800 space-y-3 shadow-xs">
+                <div className="flex items-center gap-3">
+                  <CheckCircle2 size={26} className="text-google-green shrink-0" />
+                  <div className="text-left flex-1 min-w-0">
+                    <div className="flex flex-wrap items-center gap-1.5 mb-1">
+                      {createdExamResult.method === 'algorithm' ? (
+                        <span className="px-2 py-0.5 rounded-md text-[11px] font-bold bg-blue-100 dark:bg-blue-900/60 text-blue-800 dark:text-blue-200 flex items-center gap-1">
+                          ⚡ Thuật toán bóc tách file ({createdExamResult.parserUsed || '100% dữ liệu gốc'})
+                        </span>
+                      ) : (
+                        <span className="px-2 py-0.5 rounded-md text-[11px] font-bold bg-purple-100 dark:bg-purple-900/60 text-purple-800 dark:text-purple-200 flex items-center gap-1">
+                          ✨ Nhận diện qua SI (Multimodal AI)
+                        </span>
+                      )}
+                      <span className="px-2 py-0.5 rounded-md text-[11px] font-bold bg-emerald-200/80 dark:bg-emerald-900/60 text-emerald-900 dark:text-emerald-100">
+                        {createdExamResult.subject || 'Kiến thức tổng hợp'}
+                      </span>
+                      <span className="px-2 py-0.5 rounded-md text-[11px] font-semibold bg-slate-200/70 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                        {createdExamResult.grade || 'Tự do'}
+                      </span>
+                    </div>
+                    <h4 className="text-sm font-bold text-slate-900 dark:text-white truncate">
+                      {createdExamResult.title}
+                    </h4>
+                    <p className="text-xs text-emerald-700 dark:text-emerald-300 font-medium">
+                      Đã nhận diện thành công {createdExamResult.questionCount} câu hỏi chuẩn xác từ tài liệu!
+                    </p>
                   </div>
-                  <Button size="sm" onClick={handleConfirmUpload}>
-                    Hoàn tất & Lưu Đề Thi
+                </div>
+                <div className="flex flex-wrap items-center justify-end gap-2 pt-1">
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => {
+                      setCreatedExamResult(null);
+                      setParsedExamData(null);
+                      setSelectedFile(null);
+                    }}
+                  >
+                    Tải file khác
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="border-emerald-300 dark:border-emerald-700 text-emerald-800 dark:text-emerald-200 font-bold hover:bg-emerald-100/50"
+                    onClick={() => setIsPreviewModalOpen(true)}
+                  >
+                    Xem trước ({createdExamResult.questionCount} câu)
+                  </Button>
+                  <Button
+                    size="sm"
+                    className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold"
+                    onClick={() => router.push(createdExamResult.examUrl)}
+                  >
+                    Vào thi thử ngay
                   </Button>
                 </div>
               </div>
@@ -357,7 +702,7 @@ function DocumentCreateContent() {
                   </div>
                   <div>
                     <span className="text-sm font-bold text-slate-900 dark:text-white block group-hover:text-amber-600 transition-colors">
-                      Tạo đề thi bằng AI
+                      Tạo đề thi bằng SI
                     </span>
                     <span className="text-xs text-slate-400 block font-normal">
                       Tự động tạo câu hỏi trắc nghiệm từ từ khóa hoặc chủ đề
@@ -414,223 +759,198 @@ function DocumentCreateContent() {
           </div>
         </div>
 
-        {/* MODAL 1: SOẠN ĐỀ THI THỦ CÔNG */}
-        <Modal
-          isOpen={isManualModalOpen}
-          onClose={() => setIsManualModalOpen(false)}
-          title="Soạn đề thi thủ công"
-          description="Nhập nội dung câu hỏi, các phương án trả lời và chỉ định đáp án đúng"
-        >
-          <div className="space-y-6 pt-2 max-h-[70vh] overflow-y-auto pr-1">
-            <Input
-              label="Tên đề thi"
-              placeholder="Nhập tên đề thi..."
-              value={docTitle}
-              onChange={(e) => setDocTitle(e.target.value)}
-              required
-            />
+        {/* MODAL XEM TRƯỚC VÀ CHỈNH SỬA CÂU HỎI (CHỈ MỞ KHI BẤM NÚT "XEM TRƯỚC") */}
+        {parsedExamData && (
+          <Modal
+            isOpen={isPreviewModalOpen}
+            onClose={() => setIsPreviewModalOpen(false)}
+            maxWidth="3xl"
+            title={parsedExamData.title || 'Xem trước & Chỉnh sửa câu hỏi'}
+            description={`Đã trích xuất ${parsedExamData.questions.length} câu hỏi • Thời gian làm bài: ${parsedExamData.durationMinutes || 45} phút`}
+          >
+            {/* Top Toolbar */}
+            <div className="flex flex-wrap items-center justify-between gap-3 pb-3 pt-1 border-b border-slate-100 dark:border-slate-800">
+              <div className="flex items-center gap-2">
+                <span className="px-3 py-1 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-google-blue dark:text-blue-400 font-semibold text-xs border border-blue-200/60 dark:border-blue-800/60">
+                  Tổng số: {parsedExamData.questions.length} câu
+                </span>
+                <span className="px-3 py-1 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium text-xs">
+                  Thang điểm 10
+                </span>
+              </div>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={handleAddParsedQuestion}
+                className="text-xs font-semibold text-google-blue border-blue-200 dark:border-blue-800 hover:bg-blue-50/50"
+              >
+                <Plus size={14} className="mr-1" />
+                Thêm câu hỏi
+              </Button>
+            </div>
 
-            <div className="space-y-4">
-              {manualQuestions.map((q, qIdx) => (
+            {/* Questions List Container */}
+            <div className="space-y-4 pt-3 max-h-[68vh] overflow-y-auto pr-1">
+              {parsedExamData.questions.map((q, qIdx) => (
                 <div
-                  key={q.id}
-                  className="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-3"
+                  key={qIdx}
+                  className="p-4 sm:p-5 bg-slate-50/80 dark:bg-slate-800/50 rounded-2xl border border-slate-200/80 dark:border-slate-700/80 space-y-3.5 hover:border-slate-300 dark:hover:border-slate-600 transition-colors shadow-2xs"
                 >
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-google-blue bg-blue-50 dark:bg-blue-950 px-2.5 py-1 rounded-lg">
-                      Câu {qIdx + 1}
-                    </span>
-                    {manualQuestions.length > 1 && (
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveQuestion(q.id)}
-                        className="p-1 text-slate-400 hover:text-google-red"
-                      >
-                        <Trash2 size={15} />
-                      </button>
-                    )}
+                  {/* Card Header */}
+                  <div className="flex items-center justify-between pb-2 border-b border-slate-200/60 dark:border-slate-700/60">
+                    <div className="flex items-center gap-2">
+                      <span className="px-3 py-0.5 rounded-lg bg-google-blue text-white font-bold text-xs shadow-2xs">
+                        Câu {qIdx + 1}
+                      </span>
+                      <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                        {q.points || (10 / parsedExamData.questions.length).toFixed(2)} điểm
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteParsedQuestion(qIdx)}
+                      className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40 rounded-lg transition-colors cursor-pointer"
+                      title="Xóa câu hỏi này"
+                    >
+                      <Trash2 size={15} />
+                    </button>
                   </div>
 
-                  <textarea
-                    rows={2}
-                    placeholder={`Nội dung câu hỏi ${qIdx + 1}...`}
-                    value={q.content}
-                    onChange={(e) => handleQuestionChange(q.id, 'content', e.target.value)}
-                    className="w-full text-xs p-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none"
-                  />
+                  {/* Question Content */}
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-semibold text-slate-600 dark:text-slate-300">
+                      Nội dung câu hỏi:
+                    </label>
+                    <AutoGrowingTextarea
+                      value={q.content}
+                      onChange={(val) => handleUpdateParsedQuestionContent(qIdx, val)}
+                      placeholder="Nhập nội dung câu hỏi..."
+                      className="p-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-slate-100 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-google-blue/30 focus:border-google-blue leading-relaxed shadow-2xs"
+                    />
+                  </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    {q.options.map((opt, optIdx) => (
-                      <div
-                        key={optIdx}
-                        className={`flex items-center gap-2 p-2 rounded-xl border ${
-                          opt.isCorrect
-                            ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-300'
-                            : 'bg-white dark:bg-slate-900 border-slate-200'
-                        }`}
-                      >
-                        <input
-                          type="radio"
-                          name={`correct_modal_${q.id}`}
-                          checked={opt.isCorrect}
-                          onChange={() => handleSelectCorrectOption(q.id, optIdx)}
-                          className="w-3.5 h-3.5 text-google-green"
-                        />
-                        <span className="text-xs font-bold text-slate-500">
-                          {String.fromCharCode(65 + optIdx)}.
-                        </span>
-                        <input
-                          type="text"
-                          placeholder={`Đáp án ${String.fromCharCode(65 + optIdx)}`}
-                          value={opt.content}
-                          onChange={(e) => handleOptionChange(q.id, optIdx, e.target.value)}
-                          className="w-full text-xs bg-transparent focus:outline-none"
-                        />
+                  {/* Options List */}
+                  {q.options && q.options.length > 0 ? (
+                    <div className="space-y-1.5">
+                      <label className="text-[11px] font-semibold text-slate-600 dark:text-slate-300 flex items-center justify-between">
+                        <span>Các phương án lựa chọn:</span>
+                        <span className="text-[10px] text-slate-400 font-normal">Nhấp vào ô để chọn đáp án đúng</span>
+                      </label>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+                        {q.options.map((opt, optIdx) => {
+                          const letter = String.fromCharCode(65 + optIdx);
+                          return (
+                            <div
+                              key={optIdx}
+                              onClick={() => handleSelectParsedCorrectOption(qIdx, optIdx)}
+                              className={`p-2.5 rounded-xl border flex items-center gap-2.5 transition-all cursor-pointer ${
+                                opt.isCorrect
+                                  ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-500 dark:border-emerald-600 shadow-2xs ring-1 ring-emerald-500/30'
+                                  : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700/80 hover:border-slate-300 dark:hover:border-slate-600'
+                              }`}
+                            >
+                              <div
+                                className={`w-6 h-6 rounded-lg text-xs font-bold flex items-center justify-center shrink-0 ${
+                                  opt.isCorrect
+                                    ? 'bg-emerald-600 text-white shadow-2xs'
+                                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
+                                }`}
+                              >
+                                {letter}
+                              </div>
+                              <input
+                                type="text"
+                                value={opt.content}
+                                onClick={(e) => e.stopPropagation()}
+                                onChange={(e) => handleUpdateParsedOptionContent(qIdx, optIdx, e.target.value)}
+                                placeholder={`Phương án ${letter}...`}
+                                className={`flex-1 text-xs font-medium bg-transparent border-0 focus:outline-none ${
+                                  opt.isCorrect
+                                    ? 'text-emerald-950 dark:text-emerald-100 font-semibold'
+                                    : 'text-slate-800 dark:text-slate-200'
+                                }`}
+                              />
+                              {opt.isCorrect ? (
+                                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 shrink-0 bg-emerald-100/80 dark:bg-emerald-900/60 px-2 py-0.5 rounded-md">
+                                  <Check size={11} strokeWidth={3} /> Đúng
+                                </span>
+                              ) : (
+                                <span className="text-[10px] text-slate-400 shrink-0 hover:text-emerald-600">
+                                  Chọn
+                                </span>
+                              )}
+                            </div>
+                          );
+                        })}
                       </div>
-                    ))}
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-between p-3 bg-slate-100/70 dark:bg-slate-900/50 rounded-xl border border-dashed border-slate-300 dark:border-slate-700 text-xs">
+                      <span className="text-slate-500 dark:text-slate-400 text-[11px]">
+                        Câu hỏi tự luận / Chưa có phương án trắc nghiệm
+                      </span>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleAddDefaultOptionsToQuestion(qIdx)}
+                        className="text-[11px] h-7 px-2.5 font-semibold text-google-blue border-blue-200 dark:border-blue-800"
+                      >
+                        <Plus size={12} className="mr-1" />
+                        + Thêm 4 phương án (A, B, C, D)
+                      </Button>
+                    </div>
+                  )}
+
+                  {/* Explanation Field */}
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-semibold text-slate-600 dark:text-slate-300 flex items-center gap-1">
+                      <Sparkles size={12} className="text-amber-500" />
+                      <span>Lời giải chi tiết:</span>
+                    </label>
+                    <AutoGrowingTextarea
+                      value={q.explanation || ''}
+                      onChange={(val) => handleUpdateParsedExplanation(qIdx, val)}
+                      placeholder="Nhập hướng dẫn giải hoặc lời giải chi tiết (không bắt buộc)..."
+                      className="p-2.5 bg-amber-50/40 dark:bg-amber-950/20 border border-amber-200/80 dark:border-amber-900/50 rounded-xl text-slate-800 dark:text-slate-200 text-xs font-normal focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 leading-relaxed shadow-2xs"
+                    />
                   </div>
                 </div>
               ))}
             </div>
 
-            <div className="flex justify-between items-center pt-2">
-              <Button type="button" variant="outline" size="sm" onClick={handleAddQuestion}>
-                <Plus size={15} className="mr-1" /> Thêm câu hỏi
+            {/* Modal Bottom Footer */}
+            <div className="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-slate-800 mt-2">
+              <Button variant="outline" size="sm" onClick={() => setIsPreviewModalOpen(false)}>
+                Đóng
               </Button>
-              <div className="flex gap-2">
-                <Button variant="ghost" size="sm" onClick={() => setIsManualModalOpen(false)}>
-                  Hủy
+              <div className="flex items-center gap-2.5">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={isSavingChanges}
+                  onClick={handleSaveExamEdits}
+                  className="font-bold text-xs border-blue-300 dark:border-blue-800 text-google-blue hover:bg-blue-50/60 dark:hover:bg-blue-950/40"
+                >
+                  <Save size={14} className="mr-1" />
+                  {isSavingChanges ? 'Đang lưu...' : 'Lưu thay đổi'}
                 </Button>
-                <Button size="sm" onClick={handleConfirmManualCreate}>
-                  Lưu & Tạo Đề Thi
+                <Button
+                  size="sm"
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-2xs"
+                  onClick={() => {
+                    setIsPreviewModalOpen(false);
+                    if (parsedExamData.examUrl) router.push(parsedExamData.examUrl);
+                  }}
+                >
+                  <Play size={14} className="mr-1 fill-current" />
+                  Vào thi thử ngay
                 </Button>
               </div>
             </div>
-          </div>
-        </Modal>
-
-        {/* MODAL 2: TẠO ĐỀ BẰNG AI */}
-        <Modal
-          isOpen={isAiModalOpen}
-          onClose={() => setIsAiModalOpen(false)}
-          title="Tạo đề thi bằng AI"
-          description="Nhập chủ đề hoặc từ khóa để AI tự động soạn câu hỏi"
-        >
-          <div className="space-y-4 pt-2">
-            <Input
-              label="Chủ đề bài học / Từ khóa"
-              placeholder="Ví dụ: Hàm số lũy thừa Lớp 12, Thì Quá khứ đơn..."
-              value={aiTopic}
-              onChange={(e) => setAiTopic(e.target.value)}
-              required
-            />
-            <div className="space-y-1">
-              <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                Số lượng câu hỏi
-              </label>
-              <select
-                value={aiNumQuestions}
-                onChange={(e) => setAiNumQuestions(e.target.value)}
-                className="w-full text-xs p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl"
-              >
-                <option value="5">5 câu hỏi</option>
-                <option value="10">10 câu hỏi</option>
-                <option value="20">20 câu hỏi</option>
-                <option value="40">40 câu hỏi</option>
-              </select>
-            </div>
-
-            <div className="flex justify-end gap-2 pt-4">
-              <Button variant="ghost" size="sm" onClick={() => setIsAiModalOpen(false)}>
-                Hủy
-              </Button>
-              <Button
-                size="sm"
-                onClick={() => {
-                  if (!aiTopic) {
-                    alert('Vui lòng nhập chủ đề!');
-                    return;
-                  }
-                  setIsAiModalOpen(false);
-                  showSuccessToast(`AI đã tạo thành công ${aiNumQuestions} câu hỏi về chủ đề ${aiTopic}!`);
-                }}
-              >
-                <Sparkles size={15} className="mr-1" /> Tạo bằng AI
-              </Button>
-            </div>
-          </div>
-        </Modal>
-
-        {/* MODAL 3: NGÂN HÀNG CÂU HỎI */}
-        <Modal
-          isOpen={isBankModalOpen}
-          onClose={() => setIsBankModalOpen(false)}
-          title="Trích xuất từ Ngân hàng câu hỏi"
-          description="Chọn câu hỏi từ thư viện đề thi có sẵn trên hệ thống"
-        >
-          <div className="space-y-4 pt-2">
-            <div className="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border text-xs space-y-2">
-              <p className="font-bold text-slate-900 dark:text-white">
-                Ngân hàng câu hỏi sẵn có: 1,250+ câu hỏi Môn Toán, Tiếng Anh & Lý
-              </p>
-              <p className="text-slate-500">
-                Hệ thống tự động lọc câu hỏi chuẩn theo chương trình SGK mới.
-              </p>
-            </div>
-
-            <div className="flex justify-end gap-2 pt-2">
-              <Button variant="ghost" size="sm" onClick={() => setIsBankModalOpen(false)}>
-                Hủy
-              </Button>
-              <Button
-                size="sm"
-                onClick={() => {
-                  setIsBankModalOpen(false);
-                  showSuccessToast('Đã trích xuất 20 câu hỏi từ Ngân hàng câu hỏi!');
-                }}
-              >
-                Trích xuất câu hỏi
-              </Button>
-            </div>
-          </div>
-        </Modal>
-
-        {/* MODAL 4: OCR QUÉT ẢNH */}
-        <Modal
-          isOpen={isOcrModalOpen}
-          onClose={() => setIsOcrModalOpen(false)}
-          title="Quét đề thi từ ảnh chụp (OCR)"
-          description="Tải ảnh đề thi để AI nhận diện văn bản và đáp án"
-        >
-          <div className="space-y-4 pt-2">
-            <div className="p-6 border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-2xl bg-slate-50 dark:bg-slate-800/40 text-center space-y-2">
-              <Camera size={32} className="mx-auto text-purple-600" />
-              <p className="text-xs font-bold text-slate-900 dark:text-white">
-                Chọn hoặc chụp ảnh đề thi (.png, .jpg)
-              </p>
-              <input
-                type="file"
-                accept="image/*"
-                className="w-full max-w-xs mx-auto text-xs text-slate-500 cursor-pointer"
-              />
-            </div>
-
-            <div className="flex justify-end gap-2 pt-2">
-              <Button variant="ghost" size="sm" onClick={() => setIsOcrModalOpen(false)}>
-                Hủy
-              </Button>
-              <Button
-                size="sm"
-                onClick={() => {
-                  setIsOcrModalOpen(false);
-                  showSuccessToast('Đã nhận diện OCR và tạo đề thi từ ảnh thành công!');
-                }}
-              >
-                Quét & Tạo Đề Thi
-              </Button>
-            </div>
-          </div>
-        </Modal>
+          </Modal>
+        )}
       </div>
     </AppShell>
   );

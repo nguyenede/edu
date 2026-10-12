@@ -6,20 +6,19 @@ import { AppShell } from '@/components/AppShell';
 import { useAuthStore } from '@/store/useAuthStore';
 import { Button } from '@/components/Button';
 import { Input } from '@/components/Input';
-import { ArrowLeft, FileText, Check } from 'lucide-react';
+import { ArrowLeft, FileText, Check, ChevronRight } from 'lucide-react';
 import { listDocumentFiles } from '@/lib/documentsApi';
+import { createClassAssignment } from '@/lib/classesApi';
 
 export default function CreateAssignmentPage() {
   const { id: classId } = useParams();
   const router = useRouter();
   const { token } = useAuthStore();
 
-  const [quizzes, setQuizzes] = useState<any[]>([]);
   const [documentFiles, setDocumentFiles] = useState<any[]>([]);
   const [newTitle, setNewTitle] = useState('');
   const [newDesc, setNewDesc] = useState('');
   const [deadline, setDeadline] = useState('');
-  const [linkedQuizId, setLinkedQuizId] = useState('');
   const [linkedDocumentFileId, setLinkedDocumentFileId] = useState('');
   const [maxScore, setMaxScore] = useState(10);
   const [loading, setLoading] = useState(false);
@@ -27,18 +26,13 @@ export default function CreateAssignmentPage() {
   const [toast, setToast] = useState(false);
 
   useEffect(() => {
-    if (!token) return;
-    fetchQuizzes();
+    fetchDocumentFiles();
   }, [token]);
 
-  const fetchQuizzes = async () => {
+  const fetchDocumentFiles = async () => {
     try {
-      const res = await fetch('/api/quizzes/teacher', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (res.ok) setQuizzes(await res.json());
-
-      const docs = await listDocumentFiles(token!);
+      const activeToken = token || (typeof window !== 'undefined' ? localStorage.getItem('token') : null);
+      const docs = await listDocumentFiles(activeToken || '');
       setDocumentFiles(
         Array.isArray(docs)
           ? docs.filter((doc) => Array.isArray(doc?.parsedQuiz?.questions) && doc.parsedQuiz.questions.length > 0)
@@ -56,30 +50,20 @@ export default function CreateAssignmentPage() {
     setLoading(true);
 
     try {
-      const res = await fetch('/api/assignments', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          title: newTitle,
-          description: newDesc || undefined,
-          classId,
-          quizId: linkedQuizId || undefined,
-          documentFileId: linkedDocumentFileId || undefined,
-          deadline: deadline ? new Date(deadline).toISOString() : undefined,
-          maxScore: Number(maxScore),
-        }),
+      const activeToken = token || (typeof window !== 'undefined' ? localStorage.getItem('token') : null);
+      await createClassAssignment(activeToken, {
+        title: newTitle.trim(),
+        description: newDesc.trim() || undefined,
+        classId: String(classId),
+        documentFileId: linkedDocumentFileId || undefined,
+        deadline: deadline ? new Date(deadline).toISOString() : undefined,
+        maxScore: Number(maxScore),
       });
-
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || 'Không thể giao bài tập');
 
       setToast(true);
       setTimeout(() => {
         router.push(`/app/classes/${classId}`);
-      }, 1000);
+      }, 700);
     } catch (err: any) {
       setFormError(err.message || 'Lỗi giao bài tập');
     } finally {
@@ -88,7 +72,31 @@ export default function CreateAssignmentPage() {
   };
 
   return (
-    <AppShell>
+    <AppShell
+      title={
+        <div className="flex items-center gap-1 text-2xl font-normal tracking-tight text-slate-900 dark:text-slate-100 flex-wrap -ml-2">
+          <button
+            type="button"
+            onClick={() => router.push('/app/classes')}
+            className="transition-colors cursor-pointer px-2 py-0.5 rounded-xl hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-normal"
+          >
+            Lớp học của tôi
+          </button>
+          <ChevronRight size={20} className="text-slate-400 dark:text-slate-500 shrink-0 stroke-[1.75]" />
+          <button
+            type="button"
+            onClick={() => router.push(`/app/classes/${classId}`)}
+            className="transition-colors cursor-pointer px-2 py-0.5 rounded-xl hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-normal"
+          >
+            Chi tiết lớp
+          </button>
+          <ChevronRight size={20} className="text-slate-400 dark:text-slate-500 shrink-0 stroke-[1.75]" />
+          <span className="px-2 py-0.5 rounded-xl text-slate-900 dark:text-white font-normal">
+            Giao bài tập mới
+          </span>
+        </div>
+      }
+    >
       <div className="max-w-2xl mx-auto space-y-6 pt-2 pb-12">
         {toast && (
           <div className="fixed bottom-6 right-6 z-50 bg-slate-900 text-white dark:bg-white dark:text-slate-900 px-5 py-3 rounded-2xl shadow-2xl font-medium text-xs flex items-center gap-2 animate-bounce">
@@ -96,22 +104,6 @@ export default function CreateAssignmentPage() {
             Đã giao bài tập thành công
           </div>
         )}
-
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => router.back()}
-            className="p-2 rounded-full hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 transition-all"
-            title="Quay lại"
-          >
-            <ArrowLeft size={20} />
-          </button>
-          <div>
-            <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-slate-100 flex items-center gap-2">
-              <FileText size={22} className="text-google-blue" />
-              Giao Bài tập / Đề thi mới
-            </h1>
-          </div>
-        </div>
 
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-xs">
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -162,38 +154,14 @@ export default function CreateAssignmentPage() {
 
             <div className="space-y-1">
               <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                Liên kết Đề thi trắc nghiệm (Tùy chọn)
-              </label>
-              <select
-                value={linkedQuizId}
-                onChange={(e) => {
-                  setLinkedQuizId(e.target.value);
-                  if (e.target.value) setLinkedDocumentFileId('');
-                }}
-                className="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-xs focus:outline-none focus:ring-1 focus:ring-google-blue"
-              >
-                <option value="">-- Không liên kết đề thi tự động --</option>
-                {quizzes.map((q) => (
-                  <option key={q.id} value={q.id}>
-                    {q.title} ({q._count?.questions ?? 0} câu hỏi)
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="space-y-1">
-              <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                Hoặc giao đề từ Kho tài liệu / AI đã tạo
+                Giao đề từ Kho tài liệu / Đề thi SI (Tùy chọn)
               </label>
               <select
                 value={linkedDocumentFileId}
-                onChange={(e) => {
-                  setLinkedDocumentFileId(e.target.value);
-                  if (e.target.value) setLinkedQuizId('');
-                }}
+                onChange={(e) => setLinkedDocumentFileId(e.target.value)}
                 className="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-xs focus:outline-none focus:ring-1 focus:ring-google-blue"
               >
-                <option value="">-- Không dùng tài liệu trong kho --</option>
+                <option value="">-- Không đính kèm đề thi --</option>
                 {documentFiles.map((doc) => (
                   <option key={doc.id} value={doc.id}>
                     {doc.parsedQuiz?.title || doc.name} ({doc.parsedQuiz?.questions?.length || 0} câu)
@@ -201,7 +169,7 @@ export default function CreateAssignmentPage() {
                 ))}
               </select>
               <p className="text-[11px] text-slate-500">
-                Dùng cho đề tạo bằng AI / OCR / upload Word đã nằm trong Kho tài liệu.
+                Giao đề trắc nghiệm tạo bằng SI hoặc tải lên từ Kho tài liệu.
               </p>
             </div>
 

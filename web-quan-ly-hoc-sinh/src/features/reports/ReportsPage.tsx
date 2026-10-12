@@ -190,7 +190,7 @@ const AiDiagnosticsHub: React.FC = () => {
       setPrediction(res.data.data);
     } catch (e) {
       console.error(e);
-      toast.error('Có lỗi khi tải phân tích AI.');
+      toast.error('Có lỗi khi tải phân tích SI.');
     } finally {
       setIsLoading(false);
     }
@@ -204,7 +204,7 @@ const AiDiagnosticsHub: React.FC = () => {
             <Sparkles className="w-5 h-5" />
           </div>
           <div>
-            <h3 className="text-xl font-semibold text-[#1D1D1F]">AI Academic Predictor - Chẩn đoán & Can thiệp sớm</h3>
+            <h3 className="text-xl font-semibold text-[#1D1D1F]">SI Academic Predictor - Chẩn đoán & Can thiệp sớm</h3>
             <p className="text-sm text-[#6E6E73] mt-0.5">Dự báo nguy cơ học thuật và đưa ra giải pháp sư phạm tự động.</p>
           </div>
         </div>
@@ -216,7 +216,7 @@ const AiDiagnosticsHub: React.FC = () => {
             ))}
           </Select>
           <Button onClick={runDiagnostic} disabled={isLoading || !selectedStudentId}>
-            {isLoading ? 'Đang phân tích...' : 'Chạy Chẩn đoán AI'}
+            {isLoading ? 'Đang phân tích...' : 'Chạy Chẩn đoán SI'}
           </Button>
         </div>
       </div>
@@ -224,7 +224,7 @@ const AiDiagnosticsHub: React.FC = () => {
       {isLoading ? (
         <div className="py-16 text-center text-[#6E6E73] flex flex-col items-center justify-center gap-3">
           <div className="w-8 h-8 rounded-full border-4 border-[#0071E3] border-t-transparent animate-spin" />
-          <span className="text-sm font-semibold">Thuật toán AI đang quét điểm số và lịch sử chuyên cần...</span>
+          <span className="text-sm font-semibold">Thuật toán SI đang quét điểm số và lịch sử chuyên cần...</span>
         </div>
       ) : prediction ? (
         <div className="pt-6 grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -259,7 +259,7 @@ const AiDiagnosticsHub: React.FC = () => {
           <div className="lg:col-span-2 p-6 bg-[#0071E3]/5 rounded-3xl border border-[#0071E3]/10 space-y-4">
             <div>
               <span className="text-[10px] font-bold text-[#0071E3] uppercase tracking-widest flex items-center gap-1">
-                <Sparkles className="w-3 h-3 animate-pulse" /> AI Advisor Insight
+                <Sparkles className="w-3 h-3 animate-pulse" /> SI Advisor Insight
               </span>
               <h5 className="font-bold text-base text-[#1D1D1F] mt-1">Chẩn đoán và Dự báo kết quả cuối kỳ</h5>
             </div>
@@ -277,7 +277,7 @@ const AiDiagnosticsHub: React.FC = () => {
         </div>
       ) : (
         <div className="py-12 text-center text-[#6E6E73] text-sm">
-          Vui lòng chọn học sinh phía trên và click **Chạy Chẩn đoán AI** để nhận kết quả phân tích.
+          Vui lòng chọn học sinh phía trên và click **Chạy Chẩn đoán SI** để nhận kết quả phân tích.
         </div>
       )}
     </div>

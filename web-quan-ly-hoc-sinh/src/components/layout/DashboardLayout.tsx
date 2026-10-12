@@ -66,7 +66,7 @@ const Sidebar: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen, o
       title: 'Hệ thống',
       items: [
         { title: 'Tổng quan', icon: LayoutDashboard, path: '/dashboard', roles: ['admin', 'teacher', 'student', 'parent'] },
-        { title: 'AI Advisor', icon: Sparkles, path: '/ai-advisor', roles: ['admin', 'teacher', 'student', 'parent'] },
+        { title: 'SI Advisor', icon: Sparkles, path: '/ai-advisor', roles: ['admin', 'teacher', 'student', 'parent'] },
         { title: 'Thông báo', icon: Bell, path: '/notifications', roles: ['admin', 'teacher', 'student', 'parent'] },
         { title: 'Cài đặt', icon: Settings, path: '/settings', roles: ['admin', 'teacher', 'student', 'parent'] },
       ]

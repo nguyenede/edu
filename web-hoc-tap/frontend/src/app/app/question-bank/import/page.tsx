@@ -3,9 +3,10 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { AppShell } from '@/components/AppShell';
+import { BreadcrumbChevron } from '@/components/BreadcrumbChevron';
 import { useAuthStore } from '@/store/useAuthStore';
 import { Button } from '@/components/Button';
-import { ArrowLeft, Download, Check } from 'lucide-react';
+import { ArrowLeft, Download, Check, ChevronRight } from 'lucide-react';
 
 export default function ImportQuestionPage() {
   const router = useRouter();
@@ -38,20 +39,43 @@ export default function ImportQuestionPage() {
 
       setToast(true);
       setTimeout(() => {
-        router.push('/question-bank');
-      }, 1000);
+        router.push('/app/question-bank');
+      }, 800);
     } catch (err: any) {
       setToast(true);
       setTimeout(() => {
-        router.push('/question-bank');
-      }, 1000);
+        router.push('/app/question-bank');
+      }, 800);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <AppShell>
+    <AppShell
+      title={
+        <div className="flex items-center gap-1 text-2xl font-[450] tracking-tight text-slate-900 dark:text-slate-100 flex-wrap -ml-2">
+          <button
+            type="button"
+            onClick={() => router.push('/app/question-bank')}
+            className="transition-colors cursor-pointer px-2 py-0.5 rounded-xl hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-900 dark:text-white font-[450]"
+          >
+            Ngân hàng câu hỏi
+          </button>
+          <BreadcrumbChevron
+            menuTitle="Ngân hàng câu hỏi"
+            items={[
+              { label: 'Danh sách câu hỏi', href: '/app/question-bank' },
+              { label: 'Tạo câu hỏi mới', href: '/app/question-bank/create' },
+              { label: 'Nhập câu hỏi từ file', href: '/app/question-bank/import' },
+            ]}
+          />
+          <span className="px-2 py-0.5 rounded-xl text-slate-900 dark:text-white font-[450]">
+            Nhập câu hỏi hàng loạt
+          </span>
+        </div>
+      }
+    >
       <div className="max-w-3xl mx-auto space-y-6 pt-2 pb-12">
         {toast && (
           <div className="fixed bottom-6 right-6 z-50 bg-slate-900 text-white dark:bg-white dark:text-slate-900 px-5 py-3 rounded-2xl shadow-2xl font-medium text-xs flex items-center gap-2 animate-bounce">
@@ -59,22 +83,6 @@ export default function ImportQuestionPage() {
             Đã nhập danh sách câu hỏi thành công
           </div>
         )}
-
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => router.back()}
-            className="p-2 rounded-full hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 transition-all"
-            title="Quay lại"
-          >
-            <ArrowLeft size={20} />
-          </button>
-          <div>
-            <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-slate-100 flex items-center gap-2">
-              <Download size={22} className="text-google-blue" />
-              Nhập câu hỏi hàng loạt (Import JSON)
-            </h1>
-          </div>
-        </div>
 
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-xs space-y-4">
           <form onSubmit={handleSubmit} className="space-y-4">

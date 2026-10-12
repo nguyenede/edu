@@ -3,9 +3,10 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { AppShell } from '@/components/AppShell';
+import { BreadcrumbChevron } from '@/components/BreadcrumbChevron';
 import { Button } from '@/components/Button';
 import { Badge } from '@/components/Badge';
-import { ArrowLeft, Laptop, Smartphone, Globe, Check } from 'lucide-react';
+import { ArrowLeft, Laptop, Smartphone, Globe, Check, ChevronRight } from 'lucide-react';
 
 export default function DevicesPage() {
   const router = useRouter();
@@ -17,7 +18,46 @@ export default function DevicesPage() {
   };
 
   return (
-    <AppShell>
+    <AppShell
+      title={
+        <div className="flex items-center gap-1 text-2xl font-[450] tracking-tight text-slate-900 dark:text-slate-100 flex-wrap -ml-2">
+          <button
+            type="button"
+            onClick={() => router.push('/app/settings')}
+            className="transition-colors cursor-pointer px-2 py-0.5 rounded-xl hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-900 dark:text-white font-[450]"
+          >
+            Cài đặt
+          </button>
+          <BreadcrumbChevron
+            menuTitle="Cài đặt"
+            items={[
+              { label: 'Cài đặt chung', href: '/app/settings' },
+              { label: 'Hồ sơ cá nhân', href: '/app/settings/edit-name' },
+              { label: 'Bảo mật', href: '/app/settings' },
+              { label: 'Quản lý thiết bị', href: '/app/settings/devices' },
+              { label: 'Gói dịch vụ', href: '/app/settings/plans' },
+            ]}
+          />
+          <button
+            type="button"
+            onClick={() => router.push('/app/settings')}
+            className="transition-colors cursor-pointer px-2 py-0.5 rounded-xl hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-900 dark:text-white font-[450]"
+          >
+            Bảo mật
+          </button>
+          <BreadcrumbChevron
+            menuTitle="Bảo mật"
+            items={[
+              { label: 'Đổi mật khẩu', href: '/app/settings/edit-password' },
+              { label: 'Quản lý thiết bị', href: '/app/settings/devices' },
+            ]}
+          />
+          <span className="px-2 py-0.5 rounded-xl text-slate-900 dark:text-white font-[450]">
+            Quản lý thiết bị
+          </span>
+        </div>
+      }
+    >
       <div className="max-w-2xl mx-auto space-y-6 pt-2 pb-12">
         {toast && (
           <div className="fixed bottom-6 right-6 z-50 bg-slate-900 text-white dark:bg-white dark:text-slate-900 px-5 py-3 rounded-2xl shadow-2xl font-medium text-xs flex items-center gap-2 animate-bounce">
@@ -26,22 +66,7 @@ export default function DevicesPage() {
           </div>
         )}
 
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => router.push('/app/settings/security')}
-            className="p-2 rounded-full hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 transition-all"
-            title="Quay lại Cài đặt"
-          >
-            <ArrowLeft size={20} />
-          </button>
-          <div>
-            <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
-              Quản lý các thiết bị đã đăng nhập
-            </h1>
-          </div>
-        </div>
-
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-xs space-y-3">
+        <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-xs space-y-3">
           <div className="p-4 bg-blue-50/50 dark:bg-blue-950/20 rounded-2xl flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Laptop size={22} className="text-google-blue" />
@@ -98,7 +123,7 @@ export default function DevicesPage() {
           </div>
 
           <div className="pt-4 flex justify-end">
-            <Button onClick={() => router.push('/settings')}>
+            <Button onClick={() => router.push('/app/settings/security')}>
               Hoàn tất
             </Button>
           </div>

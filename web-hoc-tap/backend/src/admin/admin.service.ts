@@ -6,16 +6,14 @@ export class AdminService {
   constructor(private prisma: PrismaService) {}
 
   async getSystemStats() {
-    const [usersCount, teachersCount, studentsCount, classesCount, quizzesCount, questionsCount, submissionsCount, roomsCount] =
+    const [usersCount, teachersCount, studentsCount, classesCount, questionsCount, submissionsCount] =
       await Promise.all([
         this.prisma.user.count(),
         this.prisma.user.count({ where: { role: 'TEACHER' } }),
         this.prisma.user.count({ where: { role: 'STUDENT' } }),
         this.prisma.class.count(),
-        this.prisma.quiz.count(),
         this.prisma.question.count(),
         this.prisma.submission.count(),
-        this.prisma.gameRoom.count(),
       ]);
 
     return {
@@ -23,10 +21,8 @@ export class AdminService {
       teachersCount,
       studentsCount,
       classesCount,
-      quizzesCount,
       questionsCount,
       submissionsCount,
-      roomsCount,
     };
   }
 
@@ -48,7 +44,6 @@ export class AdminService {
           select: {
             classes: true,
             memberships: true,
-            quizzes: true,
             submissions: true,
           },
         },

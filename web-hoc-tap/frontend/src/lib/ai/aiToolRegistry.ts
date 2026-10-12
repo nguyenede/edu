@@ -1,4 +1,6 @@
 import { safeLocalStorageSet } from '@/lib/safeStorage';
+import { idbSaveDocument } from '@/lib/indexedDbStorage';
+import { validateAndSanitizeQuestions, cleanVietnameseEncoding } from '@/lib/questionValidator';
 
 export interface ToolExecutionResult {
   toolName: string;
@@ -10,80 +12,16 @@ export interface ToolExecutionResult {
 
 export interface QuestionItem {
   id?: string;
+  rawLabel?: string;
   content: string;
   options: { content: string; isCorrect: boolean }[];
   points?: number;
+  explanation?: string;
+  type?: 'multiple_choice' | 'essay' | 'fill_blank' | 'true_false';
+  answer?: string;
 }
 
 export class AiToolRegistry {
-  /**
-   * Tạo phòng game Live Quiz mới và sinh mã PIN tham gia ngay lập tức
-   */
-  static launchGame(params: {
-    quizTitle?: string;
-    mode?: 'CHAOS' | 'CLASSIC' | 'ARENA';
-    questions?: QuestionItem[];
-    timePerQuestion?: number;
-  }): ToolExecutionResult {
-    try {
-      const pinCode = Math.floor(100000 + Math.random() * 900000).toString();
-      const roomId = `room_${Date.now()}`;
-      const title = params.quizTitle || 'Trò chơi Trắc nghiệm Trực tiếp';
-      const mode = params.mode || 'CHAOS';
-
-      const gameRoom = {
-        id: roomId,
-        pinCode,
-        title,
-        mode,
-        questionsCount: params.questions?.length || 5,
-        questions: params.questions || [
-          {
-            id: 'q1',
-            content: '1 + 1 bằng mấy?',
-            options: [
-              { content: '1', isCorrect: false },
-              { content: '2', isCorrect: true },
-              { content: '3', isCorrect: false },
-              { content: '4', isCorrect: false },
-            ],
-          },
-        ],
-        createdAt: new Date().toISOString(),
-        status: 'LOBBY',
-      };
-
-      if (typeof window !== 'undefined') {
-        const existingRooms = JSON.parse(localStorage.getItem('app_active_game_rooms') || '[]');
-        localStorage.setItem('app_active_game_rooms', JSON.stringify([gameRoom, ...existingRooms]));
-        localStorage.setItem(`game_room_${pinCode}`, JSON.stringify(gameRoom));
-      }
-
-      return {
-        toolName: 'launch_game',
-        status: 'success',
-        message: `Đã khởi tạo thành công phòng game "${title}" với mã PIN ${pinCode}!`,
-        actionType: 'game',
-        data: {
-          pinCode,
-          roomId,
-          title,
-          mode,
-          questionsCount: gameRoom.questionsCount,
-          playUrl: `/play/${pinCode}`,
-          hostUrl: `/app/host?quizId=${roomId}&mode=${mode}`,
-        },
-      };
-    } catch (err: any) {
-      return {
-        toolName: 'launch_game',
-        status: 'error',
-        message: `Lỗi khởi tạo phòng game: ${err.message}`,
-        actionType: 'game',
-      };
-    }
-  }
-
   /**
    * Tạo đề thi / bài tập trắc nghiệm mới và lưu vào kho tài liệu
    */
@@ -99,19 +37,22 @@ export class AiToolRegistry {
   }): ToolExecutionResult {
     try {
       const persist = params.persist !== false;
-      // Standard 32-character hexadecimal document UUID format (e.g. 6a8980105b9083ecaeffdfaa52bd5c46)
-      const examId = params.existingExamId || (typeof crypto !== 'undefined' && crypto.randomUUID
-        ? crypto.randomUUID().replace(/-/g, '')
-        : 'xxxxxxxxxxxx4xxxyxxxxxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
-            const r = (Math.random() * 16) | 0;
-            const v = c === 'x' ? r : (r & 0x3) | 0x8;
-            return v.toString(16);
-          })
-      ).toLowerCase();
 
-      const title = params.title || 'Đề thi trắc nghiệm mới';
-      const totalQCount = params.questions.length || 60;
-      const pointPerQuestion = Math.round((10 / totalQCount) * 100) / 100;
+      const sanitizedQuestions = validateAndSanitizeQuestions(params.questions);
+
+      if (sanitizedQuestions.length === 0) {
+        return {
+          toolName: 'create_exam',
+          status: 'error',
+          message: 'Không có câu hỏi hợp lệ từ AI đạt quy chuẩn để tạo đề thi. Tuyệt đối không tạo dữ liệu giả.',
+          actionType: 'exam',
+        };
+      }
+      // Clean readable document ID format (e.g. de_lm3x9_k2a1)
+      const examId = params.existingExamId || `de_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 6)}`;
+
+      const title = cleanVietnameseEncoding(params.title || 'Đề thi trắc nghiệm mới');
+      const pointPerQuestion = Math.round((10 / sanitizedQuestions.length) * 100) / 100;
 
       const examFileItem = {
         id: examId,
@@ -121,31 +62,40 @@ export class AiToolRegistry {
         createdAt: new Date().toISOString(),
         parsedQuiz: {
           title,
-          description: `Đề thi môn ${params.subject || 'Kiến thức tổng hợp'} - Khối ${params.grade || 'Tự do'} do AI ChatCoi tạo tự động.`,
+          description: cleanVietnameseEncoding(params.grade && params.grade !== 'Tự do'
+            ? `Đề thi môn ${params.subject || 'Kiến thức tổng hợp'} - Khối ${params.grade}`
+            : `Đề thi ${params.subject && params.subject !== 'Kiến thức tổng hợp' ? `chủ đề ${params.subject}` : 'kiến thức'}`),
           durationMinutes: params.durationMinutes || 45,
-          questions: params.questions.map((q, idx) => ({
+          questions: sanitizedQuestions.map((q, idx) => ({
             id: q.id || `q_${idx + 1}`,
-            content: (q.content || '').replace(/^Câu\s*\d+\s*[:.]\s*/i, '').trim(),
+            rawLabel: q.rawLabel || `Câu ${idx + 1}`,
+            content: q.content,
             points: q.points || pointPerQuestion,
             options: (q.options || []).map((opt) => ({
               content: opt.content,
               isCorrect: Boolean(opt.isCorrect),
             })),
+            explanation: q.explanation,
+            type: q.type || ((q.options || []).length >= 2 ? 'multiple_choice' : 'essay'),
+            answer: q.answer,
           })),
         },
       };
 
-      if (persist && typeof window !== 'undefined') {
+      const shouldPersist = persist !== false;
+      if (shouldPersist && typeof window !== 'undefined') {
         try {
+          idbSaveDocument(examFileItem);
+
           const existingDocs = JSON.parse(localStorage.getItem('app_documents_files') || '[]');
           const filteredDocs = Array.isArray(existingDocs)
-            ? existingDocs.filter((d: any) => d && d.id !== examId).slice(0, 30)
+            ? existingDocs.filter((d: any) => d && d.id !== examId)
             : [];
           safeLocalStorageSet('app_documents_files', JSON.stringify([examFileItem, ...filteredDocs]));
 
           const existingFiles = JSON.parse(localStorage.getItem('custom_uploaded_files') || '[]');
           const filteredFiles = Array.isArray(existingFiles)
-            ? existingFiles.filter((d: any) => d && d.id !== examId).slice(0, 30)
+            ? existingFiles.filter((d: any) => d && d.id !== examId)
             : [];
           safeLocalStorageSet('custom_uploaded_files', JSON.stringify([examFileItem, ...filteredFiles]));
         } catch (e) {
@@ -167,7 +117,7 @@ export class AiToolRegistry {
           questionsCount: params.questions.length,
           questions: params.questions,
           folderId: null,
-          examUrl: `/app/documents/${examId}/view`,
+          examUrl: `/documents/${examId}`,
         },
       };
     } catch (err: any) {
@@ -212,7 +162,7 @@ export class AiToolRegistry {
           folderId,
           name,
           parentId,
-          folderUrl: `/app/documents?folderId=${folderId}`,
+          folderUrl: '/documents',
         },
       };
     } catch (err: any) {
@@ -293,7 +243,7 @@ export class AiToolRegistry {
    * Điều hướng nhanh tới bất kỳ trang nào trong ứng dụng
    */
   static navigateWeb(params: { path: string; label?: string }): ToolExecutionResult {
-    const path = params.path || '/app/dashboard';
+    const path = params.path || '/dashboard';
     const label = params.label || 'Mở trang';
 
     return {
@@ -313,10 +263,6 @@ export class AiToolRegistry {
    */
   static execute(toolName: string, params: any): ToolExecutionResult {
     switch (toolName) {
-      case 'launch_game':
-      case 'create_game':
-      case 'start_game':
-        return this.launchGame(params);
       case 'create_exam':
       case 'create_test':
       case 'create_quiz':

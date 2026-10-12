@@ -12,9 +12,12 @@ export default function SettingsTabSubPage() {
     overview: 'overview',
     account: 'account',
     security: 'security',
-    password: 'password',
+    password: 'security',
     units: 'unit',
     unit: 'unit',
+    notifications: 'notifications',
+    appearance: 'appearance',
+    storage: 'storage',
     privacy: 'data_privacy',
     pro: 'pro_plan',
   };

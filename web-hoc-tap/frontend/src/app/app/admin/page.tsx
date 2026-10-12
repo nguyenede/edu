@@ -112,8 +112,8 @@ export default function AdminPage() {
       <div className="space-y-6">
         {/* Metric Summary Counters */}
         {stats && (
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <div className="p-4 bg-slate-50/80 dark:bg-slate-900/40 rounded-[6px] space-y-1">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 py-2 border-b border-slate-100 dark:border-slate-800">
+            <div className="space-y-1">
               <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider block">
                 Tổng tài khoản
               </span>
@@ -122,7 +122,7 @@ export default function AdminPage() {
               </p>
             </div>
 
-            <div className="p-4 bg-slate-50/80 dark:bg-slate-900/40 rounded-[6px] space-y-1">
+            <div className="space-y-1">
               <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider block">
                 Giáo viên / Học sinh
               </span>
@@ -131,21 +131,12 @@ export default function AdminPage() {
               </p>
             </div>
 
-            <div className="p-4 bg-slate-50/80 dark:bg-slate-900/40 rounded-[6px] space-y-1">
+            <div className="space-y-1">
               <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider block">
-                Lớp học / Bộ đề
+                Tổng số lớp học
               </span>
               <p className="text-2xl font-bold text-slate-950 dark:text-slate-100">
-                {stats.classesCount} / {stats.quizzesCount}
-              </p>
-            </div>
-
-            <div className="p-4 bg-slate-50/80 dark:bg-slate-900/40 rounded-[6px] space-y-1">
-              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider block">
-                Phòng game đã host
-              </span>
-              <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
-                {stats.roomsCount}
+                {stats.classesCount}
               </p>
             </div>
           </div>
@@ -179,7 +170,7 @@ export default function AdminPage() {
         {activeTab === 'users' && (
           <div className="space-y-4">
             {/* Filter Bar */}
-            <div className="flex flex-wrap gap-2.5 items-center p-3.5 bg-slate-50/80 dark:bg-slate-900/40 rounded-[6px]">
+            <div className="flex flex-wrap gap-2.5 items-center py-2 border-b border-slate-100 dark:border-slate-800">
               <div className="flex-1 min-w-[220px] relative">
                 <input
                   type="text"
@@ -187,7 +178,7 @@ export default function AdminPage() {
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && fetchUsers()}
-                  className="w-full pl-8 pr-3 py-1.5 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 rounded-[6px] text-xs focus:ring-1 focus:ring-blue-500 placeholder-slate-400"
+                  className="w-full pl-8 pr-3 py-1.5 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 rounded-lg text-xs focus:ring-1 focus:ring-blue-500 placeholder-slate-400"
                 />
                 <Search size={14} className="absolute left-2.5 top-2 text-slate-400" />
               </div>
@@ -195,7 +186,7 @@ export default function AdminPage() {
               <select
                 value={roleFilter}
                 onChange={(e) => setRoleFilter(e.target.value)}
-                className="px-3 py-1.5 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 rounded-[6px] text-xs font-semibold focus:ring-1 focus:ring-blue-500"
+                className="px-3 py-1.5 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 rounded-lg text-xs font-semibold focus:ring-1 focus:ring-blue-500"
               >
                 <option value="">Tất cả vai trò</option>
                 <option value="TEACHER">Giáo viên</option>
@@ -212,19 +203,19 @@ export default function AdminPage() {
             {loading ? (
               <p className="text-xs text-slate-400 py-12 text-center">Đang tải danh sách người dùng...</p>
             ) : (
-              <div className="space-y-2">
+              <div className="divide-y divide-slate-100 dark:divide-slate-800">
                 {usersList.map((u) => (
                   <div
                     key={u.id}
-                    className="p-4 bg-slate-50/80 dark:bg-slate-900/40 rounded-[6px] flex justify-between items-center select-none"
+                    className="py-3.5 px-2 flex justify-between items-center hover:bg-slate-50/50 dark:hover:bg-slate-900/30 rounded-lg transition-colors select-none group"
                   >
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-[4px] bg-slate-200 dark:bg-slate-800 flex items-center justify-center text-xs font-bold text-slate-700 dark:text-slate-300">
+                      <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center text-xs font-bold text-slate-700 dark:text-slate-300">
                         {u.profile?.name ? u.profile.name[0] : 'U'}
                       </div>
                       <div className="space-y-0.5">
                         <div className="flex items-center gap-2">
-                          <span className="font-bold text-xs text-slate-900 dark:text-slate-100">
+                          <span className="font-bold text-xs text-slate-900 dark:text-slate-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
                             {u.profile?.name || 'Chưa đặt tên'}
                           </span>
                           <Badge
@@ -252,7 +243,7 @@ export default function AdminPage() {
                       {u.role !== 'ADMIN' && (
                         <button
                           onClick={() => setUserToDelete(u.id)}
-                          className="p-1 text-slate-400 hover:text-red-600 rounded-[4px]"
+                          className="p-1 text-slate-400 hover:text-red-600 rounded transition-colors"
                           title="Xóa tài khoản"
                         >
                           <Trash2 size={16} />
@@ -270,28 +261,30 @@ export default function AdminPage() {
         {activeTab === 'logs' && (
           <div className="space-y-2">
             {auditLogs.length === 0 ? (
-              <p className="text-xs text-slate-400 py-12 text-center bg-slate-50/40 dark:bg-slate-900/20 rounded-[6px]">
+              <p className="text-xs text-slate-400 py-12 text-center">
                 Chưa có nhật ký hoạt động nào.
               </p>
             ) : (
-              auditLogs.map((log) => (
-                <div
-                  key={log.id}
-                  className="p-3.5 bg-slate-50/80 dark:bg-slate-900/40 rounded-[6px] flex justify-between items-center text-xs"
-                >
-                  <div className="space-y-0.5">
-                    <span className="font-bold text-slate-900 dark:text-slate-100 block">
-                      {log.action}
+              <div className="divide-y divide-slate-100 dark:divide-slate-800">
+                {auditLogs.map((log) => (
+                  <div
+                    key={log.id}
+                    className="py-3 px-2 flex justify-between items-center text-xs hover:bg-slate-50/50 dark:hover:bg-slate-900/30 rounded-lg transition-colors"
+                  >
+                    <div className="space-y-0.5">
+                      <span className="font-bold text-slate-900 dark:text-slate-100 block">
+                        {log.action}
+                      </span>
+                      <p className="text-slate-600 dark:text-slate-400 text-xs">
+                        {log.description}
+                      </p>
+                    </div>
+                    <span className="text-[10px] text-slate-400 shrink-0 font-mono">
+                      {new Date(log.createdAt).toLocaleString('vi-VN')}
                     </span>
-                    <p className="text-slate-600 dark:text-slate-400 text-xs">
-                      {log.description}
-                    </p>
                   </div>
-                  <span className="text-[10px] text-slate-400 shrink-0 font-mono">
-                    {new Date(log.createdAt).toLocaleString('vi-VN')}
-                  </span>
-                </div>
-              ))
+                ))}
+              </div>
             )}
           </div>
         )}

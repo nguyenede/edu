@@ -92,15 +92,15 @@ export default function NotificationsPage() {
             </p>
           </div>
         ) : (
-          <div className="space-y-2">
+          <div className="space-y-1">
             {notifications.map((n) => (
               <div
                 key={n.id}
                 onClick={() => !n.isRead && handleMarkAsRead(n.id)}
-                className={`p-4 rounded-[6px] flex justify-between items-start cursor-pointer ${
+                className={`py-3.5 px-2 rounded-lg flex justify-between items-start cursor-pointer transition-colors ${
                   n.isRead
-                    ? 'bg-slate-50/60 dark:bg-slate-900/30 text-slate-600 dark:text-slate-400'
-                    : 'bg-blue-50/40 dark:bg-blue-950/20 text-slate-900 dark:text-slate-100 ring-1 ring-blue-500/20'
+                    ? 'text-slate-600 dark:text-slate-400 hover:bg-slate-50/50 dark:hover:bg-slate-900/30'
+                    : 'text-slate-900 dark:text-slate-100 bg-blue-50/30 dark:bg-blue-950/20 hover:bg-blue-50/60 dark:hover:bg-blue-950/40'
                 }`}
               >
                 <div className="space-y-1">
@@ -109,7 +109,7 @@ export default function NotificationsPage() {
                     {!n.isRead && <Badge variant="primary">Mới</Badge>}
                   </div>
                   <p className="text-xs text-slate-600 dark:text-slate-400">{n.content}</p>
-                  <span className="text-[10px] text-slate-400 block pt-1">
+                  <span className="text-[10px] text-slate-400 block pt-0.5">
                     {new Date(n.createdAt).toLocaleString('vi-VN')}
                   </span>
                 </div>
@@ -121,7 +121,7 @@ export default function NotificationsPage() {
                     e.stopPropagation();
                     handleMarkAsRead(n.id);
                   }}
-                  className="shrink-0"
+                  className="shrink-0 text-xs"
                 >
                   {n.isRead ? 'Đã đọc' : 'Đánh dấu đọc'}
                 </Button>

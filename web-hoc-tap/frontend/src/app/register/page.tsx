@@ -46,7 +46,7 @@ export default function RegisterPage() {
     setLoading(true);
     setErrorMsg(null);
     try {
-      const res = await fetch('http://127.0.0.1:3005/api/auth/register', {
+      const res = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
@@ -58,7 +58,7 @@ export default function RegisterPage() {
       }
 
       loginUser(result.user, result.access_token);
-      window.location.href = '/app/dashboard';
+      window.location.href = '/dashboard';
     } catch (err: any) {
       setErrorMsg(err.message || 'Không kết nối được máy chủ đăng ký');
     } finally {
@@ -78,7 +78,7 @@ export default function RegisterPage() {
           className="inline-flex items-center gap-2.5 cursor-pointer mb-2"
         >
           <div className="w-10 h-10 rounded-xl bg-white dark:bg-slate-900 flex items-center justify-center p-1.5 shadow-xs">
-            <svg viewBox="0 0 24 24" className="w-full h-full">
+            <svg viewBox="0 0 24 24" width="24" height="24" className="w-full h-full" style={{ maxWidth: '24px', maxHeight: '24px' }}>
               <path fill="#4285F4" d="M12 2L2 19.7h8.4L12 16.2l3.6 3.5H22L12 2z" />
               <path fill="#FBBC05" d="M2 19.7h8.4L15.6 12 12 2 2 19.7z" />
               <path fill="#34A853" d="M12 16.2l3.6 3.5H22L17.2 12 12 16.2z" />
@@ -93,7 +93,7 @@ export default function RegisterPage() {
           Tạo tài khoản mới
         </h2>
         <p className="text-xs text-slate-500">
-          Đăng ký để trải nghiệm hệ thống học tập và phòng đấu Chaos Quiz
+          Đăng ký để trải nghiệm hệ thống học tập và kiểm tra trực tuyến
         </p>
       </div>
 

@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useState, Suspense } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { AppShell } from '@/components/AppShell';
+import { BreadcrumbChevron } from '@/components/BreadcrumbChevron';
 import { Button } from '@/components/Button';
 import { BookOpen, Check, Layers, Sparkles, ChevronRight, AlertCircle } from 'lucide-react';
 import { AiToolRegistry } from '@/lib/ai/aiToolRegistry';
@@ -20,13 +21,34 @@ const SUGGESTED_TEMPLATES = [
 function BankQuizCreateContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const folderId = searchParams.get('folderId');
-  const folderName = searchParams.get('folderName');
-  const targetQuery = folderId && folderName ? `?folderId=${folderId}&folderName=${encodeURIComponent(folderName)}` : '';
+  const rawFolderId = searchParams.get('folderId');
+  const rawFolderName = searchParams.get('folderName');
+
+  const [folderId, setFolderId] = useState<string | null>(null);
+  const [folderName, setFolderName] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const storedId = sessionStorage.getItem('app_active_folder_id');
+      const storedName = sessionStorage.getItem('app_active_folder_name');
+      const effId = rawFolderId || storedId || null;
+      const effName = rawFolderName || storedName || null;
+      setFolderId(effId);
+      setFolderName(effName);
+      if (effId) sessionStorage.setItem('app_active_folder_id', effId);
+      if (effName) sessionStorage.setItem('app_active_folder_name', effName);
+
+      if (window.location.search) {
+        window.history.replaceState(null, '', '/app/documents/create/bank');
+      }
+    }
+  }, [rawFolderId, rawFolderName]);
+
+  const targetQuery = '';
   const token = useAuthStore((state) => state.token);
 
-  const [selectedSubject, setSelectedSubject] = useState('Toán');
-  const [selectedGrade, setSelectedGrade] = useState('12');
+  const [selectedSubject, setSelectedSubject] = useState('');
+  const [selectedGrade, setSelectedGrade] = useState('');
   const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>('t1');
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -39,7 +61,7 @@ function BankQuizCreateContent() {
     const template = templateOverride || SUGGESTED_TEMPLATES.find((t) => t.id === selectedTemplateId);
     const subject = template ? template.subject : selectedSubject;
     const grade = template ? template.grade : selectedGrade;
-    const topic = template ? template.topic : `Ngân hàng câu hỏi chuẩn kiến thức môn ${selectedSubject} lớp ${selectedGrade}`;
+    const topic = template ? template.topic : (selectedSubject ? `Ngân hàng câu hỏi chuẩn kiến thức môn ${selectedSubject}${selectedGrade ? ` lớp ${selectedGrade}` : ''}` : 'Ngân hàng câu hỏi chuẩn kiến thức tổng hợp');
     const count = template ? template.questions : 20;
     const difficulty = template ? template.difficulty : 'Thông hiểu';
 
@@ -49,11 +71,12 @@ function BankQuizCreateContent() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           mode: 'topic',
-          subject,
-          grade,
+          subject: subject || '',
+          grade: grade || '',
           topic,
           numQuestions: count,
           difficulty,
+          model: 'gemini-3.5-flash-lite',
         }),
       });
 
@@ -95,36 +118,56 @@ function BankQuizCreateContent() {
   return (
     <AppShell
       title={
-        <div className="flex items-center gap-1 text-2xl font-normal tracking-tight text-slate-900 dark:text-slate-100 flex-wrap -ml-2">
+        <div className="flex items-center gap-1 text-2xl font-[450] tracking-tight text-slate-900 dark:text-slate-100 flex-wrap -ml-2">
           <button
             type="button"
             onClick={() => router.push('/app/documents')}
-            className="transition-colors cursor-pointer px-2 py-0.5 rounded-xl hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-normal"
+            className="transition-colors cursor-pointer px-2 py-0.5 rounded-xl hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-900 dark:text-white font-[450]"
           >
             Tài liệu của tôi
           </button>
-          {folderName && (
+          {folderName ? (
             <>
-              <ChevronRight size={20} className="text-slate-400 dark:text-slate-500 shrink-0 stroke-[1.75]" />
+              <BreadcrumbChevron
+                folderId={null}
+                onNavigateFolder={(id) => router.push(`/app/documents?folderId=${id}`)}
+              />
               <button
                 type="button"
                 onClick={() => router.push(`/app/documents?folderId=${folderId || ''}`)}
-                className="transition-colors cursor-pointer px-2 py-0.5 rounded-xl hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-normal"
+                className="transition-colors cursor-pointer px-2 py-0.5 rounded-xl hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-900 dark:text-white font-[450]"
               >
                 {folderName}
               </button>
+              <BreadcrumbChevron
+                folderId={folderId || null}
+                onNavigateFolder={(id) => router.push(`/app/documents?folderId=${id}`)}
+              />
             </>
+          ) : (
+            <BreadcrumbChevron
+              folderId={null}
+              onNavigateFolder={(id) => router.push(`/app/documents?folderId=${id}`)}
+            />
           )}
-          <ChevronRight size={20} className="text-slate-400 dark:text-slate-500 shrink-0 stroke-[1.75]" />
           <button
             type="button"
             onClick={() => router.push('/app/documents/create' + targetQuery)}
-            className="transition-colors cursor-pointer px-2 py-0.5 rounded-xl hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-normal"
+            className="transition-colors cursor-pointer px-2 py-0.5 rounded-xl hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-900 dark:text-white font-[450]"
           >
             Tạo đề thi
           </button>
-          <ChevronRight size={20} className="text-slate-400 dark:text-slate-500 shrink-0 stroke-[1.75]" />
-          <span className="px-2 py-0.5 rounded-xl text-slate-900 dark:text-white font-normal">
+          <BreadcrumbChevron
+            menuTitle="Phương thức tạo đề"
+            items={[
+              { label: 'Tải lên Word/PDF', href: `/app/documents/create${targetQuery}` },
+              { label: 'Tạo đề bằng AI', href: `/app/documents/create/ai${targetQuery}` },
+              { label: 'Nhận diện ảnh (OCR)', href: `/app/documents/create/ocr${targetQuery}` },
+              { label: 'Ngân hàng câu hỏi', href: `/app/documents/create/bank${targetQuery}` },
+              { label: 'Nhập thủ công', href: `/app/documents/create/manual${targetQuery}` },
+            ]}
+          />
+          <span className="px-2 py-0.5 rounded-xl text-slate-900 dark:text-white font-[450]">
             Ngân hàng câu hỏi
           </span>
         </div>
@@ -147,7 +190,7 @@ function BankQuizCreateContent() {
                 Ngân hàng đề thi & chuyên đề chuẩn kiến thức SGK mới
               </h2>
               <p className="text-xs text-slate-500">
-                Chọn môn học hoặc bộ đề có sẵn, AI sẽ tự động biên soạn và trích xuất thành bộ đề hoàn chỉnh
+                Chọn môn học hoặc bộ đề có sẵn, SI sẽ tự động biên soạn và trích xuất thành bộ đề hoàn chỉnh
               </p>
             </div>
           </div>
@@ -170,6 +213,7 @@ function BankQuizCreateContent() {
                   onChange={(e) => setSelectedSubject(e.target.value)}
                   className="w-full text-xs p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl font-medium focus:ring-1 focus:ring-emerald-500"
                 >
+                  <option value="">Không chọn</option>
                   <option value="Toán">Toán</option>
                   <option value="Tiếng Anh">Tiếng Anh</option>
                   <option value="Ngữ văn">Ngữ văn</option>
@@ -192,6 +236,7 @@ function BankQuizCreateContent() {
                   onChange={(e) => setSelectedGrade(e.target.value)}
                   className="w-full text-xs p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl font-medium focus:ring-1 focus:ring-emerald-500"
                 >
+                  <option value="">Không chọn</option>
                   <option value="12">Khối 12</option>
                   <option value="11">Khối 11</option>
                   <option value="10">Khối 10</option>
@@ -258,7 +303,7 @@ function BankQuizCreateContent() {
             <div className="p-6 text-center space-y-2 bg-emerald-50/50 dark:bg-emerald-950/20 rounded-2xl border border-emerald-200/50">
               <div className="animate-spin rounded-full h-7 w-7 border-b-2 border-emerald-500 mx-auto" />
               <p className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold">
-                AI đang trích xuất và khởi tạo bộ đề thi chuẩn kiến thức...
+                SI đang trích xuất và khởi tạo bộ đề thi chuẩn kiến thức...
               </p>
             </div>
           )}
@@ -272,7 +317,7 @@ function BankQuizCreateContent() {
               disabled={isLoading}
               className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold"
             >
-              <Sparkles size={16} className="mr-1.5" /> {isLoading ? 'AI Đang Xử Lý...' : 'Trích Xuất Câu Hỏi & Tạo Đề'}
+              <Sparkles size={16} className="mr-1.5" /> {isLoading ? 'SI Đang Xử Lý...' : 'Trích Xuất Câu Hỏi & Tạo Đề'}
             </Button>
           </div>
         </div>

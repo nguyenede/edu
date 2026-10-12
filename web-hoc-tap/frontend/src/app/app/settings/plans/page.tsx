@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/useAuthStore';
 import { AppShell } from '@/components/AppShell';
+import { BreadcrumbChevron } from '@/components/BreadcrumbChevron';
 import { Button } from '@/components/Button';
 import { Badge } from '@/components/Badge';
 import { Modal } from '@/components/Modal';
@@ -16,6 +17,7 @@ import {
   Users,
   Copy,
   CheckCircle2,
+  ChevronRight,
 } from 'lucide-react';
 
 export default function PlansPage() {
@@ -82,7 +84,32 @@ export default function PlansPage() {
   };
 
   return (
-    <AppShell>
+    <AppShell
+      title={
+        <div className="flex items-center gap-1 text-2xl font-[450] tracking-tight text-slate-900 dark:text-slate-100 flex-wrap -ml-2">
+          <button
+            type="button"
+            onClick={() => router.push('/app/settings')}
+            className="transition-colors cursor-pointer px-2 py-0.5 rounded-xl hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-900 dark:text-white font-[450]"
+          >
+            Cài đặt
+          </button>
+          <BreadcrumbChevron
+            menuTitle="Cài đặt"
+            items={[
+              { label: 'Cài đặt chung', href: '/app/settings' },
+              { label: 'Hồ sơ cá nhân', href: '/app/settings/edit-name' },
+              { label: 'Đổi mật khẩu', href: '/app/settings/edit-password' },
+              { label: 'Thiết bị đăng nhập', href: '/app/settings/devices' },
+              { label: 'Gói dịch vụ & Nâng cấp', href: '/app/settings/plans' },
+            ]}
+          />
+          <span className="px-2 py-0.5 rounded-xl text-slate-900 dark:text-white font-[450]">
+            Ủng hộ nhà phát triển & Gói Pro
+          </span>
+        </div>
+      }
+    >
       {/* Copy Toast (Fixed outside space-y container to prevent layout shift) */}
       {copyToast && (
         <div className="fixed bottom-6 right-6 z-[9999] bg-slate-900 text-white dark:bg-white dark:text-slate-900 px-5 py-3 rounded-2xl shadow-2xl font-medium text-xs flex items-center gap-2 animate-bounce pointer-events-none">
@@ -242,7 +269,7 @@ export default function PlansPage() {
                   <ul className="space-y-3 text-xs text-slate-600 dark:text-slate-300">
                     <li className="flex items-center gap-2.5">
                       <Check size={16} className="text-google-blue shrink-0" />
-                      <span>Tạo tối đa 5 đề thi AI</span>
+                      <span>Tạo tối đa 5 đề thi SI</span>
                     </li>
                     <li className="flex items-center gap-2.5">
                       <Check size={16} className="text-google-blue shrink-0" />
@@ -315,7 +342,7 @@ export default function PlansPage() {
                   <ul className="space-y-3 text-xs text-slate-700 dark:text-slate-200">
                     <li className="flex items-center gap-2.5 font-semibold text-google-blue">
                       <Zap size={16} className="text-google-blue shrink-0" />
-                      <span>Tạo 100 đề thi AI</span>
+                      <span>Tạo 100 đề thi SI</span>
                     </li>
                     <li className="flex items-center gap-2.5 font-semibold text-google-blue">
                       <Users size={16} className="text-google-blue shrink-0" />
@@ -327,7 +354,7 @@ export default function PlansPage() {
                     </li>
                     <li className="flex items-center gap-2.5 font-medium">
                       <Check size={16} className="text-google-blue shrink-0" />
-                      <span>Chấm điểm AI tự động kèm lời giải chi tiết</span>
+                      <span>Chấm điểm SI tự động kèm lời giải chi tiết</span>
                     </li>
                     <li className="flex items-center gap-2.5 font-medium">
                       <Check size={16} className="text-google-blue shrink-0" />
@@ -335,7 +362,7 @@ export default function PlansPage() {
                     </li>
                     <li className="flex items-center gap-2.5 font-medium">
                       <Check size={16} className="text-google-blue shrink-0" />
-                      <span>Phân tích lộ trình học tập AI từng học sinh</span>
+                      <span>Phân tích lộ trình học tập SI từng học sinh</span>
                     </li>
                     <li className="flex items-center gap-2.5 font-medium">
                       <Check size={16} className="text-google-blue shrink-0" />
@@ -394,7 +421,7 @@ export default function PlansPage() {
                   <ul className="space-y-3 text-xs text-slate-700 dark:text-slate-200">
                     <li className="flex items-center gap-2.5 font-bold text-amber-700 dark:text-amber-300">
                       <Sparkles size={16} className="text-amber-500 shrink-0" />
-                      <span>Tạo đề thi AI không giới hạn</span>
+                      <span>Tạo đề thi SI không giới hạn</span>
                     </li>
                     <li className="flex items-center gap-2.5 font-bold text-amber-700 dark:text-amber-300">
                       <Users size={16} className="text-amber-500 shrink-0" />

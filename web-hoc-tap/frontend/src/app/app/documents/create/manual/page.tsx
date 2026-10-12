@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useState, Suspense } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { AppShell } from '@/components/AppShell';
+import { BreadcrumbChevron } from '@/components/BreadcrumbChevron';
 import { Button } from '@/components/Button';
 import { Input } from '@/components/Input';
 import {
@@ -15,6 +16,7 @@ import {
   ChevronRight,
   Sparkles,
   Loader2,
+  AlertCircle,
 } from 'lucide-react';
 import { AiToolRegistry } from '@/lib/ai/aiToolRegistry';
 import { useAuthStore } from '@/store/useAuthStore';
@@ -31,14 +33,35 @@ interface QuestionItem {
 function ManualQuizCreateContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const folderId = searchParams.get('folderId');
-  const folderName = searchParams.get('folderName');
-  const targetQuery = folderId && folderName ? `?folderId=${folderId}&folderName=${encodeURIComponent(folderName)}` : '';
+  const rawFolderId = searchParams.get('folderId');
+  const rawFolderName = searchParams.get('folderName');
+
+  const [folderId, setFolderId] = useState<string | null>(null);
+  const [folderName, setFolderName] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const storedId = sessionStorage.getItem('app_active_folder_id');
+      const storedName = sessionStorage.getItem('app_active_folder_name');
+      const effId = rawFolderId || storedId || null;
+      const effName = rawFolderName || storedName || null;
+      setFolderId(effId);
+      setFolderName(effName);
+      if (effId) sessionStorage.setItem('app_active_folder_id', effId);
+      if (effName) sessionStorage.setItem('app_active_folder_name', effName);
+
+      if (window.location.search) {
+        window.history.replaceState(null, '', '/app/documents/create/manual');
+      }
+    }
+  }, [rawFolderId, rawFolderName]);
+
+  const targetQuery = '';
   const token = useAuthStore((state) => state.token);
 
   const [docTitle, setDocTitle] = useState('');
-  const [docSubject, setDocSubject] = useState('Toán');
-  const [docGrade, setDocGrade] = useState('12');
+  const [docSubject, setDocSubject] = useState('');
+  const [docGrade, setDocGrade] = useState('');
 
   const [questions, setQuestions] = useState<QuestionItem[]>([
     {
@@ -57,6 +80,15 @@ function ManualQuizCreateContent() {
 
   const [aiLoadingId, setAiLoadingId] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const showToast = (msg: string, isError = false) => {
+    setToastMessage(msg);
+    if (isError) {
+      setErrorMessage(msg);
+    }
+    setTimeout(() => setToastMessage(null), 4000);
+  };
 
   const handleAddQuestion = () => {
     setQuestions((prev) => [
@@ -78,7 +110,7 @@ function ManualQuizCreateContent() {
 
   const handleRemoveQuestion = (qId: string) => {
     if (questions.length <= 1) {
-      alert('Đề thi phải có ít nhất 1 câu hỏi!');
+      showToast('Đề thi phải có ít nhất 1 câu hỏi!', true);
       return;
     }
     setQuestions((prev) => prev.filter((q) => q.id !== qId));
@@ -116,25 +148,33 @@ function ManualQuizCreateContent() {
 
   const handleAiSuggestQuestion = async (qId: string) => {
     const targetQ = questions.find((q) => q.id === qId);
-    const userPrompt = targetQ?.content.trim() || docTitle.trim() || `Kiến thức trọng tâm môn ${docSubject} lớp ${docGrade}`;
+    const userPrompt = targetQ?.content.trim() || docTitle.trim() || (docSubject ? `Kiến thức trọng tâm môn ${docSubject}${docGrade ? ` lớp ${docGrade}` : ''}` : '');
+
+    if (!userPrompt) {
+      showToast('Vui lòng nhập nội dung câu hỏi hoặc từ khóa trước khi yêu cầu SI điền!', true);
+      return;
+    }
 
     setAiLoadingId(qId);
+    setErrorMessage(null);
+
     try {
       const res = await fetch('/api/ai/generate-exam', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           mode: 'suggest',
-          subject: docSubject,
-          grade: docGrade,
+          subject: docSubject || '',
+          grade: docGrade || '',
           customPrompt: userPrompt,
           difficulty: 'Thông hiểu',
+          model: 'gemini-2.5-flash',
         }),
       });
 
       const data = await res.json();
       if (!res.ok || !data.success || !data.question) {
-        throw new Error(data.error || 'AI không thể gợi ý câu hỏi lúc này');
+        throw new Error(data.error || 'SI không thể tạo câu hỏi lúc này. Hệ thống 100% không làm giả dữ liệu.');
       }
 
       const sq = data.question;
@@ -152,22 +192,29 @@ function ManualQuizCreateContent() {
           };
         })
       );
+      showToast('SI đã soạn xong câu hỏi theo đúng chủ đề!');
     } catch (err: any) {
-      console.error('Error generating single AI question:', err);
-      alert(err.message || 'Lỗi khi gọi AI tạo câu hỏi');
+      console.error('Error generating single SI question:', err);
+      showToast(err.message || 'Lỗi kết nối AI. Hệ thống 100% không làm giả dữ liệu.', true);
     } finally {
       setAiLoadingId(null);
     }
   };
 
   const handleSaveQuiz = async () => {
-    if (!docTitle.trim()) {
-      alert('Vui lòng nhập tên đề thi!');
-      return;
+    let finalTitle = docTitle.trim();
+    if (!finalTitle) {
+      if (questions[0]?.content.trim()) {
+        const snippet = questions[0].content.trim().slice(0, 35);
+        finalTitle = `Đề thi: ${snippet}...`;
+      } else {
+        finalTitle = `Đề thi trắc nghiệm (${docSubject && docSubject !== 'Không chọn' ? docSubject : 'Tổng hợp'}) - ${new Date().toLocaleDateString('vi-VN')}`;
+      }
     }
+
     const hasEmptyQuestion = questions.some((q) => !q.content.trim());
     if (hasEmptyQuestion) {
-      alert('Vui lòng điền nội dung cho tất cả các câu hỏi!');
+      showToast('Vui lòng điền nội dung cho tất cả các câu hỏi!');
       return;
     }
 
@@ -175,7 +222,7 @@ function ManualQuizCreateContent() {
     const pt = Math.round((10 / totalQ) * 100) / 100;
 
     let result = AiToolRegistry.createExam({
-      title: docTitle.trim(),
+      title: finalTitle,
       subject: docSubject,
       grade: docGrade,
       durationMinutes: totalQ <= 15 ? 30 : 60,
@@ -189,7 +236,7 @@ function ManualQuizCreateContent() {
     });
     result = await syncExamActionToDocument(token, result);
 
-    setToastMessage('Đã tạo và lưu đề thi thành công!');
+    showToast('Đã tạo và lưu đề thi thành công!');
     setTimeout(() => {
       if (result.data?.examUrl) {
         router.push(result.data.examUrl);
@@ -202,51 +249,85 @@ function ManualQuizCreateContent() {
   return (
     <AppShell
       title={
-        <div className="flex items-center gap-1 text-2xl font-normal tracking-tight text-slate-900 dark:text-slate-100 flex-wrap -ml-2">
+        <div className="flex items-center gap-1 text-2xl font-[450] tracking-tight text-slate-900 dark:text-slate-100 flex-wrap -ml-2">
           <button
             type="button"
             onClick={() => router.push('/app/documents')}
-            className="transition-colors cursor-pointer px-2 py-0.5 rounded-xl hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-normal"
+            className="transition-colors cursor-pointer px-2 py-0.5 rounded-xl hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-900 dark:text-white font-[450]"
           >
             Tài liệu của tôi
           </button>
-          {folderName && (
+          {folderName ? (
             <>
-              <ChevronRight size={20} className="text-slate-400 dark:text-slate-500 shrink-0 stroke-[1.75]" />
+              <BreadcrumbChevron
+                folderId={null}
+                onNavigateFolder={(id) => router.push(`/app/documents?folderId=${id}`)}
+              />
               <button
                 type="button"
                 onClick={() => router.push(`/app/documents?folderId=${folderId || ''}`)}
-                className="transition-colors cursor-pointer px-2 py-0.5 rounded-xl hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-normal"
+                className="transition-colors cursor-pointer px-2 py-0.5 rounded-xl hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-900 dark:text-white font-[450]"
               >
                 {folderName}
               </button>
+              <BreadcrumbChevron
+                folderId={folderId || null}
+                onNavigateFolder={(id) => router.push(`/app/documents?folderId=${id}`)}
+              />
             </>
+          ) : (
+            <BreadcrumbChevron
+              folderId={null}
+              onNavigateFolder={(id) => router.push(`/app/documents?folderId=${id}`)}
+            />
           )}
-          <ChevronRight size={20} className="text-slate-400 dark:text-slate-500 shrink-0 stroke-[1.75]" />
           <button
             type="button"
             onClick={() => router.push('/app/documents/create' + targetQuery)}
-            className="transition-colors cursor-pointer px-2 py-0.5 rounded-xl hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-normal"
+            className="transition-colors cursor-pointer px-2 py-0.5 rounded-xl hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-900 dark:text-white font-[450]"
           >
             Tạo đề thi
           </button>
-          <ChevronRight size={20} className="text-slate-400 dark:text-slate-500 shrink-0 stroke-[1.75]" />
-          <span className="px-2 py-0.5 rounded-xl text-slate-900 dark:text-white font-normal">
-            Soạn đề thủ công + Trợ lý AI
+          <BreadcrumbChevron
+            menuTitle="Phương thức tạo đề"
+            items={[
+              { label: 'Tải lên Word/PDF', href: `/app/documents/create${targetQuery}` },
+              { label: 'Tạo đề bằng AI', href: `/app/documents/create/ai${targetQuery}` },
+              { label: 'Nhận diện ảnh (OCR)', href: `/app/documents/create/ocr${targetQuery}` },
+              { label: 'Ngân hàng câu hỏi', href: `/app/documents/create/bank${targetQuery}` },
+              { label: 'Nhập thủ công', href: `/app/documents/create/manual${targetQuery}` },
+            ]}
+          />
+          <span className="px-2 py-0.5 rounded-xl text-slate-900 dark:text-white font-[450]">
+            Soạn đề thủ công
           </span>
         </div>
       }
     >
       {/* Toast Notification */}
       {toastMessage && (
-        <div className="fixed bottom-6 right-6 z-[9999] bg-slate-900 text-white dark:bg-white dark:text-slate-900 px-5 py-3 rounded-2xl shadow-2xl font-medium text-xs flex items-center gap-2 animate-bounce pointer-events-none">
-          <Check size={16} className="text-google-green shrink-0" />
+        <div className={`fixed bottom-6 right-6 z-[9999] px-5 py-3 rounded-2xl shadow-2xl font-medium text-xs flex items-center gap-2 animate-bounce pointer-events-none ${
+          errorMessage
+            ? 'bg-red-600 text-white dark:bg-red-500 dark:text-white'
+            : 'bg-slate-900 text-white dark:bg-white dark:text-slate-900'
+        }`}>
+          {errorMessage ? (
+            <AlertCircle size={16} className="text-white shrink-0" />
+          ) : (
+            <Check size={16} className="text-google-green shrink-0" />
+          )}
           <span>{toastMessage}</span>
         </div>
       )}
 
       <div className="max-w-4xl mx-auto space-y-6 pt-2 pb-16">
         <div className="space-y-6">
+          {errorMessage && (
+            <div className="p-3.5 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-2xl text-xs text-red-600 dark:text-red-400 flex items-center gap-2">
+              <AlertCircle size={16} className="shrink-0" />
+              <span>{errorMessage}</span>
+            </div>
+          )}
           {/* Metadata */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="md:col-span-1 space-y-1">
@@ -268,6 +349,7 @@ function ManualQuizCreateContent() {
                 onChange={(e) => setDocSubject(e.target.value)}
                 className="w-full text-xs p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-1 focus:ring-google-blue"
               >
+                <option value="">Không chọn</option>
                 <option value="Toán">Toán</option>
                 <option value="Tiếng Anh">Tiếng Anh</option>
                 <option value="Ngữ văn">Ngữ văn</option>
@@ -290,6 +372,7 @@ function ManualQuizCreateContent() {
                 onChange={(e) => setDocGrade(e.target.value)}
                 className="w-full text-xs p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-1 focus:ring-google-blue"
               >
+                <option value="">Không chọn</option>
                 <option value="12">Lớp 12</option>
                 <option value="11">Lớp 11</option>
                 <option value="10">Lớp 10</option>
@@ -323,7 +406,7 @@ function ManualQuizCreateContent() {
               {questions.map((q, qIdx) => (
                 <div
                   key={q.id}
-                  className="p-5 bg-slate-50/80 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-4 shadow-xs"
+                  className="py-5 border-b border-slate-100 dark:border-slate-800 space-y-4"
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
@@ -343,7 +426,7 @@ function ManualQuizCreateContent() {
                         ) : (
                           <Sparkles size={13} className="mr-1" />
                         )}
-                        {aiLoadingId === q.id ? 'AI Đang Viết...' : '✨ AI Điền Tự Động'}
+                        {aiLoadingId === q.id ? 'SI Đang Viết...' : '✨ SI Điền Tự Động'}
                       </Button>
                     </div>
 
@@ -365,10 +448,10 @@ function ManualQuizCreateContent() {
                     </label>
                     <textarea
                       rows={2}
-                      placeholder={`Nhập nội dung câu hỏi thứ ${qIdx + 1} hoặc nhập từ khóa rồi nhấn nút ✨ AI Điền Tự Động...`}
+                      placeholder={`Nhập nội dung câu hỏi thứ ${qIdx + 1} hoặc nhập từ khóa rồi nhấn nút ✨ SI Điền Tự Động...`}
                       value={q.content}
                       onChange={(e) => handleQuestionChange(q.id, 'content', e.target.value)}
-                      className="w-full text-xs p-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-1 focus:ring-google-blue"
+                      className="w-full text-xs p-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-1 focus:ring-google-blue resize-none"
                     />
                   </div>
 

@@ -13,17 +13,17 @@ export async function syncExamActionToDocument(
   const title = action.data.title || 'Đề thi trắc nghiệm';
   const totalQ = questions.length || Number(action.data.questionsCount) || 1;
   const pointPerQuestion = Math.round((10 / totalQ) * 100) / 100;
+  const existingExamId = action.data.examId;
 
   try {
-    const savedFile = await createDocumentFile(token, {
+    const savePromise = createDocumentFile(token, {
+      id: existingExamId,
       name: `${title}.docx`,
       parentId: action.data.folderId || null,
       fileType: 'docx',
       parsedQuiz: {
         title,
-        description: `Đề thi môn ${action.data.subject || 'Kiến thức tổng hợp'} - Khối ${
-          action.data.grade || 'Tự do'
-        } do AI ChatCoi tạo tự động.`,
+        description: action.data.description || '',
         durationMinutes: Number(action.data.durationMinutes) || 45,
         questions: questions.map((q: any, idx: number) => ({
           id: q.id || `q_${idx + 1}`,
@@ -37,13 +37,22 @@ export async function syncExamActionToDocument(
       },
     });
 
+    const fallbackTimeout = new Promise<any>((resolve) =>
+      setTimeout(() => resolve(null), 1500)
+    );
+
+    const savedFile = (await Promise.race([savePromise, fallbackTimeout])) || {
+      id: existingExamId,
+      parentId: action.data.folderId || null,
+    };
+
     return {
       ...action,
       data: {
         ...action.data,
-        examId: savedFile.id,
+        examId: savedFile.id || existingExamId,
         folderId: savedFile.parentId ?? action.data.folderId ?? null,
-        examUrl: `/app/documents/${savedFile.id}/view`,
+        examUrl: `/documents/${savedFile.id || existingExamId}`,
       },
     };
   } catch (err) {

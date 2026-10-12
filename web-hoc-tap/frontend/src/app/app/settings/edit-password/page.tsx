@@ -3,10 +3,12 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { AppShell } from '@/components/AppShell';
+import { BreadcrumbChevron } from '@/components/BreadcrumbChevron';
 import { Button } from '@/components/Button';
 import { Input } from '@/components/Input';
 import { useAuthStore } from '@/store/useAuthStore';
-import { ArrowLeft, Check, Lock } from 'lucide-react';
+import { changePasswordApi } from '@/lib/profileApi';
+import { ArrowLeft, Check, Lock, ChevronRight } from 'lucide-react';
 
 export default function EditPasswordPage() {
   const router = useRouter();
@@ -25,8 +27,8 @@ export default function EditPasswordPage() {
       router.push('/login');
       return;
     }
-    if (newPassword.length < 6) {
-      setErrorMsg('Mật khẩu mới phải dài ít nhất 6 ký tự');
+    if (newPassword.length < 8) {
+      setErrorMsg('Mật khẩu mới phải dài ít nhất 8 ký tự');
       return;
     }
     if (newPassword !== confirmPassword) {
@@ -36,21 +38,10 @@ export default function EditPasswordPage() {
 
     setSaving(true);
     try {
-      const res = await fetch('http://127.0.0.1:3005/api/auth/password', {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ currentPassword, newPassword }),
-      });
-      const result = await res.json().catch(() => null);
-      if (!res.ok) {
-        throw new Error(result?.message || 'Không thể đổi mật khẩu');
-      }
+      await changePasswordApi(token, currentPassword, newPassword);
       setToast(true);
       setTimeout(() => {
-        router.push('/app/settings/password');
+        router.push('/app/settings/security');
       }, 900);
     } catch (err: any) {
       setErrorMsg(err.message || 'Không thể đổi mật khẩu');
@@ -60,7 +51,46 @@ export default function EditPasswordPage() {
   };
 
   return (
-    <AppShell>
+    <AppShell
+      title={
+        <div className="flex items-center gap-1 text-2xl font-[450] tracking-tight text-slate-900 dark:text-slate-100 flex-wrap -ml-2">
+          <button
+            type="button"
+            onClick={() => router.push('/app/settings')}
+            className="transition-colors cursor-pointer px-2 py-0.5 rounded-xl hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-900 dark:text-white font-[450]"
+          >
+            Cài đặt
+          </button>
+          <BreadcrumbChevron
+            menuTitle="Cài đặt"
+            items={[
+              { label: 'Cài đặt chung', href: '/app/settings' },
+              { label: 'Hồ sơ cá nhân', href: '/app/settings/edit-name' },
+              { label: 'Bảo mật', href: '/app/settings' },
+              { label: 'Quản lý thiết bị', href: '/app/settings/devices' },
+              { label: 'Gói dịch vụ', href: '/app/settings/plans' },
+            ]}
+          />
+          <button
+            type="button"
+            onClick={() => router.push('/app/settings')}
+            className="transition-colors cursor-pointer px-2 py-0.5 rounded-xl hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-900 dark:text-white font-[450]"
+          >
+            Bảo mật
+          </button>
+          <BreadcrumbChevron
+            menuTitle="Bảo mật"
+            items={[
+              { label: 'Đổi mật khẩu', href: '/app/settings/edit-password' },
+              { label: 'Quản lý thiết bị', href: '/app/settings/devices' },
+            ]}
+          />
+          <span className="px-2 py-0.5 rounded-xl text-slate-900 dark:text-white font-[450]">
+            Đổi mật khẩu
+          </span>
+        </div>
+      }
+    >
       <div className="max-w-2xl mx-auto space-y-6 pt-2 pb-12">
         {toast && (
           <div className="fixed bottom-6 right-6 z-50 bg-slate-900 text-white dark:bg-white dark:text-slate-900 px-5 py-3 rounded-2xl shadow-2xl font-medium text-xs flex items-center gap-2 animate-bounce">
@@ -69,23 +99,7 @@ export default function EditPasswordPage() {
           </div>
         )}
 
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => router.push('/app/settings/password')}
-            className="p-2 rounded-full hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 transition-all"
-            title="Quay lại Cài đặt"
-          >
-            <ArrowLeft size={20} />
-          </button>
-          <div>
-            <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-slate-100 flex items-center gap-2">
-              <Lock size={20} className="text-google-blue" />
-              Đổi mật khẩu tài khoản
-            </h1>
-          </div>
-        </div>
-
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-xs">
+        <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-xs">
           <form onSubmit={handleSubmit} className="space-y-4">
             {errorMsg && (
               <div className="p-3 bg-red-50 text-red-700 dark:bg-red-950/30 dark:text-red-400 rounded-xl text-xs font-semibold">
@@ -117,7 +131,7 @@ export default function EditPasswordPage() {
               required
             />
             <div className="flex justify-end gap-2 pt-4">
-              <Button type="button" variant="ghost" onClick={() => router.push('/settings')}>
+              <Button type="button" variant="ghost" onClick={() => router.push('/app/settings/security')}>
                 Hủy
               </Button>
               <Button type="submit" disabled={saving}>

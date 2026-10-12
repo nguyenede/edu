@@ -16,12 +16,6 @@ export class ResultsController {
     return this.resultsService.getClassStatistics(req.user.id, classId);
   }
 
-  @Roles(Role.TEACHER)
-  @Get('quiz/:quizId')
-  async getQuizStats(@Request() req: any, @Param('quizId') quizId: string) {
-    return this.resultsService.getQuizStatistics(req.user.id, quizId);
-  }
-
   @Roles(Role.STUDENT)
   @Get('history')
   async getStudentHistory(@Request() req: any) {

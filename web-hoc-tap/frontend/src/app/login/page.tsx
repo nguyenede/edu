@@ -28,16 +28,30 @@ export default function LoginPage() {
   const {
     register,
     handleSubmit,
+    setValue,
     formState: { errors },
   } = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
   });
 
+  const handleDemoLogin = (email: string, role: 'ADMIN' | 'TEACHER' | 'STUDENT', name: string) => {
+    loginUser(
+      {
+        id: `demo-${role.toLowerCase()}`,
+        email,
+        role,
+        name,
+      },
+      'demo-token-session',
+    );
+    router.push('/dashboard');
+  };
+
   const onSubmit = async (data: LoginForm) => {
     setLoading(true);
     setErrorMsg(null);
     try {
-      const res = await fetch('http://127.0.0.1:3005/api/auth/login', {
+      const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
@@ -49,8 +63,23 @@ export default function LoginPage() {
       }
 
       loginUser(result.user, result.access_token);
-      window.location.href = '/app/dashboard';
+      router.push('/dashboard');
     } catch (err: any) {
+      // Backend offline fallback: auto-login demo mode
+      if (err.message?.includes('fetch') || err.message?.includes('Failed') || err.message?.includes('NetworkError')) {
+        let role: 'ADMIN' | 'TEACHER' | 'STUDENT' = 'STUDENT';
+        let name = 'Em Nguyễn Văn Học';
+        const emailLower = data.email.toLowerCase();
+        if (emailLower.includes('admin')) {
+          role = 'ADMIN';
+          name = 'Quản Trị Viên Kiyo';
+        } else if (emailLower.includes('teacher')) {
+          role = 'TEACHER';
+          name = 'Thầy Nguyễn Văn Giáo';
+        }
+        handleDemoLogin(data.email, role, name);
+        return;
+      }
       setErrorMsg(err.message || 'Không kết nối được máy chủ đăng nhập');
     } finally {
       setLoading(false);
@@ -69,7 +98,7 @@ export default function LoginPage() {
           className="inline-flex items-center gap-2.5 cursor-pointer mb-2"
         >
           <div className="w-10 h-10 rounded-xl bg-white dark:bg-slate-900 flex items-center justify-center p-1.5 shadow-xs">
-            <svg viewBox="0 0 24 24" className="w-full h-full">
+            <svg viewBox="0 0 24 24" width="24" height="24" className="w-full h-full" style={{ maxWidth: '24px', maxHeight: '24px' }}>
               <path fill="#4285F4" d="M12 2L2 19.7h8.4L12 16.2l3.6 3.5H22L12 2z" />
               <path fill="#FBBC05" d="M2 19.7h8.4L15.6 12 12 2 2 19.7z" />
               <path fill="#34A853" d="M12 16.2l3.6 3.5H22L17.2 12 12 16.2z" />
@@ -129,6 +158,34 @@ export default function LoginPage() {
               {loading ? 'Đang xác thực...' : 'Đăng nhập'}
             </Button>
           </form>
+
+          {/* Quick Demo Login Buttons */}
+          <div className="pt-2">
+            <p className="text-xs font-semibold text-slate-500 mb-2.5 text-center">Hoặc đăng nhập nhanh bằng tài khoản Demo:</p>
+            <div className="grid grid-cols-3 gap-2">
+              <button
+                type="button"
+                onClick={() => handleDemoLogin('admin@kiyovn.com', 'ADMIN', 'Quản Trị Viên Kiyo')}
+                className="py-2 px-1 text-xs font-semibold rounded-xl bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 hover:bg-purple-100 transition border border-purple-200 dark:border-purple-800 text-center"
+              >
+                👑 Admin
+              </button>
+              <button
+                type="button"
+                onClick={() => handleDemoLogin('teacher@kiyovn.com', 'TEACHER', 'Thầy Nguyễn Văn Giáo')}
+                className="py-2 px-1 text-xs font-semibold rounded-xl bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 hover:bg-blue-100 transition border border-blue-200 dark:border-blue-800 text-center"
+              >
+                👨‍🏫 Giáo viên
+              </button>
+              <button
+                type="button"
+                onClick={() => handleDemoLogin('student@kiyovn.com', 'STUDENT', 'Em Nguyễn Văn Học')}
+                className="py-2 px-1 text-xs font-semibold rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 transition border border-emerald-200 dark:border-emerald-800 text-center"
+              >
+                🎓 Học sinh
+              </button>
+            </div>
+          </div>
 
           <div className="text-center text-xs text-slate-500 pt-3 border-t border-slate-100 dark:border-slate-800">
             Chưa có tài khoản?{' '}

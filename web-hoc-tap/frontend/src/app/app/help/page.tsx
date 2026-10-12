@@ -3,7 +3,7 @@
 import React from 'react';
 import { useRouter } from 'next/navigation';
 import { AppShell } from '@/components/AppShell';
-import { ArrowLeft, BookOpen, Play, GraduationCap, Sparkles, HelpCircle } from 'lucide-react';
+import { ArrowLeft, BookOpen, GraduationCap, Sparkles, HelpCircle } from 'lucide-react';
 
 export default function HelpPage() {
   const router = useRouter();
@@ -25,12 +25,12 @@ export default function HelpPage() {
               Hướng dẫn sử dụng HocRealtime
             </h1>
             <p className="text-xs text-slate-500 dark:text-slate-400">
-              Nền tảng Giáo dục trực tuyến kết hợp Azota, Quizizz, Blooket và Chaos Quiz
+              Nền tảng Giáo dục trực tuyến & Quản lý học tập thông minh
             </p>
           </div>
         </div>
 
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-xs space-y-6">
+        <div className="space-y-3">
           <div className="flex items-start gap-4 p-4 bg-blue-50/50 dark:bg-blue-950/20 rounded-2xl">
             <BookOpen size={24} className="text-google-blue shrink-0 mt-1" />
             <div className="space-y-1">
@@ -43,14 +43,14 @@ export default function HelpPage() {
             </div>
           </div>
 
-          <div className="flex items-start gap-4 p-4 bg-amber-50/50 dark:bg-amber-950/20 rounded-2xl">
-            <Play size={24} className="text-amber-600 shrink-0 mt-1" />
+          <div className="flex items-start gap-4 p-4 bg-purple-50/50 dark:bg-purple-950/20 rounded-2xl">
+            <Sparkles size={24} className="text-purple-600 shrink-0 mt-1" />
             <div className="space-y-1">
               <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
-                2. Host Chaos Quiz Realtime
+                2. Trợ lý SI tạo đề kiểm tra thông minh
               </h3>
               <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-                Vào mục <strong>Đề thi & Game</strong> &rarr; Chọn bộ câu hỏi muốn tổ chức &rarr; Bấm <em>Host Chaos Mode</em>. Học sinh chỉ cần nhập mã PIN 6 số để tham gia thi đấu thời gian thực.
+                Vào mục <strong>Trợ lý SI</strong> hoặc <strong>Tạo đề với SI</strong> trong Kho tài liệu &rarr; Nhập chủ đề, cấp lớp, phân bổ độ khó theo ma trận chuẩn Bộ GD&ĐT để sinh đề trắc nghiệm tức thì.
               </p>
             </div>
           </div>

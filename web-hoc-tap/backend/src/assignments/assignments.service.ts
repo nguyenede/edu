@@ -394,4 +394,29 @@ export class AssignmentsService {
         : [],
     };
   }
+
+  async deleteAssignment(teacherId: string, assignmentId: string) {
+    const assignment = await this.prisma.assignment.findUnique({
+      where: { id: assignmentId },
+    });
+    if (!assignment) {
+      throw new NotFoundException('Assignment not found');
+    }
+    if (assignment.teacherId !== teacherId) {
+      throw new ForbiddenException('Access denied');
+    }
+
+    try {
+      await this.prisma.submissionAnswer.deleteMany({
+        where: { submission: { assignmentId } },
+      });
+      await this.prisma.submission.deleteMany({
+        where: { assignmentId },
+      });
+    } catch (_) {}
+
+    return this.prisma.assignment.delete({
+      where: { id: assignmentId },
+    });
+  }
 }

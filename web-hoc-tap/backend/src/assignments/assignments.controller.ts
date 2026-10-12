@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Get, Param, UseGuards, Request } from '@nestjs/common';
+import { Controller, Post, Body, Get, Param, Delete, UseGuards, Request } from '@nestjs/common';
 import { AssignmentsService } from './assignments.service';
 import { CreateAssignmentDto } from './dto/create-assignment.dto';
 import { SubmitAssignmentDto } from './dto/submit-assignment.dto';
@@ -36,6 +36,12 @@ export class AssignmentsController {
   @Get(':id')
   async getDetail(@Request() req: any, @Param('id') assignmentId: string) {
     return this.assignmentsService.getAssignmentDetail(assignmentId, req.user.id, req.user.role);
+  }
+
+  @Roles(Role.TEACHER)
+  @Delete(':id')
+  async deleteAssignment(@Request() req: any, @Param('id') assignmentId: string) {
+    return this.assignmentsService.deleteAssignment(req.user.id, assignmentId);
   }
 
   @Roles(Role.STUDENT)

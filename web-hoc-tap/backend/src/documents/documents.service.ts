@@ -99,6 +99,18 @@ export class DocumentsService {
     return this.serializeFile(file);
   }
 
+  async moveFolder(ownerId: string, id: string, parentId?: string | null) {
+    await this.assertFolderOwner(ownerId, id);
+    const targetParentId = parentId || null;
+    if (targetParentId === id) throw new BadRequestException('Cannot move folder into itself');
+    if (targetParentId) await this.assertFolderOwner(ownerId, targetParentId);
+    const folder = await this.prisma.documentFolder.update({
+      where: { id },
+      data: { parentId: targetParentId },
+    });
+    return this.serializeFolder(folder);
+  }
+
   async deleteFolder(ownerId: string, id: string) {
     await this.assertFolderOwner(ownerId, id);
     await this.prisma.documentFolder.delete({ where: { id } });
@@ -108,6 +120,12 @@ export class DocumentsService {
   async deleteFile(ownerId: string, id: string) {
     await this.assertFileOwner(ownerId, id);
     await this.prisma.documentFile.delete({ where: { id } });
+    return { success: true };
+  }
+
+  async clearAll(ownerId: string) {
+    await this.prisma.documentFile.deleteMany({ where: { ownerId } });
+    await this.prisma.documentFolder.deleteMany({ where: { ownerId } });
     return { success: true };
   }
 

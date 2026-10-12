@@ -3,11 +3,12 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { AppShell } from '@/components/AppShell';
+import { BreadcrumbChevron } from '@/components/BreadcrumbChevron';
 import { Button } from '@/components/Button';
 import { Input } from '@/components/Input';
 import { updateProfile } from '@/lib/profileApi';
 import { useAuthStore } from '@/store/useAuthStore';
-import { ArrowLeft, Check } from 'lucide-react';
+import { ArrowLeft, Check, ChevronRight } from 'lucide-react';
 
 export default function EditAddressPage() {
   const router = useRouter();
@@ -42,7 +43,51 @@ export default function EditAddressPage() {
   };
 
   return (
-    <AppShell>
+    <AppShell
+      title={
+        <div className="flex items-center gap-1 text-2xl font-[450] tracking-tight text-slate-900 dark:text-slate-100 flex-wrap -ml-2">
+          <button
+            type="button"
+            onClick={() => router.push('/app/settings')}
+            className="transition-colors cursor-pointer px-2 py-0.5 rounded-xl hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-900 dark:text-white font-[450]"
+          >
+            Cài đặt
+          </button>
+          <BreadcrumbChevron
+            menuTitle="Cài đặt"
+            items={[
+              { label: 'Cài đặt chung', href: '/app/settings' },
+              { label: 'Hồ sơ cá nhân', href: '/app/settings/edit-name' },
+              { label: 'Đổi mật khẩu', href: '/app/settings/edit-password' },
+              { label: 'Quản lý thiết bị', href: '/app/settings/devices' },
+              { label: 'Gói dịch vụ', href: '/app/settings/plans' },
+            ]}
+          />
+          <button
+            type="button"
+            onClick={() => router.push('/app/settings')}
+            className="transition-colors cursor-pointer px-2 py-0.5 rounded-xl hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-900 dark:text-white font-[450]"
+          >
+            Tài khoản
+          </button>
+          <BreadcrumbChevron
+            menuTitle="Thông tin tài khoản"
+            items={[
+              { label: 'Họ và tên & Ảnh hồ sơ', href: '/app/settings/edit-name' },
+              { label: 'Số điện thoại', href: '/app/settings/edit-phone' },
+              { label: 'Ngày sinh', href: '/app/settings/edit-birthday' },
+              { label: 'Giới tính', href: '/app/settings/edit-gender' },
+              { label: 'Địa chỉ', href: '/app/settings/edit-address' },
+              { label: 'Ngôn ngữ', href: '/app/settings/edit-language' },
+              { label: 'Đổi mật khẩu', href: '/app/settings/edit-password' },
+            ]}
+          />
+          <span className="px-2 py-0.5 rounded-xl text-slate-900 dark:text-white font-[450]">
+            Địa chỉ liên hệ
+          </span>
+        </div>
+      }
+    >
       <div className="max-w-2xl mx-auto space-y-6 pt-2 pb-12">
         {toast && (
           <div className="fixed bottom-6 right-6 z-50 bg-slate-900 text-white dark:bg-white dark:text-slate-900 px-5 py-3 rounded-2xl shadow-2xl font-medium text-xs flex items-center gap-2 animate-bounce">
@@ -51,22 +96,7 @@ export default function EditAddressPage() {
           </div>
         )}
 
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => router.push('/app/settings/account')}
-            className="p-2 rounded-full hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 transition-all"
-            title="Quay lại Cài đặt"
-          >
-            <ArrowLeft size={20} />
-          </button>
-          <div>
-            <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
-              Địa chỉ liên hệ
-            </h1>
-          </div>
-        </div>
-
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-xs">
+        <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-xs">
           <form onSubmit={handleSubmit} className="space-y-4">
             {errorMsg && (
               <div className="p-3 bg-red-50 text-red-700 dark:bg-red-950/30 dark:text-red-400 rounded-xl text-xs font-semibold">
@@ -86,7 +116,7 @@ export default function EditAddressPage() {
               placeholder="Nhập địa chỉ làm việc..."
             />
             <div className="flex justify-end gap-2 pt-4">
-              <Button type="button" variant="ghost" onClick={() => router.push('/settings')}>
+              <Button type="button" variant="ghost" onClick={() => router.push('/app/settings/account')}>
                 Hủy
               </Button>
               <Button type="submit" disabled={saving}>

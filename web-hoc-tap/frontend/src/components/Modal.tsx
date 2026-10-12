@@ -6,10 +6,10 @@ import { X } from 'lucide-react';
 export interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
-  title: string;
+  title: React.ReactNode;
   description?: string;
   children: React.ReactNode;
-  maxWidth?: 'sm' | 'md' | 'lg' | 'xl';
+  maxWidth?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl';
 }
 
 export const Modal: React.FC<ModalProps> = ({
@@ -61,6 +61,8 @@ export const Modal: React.FC<ModalProps> = ({
     md: 'max-w-md',
     lg: 'max-w-lg',
     xl: 'max-w-2xl',
+    '2xl': 'max-w-3xl',
+    '3xl': 'max-w-4xl',
   };
 
   return (
@@ -79,7 +81,7 @@ export const Modal: React.FC<ModalProps> = ({
 
       {/* Material You Modal Dialog */}
       <div
-        className={`relative z-10 w-full ${maxWidths[maxWidth]} bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 rounded-3xl p-4 text-left flex flex-col gap-2 shadow-2xl my-auto transition-all duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] transform ${
+        className={`relative z-10 w-full ${maxWidths[maxWidth]} bg-white dark:bg-[#1e1f20] border border-slate-200/60 dark:border-[#2d2f31] rounded-3xl p-4 text-left flex flex-col gap-2 shadow-2xl my-auto transition-all duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] transform ${
           isVisible
             ? 'scale-100 opacity-100 translate-y-0'
             : 'scale-95 opacity-0 translate-y-2'
@@ -98,7 +100,7 @@ export const Modal: React.FC<ModalProps> = ({
           </div>
           <button
             onClick={onClose}
-            className="p-2 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+            className="p-2 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 rounded-full hover:bg-slate-100 dark:hover:bg-[#2d2f31] transition-colors cursor-pointer"
             aria-label="Close"
           >
             <X size={18} />

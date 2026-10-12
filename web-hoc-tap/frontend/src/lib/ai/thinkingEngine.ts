@@ -1,4 +1,5 @@
 import { ToolExecutionResult, AiToolRegistry, QuestionItem } from './aiToolRegistry';
+import { validateAndSanitizeQuestions, cleanVietnameseEncoding } from '@/lib/questionValidator';
 
 export interface ParsedAgentOutput {
   cleanText: string;
@@ -41,6 +42,10 @@ export class ThinkingEngine {
     while ((match = actionRegex.exec(text)) !== null) {
       const toolName = match[1].toLowerCase().trim();
       const payloadStr = match[2].trim();
+      // Ensure at most 1 create_exam action is processed per request
+      if (toolName === 'create_exam' && executedActions.some((a) => a.actionType === 'exam')) {
+        continue;
+      }
       const result = this.processActionPayload(toolName, payloadStr, userPrompt, isFinal);
       if (result) {
         executedActions.push(result);
@@ -53,6 +58,7 @@ export class ThinkingEngine {
       const jsonBlockRegex = /```(?:json)?\s*(\{[\s\S]*?"questions"[\s\S]*?\})\s*```/gi;
       let jsonMatch: RegExpExecArray | null;
       while ((jsonMatch = jsonBlockRegex.exec(text)) !== null) {
+        if (executedActions.some((a) => a.actionType === 'exam')) break;
         const payloadStr = jsonMatch[1].trim();
         const result = this.processActionPayload('create_exam', payloadStr, userPrompt, isFinal);
         if (result) {
@@ -151,74 +157,85 @@ export class ThinkingEngine {
           rawQuestions = robustFields.questions || [];
         }
 
-        const questions: QuestionItem[] = rawQuestions.map((q: any, idx: number) => {
-          const qContent = q.question || q.content || `Câu hỏi ${idx + 1}`;
+        const validQuestions: QuestionItem[] = [];
+
+        for (let idx = 0; idx < rawQuestions.length; idx++) {
+          const q = rawQuestions[idx];
+          const rawQText = String(q.question || q.content || '').trim();
+          const qContent = rawQText
+            .replace(/^(?:(?:Câu|câu|CÂU|Question|QUESTION|Bài\s*tập|BÀI\s*TẬP|Bài|BÀI|CH|Ví\s*dụ|VÍ\s*DỤ|Luyện\s*tập|Vận\s*dụng|Dạng)\s*(?:\d+|[IVXLCDM]+)[\s:.-]*|(?:\d+)[\.\)]\s+)/i, '')
+            .replace(/^[:.-]+\s*/, '')
+            .trim();
+
+          if (!qContent) continue;
+
           const answerKey = String(q.answer || q.correct_answer || q.correctAnswer || '').trim();
 
           let options: { content: string; isCorrect: boolean }[] = [];
-          if (Array.isArray(q.options)) {
-            options = q.options.map((opt: any, oIdx: number) => {
+          let hasDummy = false;
+
+          if (Array.isArray(q.options) && q.options.length > 0) {
+            for (let oIdx = 0; oIdx < q.options.length; oIdx++) {
+              const opt = q.options[oIdx];
+              let optText = '';
+              let isCorrect = false;
+
               if (typeof opt === 'string') {
-                const optTrimmed = opt.trim();
-                const isCorrect =
-                  (answerKey && optTrimmed.toLowerCase() === answerKey.toLowerCase()) ||
-                  (answerKey && optTrimmed.toLowerCase().startsWith(answerKey.toLowerCase() + '.')) ||
+                optText = opt.trim();
+                isCorrect = Boolean(
+                  (answerKey && optText.toLowerCase() === answerKey.toLowerCase()) ||
+                  (answerKey && optText.toLowerCase().startsWith(answerKey.toLowerCase() + '.')) ||
                   (answerKey && (
                     (answerKey === 'A' || answerKey === '1') && oIdx === 0 ||
                     (answerKey === 'B' || answerKey === '2') && oIdx === 1 ||
                     (answerKey === 'C' || answerKey === '3') && oIdx === 2 ||
                     (answerKey === 'D' || answerKey === '4') && oIdx === 3
-                  )) ||
-                  (!answerKey && oIdx === 0);
-                return { content: optTrimmed, isCorrect };
+                  ))
+                );
               } else if (typeof opt === 'object' && opt !== null) {
-                return {
-                  content: opt.content || opt.text || opt.title || `Lựa chọn ${oIdx + 1}`,
-                  isCorrect: Boolean(
-                    opt.isCorrect ||
-                    opt.correct ||
-                    (answerKey && String(opt.content).trim().toLowerCase() === answerKey.toLowerCase())
-                  ),
-                };
+                optText = String(opt.content || opt.text || opt.title || '').trim();
+                isCorrect = Boolean(
+                  opt.isCorrect ||
+                  opt.correct ||
+                  (answerKey && optText.toLowerCase() === answerKey.toLowerCase())
+                );
               }
-              return { content: String(opt), isCorrect: oIdx === 0 };
-            });
+
+              // TUYỆT ĐỐI 100% không cho phép phương án rỗng hoặc placeholder giả
+              if (!optText || /^Phương án\s*[A-D0-9]?$/i.test(optText) || /^Lựa chọn\s*[A-D0-9]?$/i.test(optText)) {
+                hasDummy = true;
+                break;
+              }
+
+              options.push({ content: optText, isCorrect });
+            }
           }
 
-          // Ensure at least 4 options
-          while (options.length < 4) {
-            options.push({
-              content: `Phương án ${String.fromCharCode(65 + options.length)}`,
-              isCorrect: false,
-            });
-          }
+          if (hasDummy) continue;
 
-          // Ensure at least one option is correct
-          if (!options.some((o) => o.isCorrect) && options.length > 0) {
-            options[0].isCorrect = true;
-          }
-
-          return {
+          validQuestions.push({
             id: `q_${q.id || idx + 1}`,
             content: qContent,
             options,
-          };
-        });
+          });
+        }
 
-        if (questions.length > 0) {
+        const sanitizedQuestions = validateAndSanitizeQuestions(validQuestions);
+
+        if (sanitizedQuestions.length > 0) {
           return AiToolRegistry.createExam({
-            title,
-            subject: topic,
-            grade,
-            durationMinutes: params.durationMinutes || (questions.length <= 15 ? 30 : 60),
-            questions,
+            title: cleanVietnameseEncoding(title),
+            subject: cleanVietnameseEncoding(topic),
+            grade: cleanVietnameseEncoding(grade),
+            durationMinutes: params.durationMinutes || (sanitizedQuestions.length <= 15 ? 30 : 60),
+            questions: sanitizedQuestions,
             persist,
           });
         }
       }
 
       if (toolName === 'launch_game') {
-        return AiToolRegistry.launchGame(params);
+        return AiToolRegistry.execute(toolName, params);
       }
 
       if (toolName === 'create_class') {
@@ -371,37 +388,61 @@ export class ThinkingEngine {
       try {
         const obj = JSON.parse(sanitized);
         if (obj && (obj.question || obj.content)) {
-          const qText = obj.question || obj.content;
+          const rawQ = String(obj.question || obj.content || '').trim();
+          const qText = rawQ
+            .replace(/^(?:(?:Câu|câu|CÂU|Question|QUESTION|Bài\s*tập|BÀI\s*TẬP|Bài|BÀI|CH|Ví\s*dụ|VÍ\s*DỤ|Luyện\s*tập|Vận\s*dụng|Dạng)\s*(?:\d+|[IVXLCDM]+)[\s:.-]*|(?:\d+)[\.\)]\s+)/i, '')
+            .replace(/^[:.-]+\s*/, '')
+            .trim();
+
+          if (!qText) return null;
+
           const ans = String(obj.answer || obj.correct_answer || obj.correctAnswer || '').trim();
           let opts: { content: string; isCorrect: boolean }[] = [];
+          let hasDummy = false;
 
-          if (Array.isArray(obj.options)) {
-            opts = obj.options.map((opt: any, oIdx: number) => {
+          if (Array.isArray(obj.options) && obj.options.length > 0) {
+            for (let oIdx = 0; oIdx < obj.options.length; oIdx++) {
+              const opt = obj.options[oIdx];
+              let optText = '';
+              let isCorrect = false;
+
               if (typeof opt === 'string') {
-                const optTrimmed = opt.trim();
-                const isCorrect =
-                  (ans && optTrimmed.toLowerCase() === ans.toLowerCase()) ||
-                  (ans && optTrimmed.toLowerCase().startsWith(ans.toLowerCase() + '.')) ||
-                  (!ans && oIdx === 0);
-                return { content: optTrimmed, isCorrect };
+                optText = opt.trim();
+                isCorrect = Boolean(
+                  (ans && optText.toLowerCase() === ans.toLowerCase()) ||
+                  (ans && optText.toLowerCase().startsWith(ans.toLowerCase() + '.')) ||
+                  (ans && (
+                    (ans === 'A' || ans === '1') && oIdx === 0 ||
+                    (ans === 'B' || ans === '2') && oIdx === 1 ||
+                    (ans === 'C' || ans === '3') && oIdx === 2 ||
+                    (ans === 'D' || ans === '4') && oIdx === 3
+                  ))
+                );
               } else if (typeof opt === 'object' && opt !== null) {
-                return {
-                  content: opt.content || opt.text || `Phương án ${oIdx + 1}`,
-                  isCorrect: Boolean(opt.isCorrect || opt.correct),
-                };
+                optText = String(opt.content || opt.text || '').trim();
+                isCorrect = Boolean(
+                  opt.isCorrect ||
+                  opt.correct ||
+                  (ans && optText.toLowerCase() === ans.toLowerCase())
+                );
               }
-              return { content: String(opt), isCorrect: oIdx === 0 };
-            });
+
+              if (!optText || /^Phương án\s*[A-D0-9]?$/i.test(optText) || /^Lựa chọn\s*[A-D0-9]?$/i.test(optText)) {
+                hasDummy = true;
+                break;
+              }
+
+              opts.push({ content: optText, isCorrect });
+            }
           }
 
-          if (opts.length > 0) {
-            if (!opts.some((o) => o.isCorrect)) opts[0].isCorrect = true;
-            return {
-              id: `q_${obj.id || fallbackId}`,
-              content: qText,
-              options: opts,
-            };
-          }
+          if (hasDummy) return null;
+
+          return {
+            id: `q_${obj.id || fallbackId}`,
+            content: qText,
+            options: opts,
+          };
         }
       } catch {}
 
@@ -417,42 +458,53 @@ export class ThinkingEngine {
 
       const optionsMatch = block.match(/"(?:options|answers)"\s*:\s*\[([\s\S]*?)\]/i);
 
-      if (qMatch && optionsMatch) {
-        const qText = qMatch[1].replace(/\\"/g, '"').trim();
+      if (qMatch) {
+        const rawQ = qMatch[1].replace(/\\"/g, '"').trim();
+        const qText = rawQ
+          .replace(/^(?:(?:Câu|câu|CÂU|Question|QUESTION|Bài\s*tập|BÀI\s*TẬP|Bài|BÀI|CH|Ví\s*dụ|VÍ\s*DỤ|Luyện\s*tập|Vận\s*dụng|Dạng)\s*(?:\d+|[IVXLCDM]+)[\s:.-]*|(?:\d+)[\.\)]\s+)/i, '')
+          .replace(/^[:.-]+\s*/, '')
+          .trim();
+
+        if (!qText) return null;
+
         const ansText = ansMatch ? ansMatch[1].replace(/\\"/g, '"').trim() : '';
-        const optionsRaw = optionsMatch[1];
-
         const options: { content: string; isCorrect: boolean }[] = [];
+        let hasDummy = false;
 
-        // Trích xuất từng chuỗi trong mảng options
-        const optStringRegex = /"([^"\\]*(?:\\.[^"\\]*)*)"/g;
-        let oMatch: RegExpExecArray | null;
-        let oIdx = 0;
-        while ((oMatch = optStringRegex.exec(optionsRaw)) !== null) {
-          const optContent = oMatch[1].replace(/\\"/g, '"').trim();
-          const isCorrect =
-            (ansText && optContent.toLowerCase() === ansText.toLowerCase()) ||
-            (ansText && optContent.toLowerCase().startsWith(ansText.toLowerCase() + '.')) ||
-            (ansText && (
-              (ansText === 'A' || ansText === '1') && oIdx === 0 ||
-              (ansText === 'B' || ansText === '2') && oIdx === 1 ||
-              (ansText === 'C' || ansText === '3') && oIdx === 2 ||
-              (ansText === 'D' || ansText === '4') && oIdx === 3
-            )) ||
-            (!ansText && oIdx === 0);
+        if (optionsMatch) {
+          const optionsRaw = optionsMatch[1];
+          const optStringRegex = /"([^"\\]*(?:\\.[^"\\]*)*)"/g;
+          let oMatch: RegExpExecArray | null;
+          let oIdx = 0;
+          while ((oMatch = optStringRegex.exec(optionsRaw)) !== null) {
+            const optContent = oMatch[1].replace(/\\"/g, '"').trim();
+            if (!optContent || /^Phương án\s*[A-D0-9]?$/i.test(optContent) || /^Lựa chọn\s*[A-D0-9]?$/i.test(optContent)) {
+              hasDummy = true;
+              break;
+            }
+            const isCorrect = Boolean(
+              (ansText && optContent.toLowerCase() === ansText.toLowerCase()) ||
+              (ansText && optContent.toLowerCase().startsWith(ansText.toLowerCase() + '.')) ||
+              (ansText && (
+                (ansText === 'A' || ansText === '1') && oIdx === 0 ||
+                (ansText === 'B' || ansText === '2') && oIdx === 1 ||
+                (ansText === 'C' || ansText === '3') && oIdx === 2 ||
+                (ansText === 'D' || ansText === '4') && oIdx === 3
+              ))
+            );
 
-          options.push({ content: optContent, isCorrect });
-          oIdx++;
+            options.push({ content: optContent, isCorrect });
+            oIdx++;
+          }
         }
 
-        if (options.length > 0) {
-          if (!options.some((o) => o.isCorrect)) options[0].isCorrect = true;
-          return {
-            id: `q_${idMatch ? idMatch[1] : fallbackId}`,
-            content: qText,
-            options,
-          };
-        }
+        if (hasDummy) return null;
+
+        return {
+          id: `q_${idMatch ? idMatch[1] : fallbackId}`,
+          content: qText,
+          options,
+        };
       }
     } catch (e) {
       console.error('Error parsing single question block:', e);

@@ -35,7 +35,7 @@ export default function EditNamePage() {
     setSaving(true);
     setErrorMsg(null);
     try {
-      const res = await fetch('http://127.0.0.1:3005/api/auth/profile', {
+      const res = await fetch('/api/auth/profile', {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -86,14 +86,14 @@ export default function EditNamePage() {
         </div>
 
         {/* Form Card */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-xs space-y-6">
+        <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-xs space-y-6">
           {errorMsg && (
             <div className="bg-red-50 text-red-700 dark:bg-red-950/30 dark:text-red-400 p-3 rounded-2xl text-xs font-semibold">
               {errorMsg}
             </div>
           )}
 
-          <div className="flex flex-col items-center justify-center space-y-3 pb-4 border-b border-slate-100 dark:border-slate-800">
+          <div className="flex flex-col items-center justify-center space-y-3 pb-2">
             <div className="relative group">
               <div className="w-24 h-24 rounded-full bg-google-blue text-white flex items-center justify-center font-bold text-3xl shadow-md">
                 {name ? name[0].toUpperCase() : 'U'}

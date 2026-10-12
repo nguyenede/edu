@@ -3,10 +3,11 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { AppShell } from '@/components/AppShell';
+import { BreadcrumbChevron } from '@/components/BreadcrumbChevron';
 import { useAuthStore } from '@/store/useAuthStore';
 import { Button } from '@/components/Button';
 import { Input } from '@/components/Input';
-import { ArrowLeft, BookOpen, Check, Plus, Trash2, Sparkles, Loader2 } from 'lucide-react';
+import { ArrowLeft, BookOpen, Check, Plus, Trash2, Sparkles, Loader2, ChevronRight } from 'lucide-react';
 
 export default function CreateQuestionPage() {
   const router = useRouter();
@@ -71,7 +72,7 @@ export default function CreateQuestionPage() {
 
       const data = await res.json();
       if (!res.ok || !data.success || !data.question) {
-        throw new Error(data.error || 'AI không thể gợi ý câu hỏi lúc này');
+        throw new Error(data.error || 'SI không thể gợi ý câu hỏi lúc này');
       }
 
       const sq = data.question;
@@ -86,8 +87,8 @@ export default function CreateQuestionPage() {
         );
       }
     } catch (err: any) {
-      console.error('Error generating AI question suggestion:', err);
-      setErrorMsg(err.message || 'Lỗi khi gọi AI gợi ý câu hỏi');
+      console.error('Error generating SI question suggestion:', err);
+      setErrorMsg(err.message || 'Lỗi khi gọi SI gợi ý câu hỏi');
     } finally {
       setAiLoading(false);
     }
@@ -124,20 +125,43 @@ export default function CreateQuestionPage() {
 
       setToast(true);
       setTimeout(() => {
-        router.push('/question-bank');
-      }, 1000);
+        router.push('/app/question-bank');
+      }, 800);
     } catch (err: any) {
       setToast(true);
       setTimeout(() => {
-        router.push('/question-bank');
-      }, 1000);
+        router.push('/app/question-bank');
+      }, 800);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <AppShell>
+    <AppShell
+      title={
+        <div className="flex items-center gap-1 text-2xl font-[450] tracking-tight text-slate-900 dark:text-slate-100 flex-wrap -ml-2">
+          <button
+            type="button"
+            onClick={() => router.push('/app/question-bank')}
+            className="transition-colors cursor-pointer px-2 py-0.5 rounded-xl hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-900 dark:text-white font-[450]"
+          >
+            Ngân hàng câu hỏi
+          </button>
+          <BreadcrumbChevron
+            menuTitle="Ngân hàng câu hỏi"
+            items={[
+              { label: 'Danh sách câu hỏi', href: '/app/question-bank' },
+              { label: 'Tạo câu hỏi mới', href: '/app/question-bank/create' },
+              { label: 'Nhập câu hỏi từ file', href: '/app/question-bank/import' },
+            ]}
+          />
+          <span className="px-2 py-0.5 rounded-xl text-slate-900 dark:text-white font-[450]">
+            Tạo câu hỏi mới
+          </span>
+        </div>
+      }
+    >
       <div className="max-w-3xl mx-auto space-y-6 pt-2 pb-12">
         {toast && (
           <div className="fixed bottom-6 right-6 z-50 bg-slate-900 text-white dark:bg-white dark:text-slate-900 px-5 py-3 rounded-2xl shadow-2xl font-medium text-xs flex items-center gap-2 animate-bounce">
@@ -145,22 +169,6 @@ export default function CreateQuestionPage() {
             Đã thêm câu hỏi mới thành công
           </div>
         )}
-
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => router.back()}
-            className="p-2 rounded-full hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 transition-all cursor-pointer"
-            title="Quay lại"
-          >
-            <ArrowLeft size={20} />
-          </button>
-          <div>
-            <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-slate-100 flex items-center gap-2">
-              <BookOpen size={22} className="text-google-blue" />
-              Tạo Câu hỏi trắc nghiệm mới
-            </h1>
-          </div>
-        </div>
 
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-xs">
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -184,14 +192,14 @@ export default function CreateQuestionPage() {
                   className="text-amber-600 dark:text-amber-400 font-bold hover:bg-amber-50 dark:hover:bg-amber-950/40 text-[11px] h-7 px-2.5"
                 >
                   {aiLoading ? <Loader2 size={13} className="animate-spin mr-1" /> : <Sparkles size={13} className="mr-1" />}
-                  {aiLoading ? 'AI Đang Viết...' : '✨ AI Tự Điền Câu Hỏi'}
+                  {aiLoading ? 'SI Đang Viết...' : '✨ SI Tự Điền Câu Hỏi'}
                 </Button>
               </div>
               <textarea
                 value={qContent}
                 onChange={(e) => setQContent(e.target.value)}
-                placeholder="Nhập nội dung câu hỏi hoặc nhập từ khóa chủ đề rồi bấm ✨ AI Tự Điền Câu Hỏi..."
-                className="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-xs focus:outline-none focus:ring-1 focus:ring-google-blue"
+                placeholder="Nhập nội dung câu hỏi hoặc nhập từ khóa chủ đề rồi bấm ✨ SI Tự Điền Câu Hỏi..."
+                className="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-xs focus:outline-none focus:ring-1 focus:ring-google-blue resize-none"
                 rows={3}
                 required
               />
@@ -286,7 +294,7 @@ export default function CreateQuestionPage() {
                 value={qExplanation}
                 onChange={(e) => setQExplanation(e.target.value)}
                 placeholder="Nhập giải thích đáp án cho học sinh xem sau khi hoàn thành..."
-                className="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-xs focus:outline-none focus:ring-1 focus:ring-google-blue"
+                className="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-xs focus:outline-none focus:ring-1 focus:ring-google-blue resize-none"
                 rows={2}
               />
             </div>

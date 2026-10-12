@@ -32,7 +32,7 @@ export default function HomePage() {
       <header className="px-6 py-4 flex justify-between items-center select-none sticky top-0 z-30 bg-google-bg/85 dark:bg-google-bg-dark/85 backdrop-blur-md border-b border-slate-200/60 dark:border-slate-800/60">
         <div className="flex items-center gap-3 cursor-pointer" onClick={() => router.push('/')}>
           <div className="w-10 h-10 rounded-2xl bg-white dark:bg-slate-900 flex items-center justify-center p-2 shadow-sm border border-slate-200/70 dark:border-slate-800">
-            <svg viewBox="0 0 24 24" className="w-full h-full">
+            <svg viewBox="0 0 24 24" width="24" height="24" className="w-full h-full" style={{ maxWidth: '24px', maxHeight: '24px' }}>
               <path fill="#4285F4" d="M12 2L2 19.7h8.4L12 16.2l3.6 3.5H22L12 2z" />
               <path fill="#FBBC05" d="M2 19.7h8.4L15.6 12 12 2 2 19.7z" />
               <path fill="#34A853" d="M12 16.2l3.6 3.5H22L17.2 12 12 16.2z" />
@@ -59,9 +59,6 @@ export default function HomePage() {
           <a href="#features" className="hover:text-google-blue transition-colors">
             Tính năng
           </a>
-          <a href="#chaos" className="hover:text-google-blue transition-colors flex items-center gap-1">
-            <Zap size={13} className="text-google-red fill-current" /> Chaos Quiz
-          </a>
           <a href="#how-it-works" className="hover:text-google-blue transition-colors">
             Cách hoạt động
           </a>
@@ -80,7 +77,7 @@ export default function HomePage() {
           {isAuthenticated ? (
             <Button
               size="sm"
-              onClick={() => router.push('/app/dashboard')}
+              onClick={() => router.push('/dashboard')}
               className="font-bold gap-1.5 shadow-sm"
             >
               Vào Dashboard ({user?.name || user?.email?.split('@')[0]})
@@ -117,7 +114,7 @@ export default function HomePage() {
           <div className="lg:col-span-7 text-center lg:text-left space-y-6">
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-blue-50 dark:bg-blue-950/70 border border-blue-100 dark:border-blue-900/60 text-google-blue rounded-full text-xs font-bold select-none">
               <Sparkles size={14} className="text-google-blue" />
-              Kỷ nguyên mới của Giáo dục Trực tuyến & AI
+              Kỷ nguyên mới của Giáo dục Trực tuyến & SI
             </div>
 
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight text-slate-900 dark:text-slate-100 leading-[1.12]">
@@ -129,13 +126,13 @@ export default function HomePage() {
             </h1>
 
             <p className="text-base sm:text-lg text-slate-600 dark:text-slate-400 font-normal leading-relaxed max-w-xl mx-auto lg:mx-0">
-              Nền tảng all-in-one cho Thầy Cô và Học Sinh: Bóc tách đề thi tự động bằng AI & OCR, quản lý bài tập theo phong cách Azota, cùng đấu trường trắc nghiệm <strong>Chaos Quiz 25 ô</strong> không độ trễ.
+              Nền tảng all-in-one cho Thầy Cô và Học Sinh: Bóc tách đề thi tự động bằng SI & OCR, quản lý bài tập theo phong cách Azota, cùng kho tài liệu & đề kiểm tra phân hóa chuẩn Bộ GD&ĐT.
             </p>
 
             <div className="pt-2 flex flex-wrap items-center justify-center lg:justify-start gap-3">
               <Button
                 size="lg"
-                onClick={() => router.push(isAuthenticated ? '/app/dashboard' : '/register')}
+                onClick={() => router.push(isAuthenticated ? '/dashboard' : '/register')}
                 className="font-bold gap-2 shadow-lg shadow-blue-500/25 hover:shadow-blue-500/35 cursor-pointer"
               >
                 {isAuthenticated ? 'Vào khu vực học tập' : 'Bắt đầu miễn phí ngay'}
@@ -187,10 +184,10 @@ export default function HomePage() {
             </div>
             <div className="space-y-1">
               <div className="text-3xl sm:text-4xl font-extrabold text-google-red font-mono">
-                25 Ô
+                4 Mức
               </div>
               <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-                Đấu trường Chaos ma trận độc quyền
+                Ma trận đề thi chuẩn phân hóa Bộ GD&ĐT
               </p>
             </div>
             <div className="space-y-1">
@@ -237,10 +234,10 @@ export default function HomePage() {
                 1
               </div>
               <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">
-                Đăng ký & Tạo lớp / Phòng
+                Đăng ký & Tham gia lớp học
               </h3>
               <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-                Tạo tài khoản Giáo viên hoặc Học sinh. Mở lớp học mới hoặc chọn chế độ phòng thi đấu Chaos Quiz trực tiếp.
+                Tạo tài khoản Giáo viên hoặc Học sinh. Mở lớp học mới hoặc nhập mã lớp để kết nối ngay lập tức.
               </p>
             </div>
 
@@ -249,10 +246,10 @@ export default function HomePage() {
                 2
               </div>
               <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">
-                Soạn đề thần tốc với AI
+                Soạn đề thần tốc với SI
               </h3>
               <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-                Tải lên file đề PDF hoặc dùng ngân hàng câu hỏi sẵn có. AI tự động tinh chỉnh ma trận câu hỏi và phân loại độ khó.
+                Tải lên file đề PDF hoặc dùng ngân hàng câu hỏi sẵn có. SI tự động tinh chỉnh ma trận câu hỏi và phân loại độ khó.
               </p>
             </div>
 

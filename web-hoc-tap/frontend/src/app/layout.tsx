@@ -7,11 +7,12 @@ import './globals.css';
 const inter = Inter({
   subsets: ['latin', 'vietnamese'],
   display: 'swap',
+  variable: '--font-inter',
 });
 
 export const metadata: Metadata = {
-  title: 'HocRealtime - Nền tảng Giáo dục & Chaos Quiz',
-  description: 'Nền tảng giao bài, chấm điểm và thi đấu trắc nghiệm realtime Chaos Quiz',
+  title: 'HocRealtime - Nền tảng Giáo dục & Quản lý Học tập Thông minh',
+  description: 'Nền tảng giao bài, chấm điểm và tạo đề kiểm tra phân hóa tự động chuẩn Bộ GD&ĐT',
 };
 
 export default function RootLayout({
@@ -20,7 +21,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="vi" className="h-full">
+    <html lang="vi" className={`h-full ${inter.variable} ${inter.className}`} suppressHydrationWarning>
       <head>
         <link
           rel="stylesheet"
@@ -28,7 +29,7 @@ export default function RootLayout({
           crossOrigin="anonymous"
         />
       </head>
-      <body className={`min-h-screen bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 ${inter.className}`}>
+      <body className="min-h-screen bg-white dark:bg-[#131314] text-slate-900 dark:text-slate-100 font-sans">
         <Providers>{children}</Providers>
       </body>
     </html>

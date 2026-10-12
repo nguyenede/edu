@@ -10,9 +10,9 @@ export default function LegacyDocViewRedirect() {
 
   useEffect(() => {
     if (id) {
-      router.replace(`/app/documents/${encodeURIComponent(id)}/view`);
+      router.replace(`/documents/${encodeURIComponent(id)}`);
     } else {
-      router.replace('/app/documents');
+      router.replace('/documents');
     }
   }, [router, id]);
 

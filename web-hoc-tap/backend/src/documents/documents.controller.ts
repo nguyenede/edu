@@ -22,6 +22,12 @@ export class DocumentsController {
     return this.documentsService.renameFolder(req.user.id, id, String(dto.name || ''));
   }
 
+  @Patch('folders/:id/move')
+  @Post('folders/:id/move')
+  async moveFolder(@Request() req: any, @Param('id') id: string, @Body() dto: any) {
+    return this.documentsService.moveFolder(req.user.id, id, dto.parentId || dto.folderId || null);
+  }
+
   @Delete('folders/:id')
   async deleteFolder(@Request() req: any, @Param('id') id: string) {
     return this.documentsService.deleteFolder(req.user.id, id);
@@ -48,6 +54,7 @@ export class DocumentsController {
   }
 
   @Patch('files/:id/move')
+  @Post('files/:id/move')
   async moveFile(@Request() req: any, @Param('id') id: string, @Body() dto: any) {
     return this.documentsService.moveFile(req.user.id, id, dto.parentId || dto.folderId || null);
   }
@@ -55,5 +62,10 @@ export class DocumentsController {
   @Delete('files/:id')
   async deleteFile(@Request() req: any, @Param('id') id: string) {
     return this.documentsService.deleteFile(req.user.id, id);
+  }
+
+  @Delete('all')
+  async clearAll(@Request() req: any) {
+    return this.documentsService.clearAll(req.user.id);
   }
 }

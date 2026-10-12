@@ -50,7 +50,11 @@ html, body {
 
 html.dark,
 html.dark body {
-  background-color: #090a0f;
+  background-color: #131314 !important;
+}
+
+html, body, button, input, select, textarea {
+  font-family: var(--font-inter), 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif !important;
 }
 
 body {
@@ -59,6 +63,44 @@ body {
 
 html.dark body {
   @apply text-slate-100;
+  background-color: #131314 !important;
+}
+
+/* Neutral Charcoal Dark Theme Global Utilities */
+html.dark .bg-google-bg-dark {
+  background-color: #131314 !important;
+}
+
+html.dark .bg-google-card-dark {
+  background-color: #1e1f20 !important;
+}
+
+html.dark .bg-google-hover-dark {
+  background-color: #2d2f31 !important;
+}
+
+html.dark .bg-google-pill-dark {
+  background-color: #2d2f31 !important;
+}
+
+html.dark .bg-slate-900,
+html.dark .bg-slate-950,
+html.dark .bg-gray-900,
+html.dark .bg-zinc-900 {
+  background-color: #1e1f20 !important;
+}
+
+html.dark .bg-slate-800,
+html.dark .bg-gray-800,
+html.dark .bg-zinc-800 {
+  background-color: #282a2c !important;
+}
+
+html.dark .border-slate-800,
+html.dark .border-slate-700,
+html.dark .border-gray-800,
+html.dark .border-zinc-800 {
+  border-color: #2d2f31 !important;
 }
 
 .scrollbar-gutter-stable {
@@ -75,6 +117,10 @@ select:focus-visible,
 textarea:focus-visible {
   outline: none !important;
   box-shadow: none !important;
+}
+
+textarea {
+  resize: none !important;
 }
 
 input:-webkit-autofill,
@@ -132,6 +178,63 @@ html.dark input:-webkit-autofill:active {
 .no-scrollbar {
   -ms-overflow-style: none !important;
   scrollbar-width: none !important;
+}
+
+/* Windows 11 Fluent Scrollbar (Ultra-thin 2px line when idle, expands into rounded 6px pill on hover) */
+.win-scrollbar {
+  scrollbar-width: thin !important;
+  scrollbar-color: rgba(148, 163, 184, 0.4) transparent !important;
+}
+
+.win-scrollbar:hover {
+  scrollbar-color: #94A3B8 transparent !important;
+}
+
+html.dark .win-scrollbar {
+  scrollbar-color: rgba(100, 116, 139, 0.35) transparent !important;
+}
+
+html.dark .win-scrollbar:hover {
+  scrollbar-color: #64748B transparent !important;
+}
+
+.win-scrollbar::-webkit-scrollbar {
+  width: 2px !important;
+  height: 2px !important;
+}
+
+.win-scrollbar::-webkit-scrollbar-track {
+  background: transparent !important;
+}
+
+.win-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.4) !important;
+  border-radius: 9999px !important;
+}
+
+.win-scrollbar:hover::-webkit-scrollbar {
+  width: 6px !important;
+  height: 6px !important;
+}
+
+.win-scrollbar:hover::-webkit-scrollbar-thumb {
+  background: #94A3B8 !important;
+}
+
+.win-scrollbar:hover::-webkit-scrollbar-thumb:hover {
+  background: #64748B !important;
+}
+
+html.dark .win-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(100, 116, 139, 0.35) !important;
+}
+
+html.dark .win-scrollbar:hover::-webkit-scrollbar-thumb {
+  background: #64748B !important;
+}
+
+html.dark .win-scrollbar:hover::-webkit-scrollbar-thumb:hover {
+  background: #94A3B8 !important;
 }
 
 /* ChatCoi Sidebar Custom Scrollbar (Thin 5px track matching screenshot 100%) */

@@ -23,6 +23,17 @@ import {
   Share2,
 } from 'lucide-react';
 
+import {
+  fetchClassDetail,
+  fetchClassAssignments,
+  fetchClassMembers,
+  deleteClass,
+  removeStudentFromClass,
+  createClassAssignment,
+  deleteClassAssignment,
+} from '@/lib/classesApi';
+import { safeLocalStorageSet } from '@/lib/safeStorage';
+
 export default function ClassDetailPage() {
   const { id: classId } = useParams();
   const router = useRouter();
@@ -31,7 +42,6 @@ export default function ClassDetailPage() {
   const [clazz, setClazz] = useState<any>(null);
   const [members, setMembers] = useState<any[]>([]);
   const [assignments, setAssignments] = useState<any[]>([]);
-  const [quizzes, setQuizzes] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState<'assignments' | 'students'>('assignments');
   const [loading, setLoading] = useState(true);
 
@@ -39,6 +49,7 @@ export default function ClassDetailPage() {
   const [isCreateAssignOpen, setIsCreateAssignOpen] = useState(false);
   const [isDeleteClassOpen, setIsDeleteClassOpen] = useState(false);
   const [studentToDelete, setStudentToDelete] = useState<string | null>(null);
+  const [assignmentToDelete, setAssignmentToDelete] = useState<any>(null);
   const [copied, setCopied] = useState(false);
 
   // Assignment Form State
@@ -52,7 +63,8 @@ export default function ClassDetailPage() {
   const isTeacher = user?.role === 'TEACHER';
 
   useEffect(() => {
-    if (!token) {
+    const activeToken = token || (typeof window !== 'undefined' ? localStorage.getItem('token') : null);
+    if (!activeToken) {
       router.push('/login');
       return;
     }
@@ -62,35 +74,26 @@ export default function ClassDetailPage() {
   const fetchClassData = async () => {
     setLoading(true);
     try {
-      // 1. Class Detail
-      const classRes = await fetch(`/api/classes/${classId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!classRes.ok) throw new Error('Không tìm thấy lớp học');
-      setClazz(await classRes.json());
+      const activeToken = token || (typeof window !== 'undefined' ? localStorage.getItem('token') : null);
+      const cId = String(classId);
+
+      // 1. Class Detail with resilient offline support
+      const detail = await fetchClassDetail(activeToken, cId);
+      setClazz(detail);
 
       // 2. Assignments
-      const assignRes = await fetch(
-        `/api/assignments/class/${classId}`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      if (assignRes.ok) setAssignments(await assignRes.json());
+      const asgs = await fetchClassAssignments(activeToken, cId);
+      setAssignments(asgs);
 
-      // 3. Members & Quizzes (Teacher)
-      if (isTeacher) {
-        const membersRes = await fetch(
-          `/api/classes/${classId}/members`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        if (membersRes.ok) setMembers(await membersRes.json());
+      // 3. Members
+      const mems = await fetchClassMembers(activeToken, cId);
+      setMembers(mems);
 
-        const quizRes = await fetch('/api/quizzes/teacher', {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (quizRes.ok) setQuizzes(await quizRes.json());
+      if (detail && mems.length > (detail._count?.members || 0)) {
+        setClazz({ ...detail, _count: { members: mems.length } });
       }
     } catch (err) {
-      console.error(err);
+      console.error('Error fetching class data:', err);
     } finally {
       setLoading(false);
     }
@@ -101,68 +104,50 @@ export default function ClassDetailPage() {
     if (!newTitle.trim()) return;
     setFormError(null);
 
+    const activeToken = token || (typeof window !== 'undefined' ? localStorage.getItem('token') : null);
+    const cId = String(classId);
+
     try {
-      const res = await fetch('/api/assignments', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          title: newTitle,
-          description: newDesc || undefined,
-          classId,
-          quizId: linkedQuizId || undefined,
-          deadline: deadline ? new Date(deadline).toISOString() : undefined,
-          maxScore: Number(maxScore),
-        }),
+      const created = await createClassAssignment(activeToken, {
+        title: newTitle.trim(),
+        description: newDesc || undefined,
+        classId: cId,
+        quizId: linkedQuizId || undefined,
+        deadline: deadline ? new Date(deadline).toISOString() : undefined,
+        maxScore: Number(maxScore),
       });
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || 'Không thể giao bài');
-
+      setAssignments((prev) => [created, ...prev.filter((a) => a.id !== created.id)]);
       setNewTitle('');
       setNewDesc('');
       setDeadline('');
       setLinkedQuizId('');
       setIsCreateAssignOpen(false);
-      fetchClassData();
     } catch (err: any) {
-      setFormError(err.message);
+      setFormError(err.message || 'Lỗi tạo bài tập');
     }
   };
 
   const handleRemoveStudent = async () => {
     if (!studentToDelete) return;
-    try {
-      const res = await fetch(
-        `/api/classes/${classId}/students/${studentToDelete}`,
-        {
-          method: 'DELETE',
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-      if (res.ok) {
-        setMembers(members.filter((m) => m.student.id !== studentToDelete));
-        setStudentToDelete(null);
-      }
-    } catch (err) {
-      console.error(err);
-    }
+    const activeToken = token || (typeof window !== 'undefined' ? localStorage.getItem('token') : null);
+    await removeStudentFromClass(activeToken, String(classId), studentToDelete);
+    setMembers((prev) => prev.filter((m) => m.student.id !== studentToDelete));
+    setStudentToDelete(null);
+  };
+
+  const handleDeleteAssignment = async () => {
+    if (!assignmentToDelete) return;
+    const activeToken = token || (typeof window !== 'undefined' ? localStorage.getItem('token') : null);
+    await deleteClassAssignment(activeToken, String(classId), assignmentToDelete.id);
+    setAssignments((prev) => prev.filter((a) => a.id !== assignmentToDelete.id));
+    setAssignmentToDelete(null);
   };
 
   const handleDeleteClass = async () => {
-    try {
-      const res = await fetch(`/api/classes/${classId}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (res.ok) {
-        router.push('/app/classes');
-      }
-    } catch (err) {
-      console.error(err);
-    }
+    const activeToken = token || (typeof window !== 'undefined' ? localStorage.getItem('token') : null);
+    await deleteClass(activeToken, String(classId));
+    router.push('/classes');
   };
 
   const handleCopyCode = () => {
@@ -172,17 +157,45 @@ export default function ClassDetailPage() {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  if (loading || !clazz) {
+  if (loading && !clazz) {
     return (
       <AppShell>
-        <p className="text-xs text-slate-400 py-12 text-center">Đang tải thông tin lớp học...</p>
+        <div className="flex flex-col items-center justify-center p-16 gap-3">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-google-blue"></div>
+          <p className="text-xs text-slate-400">Đang tải thông tin lớp học...</p>
+        </div>
+      </AppShell>
+    );
+  }
+
+  if (!clazz) {
+    return (
+      <AppShell title="Không tìm thấy lớp học">
+        <div className="p-12 text-center space-y-4">
+          <p className="text-sm text-slate-500">Lớp học không tồn tại hoặc đã bị xóa.</p>
+          <Button onClick={() => router.push('/classes')}>Quay lại danh sách lớp học</Button>
+        </div>
       </AppShell>
     );
   }
 
   return (
     <AppShell
-      title={clazz.name}
+      title={
+        <div className="flex items-center gap-1 text-2xl font-[450] tracking-tight text-slate-900 dark:text-slate-100 flex-wrap -ml-2">
+          <button
+            type="button"
+            onClick={() => router.push('/classes')}
+            className="transition-colors cursor-pointer px-2 py-0.5 rounded-xl hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-900 dark:text-white font-[450]"
+          >
+            Lớp học của tôi
+          </button>
+          <ChevronRight size={14} className="text-slate-400 dark:text-slate-500 shrink-0 stroke-[2]" />
+          <span className="px-2 py-0.5 rounded-xl text-slate-900 dark:text-white font-[450]">
+            {clazz.name}
+          </span>
+        </div>
+      }
       subtitle={`Mã tham gia lớp: ${clazz.code}`}
       action={
         <div className="flex items-center gap-2">
@@ -195,7 +208,7 @@ export default function ClassDetailPage() {
             <>
               <Button
                 size="sm"
-                onClick={() => router.push(`/app/classes/${classId}/assignments/create`)}
+                onClick={() => router.push('/documents')}
                 className="gap-1.5"
               >
                 <Plus size={16} /> Giao bài tập
@@ -216,13 +229,13 @@ export default function ClassDetailPage() {
     >
       <div className="space-y-6">
         {/* Navigation Tabs */}
-        <div className="flex gap-4 border-b border-slate-100 dark:border-slate-900 pb-1">
+        <div className="flex gap-4 items-center">
           <button
             onClick={() => setActiveTab('assignments')}
-            className={`pb-2.5 text-sm font-semibold border-b-2 ${
+            className={`text-sm font-semibold transition-colors ${
               activeTab === 'assignments'
-                ? 'border-blue-600 text-blue-600 dark:border-blue-500 dark:text-blue-500'
-                : 'border-transparent text-slate-500'
+                ? 'text-blue-600 dark:text-blue-400 font-bold'
+                : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
             }`}
           >
             Bài tập & Đề thi ({assignments.length})
@@ -231,10 +244,10 @@ export default function ClassDetailPage() {
           {isTeacher && (
             <button
               onClick={() => setActiveTab('students')}
-              className={`pb-2.5 text-sm font-semibold border-b-2 ${
+              className={`text-sm font-semibold transition-colors ${
                 activeTab === 'students'
-                  ? 'border-blue-600 text-blue-600 dark:border-blue-500 dark:text-blue-500'
-                  : 'border-transparent text-slate-500'
+                  ? 'text-blue-600 dark:text-blue-400 font-bold'
+                  : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
               }`}
             >
               Danh sách Học sinh ({members.length})
@@ -246,28 +259,23 @@ export default function ClassDetailPage() {
         {activeTab === 'assignments' && (
           <div className="space-y-4">
             {assignments.length === 0 ? (
-              <div className="p-12 text-center space-y-3">
+              <div className="p-12 text-center space-y-2">
                 <FileText size={40} className="mx-auto text-slate-300 dark:text-slate-700" />
-                <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
+                <h3 className="text-sm font-medium text-slate-500 dark:text-slate-400">
                   Chưa có bài tập nào được giao
                 </h3>
-                <p className="text-xs text-slate-500 max-w-sm mx-auto">
-                  {isTeacher
-                    ? 'Hãy nhấn "Giao bài tập" để tạo đề tự luận hoặc kết nối bộ câu hỏi trắc nghiệm.'
-                    : 'Giáo viên chưa giao bài tập nào cho lớp này.'}
-                </p>
               </div>
             ) : (
-              <div className="space-y-2">
+              <div className="divide-y divide-slate-100 dark:divide-slate-800">
                 {assignments.map((assign) => (
                   <div
                     key={assign.id}
-                    onClick={() => router.push(`/app/assignments/${assign.id}`)}
-                    className="p-4 bg-slate-50/80 dark:bg-slate-900/40 rounded-[6px] flex justify-between items-center cursor-pointer select-none"
+                    onClick={() => router.push(`/assignments/${assign.id}`)}
+                    className="py-3.5 px-2 flex justify-between items-center cursor-pointer select-none hover:bg-slate-50/50 dark:hover:bg-slate-900/30 rounded-lg transition-colors group"
                   >
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
-                        <h4 className="font-bold text-sm text-slate-900 dark:text-slate-100">
+                        <h4 className="font-bold text-sm text-slate-900 dark:text-slate-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
                           {assign.title}
                         </h4>
                         {assign.quiz && <Badge variant="info">Trắc nghiệm</Badge>}
@@ -282,7 +290,7 @@ export default function ClassDetailPage() {
                       </p>
                     </div>
 
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-3">
                       <div className="text-right">
                         <span className="text-xs font-semibold text-slate-600 dark:text-slate-400 block">
                           Thang điểm: {assign.maxScore}
@@ -293,7 +301,22 @@ export default function ClassDetailPage() {
                           </span>
                         )}
                       </div>
-                      <ChevronRight size={16} className="text-slate-400" />
+
+                      {isTeacher && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setAssignmentToDelete(assign);
+                          }}
+                          className="p-1.5 rounded text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors cursor-pointer"
+                          title="Xóa bài tập"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      )}
+
+                      <ChevronRight size={16} className="text-slate-400 group-hover:translate-x-0.5 transition-transform" />
                     </div>
                   </div>
                 ))}
@@ -310,41 +333,61 @@ export default function ClassDetailPage() {
                 Chưa có học sinh nào tham gia bằng mã lớp: <strong className="font-mono">{clazz.code}</strong>
               </p>
             ) : (
-              <div className="space-y-2">
-                {members.map((m) => (
-                  <div
-                    key={m.id}
-                    className="p-3.5 bg-slate-50/80 dark:bg-slate-900/40 rounded-[6px] flex justify-between items-center"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-[4px] bg-slate-200 dark:bg-slate-800 flex items-center justify-center font-bold text-xs">
-                        {m.student.profile?.name ? m.student.profile.name[0] : 'S'}
-                      </div>
-                      <div>
-                        <span className="font-bold text-xs text-slate-900 dark:text-slate-100 block">
-                          {m.student.profile?.name || m.student.email}
-                        </span>
-                        <span className="text-[10px] text-slate-400 font-mono">
-                          {m.student.email}
-                        </span>
-                      </div>
-                    </div>
+              <div className="divide-y divide-slate-100 dark:divide-slate-800">
+                {members.map((m) => {
+                  const studentName = m.student?.profile?.name || m.student?.name || m.name || m.student?.email || m.email || 'Học sinh';
+                  const studentEmail = m.student?.email || m.email || '';
+                  const studentId = m.student?.id || m.studentId || m.id;
+                  const initialChar = (studentName ? studentName[0] : 'S').toUpperCase();
 
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setStudentToDelete(m.student.id)}
-                      className="text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20"
+                  return (
+                    <div
+                      key={m.id || studentId}
+                      className="py-3 px-2 flex justify-between items-center hover:bg-slate-50/50 dark:hover:bg-slate-900/30 rounded-lg transition-colors"
                     >
-                      Xóa khỏi lớp
-                    </Button>
-                  </div>
-                ))}
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center font-bold text-xs text-slate-800 dark:text-slate-200">
+                          {initialChar}
+                        </div>
+                        <div>
+                          <span className="font-bold text-xs text-slate-900 dark:text-slate-100 block">
+                            {studentName}
+                          </span>
+                          {studentEmail && (
+                            <span className="text-[10px] text-slate-400 font-mono">
+                              {studentEmail}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setStudentToDelete(studentId)}
+                        className="text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20 text-xs"
+                      >
+                        Xóa khỏi lớp
+                      </Button>
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>
         )}
       </div>
+
+      {/* Delete Assignment Confirmation */}
+      <ConfirmDialog
+        isOpen={!!assignmentToDelete}
+        onClose={() => setAssignmentToDelete(null)}
+        onConfirm={handleDeleteAssignment}
+        title="Xóa bài tập này?"
+        message={`Bạn có chắc chắn muốn xóa bài tập "${assignmentToDelete?.title}"? Tất cả bài nộp của học sinh đối với bài tập này cũng sẽ bị xóa.`}
+        isDestructive
+        confirmText="Xóa bài tập"
+      />
 
       {/* Delete Class Confirmation */}
       <ConfirmDialog

@@ -1,55 +1,47 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/useAuthStore';
 import { AppShell } from '@/components/AppShell';
 import { Button } from '@/components/Button';
 import { GraduationCap, Users, Plus, ChevronRight, Copy, Check } from 'lucide-react';
+import { fetchClasses as apiFetchClasses, getLocalClasses, ClassItem } from '@/lib/classesApi';
 
 export default function ClassesPage() {
   const router = useRouter();
   const { user, token } = useAuthStore();
-  const [classes, setClasses] = useState<any[]>([]);
+  const [classes, setClasses] = useState<ClassItem[]>([]);
   const [loading, setLoading] = useState(true);
 
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
   const isTeacher = user?.role === 'TEACHER';
 
-  useEffect(() => {
-    if (!token) {
-      router.push('/login');
-      return;
-    }
-    fetchClasses();
-  }, [token]);
-
-  const fetchClasses = async () => {
+  const loadClasses = useCallback(async () => {
     setLoading(true);
     try {
-      const endpoint = isTeacher
-        ? '/api/classes/teacher'
-        : '/api/classes/student';
-
-      const res = await fetch(endpoint, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (res.ok) {
-        const data = await res.json();
-        if (isTeacher) {
-          setClasses(data);
-        } else {
-          setClasses(data.map((m: any) => m.class));
-        }
-      } else {
-        setClasses([]);
-      }
+      const activeToken = token || (typeof window !== 'undefined' ? localStorage.getItem('token') : null);
+      const data = await apiFetchClasses(activeToken, isTeacher);
+      setClasses(data);
     } catch (err) {
-      setClasses([]);
+      console.error('Error loading classes:', err);
+      setClasses(getLocalClasses());
     } finally {
       setLoading(false);
     }
-  };
+  }, [token, isTeacher]);
+
+  useEffect(() => {
+    loadClasses();
+
+    const handleRefresh = () => loadClasses();
+    window.addEventListener('storage', handleRefresh);
+    window.addEventListener('focus', handleRefresh);
+    return () => {
+      window.removeEventListener('storage', handleRefresh);
+      window.removeEventListener('focus', handleRefresh);
+    };
+  }, [loadClasses]);
 
   const handleCopyCode = (e: React.MouseEvent, code: string) => {
     e.stopPropagation();
@@ -68,11 +60,11 @@ export default function ClassesPage() {
       }
       action={
         isTeacher ? (
-          <Button size="sm" onClick={() => router.push('/classes/create')} className="gap-1.5">
+          <Button size="sm" onClick={() => router.push('/app/classes/create')} className="gap-1.5">
             <Plus size={16} /> Tạo lớp học
           </Button>
         ) : (
-          <Button size="sm" onClick={() => router.push('/classes/join')} className="gap-1.5">
+          <Button size="sm" onClick={() => router.push('/app/classes/join')} className="gap-1.5">
             <Plus size={16} /> Tham gia lớp mới
           </Button>
         )
@@ -94,43 +86,43 @@ export default function ClassesPage() {
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="space-y-1">
             {classes.map((cls) => (
               <div
                 key={cls.id}
-                onClick={() => router.push(`/classes/${cls.id}`)}
-                className="p-5 bg-slate-50/80 dark:bg-slate-900/40 rounded-[6px] flex flex-col justify-between cursor-pointer space-y-4 select-none"
+                onClick={() => router.push(`/app/classes/${cls.id}`)}
+                className="py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 cursor-pointer hover:bg-slate-50/50 dark:hover:bg-slate-900/30 px-2 rounded-lg transition-colors select-none group"
               >
-                <div className="space-y-1.5">
-                  <div className="flex justify-between items-start">
-                    <h3 className="font-bold text-slate-950 dark:text-slate-100 text-base">
-                      {cls.name}
-                    </h3>
-                  </div>
-                  <p className="text-xs text-slate-500">
-                    {isTeacher
-                      ? 'Mã mời học sinh: '
-                      : `Giáo viên: ${cls.teacher?.profile?.name || cls.teacher?.email}`}
-                    {isTeacher && (
-                      <span
-                        onClick={(e) => handleCopyCode(e, cls.code)}
-                        className="inline-flex items-center gap-1 font-mono font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40 px-1.5 py-0.5 rounded-[4px] ml-1 cursor-pointer"
-                        title="Click để sao chép"
-                      >
-                        {cls.code}
-                        {copiedCode === cls.code ? <Check size={12} /> : <Copy size={12} />}
+                <div className="space-y-1">
+                  <h3 className="font-bold text-slate-950 dark:text-slate-100 text-base group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                    {cls.name}
+                  </h3>
+                  <div className="flex items-center gap-3 text-xs text-slate-500">
+                    <span className="flex items-center gap-1">
+                      <Users size={13} /> {cls._count?.members ?? 0} học sinh
+                    </span>
+                    <span>•</span>
+                    {isTeacher ? (
+                      <span className="flex items-center gap-1 font-mono">
+                        Mã: <strong className="text-slate-700 dark:text-slate-300">{cls.code}</strong>
+                        <button
+                          type="button"
+                          onClick={(e) => handleCopyCode(e, cls.code)}
+                          className="hover:text-slate-900 dark:hover:text-white p-0.5"
+                          title="Sao chép mã"
+                        >
+                          {copiedCode === cls.code ? <Check size={12} className="text-emerald-500" /> : <Copy size={12} />}
+                        </button>
                       </span>
+                    ) : (
+                      <span>Giáo viên: {cls.teacher?.profile?.name || cls.teacher?.email}</span>
                     )}
-                  </p>
+                  </div>
                 </div>
 
-                <div className="flex justify-between items-center text-xs text-slate-500 pt-3 border-t border-slate-200/40 dark:border-slate-800/40">
-                  <span className="flex items-center gap-1.5 font-medium">
-                    <Users size={14} /> {cls._count?.members ?? 0} học sinh
-                  </span>
-                  <span className="font-semibold text-blue-600 dark:text-blue-400 flex items-center gap-0.5">
-                    Chi tiết lớp <ChevronRight size={14} />
-                  </span>
+                <div className="flex items-center gap-2 text-xs font-semibold text-blue-600 dark:text-blue-400">
+                  <span>Chi tiết lớp</span>
+                  <ChevronRight size={14} className="group-hover:translate-x-0.5 transition-transform" />
                 </div>
               </div>
             ))}

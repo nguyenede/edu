@@ -27,6 +27,21 @@ interface AuthState {
   setPlan: (plan: string) => void;
 }
 
+export const getStoredUser = (): User | null => {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = localStorage.getItem('user');
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+};
+
+export const getStoredToken = (): string | null => {
+  if (typeof window === 'undefined') return null;
+  return localStorage.getItem('token');
+};
+
 export const useAuthStore = create<AuthState>((set) => ({
   user: null,
   token: null,

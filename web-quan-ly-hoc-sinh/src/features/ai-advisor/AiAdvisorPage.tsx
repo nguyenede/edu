@@ -36,8 +36,8 @@ const AiAdvisorPage: React.FC = () => {
   // Initialize with a welcoming message
   useEffect(() => {
     const welcome = user?.role === 'parent'
-      ? `Xin chào phụ huynh **${user.full_name}**! Tôi là **AI Advisor** - Trợ lý Học thuật chuyên sâu dành riêng cho gia đình.\n\nTôi có thể kết nối thời gian thực với kết quả điểm số, chuyên cần và học phí của con em anh/chị. Anh/chị có thể click nhanh các gợi ý bên dưới hoặc đặt câu hỏi bất kỳ như:\n* "Con tôi học lực thế nào?"\n* "Có hóa đơn học phí nào chưa đóng không?"\n* "Xem lịch học hôm nay của con."`
-      : `Xin chào **${user?.full_name}**! Tôi là **AI Advisor** - Trợ lý Học thuật cá nhân của bạn.\n\nTôi có thể giúp bạn kiểm tra nhanh tình hình GPA học thuật, tỉ lệ chuyên cần đi học, hóa đơn học phí còn nợ hoặc thời khóa biểu hôm nay. Bạn có thể sử dụng các nút bấm phím tắt bên dưới để trò chuyện cùng tôi nhé!`;
+      ? `Xin chào phụ huynh **${user.full_name}**! Tôi là **SI Advisor** - Trợ lý Học thuật chuyên sâu dành riêng cho gia đình.\n\nTôi có thể kết nối thời gian thực với kết quả điểm số, chuyên cần và học phí của con em anh/chị. Anh/chị có thể click nhanh các gợi ý bên dưới hoặc đặt câu hỏi bất kỳ như:\n* "Con tôi học lực thế nào?"\n* "Có hóa đơn học phí nào chưa đóng không?"\n* "Xem lịch học hôm nay của con."`
+      : `Xin chào **${user?.full_name}**! Tôi là **SI Advisor** - Trợ lý Học thuật cá nhân của bạn.\n\nTôi có thể giúp bạn kiểm tra nhanh tình hình GPA học thuật, tỉ lệ chuyên cần đi học, hóa đơn học phí còn nợ hoặc thời khóa biểu hôm nay. Bạn có thể sử dụng các nút bấm phím tắt bên dưới để trò chuyện cùng tôi nhé!`;
 
     setMessages([
       {
@@ -126,7 +126,7 @@ const AiAdvisorPage: React.FC = () => {
           {/* Chat Headers */}
           <div className="h-14 px-6 border-b border-[#EDEDF2] flex items-center gap-2.5 shrink-0 bg-[#F5F5F7]/30">
             <Bot className="w-5 h-5 text-[#0071E3]" />
-            <span className="font-semibold text-sm text-[#1D1D1F]">AI Learning Advisor</span>
+            <span className="font-semibold text-sm text-[#1D1D1F]">SI Learning Advisor</span>
             <div className="ml-auto flex items-center gap-1.5 px-2.5 py-0.5 bg-[#34C759]/10 text-[#34C759] rounded-full text-[10px] font-bold uppercase tracking-wider">
               Online
             </div>
@@ -191,7 +191,7 @@ const AiAdvisorPage: React.FC = () => {
                     <span className="w-2 h-2 bg-[#6E6E73] rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
                     <span className="w-2 h-2 bg-[#6E6E73] rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
                   </div>
-                  <span className="text-xs font-semibold">AI đang phân tích dữ liệu...</span>
+                  <span className="text-xs font-semibold">SI đang phân tích dữ liệu...</span>
                 </div>
               </div>
             )}

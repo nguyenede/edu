@@ -44,7 +44,7 @@ export default function EditGenderPage() {
           </div>
         </div>
 
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-xs space-y-3">
+        <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-xs space-y-3">
           {['Nam', 'Nữ', 'Khác', 'Không muốn tiết lộ'].map((g) => (
             <button
               key={g}

@@ -16,24 +16,46 @@ export const TopLoadingBar: React.FC = () => {
   const [progress, setProgress] = useState(0);
   const [visible, setVisible] = useState(false);
 
-  const start = () => {
-    setVisible(true);
-    setProgress(20);
-    setTimeout(() => setProgress(65), 100);
-    setTimeout(() => setProgress(85), 200);
+  const timersRef = React.useRef<ReturnType<typeof setTimeout>[]>([]);
+
+  const clearAllTimers = () => {
+    timersRef.current.forEach((t) => clearTimeout(t));
+    timersRef.current = [];
   };
 
   const finish = () => {
+    clearAllTimers();
     setProgress(100);
-    setTimeout(() => {
+    const hideTimer = setTimeout(() => {
       setVisible(false);
       setProgress(0);
-    }, 200);
+    }, 220);
+    timersRef.current.push(hideTimer);
+  };
+
+  const start = () => {
+    clearAllTimers();
+    setVisible(true);
+    setProgress(25);
+
+    const t1 = setTimeout(() => setProgress(65), 100);
+    const t2 = setTimeout(() => setProgress(85), 200);
+
+    // Watchdog timer: Automatically complete and hide after 600ms
+    // Ensures the loading bar NEVER freezes or stays stuck on any page
+    const watchdog = setTimeout(() => {
+      finish();
+    }, 600);
+
+    timersRef.current.push(t1, t2, watchdog);
   };
 
   useEffect(() => {
     globalStartLoading = start;
     globalFinishLoading = finish;
+    return () => {
+      clearAllTimers();
+    };
   }, []);
 
   // Trigger loading completion on route / search parameter changes
@@ -45,14 +67,17 @@ export const TopLoadingBar: React.FC = () => {
   useEffect(() => {
     const handleAnchorClick = (e: MouseEvent) => {
       const target = (e.target as HTMLElement).closest('a');
-      if (target && target.href) {
-        const targetUrl = new URL(target.href, window.location.origin);
-        if (
-          targetUrl.origin === window.location.origin &&
-          targetUrl.pathname !== window.location.pathname
-        ) {
-          start();
-        }
+      if (target && target.href && !target.target && !target.hasAttribute('download')) {
+        try {
+          const targetUrl = new URL(target.href, window.location.origin);
+          if (
+            targetUrl.origin === window.location.origin &&
+            targetUrl.pathname !== window.location.pathname &&
+            !targetUrl.pathname.startsWith('/api')
+          ) {
+            start();
+          }
+        } catch {}
       }
     };
 
@@ -60,24 +85,27 @@ export const TopLoadingBar: React.FC = () => {
     return () => document.removeEventListener('click', handleAnchorClick);
   }, []);
 
-  // Intercept history.pushState and history.replaceState for programmatic router.push navigation
+  // Intercept history.pushState only for programmatic router navigation to DIFFERENT routes
   useEffect(() => {
     const origPushState = window.history.pushState;
-    const origReplaceState = window.history.replaceState;
 
-    window.history.pushState = function (...args) {
-      start();
-      return origPushState.apply(this, args);
-    };
-
-    window.history.replaceState = function (...args) {
-      start();
-      return origReplaceState.apply(this, args);
+    window.history.pushState = function (data, unused, url) {
+      if (url) {
+        try {
+          const destUrl = new URL(url.toString(), window.location.origin);
+          if (
+            destUrl.origin === window.location.origin &&
+            destUrl.pathname !== window.location.pathname
+          ) {
+            start();
+          }
+        } catch {}
+      }
+      return origPushState.apply(this, [data, unused, url]);
     };
 
     return () => {
       window.history.pushState = origPushState;
-      window.history.replaceState = origReplaceState;
     };
   }, []);
 

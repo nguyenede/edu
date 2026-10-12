@@ -207,10 +207,11 @@ export default function QuestionBankPage() {
             points: Number(item.points || 1),
             timeLimit: Number(item.timeLimit || 30),
             explanation: item.explanation || undefined,
-            options: item.options || [
-              { content: 'Đáp án A', isCorrect: true },
-              { content: 'Đáp án B', isCorrect: false },
-            ],
+            options: Array.isArray(item.options) && item.options.length >= 2
+              ? item.options
+              : (() => {
+                  throw new Error(`Câu hỏi "${item.content || ''}" không có danh sách đáp án hợp lệ. Tuyệt đối không dùng dữ liệu giả.`);
+                })(),
           }),
         });
       }
@@ -301,7 +302,7 @@ export default function QuestionBankPage() {
         {/* Right 3 Cols: Filter Bar and Questions List */}
         <div className="md:col-span-3 space-y-4">
           {/* Filters Bar */}
-          <div className="flex flex-wrap gap-2.5 items-center p-3 bg-slate-50/80 dark:bg-slate-900/40 rounded-[6px]">
+          <div className="flex flex-wrap gap-2.5 items-center py-2">
             <div className="flex-1 min-w-[220px] relative">
               <input
                 type="text"
@@ -309,7 +310,7 @@ export default function QuestionBankPage() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && fetchQuestions()}
-                className="w-full pl-8 pr-3 py-1.5 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 rounded-[6px] text-xs focus:ring-1 focus:ring-blue-500 placeholder-slate-400"
+                className="w-full pl-8 pr-3 py-1.5 bg-slate-50 dark:bg-[#282a2c] text-slate-900 dark:text-slate-100 rounded-lg text-xs focus:ring-1 focus:ring-blue-500 placeholder-slate-400"
               />
               <Search size={14} className="absolute left-2.5 top-2 text-slate-400" />
             </div>
@@ -317,7 +318,7 @@ export default function QuestionBankPage() {
             <select
               value={difficultyFilter}
               onChange={(e) => setDifficultyFilter(e.target.value)}
-              className="px-3 py-1.5 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 rounded-[6px] text-xs focus:ring-1 focus:ring-blue-500 font-medium"
+              className="px-3 py-1.5 bg-slate-50 dark:bg-[#282a2c] text-slate-900 dark:text-slate-100 rounded-lg text-xs focus:ring-1 focus:ring-blue-500 font-medium"
             >
               <option value="">Độ khó (Tất cả)</option>
               <option value="EASY">Dễ</option>
@@ -328,7 +329,7 @@ export default function QuestionBankPage() {
             <select
               value={typeFilter}
               onChange={(e) => setTypeFilter(e.target.value)}
-              className="px-3 py-1.5 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 rounded-[6px] text-xs focus:ring-1 focus:ring-blue-500 font-medium"
+              className="px-3 py-1.5 bg-slate-50 dark:bg-[#282a2c] text-slate-900 dark:text-slate-100 rounded-lg text-xs focus:ring-1 focus:ring-blue-500 font-medium"
             >
               <option value="">Dạng câu hỏi (Tất cả)</option>
               <option value="MULTIPLE_CHOICE">Trắc nghiệm</option>
@@ -354,11 +355,11 @@ export default function QuestionBankPage() {
               </p>
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-2">
               {questions.map((q) => (
                 <div
                   key={q.id}
-                  className="p-4 bg-slate-50/80 dark:bg-slate-900/40 rounded-[6px] space-y-3"
+                  className="py-4 space-y-3 hover:bg-slate-50/50 dark:hover:bg-slate-900/30 px-2 rounded-lg transition-colors group"
                 >
                   <div className="flex justify-between items-start gap-4">
                     <span className="font-bold text-sm text-slate-950 dark:text-slate-100 leading-relaxed">
@@ -366,7 +367,7 @@ export default function QuestionBankPage() {
                     </span>
                     <button
                       onClick={() => setQuestionToDelete(q.id)}
-                      className="p-1 text-slate-400 hover:text-red-600 rounded-[4px]"
+                      className="p-1 text-slate-400 hover:text-red-600 rounded transition-colors"
                       title="Xóa câu hỏi"
                     >
                       <Trash2 size={16} />
@@ -378,10 +379,10 @@ export default function QuestionBankPage() {
                     {q.options.map((opt: any) => (
                       <div
                         key={opt.id}
-                        className={`p-2 rounded-[4px] text-xs font-medium flex items-center gap-2 ${
+                        className={`p-2 rounded text-xs font-medium flex items-center gap-2 ${
                           opt.isCorrect
-                            ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 font-bold ring-1 ring-emerald-500/30'
-                            : 'bg-white dark:bg-slate-950 text-slate-700 dark:text-slate-300'
+                            ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 font-bold'
+                            : 'bg-slate-50/50 dark:bg-slate-900/30 text-slate-700 dark:text-slate-300'
                         }`}
                       >
                         <Check
@@ -394,7 +395,7 @@ export default function QuestionBankPage() {
                   </div>
 
                   {/* Meta Tags */}
-                  <div className="flex flex-wrap gap-3 items-center text-[10px] text-slate-400 pt-2 border-t border-slate-200/40 dark:border-slate-800/40">
+                  <div className="flex flex-wrap gap-3 items-center text-[10px] text-slate-400 pt-1">
                     <Badge variant={q.difficulty === 'EASY' ? 'success' : q.difficulty === 'HARD' ? 'danger' : 'warning'}>
                       {q.difficulty === 'EASY' ? 'Dễ' : q.difficulty === 'HARD' ? 'Khó' : 'Trung bình'}
                     </Badge>
