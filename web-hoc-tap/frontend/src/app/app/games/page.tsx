@@ -26,7 +26,6 @@ import {
 } from '@/lib/gameQuestionHelper';
 import {
   Gamepad2,
-  Sparkles,
   Trophy,
   Settings,
   Plus,
@@ -712,29 +711,6 @@ export default function GamesHubPage() {
         ) : (
           /* LEVEL 1: OVERALL 8 GAMES CATALOG HUB */
           <div className="space-y-4">
-            {exams.length === 0 && !isLoading && (
-              <div className="p-4 rounded-2xl bg-blue-50/80 dark:bg-blue-950/30 border border-blue-200/80 dark:border-blue-900/50 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-blue-900 dark:text-blue-200">
-                <div className="flex items-center gap-2.5">
-                  <span className="w-8 h-8 rounded-xl bg-blue-500/15 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold text-sm shrink-0">
-                    <Sparkles size={16} />
-                  </span>
-                  <div>
-                    <span className="font-bold">Đã sẵn sàng Bản Chạy Thử cho tất cả 8 trò chơi!</span>
-                    <p className="text-[11px] text-blue-700/80 dark:text-blue-300/80">
-                      Bạn có thể bấm vào trò chơi để chơi ngay lập tức, hoặc tải đề thi lên Kho tài liệu để thi đấu với câu hỏi của lớp mình.
-                    </p>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => router.push('/documents')}
-                  className="px-3.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold whitespace-nowrap cursor-pointer transition-colors shadow-xs self-end sm:self-center text-xs"
-                >
-                  Kho tài liệu ➔
-                </button>
-              </div>
-            )}
-
             <div className="flex items-center justify-between text-xs text-slate-500 dark:text-zinc-400 px-1">
               <span>
                 Bấm vào trò chơi để mở trang quản lý và tạo các bài chơi tương tác của bạn.
