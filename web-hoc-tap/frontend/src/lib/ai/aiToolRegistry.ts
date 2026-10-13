@@ -44,7 +44,7 @@ export class AiToolRegistry {
         return {
           toolName: 'create_exam',
           status: 'error',
-          message: 'Không có câu hỏi hợp lệ từ AI đạt quy chuẩn để tạo đề thi. Tuyệt đối không tạo dữ liệu giả.',
+          message: 'Không có câu hỏi hợp lệ từ SI đạt quy chuẩn để tạo đề thi. Tuyệt đối không tạo dữ liệu giả.',
           actionType: 'exam',
         };
       }

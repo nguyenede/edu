@@ -79,7 +79,7 @@ CẤU TRÚC BẮT BUỘC:
 }</action>
 Tôi đã biên soạn hoàn tất bộ đề thi gồm ${targetCount} câu hỏi chuẩn xác cho bạn.`;
     } else {
-      systemPrompt = `BẠN LÀ CHATCOI - TRỢ LÝ AI TỰ HÀNH (AUTONOMOUS AGENT) THÔNG MINH, TẠO ĐỀ THI VÀ TÀI LIỆU HỌC TẬP TỰ ĐỘNG THEO YÊU CẦU CỦA NGƯỜI DÙNG.
+      systemPrompt = `BẠN LÀ CHATCOI - TRỢ LÝ SI TỰ HÀNH (AUTONOMOUS AGENT) THÔNG MINH, TẠO ĐỀ THI VÀ TÀI LIỆU HỌC TẬP TỰ ĐỘNG THEO YÊU CẦU CỦA NGƯỜI DÙNG.
 
 QUY TẮC BẮT BUỘC:
 1. NGÔN NGỮ: TUYỆT ĐỐI 100% TRẢ LỜI BẰNG TIẾNG VIỆT.
@@ -138,7 +138,7 @@ QUY TẮC BẮT BUỘC:
     if (!response.ok) {
       const errorText = await response.text();
       return NextResponse.json(
-        { error: `Máy chủ AI Gateway báo lỗi (${response.status}): ${errorText}` },
+        { error: `Máy chủ SI Gateway báo lỗi (${response.status}): ${errorText}` },
         { status: response.status }
       );
     }
@@ -154,7 +154,7 @@ QUY TẮC BẮT BUỘC:
     const message = error instanceof Error ? error.message : 'Internal Server Error';
     console.error('Error proxying AI request:', error);
     return NextResponse.json(
-      { error: `Không thể kết nối đến máy chủ AI (http://localhost:6660): ${message}. Vui lòng kiểm tra lại AI Gateway!` },
+      { error: `Không thể kết nối đến máy chủ SI (http://localhost:6660): ${message}. Vui lòng kiểm tra lại SI Gateway!` },
       { status: 500 }
     );
   }

@@ -335,10 +335,8 @@ export default function SettingsPage(props: any) {
     refreshStorageData();
     const handleStorageChange = () => refreshStorageData();
     window.addEventListener('storage', handleStorageChange);
-    window.addEventListener('focus', handleStorageChange);
     return () => {
       window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('focus', handleStorageChange);
     };
   }, [refreshStorageData]);
 
@@ -1757,7 +1755,7 @@ export default function SettingsPage(props: any) {
                             Tải bản sao lưu toàn bộ kho đề thi & bài làm (.zip)
                           </span>
                           <span className="text-xs text-slate-400 block font-normal">
-                            Xuất tất cả {storageData.fileCount} tệp đề thi và bài làm do AI hoặc bạn tạo để lưu trữ ngoại tuyến
+                            Xuất tất cả {storageData.fileCount} tệp đề thi và bài làm do SI hoặc bạn tạo để lưu trữ ngoại tuyến
                           </span>
                         </div>
                         <Button

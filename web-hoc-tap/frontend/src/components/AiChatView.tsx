@@ -609,7 +609,7 @@ export default function AiChatView({ initialSessionId }: { initialSessionId?: st
 
       if (!res.ok) {
         const errJson = await res.json().catch(() => null);
-        const errMsg = errJson?.error || `Máy chủ AI phản hồi lỗi: ${res.status}`;
+        const errMsg = errJson?.error || `Máy chủ SI phản hồi lỗi: ${res.status}`;
         throw new Error(errMsg);
       }
 
@@ -736,14 +736,14 @@ export default function AiChatView({ initialSessionId }: { initialSessionId?: st
       }
     } catch (error) {
       console.error('Error in AI execution:', error);
-      const errMsg = error instanceof Error ? error.message : 'Đã xảy ra lỗi khi kết nối với máy chủ AI.';
+      const errMsg = error instanceof Error ? error.message : 'Đã xảy ra lỗi khi kết nối với máy chủ SI.';
 
       const errorAiMsg: ChatMessage = {
         id: aiMsgId,
         sender: 'ai',
-        text: `⚠️ **Không thể tạo câu hỏi lúc này:**\n${errMsg}\n\n*Vui lòng đảm bảo cổng AI Gateway (http://localhost:6660) đang chạy để tạo tài liệu trực tiếp bằng AI.*`,
+        text: `⚠️ **Không thể tạo câu hỏi lúc này:**\n${errMsg}\n\n*Vui lòng đảm bảo cổng SI Gateway (http://localhost:6660) đang chạy để tạo tài liệu trực tiếp bằng SI.*`,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        thoughtText: `Lỗi kết nối cổng dịch vụ AI: ${errMsg}`,
+        thoughtText: `Lỗi kết nối cổng dịch vụ SI: ${errMsg}`,
         thoughtDuration: 1,
       };
 

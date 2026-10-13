@@ -1236,7 +1236,7 @@ function DocumentsPageContent() {
 
         const exam = data.exam;
         if (!Array.isArray(exam.questions) || exam.questions.length === 0) {
-          throw new Error('AI không tìm thấy câu hỏi hợp lệ trong tài liệu. Tuyệt đối không tạo dữ liệu giả.');
+          throw new Error('SI không tìm thấy câu hỏi hợp lệ trong tài liệu. Tuyệt đối không tạo dữ liệu giả.');
         }
 
         setParsedPreview({
@@ -1255,8 +1255,8 @@ function DocumentsPageContent() {
         });
         setIsUploadDocxOpen(true);
       } catch (err: any) {
-        console.error('Error parsing file with AI:', err);
-        alert(err.message || 'Lỗi bóc tách câu hỏi bằng AI. Hệ thống 100% không làm giả dữ liệu.');
+        console.error('Error parsing file with SI:', err);
+        alert(err.message || 'Lỗi bóc tách câu hỏi bằng SI. Hệ thống 100% không làm giả dữ liệu.');
       } finally {
         setIsParsing(false);
       }
@@ -1357,7 +1357,7 @@ function DocumentsPageContent() {
     }
 
     if (uploadedFiles.length === 0) {
-      alert('Không thể tạo câu hỏi từ các file trong thư mục bằng AI. Hệ thống 100% không làm giả dữ liệu.');
+      alert('Không thể tạo câu hỏi từ các file trong thư mục bằng SI. Hệ thống 100% không làm giả dữ liệu.');
       e.target.value = '';
       return;
     }

@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -195,7 +195,7 @@ function ManualQuizCreateContent() {
       showToast('SI đã soạn xong câu hỏi theo đúng chủ đề!');
     } catch (err: any) {
       console.error('Error generating single SI question:', err);
-      showToast(err.message || 'Lỗi kết nối AI. Hệ thống 100% không làm giả dữ liệu.', true);
+      showToast(err.message || 'Lỗi kết nối SI. Hệ thống 100% không làm giả dữ liệu.', true);
     } finally {
       setAiLoadingId(null);
     }
@@ -292,7 +292,7 @@ function ManualQuizCreateContent() {
             menuTitle="Phương thức tạo đề"
             items={[
               { label: 'Tải lên Word/PDF', href: `/app/documents/create${targetQuery}` },
-              { label: 'Tạo đề bằng AI', href: `/app/documents/create/ai${targetQuery}` },
+              { label: 'Tạo đề bằng SI', href: `/app/documents/create/ai${targetQuery}` },
               { label: 'Nhận diện ảnh (OCR)', href: `/app/documents/create/ocr${targetQuery}` },
               { label: 'Ngân hàng câu hỏi', href: `/app/documents/create/bank${targetQuery}` },
               { label: 'Nhập thủ công', href: `/app/documents/create/manual${targetQuery}` },

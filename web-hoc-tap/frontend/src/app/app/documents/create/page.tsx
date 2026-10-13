@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -610,7 +610,7 @@ function DocumentCreateContent() {
                         </span>
                       ) : (
                         <span className="px-2 py-0.5 rounded-md text-[11px] font-bold bg-purple-100 dark:bg-purple-900/60 text-purple-800 dark:text-purple-200 flex items-center gap-1">
-                          ✨ Nhận diện qua SI (Multimodal AI)
+                          ✨ Nhận diện qua SI
                         </span>
                       )}
                       <span className="px-2 py-0.5 rounded-md text-[11px] font-bold bg-emerald-200/80 dark:bg-emerald-900/60 text-emerald-900 dark:text-emerald-100">

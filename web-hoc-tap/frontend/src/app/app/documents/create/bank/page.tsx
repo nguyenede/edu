@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -161,7 +161,7 @@ function BankQuizCreateContent() {
             menuTitle="Phương thức tạo đề"
             items={[
               { label: 'Tải lên Word/PDF', href: `/app/documents/create${targetQuery}` },
-              { label: 'Tạo đề bằng AI', href: `/app/documents/create/ai${targetQuery}` },
+              { label: 'Tạo đề bằng SI', href: `/app/documents/create/ai${targetQuery}` },
               { label: 'Nhận diện ảnh (OCR)', href: `/app/documents/create/ocr${targetQuery}` },
               { label: 'Ngân hàng câu hỏi', href: `/app/documents/create/bank${targetQuery}` },
               { label: 'Nhập thủ công', href: `/app/documents/create/manual${targetQuery}` },

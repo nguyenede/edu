@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -77,7 +77,7 @@ function AiQuizCreateContent() {
       const data = await res.json();
 
       if (!res.ok || !data.success || !data.exam) {
-        throw new Error(data.error || 'Máy chủ AI không thể tạo đề thi lúc này');
+        throw new Error(data.error || 'Máy chủ SI không thể tạo đề thi lúc này');
       }
 
       const generatedExam = data.exam;
@@ -93,7 +93,7 @@ function AiQuizCreateContent() {
       });
       result = await syncExamActionToDocument(token, result);
 
-      setToastMessage(`AI đã tạo thành công ${generatedExam.questions.length} câu hỏi chuẩn xác!`);
+      setToastMessage(`SI đã tạo thành công ${generatedExam.questions.length} câu hỏi chuẩn xác!`);
 
       setTimeout(() => {
         if (result.data?.examUrl) {
@@ -156,14 +156,14 @@ function AiQuizCreateContent() {
             menuTitle="Phương thức tạo đề"
             items={[
               { label: 'Tải lên Word/PDF', href: `/app/documents/create${targetQuery}` },
-              { label: 'Tạo đề bằng AI', href: `/app/documents/create/ai${targetQuery}` },
+              { label: 'Tạo đề bằng SI', href: `/app/documents/create/ai${targetQuery}` },
               { label: 'Nhận diện ảnh (OCR)', href: `/app/documents/create/ocr${targetQuery}` },
               { label: 'Ngân hàng câu hỏi', href: `/app/documents/create/bank${targetQuery}` },
               { label: 'Nhập thủ công', href: `/app/documents/create/manual${targetQuery}` },
             ]}
           />
           <span className="px-2 py-0.5 rounded-xl text-slate-900 dark:text-white font-normal">
-            Tạo đề bằng AI
+            Tạo đề bằng SI
           </span>
         </div>
       }
@@ -182,10 +182,10 @@ function AiQuizCreateContent() {
             <Wand2 size={24} className="text-amber-500 shrink-0" />
             <div>
               <h2 className="text-sm font-bold text-slate-900 dark:text-white">
-                Trình tạo câu hỏi trắc nghiệm tự động 100% bằng AI
+                Trình tạo câu hỏi trắc nghiệm tự động 100% bằng SI
               </h2>
               <p className="text-xs text-slate-500">
-                Nhập chủ đề bài học, AI sẽ trực tiếp suy luận và sinh ra các câu hỏi trắc nghiệm kèm đáp án chuẩn xác
+                Nhập chủ đề bài học, SI sẽ trực tiếp suy luận và sinh ra các câu hỏi trắc nghiệm kèm đáp án chuẩn xác
               </p>
             </div>
           </div>
@@ -302,7 +302,7 @@ function AiQuizCreateContent() {
             <div className="p-6 text-center space-y-2 bg-amber-50/50 dark:bg-amber-950/20 rounded-2xl border border-amber-200/50">
               <div className="animate-spin rounded-full h-7 w-7 border-b-2 border-amber-500 mx-auto" />
               <p className="text-xs text-amber-600 dark:text-amber-400 font-semibold">
-                AI đang suy luận nội dung và khởi tạo đề thi trắc nghiệm...
+                SI đang suy luận nội dung và khởi tạo đề thi trắc nghiệm...
               </p>
               <p className="text-[11px] text-slate-400">
                 {docSubject || docGrade
@@ -321,7 +321,7 @@ function AiQuizCreateContent() {
               onClick={handleGenerate}
               disabled={isGenerating}
             >
-              <Sparkles size={16} className="mr-1.5" /> {isGenerating ? 'AI Đang Xử Lý...' : 'Tạo Đề Thi Bằng AI'}
+              <Sparkles size={16} className="mr-1.5" /> {isGenerating ? 'SI Đang Xử Lý...' : 'Tạo Đề Thi Bằng SI'}
             </Button>
           </div>
         </div>
@@ -332,7 +332,7 @@ function AiQuizCreateContent() {
 
 export default function AiQuizCreatePage() {
   return (
-    <Suspense fallback={<div className="p-8 text-center text-xs text-slate-500 font-medium">Đang tải cấu hình AI...</div>}>
+    <Suspense fallback={<div className="p-8 text-center text-xs text-slate-500 font-medium">Đang tải cấu hình SI...</div>}>
       <AiQuizCreateContent />
     </Suspense>
   );

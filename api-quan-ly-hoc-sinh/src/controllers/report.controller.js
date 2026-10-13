@@ -243,7 +243,7 @@ exports.aiAdvisorChat = async (req, res) => {
 
       if (children.length === 0) {
         return sendSuccess(res, 'AI Advisor Response', {
-          reply: `Xin chào phụ huynh **${parentName}**. Hệ thống nhận thấy tài khoản của anh/chị hiện chưa được liên kết với hồ sơ học sinh nào. Vui lòng liên hệ với nhà trường để liên kết tài khoản trước khi sử dụng trợ lý AI.`,
+          reply: `Xin chào phụ huynh **${parentName}**. Hệ thống nhận thấy tài khoản của anh/chị hiện chưa được liên kết với hồ sơ học sinh nào. Vui lòng liên hệ với nhà trường để liên kết tài khoản trước khi sử dụng trợ lý SI.`,
           analyzedStudent: null
         });
       }
@@ -264,7 +264,7 @@ exports.aiAdvisorChat = async (req, res) => {
     } else {
       // Admin/Teacher general assistant response
       return sendSuccess(res, 'AI Advisor Response', {
-        reply: `Xin chào **${req.user.full_name}** (Vai trò: ${role === 'admin' ? 'Quản trị viên' : 'Giáo viên'}).\n\nTôi là **AI Advisor** hỗ trợ nghiệp vụ trường học. Tôi có thể hỗ trợ anh/chị:\n\n1. **Phân tích kết quả học thuật**: Xem chi tiết dự báo học lực từng học sinh tại trang "Hồ sơ chi tiết học sinh" -> chọn tab "AI Phân tích học tập".\n2. **Gợi ý giảng dạy**: Nhận phân tích phổ điểm và phương pháp giảng dạy tại mục "Điểm số" -> Chọn lớp & môn học.\n3. **Thống kê báo cáo**: Xem biểu đồ tăng trưởng và cơ cấu xếp loại học sinh tại trang "Báo cáo & Thống kê".\n\nAnh/chị muốn tôi hỗ trợ thông tin nào?`,
+        reply: `Xin chào **${req.user.full_name}** (Vai trò: ${role === 'admin' ? 'Quản trị viên' : 'Giáo viên'}).\n\nTôi là **SI Advisor** hỗ trợ nghiệp vụ trường học. Tôi có thể hỗ trợ anh/chị:\n\n1. **Phân tích kết quả học thuật**: Xem chi tiết dự báo học lực từng học sinh tại trang "Hồ sơ chi tiết học sinh" -> chọn tab "SI Phân tích học tập".\n2. **Gợi ý giảng dạy**: Nhận phân tích phổ điểm và phương pháp giảng dạy tại mục "Điểm số" -> Chọn lớp & môn học.\n3. **Thống kê báo cáo**: Xem biểu đồ tăng trưởng và cơ cấu xếp loại học sinh tại trang "Báo cáo & Thống kê".\n\nAnh/chị muốn tôi hỗ trợ thông tin nào?`,
         analyzedStudent: null
       });
     }
@@ -380,7 +380,7 @@ exports.aiAdvisorChat = async (req, res) => {
         `• **Số ngày đi học/có phép**: \`${presentCount} ngày\`\n` +
         `• **Số ngày vắng mặt không phép**: \`${absentCount} ngày\`\n` +
         `• **Số lần đi muộn**: \`${lateCount} lần\`\n\n` +
-        `*Lời khuyên từ AI Advisor*: ${advice}`;
+        `*Lời khuyên từ SI Advisor*: ${advice}`;
     } 
     else if (cleanMsg.includes('học phí') || cleanMsg.includes('tiền') || cleanMsg.includes('đóng học') || cleanMsg.includes('hóa đơn') || cleanMsg.includes('nợ')) {
       if (totalUnpaidAmount === 0) {
@@ -421,17 +421,17 @@ exports.aiAdvisorChat = async (req, res) => {
       if (gpa === null) {
         reply = welcomeText + `Tôi cần có điểm số hiện tại để đưa ra lộ trình cải thiện chính xác. Hãy quay lại sau khi đã có điểm nhé!`;
       } else {
-        reply = welcomeText + `Dưới đây là **Lộ trình Cải thiện Học tập Cá nhân hóa bằng AI**:\n\n` +
+        reply = welcomeText + `Dưới đây là **Lộ trình Cải thiện Học tập Cá nhân hóa bằng SI**:\n\n` +
           `1. **Tập trung khắc phục điểm yếu**: Điểm số môn **${weakestSubject?.name}** đang thấp nhất (${weakestSubject?.score}đ). Đề xuất dành 45 phút mỗi tối làm bài tập cơ bản môn này.\n` +
           `2. **Phương pháp học tập**: Áp dụng kỹ thuật Pomodoro (học 25 phút, nghỉ 5 phút) để tăng tập trung. Tuyệt đối không vừa học vừa bấm điện thoại.\n` +
           `3. **Tương tác tích cực**: Đề nghị cháu chủ động hỏi bài thầy cô, bạn bè ở cuối giờ học nếu chưa hiểu bài trên lớp.\n` +
           `4. **Duy trì sức khỏe**: Tránh thức khuya sau 11h đêm. Ngủ đủ giấc giúp trí nhớ lưu giữ tốt hơn.\n\n` +
-          `AI tin rằng nếu áp dụng đều đặn, điểm số môn **${weakestSubject?.name}** sẽ cải thiện ít nhất 1.5 điểm trong kỳ kiểm tra tới!`;
+          `SI tin rằng nếu áp dụng đều đặn, điểm số môn **${weakestSubject?.name}** sẽ cải thiện ít nhất 1.5 điểm trong kỳ kiểm tra tới!`;
       }
     }
     else {
       // General Greeting / Helper Response
-      reply = welcomeText + `Tôi là **Trợ lý Học đường AI Advisor** chuyên sâu của bạn.\n\n` +
+      reply = welcomeText + `Tôi là **Trợ lý Học đường SI Advisor** chuyên sâu của bạn.\n\n` +
         `Tôi có quyền truy cập trực tiếp vào cơ sở dữ liệu học tập cá nhân và có thể giải đáp chính xác các thắc mắc của bạn:\n\n` +
         `• Gõ \`học lực\` hoặc \`điểm số\` để xem phân tích GPA và điểm các môn.\n` +
         `• Gõ \`chuyên cần\` hoặc \`nghỉ học\` để kiểm tra tỷ lệ đi học vắng/muộn.\n` +

@@ -735,6 +735,7 @@ function DocumentDynamicViewPageContent() {
               </h1>
               {fileItem.parsedQuiz?.description &&
                 !fileItem.parsedQuiz.description.includes('do AI tạo') &&
+                !fileItem.parsedQuiz.description.includes('do SI tạo') &&
                 !fileItem.parsedQuiz.description.includes('tạo tự động') && (
                 <p className="text-xs text-slate-500 dark:text-slate-400">
                   {fileItem.parsedQuiz.description}

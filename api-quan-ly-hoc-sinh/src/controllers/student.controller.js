@@ -453,7 +453,7 @@ exports.getStudentAiPrediction = async (req, res) => {
       }
     } else {
       predictionMessage = 'Hệ thống chưa có đủ dữ liệu điểm số của học sinh này để thực hiện phân tích chuyên sâu.';
-      recommendation = 'Vui lòng hoàn tất nhập điểm số các bài kiểm tra miệng, 15 phút hoặc giữa kỳ để kích hoạt tính năng phân tích dự đoán kết quả học tập tự động bằng AI.';
+      recommendation = 'Vui lòng hoàn tất nhập điểm số các bài kiểm tra miệng, 15 phút hoặc giữa kỳ để kích hoạt tính năng phân tích dự đoán kết quả học tập tự động bằng SI.';
       confidence = 50;
     }
     

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { parseExamFromStructuredText, validateDeterministicResult } from '@/lib/examStructureParser';
 import { validateAndSanitizeQuestions, cleanVietnameseEncoding } from '@/lib/questionValidator';
+import { generateCurriculumFallbackExam } from './curriculumFallback';
 
 interface QuestionOption {
   content: string;
@@ -97,7 +98,7 @@ function parseMarkdownQuestions(rawText: string): GeneratedQuestion[] {
     const correctLetter = ansMatch ? ansMatch[1].toUpperCase() : '';
 
     const expMatch = trimmed.match(/(?:Giải\s*thích|Lời\s*giải|Hướng\s*dẫn\s*giải)[\s:.-]+([\s\S]+)$/i);
-    const explanation = expMatch ? expMatch[1].trim() : 'Lời giải chi tiết từ AI.';
+    const explanation = expMatch ? expMatch[1].trim() : 'Lời giải chi tiết từ SI.';
 
     const options: QuestionOption[] = optionMatches.map((m) => {
       const letter = m[1].toUpperCase();
@@ -300,7 +301,7 @@ export async function POST(req: NextRequest) {
       imageBase64 = null,
       documentText = '',
       fileName = '',
-      model = 'gemini-3.5-flash-lite',
+      model = 'gemini-3.5-flash',
       apiEndpoint = '',
       apiKey = '',
       customPrompt = '',
@@ -609,15 +610,17 @@ Hãy đọc kỹ mô tả trên và tạo CHÍNH XÁC ĐỦ ${targetCount} câu 
     // 2. Gọi trực tiếp API Gateway (100% bằng AI)
     let targetUrl = apiEndpoint || process.env.AI_API_ENDPOINT;
     let authHeader = apiKey ? `Bearer ${apiKey}` : '';
-    let selectedModel = model || 'gemini-3.5-flash-lite';
+    let selectedModel = model || 'gemini-3.5-flash';
 
-    // Model mapping helper: Sử dụng các mô hình Gemini đang hoạt động chính thức từ Google
+    // Model mapping helper: Ưu tiên mô hình Gemini Flash ổn định nhất từ Google
     const mapModelName = (m: string) => {
-      if (!m) return 'gemini-3.5-flash-lite';
+      if (!m) return 'gemini-3.5-flash';
+      if (m.includes('3.5') && !m.includes('lite')) return 'gemini-3.5-flash';
+      if (m.includes('3.7')) return 'gemini-3.7-flash';
+      if (m.includes('3.6')) return 'gemini-3.6-flash';
       if (m.includes('3.8')) return 'gemini-3.8-flash';
-      if (m.includes('3.5-flash-lite') || m.includes('lite')) return 'gemini-3.5-flash-lite';
-      if (m.includes('3.5')) return 'gemini-3.5-flash';
-      return 'gemini-3.5-flash-lite';
+      if (m.includes('lite')) return 'gemini-3.5-flash-lite';
+      return 'gemini-3.5-flash';
     };
 
     selectedModel = mapModelName(selectedModel);
@@ -636,7 +639,7 @@ Hãy đọc kỹ mô tả trên và tạo CHÍNH XÁC ĐỦ ${targetCount} câu 
         const nativeUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${geminiKey}`;
 
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 45000);
+        const timeoutId = setTimeout(() => controller.abort(), 18000);
 
         const parts: any[] = [];
 
@@ -689,7 +692,9 @@ Hãy đọc kỹ mô tả trên và tạo CHÍNH XÁC ĐỦ ${targetCount} câu 
           }
 
           const nativeData = await nativeRes.json();
-          const extracted = nativeData.candidates?.[0]?.content?.parts?.[0]?.text || '';
+          const resParts = nativeData.candidates?.[0]?.content?.parts || [];
+          const textPart = resParts.find((p: any) => !p.thought && p.text) || resParts[resParts.length - 1];
+          const extracted = textPart?.text || '';
           if (!extracted) {
             throw new Error(`Google Native API trả về rỗng cho mô hình ${modelName}`);
           }
@@ -705,7 +710,7 @@ Hãy đọc kỹ mô tả trên và tạo CHÍNH XÁC ĐỦ ${targetCount} câu 
       let auth = authHeader || (geminiKey ? `Bearer ${geminiKey}` : '');
 
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 45000);
+      const timeoutId = setTimeout(() => controller.abort(), 18000);
 
       const response = await fetch(ep, {
         method: 'POST',
@@ -741,7 +746,7 @@ Hãy đọc kỹ mô tả trên và tạo CHÍNH XÁC ĐỦ ${targetCount} câu 
 
       if (aiResult.error || (Array.isArray(aiResult) && aiResult[0]?.error)) {
         const errObj = aiResult.error || aiResult[0]?.error;
-        throw new Error(`Google API Error (${errObj.code || 500}): ${errObj.message || 'Lỗi từ dịch vụ AI'}`);
+        throw new Error(`Google API Error (${errObj.code || 500}): ${errObj.message || 'Lỗi từ dịch vụ SI'}`);
       }
 
       const rawText = aiResult.choices?.[0]?.message?.content;
@@ -754,48 +759,95 @@ Hãy đọc kỹ mô tả trên và tạo CHÍNH XÁC ĐỦ ${targetCount} câu 
 
     const candidateModels = [
       selectedModel,
-      'gemini-3.5-flash-lite',
-      'gemini-3.8-flash',
       'gemini-3.5-flash',
+      'gemini-3.7-flash',
+      'gemini-3.6-flash',
+      'gemini-3.8-flash',
+      'gemini-flash-latest',
+      'gemini-3.5-flash-lite',
+      'gemini-flash-lite-latest',
+      'gemini-3.1-flash-lite',
     ].filter((v, i, a) => a.indexOf(v) === i);
 
     let lastError: any = null;
     for (const m of candidateModels) {
-      for (let attempt = 1; attempt <= 2; attempt++) {
+      try {
+        console.log(`Đang thử mô hình AI: ${m}...`);
+        rawAiText = await executeAiCall(m);
+        if (rawAiText && rawAiText.trim().length > 0) {
+          selectedModel = m;
+          lastError = null;
+          console.log(`Mô hình ${m} phản hồi thành công!`);
+          break;
+        }
+      } catch (err: any) {
+        console.warn(`Mô hình ${m} gặp sự cố (${err.message}). Tự động đổi sang mô hình tiếp theo...`);
+        lastError = err;
+        // Nếu lỗi 503 hoặc 429 hoặc timeout, chuyển ngay sang model tiếp theo trong danh sách mà không đợi
+        continue;
+      }
+    }
+
+    // Nếu lượt đầu tiên tất cả các mô hình đều gặp sự cố quá tải, thử lại nhanh với 2 mô hình ổn định nhất sau 1.5s
+    if (!rawAiText && lastError) {
+      console.log('Tất cả các mô hình đang cao tải, tự động đợi 1.5s và thử lại với cụm mô hình dự phòng...');
+      await new Promise((r) => setTimeout(r, 1500));
+      for (const m of ['gemini-3.5-flash', 'gemini-flash-latest', 'gemini-3.7-flash']) {
         try {
-          if (attempt > 1) {
-            console.log(`Đang thử lại mô hình ${m} (lần ${attempt}) sau 1.2s...`);
-            await new Promise((r) => setTimeout(r, 1200));
-          }
           rawAiText = await executeAiCall(m);
           if (rawAiText && rawAiText.trim().length > 0) {
             selectedModel = m;
             lastError = null;
             break;
           }
-        } catch (err: any) {
-          console.warn(`AI model ${m} attempt ${attempt} failed:`, err.message);
-          lastError = err;
-          const isHighDemand = err.message?.includes('503') || err.message?.includes('high demand') || err.message?.includes('429');
-          if (!isHighDemand) {
-            // Lỗi không phải quá tải tạm thời, chuyển ngay sang model khác
-            break;
-          }
+        } catch (e: any) {
+          lastError = e;
         }
-      }
-      if (rawAiText && rawAiText.trim().length > 0) {
-        break;
       }
     }
 
     if (lastError || !rawAiText) {
+      console.warn('Toàn bộ mô hình AI Google gặp sự cố quá tải. Kích hoạt bộ sinh đề thi chuẩn kiến thức dự phòng...');
+      if (mode === 'topic' || mode === 'suggest' || mode === 'manual' || mode === 'bank') {
+        try {
+          const fallbackExam = generateCurriculumFallbackExam({
+            subject: resolvedSubject || 'Toán học',
+            grade: resolvedGrade || '10',
+            topic: effectiveMergedTopic || topic || 'Kiến thức trọng tâm',
+            targetCount,
+          });
+
+          const sanitizedFallback = validateAndSanitizeQuestions(fallbackExam.questions);
+          if (sanitizedFallback.length > 0) {
+            const fallbackResponse: GeneratedExamResponse = {
+              title: cleanVietnameseEncoding(fallbackExam.title),
+              subject: cleanVietnameseEncoding(fallbackExam.subject),
+              grade: cleanVietnameseEncoding(fallbackExam.grade),
+              durationMinutes: sanitizedFallback.length <= 15 ? 45 : 90,
+              questions: sanitizedFallback,
+              modelUsed: 'kiyo-curriculum-standard-fallback',
+            };
+
+            return NextResponse.json({
+              success: true,
+              exam: fallbackResponse,
+              question: sanitizedFallback[0],
+              source: 'curriculum_fallback',
+              fallbackNotice: 'Đề thi đã được khởi tạo chuẩn kiến thức (do Google AI đang quá tải). Giáo viên có thể tùy chỉnh hoặc thêm câu hỏi ngay.',
+            });
+          }
+        } catch (fbErr) {
+          console.error('Error generating fallback curriculum exam:', fbErr);
+        }
+      }
+
       console.error('All AI model attempts failed:', lastError);
       const isTimeout = lastError?.name === 'AbortError';
       const isHighDemand = lastError?.message?.includes('503') || lastError?.message?.includes('high demand');
       
-      let friendlyMessage = `Không thể kết nối đến máy chủ AI: ${lastError?.message || 'Lỗi mạng'}. Hệ thống 100% không làm giả dữ liệu. Vui lòng thử lại!`;
+      let friendlyMessage = `Không thể kết nối đến máy chủ SI: ${lastError?.message || 'Lỗi mạng'}. Hệ thống 100% không làm giả dữ liệu. Vui lòng thử lại!`;
       if (isTimeout) {
-        friendlyMessage = 'Quá thời gian phản hồi từ máy chủ AI (Timeout). Vui lòng thử lại với số lượng câu hỏi ít hơn hoặc thử lại sau vài giây.';
+        friendlyMessage = 'Quá thời gian phản hồi từ máy chủ SI (Timeout). Vui lòng thử lại với số lượng câu hỏi ít hơn hoặc thử lại sau vài giây.';
       } else if (isHighDemand) {
         friendlyMessage = 'Máy chủ Google AI hiện đang có lượng truy cập đột biến (503 High Demand). Đang tự động hạ tải, vui lòng bấm "Thử lại" sau vài giây!';
       }
@@ -843,7 +895,7 @@ Hãy đọc kỹ mô tả trên và tạo CHÍNH XÁC ĐỦ ${targetCount} câu 
         const mdQuestions = parseMarkdownQuestions(rawAiText);
         if (mdQuestions.length > 0) {
           parsedData = {
-            title: resolvedTitle || 'Đề trắc nghiệm do AI biên soạn',
+            title: resolvedTitle || 'Đề trắc nghiệm do SI biên soạn',
             subject: resolvedSubject || 'Kiến thức tổng hợp',
             grade: resolvedGrade || 'Tự do',
             durationMinutes: 45,
@@ -857,7 +909,7 @@ Hãy đọc kỹ mô tả trên và tạo CHÍNH XÁC ĐỦ ${targetCount} câu 
       return NextResponse.json(
         {
           success: false,
-          error: 'AI đã phản hồi nhưng không thể phân tích cấu trúc câu hỏi trắc nghiệm hợp lệ. Vui lòng thử lại với mô tả chi tiết hơn hoặc chọn mô hình khác.',
+          error: 'SI đã phản hồi nhưng không thể phân tích cấu trúc câu hỏi trắc nghiệm hợp lệ. Vui lòng thử lại với mô tả chi tiết hơn hoặc chọn mô hình khác.',
           rawSnippet: rawAiText.slice(0, 500),
         },
         { status: 502 }
@@ -871,7 +923,7 @@ Hãy đọc kỹ mô tả trên và tạo CHÍNH XÁC ĐỦ ${targetCount} câu 
       return NextResponse.json(
         {
           success: false,
-          error: 'AI không tạo được nội dung câu hỏi trắc nghiệm đạt quy chuẩn chất lượng (trùng lặp phương án, sai cấu trúc phân số hoặc khuyết tài nguyên hình ảnh). Hệ thống 100% không làm giả dữ liệu. Vui lòng thử lại với mô tả chi tiết hơn!',
+          error: 'SI không tạo được nội dung câu hỏi trắc nghiệm đạt quy chuẩn chất lượng (trùng lặp phương án, sai cấu trúc phân số hoặc khuyết tài nguyên hình ảnh). Hệ thống 100% không làm giả dữ liệu. Vui lòng thử lại với mô tả chi tiết hơn!',
           rawSnippet: rawAiText.slice(0, 500),
         },
         { status: 502 }
@@ -905,7 +957,7 @@ Hãy đọc kỹ mô tả trên và tạo CHÍNH XÁC ĐỦ ${targetCount} câu 
     return NextResponse.json(
       {
         success: false,
-        error: error.message || 'Lỗi xử lý tạo đề thi bằng AI',
+        error: error.message || 'Lỗi xử lý tạo đề thi bằng SI',
       },
       { status: 500 }
     );
