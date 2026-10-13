@@ -148,7 +148,7 @@ function OcrQuizCreateContent() {
           imageBase64: extracted.imageBase64 || imagePreview || null,
           documentText: extracted.text || '',
           fileName: selectedImage.name,
-          model: 'gemini-3.5-flash-lite',
+          model: 'gemini-3.5-flash',
         }),
       });
 
@@ -329,9 +329,19 @@ function OcrQuizCreateContent() {
           </div>
 
           {errorMessage && (
-            <div className="p-3.5 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-2xl text-xs text-red-600 dark:text-red-400 flex items-center gap-2">
-              <AlertCircle size={16} className="shrink-0" />
-              <span>{errorMessage}</span>
+            <div className="p-3.5 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-2xl text-xs text-red-600 dark:text-red-400 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <AlertCircle size={16} className="shrink-0" />
+                <span>{errorMessage}</span>
+              </div>
+              <button
+                type="button"
+                onClick={handleStartOcr}
+                disabled={isScanning}
+                className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-semibold shrink-0 cursor-pointer transition-all active:scale-95 disabled:opacity-50"
+              >
+                Thử lại ngay
+              </button>
             </div>
           )}
 

@@ -1,4 +1,14 @@
-import { GeneratedQuestion } from '@/types/quiz';
+export interface QuestionOption {
+  content: string;
+  isCorrect: boolean;
+}
+
+export interface GeneratedQuestion {
+  content: string;
+  options: QuestionOption[];
+  explanation?: string;
+  points?: number;
+}
 
 interface FallbackTemplate {
   subject: string;
@@ -285,10 +295,11 @@ export function generateCurriculumFallbackExam(params: {
     const content = i < basePool.length ? src.content : `[Mở rộng ${Math.floor(i / basePool.length) + 1}] ${src.content}`;
     
     questions.push({
-      id: qId,
       content,
-      options: [...src.options],
-      correctAnswer: src.correctAnswer,
+      options: src.options.map((opt) => ({
+        content: opt,
+        isCorrect: opt === src.correctAnswer,
+      })),
       explanation: src.explanation,
     });
   }
