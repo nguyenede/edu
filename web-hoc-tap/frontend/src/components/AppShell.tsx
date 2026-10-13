@@ -287,7 +287,7 @@ export const AppShell: React.FC<AppShellProps> = ({
       >
         <div className="mr-0 h-full flex flex-col">
           {/* Inner Google White Sheet Canvas */}
-          <div className="bg-white dark:bg-[#1e1f20] rounded-none shadow-none flex-1 flex flex-col overflow-hidden md:border-l md:border-slate-200/60 md:dark:border-slate-800/80">
+          <div className="bg-white dark:bg-[#1e1f20] rounded-none md:rounded-tl-3xl md:rounded-tr-none md:rounded-b-none shadow-none flex-1 flex flex-col overflow-hidden">
             {/* Page Body Viewport - Title and content scroll together smoothly */}
             <main
               id="app-main-viewport"
