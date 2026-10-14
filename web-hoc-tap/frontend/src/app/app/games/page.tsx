@@ -363,24 +363,33 @@ export default function GamesHubPage() {
     setPlayingLesson(lesson);
   };
 
-  // Open creation modal
-  const handleOpenCreateModal = () => {
-    if (!activeCategory) return;
-    const meta = getCategoryMeta(activeCategory);
+  // Open step-by-step game creation wizard
+  const handleStartGameCreation = (mode: ActiveGameMode) => {
+    if (!mode) return;
+    setActiveCategory(mode);
+    const meta = getCategoryMeta(mode);
     setEditingLessonId(null);
+    const defaultExam = exams.length > 0 ? exams[0] : null;
+    const examId = defaultExam ? defaultExam.id : '';
+    setSelectedExamId(examId);
     setGameConfig({
       ...DEFAULT_GAME_CONFIG,
-      title: `${meta.shortName} - ${selectedExam?.title || 'Bài tập mới'}`,
+      title: `${meta.shortName} - ${defaultExam?.title || 'Bài tập mới'}`,
     });
-    // Populate questions from current exam or default trial questions
-    if (selectedExam && Array.isArray(selectedExam.questions) && selectedExam.questions.length > 0) {
+    if (defaultExam && Array.isArray(defaultExam.questions) && defaultExam.questions.length > 0) {
       setCustomQuestions(
-        selectedExam.questions.map((q, idx) => normalizeGameQuestion(q, idx))
+        defaultExam.questions.map((q, idx) => normalizeGameQuestion(q, idx))
       );
     } else {
       setCustomQuestions(DEFAULT_CLASSROOM_TRIAL_QUESTIONS);
     }
     setIsConfigModalOpen(true);
+  };
+
+  // Open creation modal
+  const handleOpenCreateModal = () => {
+    if (!activeCategory) return;
+    handleStartGameCreation(activeCategory);
   };
 
   // Open edit modal
@@ -760,7 +769,7 @@ export default function GamesHubPage() {
                 return (
                   <div
                     key={game.id}
-                    onClick={() => handleQuickPlayTrial(game.id)}
+                    onClick={() => handleStartGameCreation(game.id)}
                     className="group rounded-2xl p-4 sm:p-5 bg-white dark:bg-[#1a1b1e] border border-slate-200/80 dark:border-white/10 hover:border-google-blue/50 dark:hover:border-google-blue/50 transition-all duration-150 select-none flex flex-col justify-between shadow-2xs hover:shadow-md cursor-pointer active:scale-[0.99]"
                   >
                     <div>
@@ -786,18 +795,30 @@ export default function GamesHubPage() {
                       </p>
                     </div>
 
-                    {/* Single Full-width Clean Action Button */}
-                    <div className="mt-4 pt-3 border-t border-slate-100 dark:border-white/5">
+                    {/* Action Buttons: Primary "Tạo bài chơi" (wizard) + Secondary "Chơi thử" */}
+                    <div className="mt-4 pt-3 border-t border-slate-100 dark:border-white/5 flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleStartGameCreation(game.id);
+                        }}
+                        className="flex-1 py-2 px-3 rounded-xl bg-google-blue hover:bg-blue-600 text-white text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs active:scale-95"
+                      >
+                        <Plus size={14} />
+                        <span>Tạo bài chơi</span>
+                      </button>
                       <button
                         type="button"
                         onClick={(e) => {
                           e.stopPropagation();
                           handleQuickPlayTrial(game.id);
                         }}
-                        className="w-full py-2 px-3 rounded-xl bg-google-blue hover:bg-blue-600 text-white text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs active:scale-95"
+                        title="Chơi thử nhanh bằng câu hỏi mẫu"
+                        className="py-2 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-700 dark:text-zinc-200 text-xs font-semibold transition-all flex items-center justify-center gap-1 cursor-pointer active:scale-95"
                       >
-                        <Play size={13} className="fill-white" />
-                        <span>Dạy ngay</span>
+                        <Play size={12} className="fill-current" />
+                        <span>Chơi thử</span>
                       </button>
                     </div>
                   </div>
@@ -823,6 +844,7 @@ export default function GamesHubPage() {
           selectedExamId={selectedExamId}
           onSelectExam={handleSelectExamInModal}
           onSaveGame={handleSaveLesson}
+          initialStep={editingLessonId ? 3 : 1}
           onStartGame={() => {
             const meta = getCategoryMeta(activeCategory);
             const newLesson: CustomGameLesson = {

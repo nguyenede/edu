@@ -330,10 +330,10 @@ export async function POST(req: NextRequest) {
 
     const startTime = Date.now();
 
-    // 0. ƯU TIÊN TUYỆT ĐỐI: Kiểm tra xem văn bản đầu vào (documentText hoặc topic chứa nội dung đề thi) có cấu trúc câu hỏi không
-    const candidateStructuredText = (documentText && documentText.trim().length > 20)
+    // 0. ƯU TIÊN: Kiểm tra xem văn bản tài liệu (chỉ trong chế độ document/file) có chứa sẵn danh sách đề thi hoàn chỉnh không
+    const candidateStructuredText = (mode === 'document' || mode === 'file') && documentText && documentText.trim().length > 50
       ? documentText
-      : (typeof topic === 'string' && topic.trim().length > 30 && /(?:(?:Câu|Bài)\s*\d+|\d+\.)[\s:.-]+/i.test(topic) ? topic : '');
+      : '';
 
     if (candidateStructuredText) {
       try {
@@ -341,7 +341,11 @@ export async function POST(req: NextRequest) {
           title: resolvedTitle,
           fileName,
         });
-        if (directParsed && validateDeterministicResult(directParsed)) {
+        if (
+          directParsed &&
+          validateDeterministicResult(directParsed) &&
+          (directParsed.questions.length >= 3 || directParsed.questions.some((q) => q.options && q.options.length >= 2))
+        ) {
           const durationMs = Date.now() - startTime;
           console.log(`[generate-exam API] -> THUẬT TOÁN ĐỊA PHƯƠNG THÀNH CÔNG: Đã bóc tách ${directParsed.questions.length} câu hỏi thật trong ${durationMs}ms (0ms AI)!`);
           return NextResponse.json({
@@ -353,7 +357,7 @@ export async function POST(req: NextRequest) {
             isRealData: true,
           });
         } else {
-          console.log('[generate-exam API] Thuật toán địa phương chưa giải mã trọn vẹn (có công thức nhị phân MathType hoặc ảnh) -> Kích hoạt SI chuyển giao...');
+          console.log('[generate-exam API] Tài liệu là bài giảng/lý thuyết hoặc chưa đủ cấu trúc trắc nghiệm hoàn chỉnh -> Kích hoạt SI chuyển giao...');
         }
       } catch (parseErr) {
         console.warn('[generate-exam API] Lỗi thuật toán parse văn bản cấu trúc:', parseErr);
@@ -383,12 +387,12 @@ QUY TẮC BẮT BUỘC TUÂN THỦ:
 2. TỰ ĐỘNG NHẬN DIỆN MÔN HỌC & KHỐI LỚP:
    - "subject": Xác định đúng môn học từ nội dung câu hỏi trong ảnh (Toán, Vật lý, Hóa học, Tiếng Anh...).
    - "title": Đặt tiêu đề phản ánh đúng nội dung bài học / đề thi trong ảnh.
-   - "grade": Khối lớp phù hợp.
+   - "grade": Khối lớp chuẩn xác (Lớp 1 đến Lớp 12).
 3. CHỈ TRẢ VỀ JSON DUY NHẤT HỢP LỆ THEO CẤU TRÚC:
 {
-  "title": "${resolvedTitle || (fileName ? fileName.replace(/\.[^/.]+$/, '') : 'Đề thi bóc tách từ ảnh')}",
-  "subject": "${resolvedSubject || 'Kiến thức tổng hợp'}",
-  "grade": "${resolvedGrade || 'Tự do'}",
+  "title": "${resolvedTitle || (fileName ? fileName.replace(/\.[^/.]+$/, '') : 'Đề thi trích xuất từ ảnh')}",
+  "subject": "${resolvedSubject ? resolvedSubject : 'Tên môn học chuẩn xác'}",
+  "grade": "${resolvedGrade ? (resolvedGrade.startsWith('Lớp') ? resolvedGrade : `Lớp ${resolvedGrade}`) : 'Khối lớp chuẩn xác'}",
   "durationMinutes": 45,
   "questions": [
     {
@@ -420,47 +424,56 @@ QUY TẮC BẮT BUỘC TUÂN THỦ:
       // 2. Chế độ phân tích & sinh đề từ tài liệu
       const cleanDocText = (documentText || '').slice(0, 45000);
       const docTargetCount = Math.max(10, Math.min(Number(numQuestions) || 15, 50));
+      const gradeText = resolvedGrade ? (resolvedGrade.startsWith('Lớp') ? resolvedGrade : `Lớp ${resolvedGrade}`) : '';
+
       systemPrompt = `BẠN LÀ CHUYÊN GIA AI GIÁO DỤC PHÂN TÍCH VÀ BIÊN SOẠN ĐỀ THI TỪ TÀI LIỆU (${fileName || 'file'}).
-QUY TẮC BẮT BUỘC TUÂN THỦ:
-1. ĐỌC NỘI DUNG VÀ TỰ ĐỘNG NHẬN DIỆN CHÍNH XÁC MÔN HỌC & CHỦ ĐỀ:
-   - "subject": Xác định đúng tên môn học/lĩnh vực thực tế của tài liệu (Ví dụ: "Kinh tế & Pháp luật", "Tiếng Anh", "Hóa học", "Sinh học", "Lịch sử", "Địa lý", "Vật lý", "Tin học", "Toán học"...).
-   - "title": Đặt tiêu đề đề thi phản ánh đúng chủ đề cụ thể của tài liệu.
-   - "grade": Khối lớp hoặc trình độ học vấn phù hợp ("Lớp 10", "Lớp 11", "Lớp 12", "Đại học"...).
-2. SỐ LƯỢNG VÀ CHẤT LƯỢNG CÂU HỎI TRẮC NGHIỆM:
-   - Nếu tài liệu đã chứa sẵn danh sách câu hỏi / bài tập: Hãy bóc tách và trích xuất TOÀN BỘ tất cả các câu hỏi có trong tài liệu (không được bỏ sót câu nào).
-   - TUYỆT ĐỐI 100% KHÔNG TẠO DỮ LIỆU GIẢ:
-     + Tuyệt đối không bao giờ trả về "Phương án A", "Phương án B", "Phương án C", "Phương án D" hoặc các placeholder vô nghĩa.
-     + Nội dung mỗi phương án BẮT BUỘC phải là nội dung kiến thức, công thức toán hoặc đáp án cụ thể từ tài liệu.
-     + 4 PHƯƠNG ÁN BẮT BUỘC KHÁC NHAU HOÀN TOÀN (TUYỆT ĐỐI KHÔNG TRÙNG LẶP).
-     + DUY NHẤT 1 PHƯƠNG ÁN ĐÚNG KHỚP 100% VỚI LỜI GIẢI.
-     + Nếu tài liệu có công thức toán học, BẮT BUỘC viết dưới dạng LaTeX chuẩn (ví dụ: \\\\ge 50, \\\\le, \\\\sqrt{...}, \\\\frac{tử}{mẫu}).
-     + QUY TẮC PHÂN SỐ: Viết dạng \\\\frac{tử_số}{mẫu_số}. TỬ SỐ Ở TRÊN, MẪU SỐ Ở DƯỚI. TUYỆT ĐỐI KHÔNG ĐẢO NGƯỢC (1/3 là \\\\frac{1}{3}, (2x-1)/(x+1) là \\\\frac{2x-1}{x+1}).
-     + CHUẨN HÓA TIẾNG VIỆT: Dùng 100% Unicode NFC dựng sẵn, không dùng combining characters (như Haˋmso^ˊ).
-     + KIỂM SOÁT ĐA PHƯƠNG TIỆN: Không tạo câu hỏi thiếu hình vẽ/bảng biến thiên; nếu có bảng biến thiên bắt buộc vẽ dạng Markdown table.
-   - TUYỆT ĐỐI KHÔNG BAO GIỜ trả về các token nội bộ như [!m:$mathtype_X$], mathtype_X, [img:$img_X$]. Mọi công thức toán học BẮT BUỘC phục hồi sang LaTeX chuẩn ($v \\ge 60$, $x < 5$, $a \\le b$).
-   - QUY TẮC PHÂN TÍCH SÂU: Lời giải (explanation) BẮT BUỘC phân tích chi tiết từng bước, giải thích vì sao đáp án đúng và vì sao các phương án khác sai. Mỗi câu hỏi trắc nghiệm BẮT BUỘC có các phương án lựa chọn cụ thể và lời giải chi tiết (explanation).
+
+QUY TẮC TỐI THƯỢNG (BẮT BUỘC TUÂN THỦ 100%):
+1. NHẬN DIỆN CHÍNH XÁC MÔN HỌC & CẤP HỌC / KHỐI LỚP (GDPT 2018):
+   - Đọc kỹ tài liệu và đối chiếu với Chương trình Giáo dục Phổ thông 2018 của Bộ GD&ĐT Việt Nam:
+   - "subject": Xác định đúng tên môn học của tài liệu (Ví dụ: "Toán", "Vật lý", "Hóa học", "Sinh học", "Ngữ văn", "Lịch sử", "Địa lý", "Tiếng Anh", "Tin học", "Kinh tế & Pháp luật"...). TUYỆT ĐỐI KHÔNG để "Kiến thức tổng hợp" nếu tài liệu thuộc một môn học cụ thể.
+   - "grade": Xác định đúng khối lớp thực tế của bài học (Ví dụ: "Lớp 9", "Lớp 8", "Lớp 7", "Lớp 6", "Lớp 10", "Lớp 11", "Lớp 12"...).
+     + TUYỆT ĐỐI KHÔNG tự tiện nâng cấp độ lên "Lớp 12" nếu bài học thuộc cấp THCS (Lớp 6, 7, 8, 9) hoặc Tiểu học (Lớp 1-5).
+     + Ví dụ: Tài liệu về "Bất đẳng thức và tính chất", "Căn bậc hai", "Hệ hai phương trình", "Đường tròn" là bài học của LỚP 9. BẮT BUỘC gán "grade": "Lớp 9" và biên soạn câu hỏi đúng chuẩn kiến thức Lớp 9!
+   - "title": Đặt tiêu đề ngắn gọn, phản ánh đúng tên bài học và môn học của tài liệu.
+
+2. BÁM SÁT 100% NỘI DUNG VÀ PHẠM VI BÀI HỌC TRONG TÀI LIỆU:
+   - Toàn bộ các câu hỏi trắc nghiệm PHẢI tập trung CHÍNH XÁC vào các kiến thức, khái niệm trọng tâm, tính chất, định lý, công thức và dạng bài tập có trong bài học/tài liệu được cung cấp.
+   - TUYỆT ĐỐI KHÔNG ra đề vượt quá phạm vi kiến thức của bài học và cấp học tương ứng (Ví dụ: Bài học Bất đẳng thức Toán 9 chỉ hỏi về tính chất liên hệ thứ tự với phép cộng/nhân, quy tắc so sánh cơ bản; CẤM TUYỆT ĐỐI không đưa bất đẳng thức tích phân hay đạo hàm THPT, cấm đưa bất đẳng thức Cauchy-Schwarz nâng cao ngoài SGK vào).
+   - Nếu tài liệu đã có sẵn câu hỏi/bài tập: Bóc tách và trích xuất TOÀN BỘ các câu hỏi từ tài liệu (không được bỏ sót câu nào).
+   - Nếu tài liệu là lý thuyết/bài giảng: Biên soạn các câu hỏi trắc nghiệm kiểm tra sâu các khái niệm lý thuyết và bài tập áp dụng trực tiếp của chính bài học đó.
+
+3. TIÊU CHUẨN CÂU HỎI TRẮC NGHIỆM & TUYỆT ĐỐI KHÔNG TẠO DỮ LIỆU GIẢ:
+   - TUYỆT ĐỐI KHÔNG BAO GIỜ tự bịa ra "Phương án A", "Phương án B", "Phương án C", "Phương án D" hoặc các placeholder vô nghĩa.
+   - Nội dung mỗi phương án BẮT BUỘC phải là nội dung kiến thức, công thức toán hoặc đáp án cụ thể.
+   - Đúng 4 phương án A, B, C, D phân biệt hoàn toàn (TUYỆT ĐỐI KHÔNG TRÙNG LẶP).
+   - DUY NHẤT 1 PHƯƠNG ÁN ĐÚNG KHỚP 100% VỚI LỜI GIẢI ("isCorrect": true).
+   - CÔNG THỨC TOÁN & LATEX: Mọi công thức toán học BẮT BUỘC viết dưới dạng LaTeX chuẩn ($...$).
+   - QUY TẮC PHÂN SỐ: Viết dạng \\frac{tử_số}{mẫu_số}. TỬ SỐ Ở TRÊN, MẪU SỐ Ở DƯỚI. TUYỆT ĐỐI KHÔNG ĐẢO NGƯỢC (1/3 là \\frac{1}{3}).
+   - CHUẨN HÓA TIẾNG VIỆT: Dùng 100% Unicode NFC dựng sẵn.
+   - Lời giải (explanation) BẮT BUỘC phân tích chi tiết từng bước, giải thích vì sao đáp án đúng và vì sao các phương án khác sai.
 
 CHỈ TRẢ VỀ JSON DUY NHẤT:
 {
   "title": "${resolvedTitle || 'Đề kiểm tra kiến thức theo tài liệu'}",
-  "subject": "${resolvedSubject}",
-  "grade": "${resolvedGrade}",
+  "subject": "${resolvedSubject ? resolvedSubject : 'Tên môn học chuẩn xác'}",
+  "grade": "${gradeText ? gradeText : 'Khối lớp chuẩn xác (Ví dụ: Lớp 9, Lớp 10...)'}",
   "durationMinutes": ${docTargetCount <= 10 ? 15 : docTargetCount <= 25 ? 45 : 90},
   "questions": [
     {
-      "content": "Nội dung câu hỏi cụ thể từ tài liệu...",
-      "explanation": "Lời giải chi tiết...",
+      "content": "Nội dung câu hỏi cụ thể bám sát bài học trong tài liệu...",
+      "explanation": "Lời giải chi tiết từng bước...",
       "options": [
-        {"content": "v \\\\ge 50", "isCorrect": true},
-        {"content": "v > 50", "isCorrect": false},
-        {"content": "v \\\\le 50", "isCorrect": false},
-        {"content": "v < 50", "isCorrect": false}
+        {"content": "Phương án 1", "isCorrect": false},
+        {"content": "Phương án đúng", "isCorrect": true},
+        {"content": "Phương án 3", "isCorrect": false},
+        {"content": "Phương án 4", "isCorrect": false}
       ]
     }
   ]
 }`;
 
-      userContent = `Hãy đọc kỹ tài liệu, nhận diện đúng chủ đề và bóc tách hoặc biên soạn thành ĐỦ ít nhất ${docTargetCount} câu hỏi trắc nghiệm chất lượng cao bao quát toàn diện nội dung tài liệu:\n\n${cleanDocText}`;
+      userContent = `Hãy đọc kỹ tài liệu, nhận diện đúng môn học, khối lớp và bóc tách hoặc biên soạn thành ĐỦ ít nhất ${docTargetCount} câu hỏi trắc nghiệm chất lượng cao bám sát 100% nội dung bài học trong tài liệu:\n\n${cleanDocText}`;
     } else if (mode === 'suggest') {
       // 3. Chế độ gợi ý 1 câu hỏi đơn lẻ
       systemPrompt = `BẠN LÀ CHUYÊN GIA BIÊN SOẠN CÂU HỎI TRẮC NGHIỆM GIÁO DỤC CHUẨN XÁC.
@@ -492,76 +505,87 @@ ${resolvedGrade ? `Khối lớp: ${resolvedGrade}` : ''}
 Hãy tạo 1 câu hỏi trắc nghiệm hoàn chỉnh, chuẩn xác bám sát 100% nội dung trên.`;
     } else {
       // 4. Chế độ tạo đề theo chủ đề / mô tả (100% sinh bằng AI bám sát mô tả của người dùng)
+      const userProvidedDesc = (topic || effectiveMergedTopic || '').trim();
+      const gradeText = resolvedGrade ? (resolvedGrade.startsWith('Lớp') ? resolvedGrade : `Lớp ${resolvedGrade}`) : '';
+
       let gradeNote = '';
       if (resolvedGrade) {
         const gradeNum = parseInt(resolvedGrade) || 0;
         if (gradeNum >= 1 && gradeNum <= 5) {
-          gradeNote = `\nLƯU Ý CẤP HỌC: Trình độ học sinh TIỂU HỌC (LỚP ${resolvedGrade}). Ngôn từ đơn giản, trong sáng, phù hợp lứa tuổi.`;
+          gradeNote = `\n- LƯU Ý CẤP HỌC: Trình độ TIỂU HỌC (${gradeText}). Ngôn từ đơn giản, trong sáng, phù hợp lứa tuổi.`;
         } else if (gradeNum >= 6 && gradeNum <= 9) {
-          gradeNote = `\nLƯU Ý CẤP HỌC: Trình độ TRUNG HỌC CƠ SỞ (THCS - LỚP ${resolvedGrade}).`;
+          gradeNote = `\n- LƯU Ý CẤP HỌC: Trình độ TRUNG HỌC CƠ SỞ (THCS - ${gradeText}). Bám sát đúng chương trình THCS, TUYỆT ĐỐI KHÔNG đưa kiến thức THPT vào.`;
         } else if (gradeNum >= 10 && gradeNum <= 12) {
-          gradeNote = `\nLƯU Ý CẤP HỌC: Trình độ TRUNG HỌC PHỔ THÔNG (THPT - LỚP ${resolvedGrade}).`;
+          gradeNote = `\n- LƯU Ý CẤP HỌC: Trình độ TRUNG HỌC PHỔ THÔNG (THPT - ${gradeText}).`;
         } else {
-          gradeNote = `\nLƯU Ý CẤP HỌC: Trình độ ${resolvedGrade}.`;
+          gradeNote = `\n- LƯU Ý CẤP HỌC: Trình độ ${gradeText}.`;
         }
       }
 
-      const userProvidedDesc = (topic || effectiveMergedTopic || '').trim();
-
-      systemPrompt = `BẠN LÀ CHUYÊN GIA AI BIÊN SOẠN BỘ CÂU HỎI TRẮC NGHIỆM ĐÁP ỨNG CHÍNH XÁC YÊU CẦU CỦA NGƯỜI DÙNG.
+      systemPrompt = `BẠN LÀ CHUYÊN GIA AI GIÁO DỤC BIÊN SOẠN BỘ CÂU HỎI TRẮC NGHIỆM ĐÁP ỨNG CHÍNH XÁC YÊU CẦU CỦA NGƯỜI DÙNG.
 
 QUY TẮC TỐI THƯỢNG (BẮT BUỘC TUÂN THỦ 100%):
-1. BÁM SÁT 100% NỘI DUNG VÀ MÔ TẢ CỦA NGƯỜI DÙNG:
-   - Hãy đọc kỹ toàn bộ nội dung mô tả của người dùng bên dưới.
-   - Các câu hỏi trắc nghiệm PHẢI tập trung CHÍNH XÁC vào đúng chủ đề, lĩnh vực, tình huống hoặc danh sách kiến thức mà người dùng đã mô tả.
-   - TUYỆT ĐỐI KHÔNG tự ý bóp méo, KHÔNG gượng ép sang môn học khác (ví dụ: người dùng mô tả về một tựa game, thể thao, lịch sử, đời sống, văn hóa, công nghệ, thương hiệu, phim ảnh... thì BẮT BUỘC biên soạn các câu hỏi thuần túy về kiến thức/nội dung của chủ đề đó, TUYỆT ĐỐI KHÔNG biến thành bài toán hay chèn công thức toán học vào trừ khi người dùng thực sự yêu cầu môn Toán).
-   - Nếu người dùng cung cấp sẵn đoạn văn bản, dàn ý hoặc danh sách câu hỏi trong phần mô tả, hãy bám sát và khai thác trực tiếp từ nội dung đó để tạo câu hỏi trắc nghiệm.
-   - Nếu người dùng có chọn môn học cụ thể (${resolvedSubject || 'không bắt buộc'}) hoặc khối lớp cụ thể (${resolvedGrade || 'không bắt buộc'}), hãy kết hợp chuẩn xác với mô tả.${gradeNote}
+1. NHẬN DIỆN CHÍNH XÁC CẤP HỌC & KHỐI LỚP THEO CHƯƠNG TRÌNH GDPT 2018:
+   - Hãy phân tích tên bài học / chủ đề người dùng yêu cầu: "${userProvidedDesc}".
+   - Đối chiếu với chương trình Giáo dục Phổ thông (GDPT 2018) của Bộ Giáo dục và Đào tạo Việt Nam:
+     + Xác định đúng MÔN HỌC (Ví dụ: "Toán", "Vật lý", "Hóa học", "Sinh học", "Ngữ văn", "Lịch sử", "Địa lý", "Tiếng Anh", "Tin học", "Kinh tế & Pháp luật"...). Tuyệt đối không để "Kiến thức tổng hợp" nếu chủ đề thuộc môn học cụ thể.
+     + Xác định đúng KHỐI LỚP (Ví dụ: "Lớp 9", "Lớp 8", "Lớp 7", "Lớp 6", "Lớp 10", "Lớp 11", "Lớp 12"...).
+     + TUYỆT ĐỐI KHÔNG tự động nâng lên "Lớp 12" hay "Tốt nghiệp THPT"! Nếu bài học thuộc cấp THCS (Lớp 6, 7, 8, 9) hoặc Tiểu học (Lớp 1-5), BẮT BUỘC biên soạn câu hỏi đúng trình độ, ngôn từ và phạm vi kiến thức của cấp học đó!${gradeNote}
+     ${resolvedSubject ? `+ Môn học chỉ định: ${resolvedSubject}` : ''}
+     ${gradeText ? `+ Khối lớp chỉ định: ${gradeText}` : ''}
 
-2. QUY CHUẨN CÔNG THỨC TOÁN HỌC & PHÂN SỐ (MATH/LATEX):
+2. BÁM SÁT 100% NỘI DUNG VÀ PHẠM VI CỦA BÀI HỌC:
+   - Toàn bộ ${targetCount} câu hỏi trắc nghiệm PHẢI tập trung CHÍNH XÁC vào đúng bài học, khái niệm trọng tâm, tính chất, định lý, công thức và dạng bài tập đặc trưng của bài học đó.
+   - VÍ DỤ: Chủ đề "Bài 5: Bất đẳng thức và tính chất" (Toán 9 / GDPT 2018):
+     * Khái niệm bất đẳng thức: vế trái, vế phải, các dấu <, >, <=, >=.
+     * Bất đẳng thức và phép cộng: Cho a < b, cộng cả hai vế với số c được a + c < b + c (cùng chiều).
+     * Bất đẳng thức và phép nhân:
+       - Nhân với số dương c > 0: ac < bc (cùng chiều).
+       - Nhân với số âm c < 0: ac > bc (đổi chiều bất đẳng thức).
+     * Tính chất bắc cầu: a < b và b < c suy ra a < c.
+     * Dạng bài so sánh biểu thức: cho a < b, so sánh a + 3 và b + 3; so sánh -2a và -2b; so sánh 3a - 1 và 3b - 1...
+     * TUYỆT ĐỐI KHÔNG sinh câu hỏi bất đẳng thức tích phân hay đạo hàm của lớp 12, KHÔNG sinh bất đẳng thức Schur, Cauchy 3 số nâng cao đại học làm sai lệch mục tiêu của bài học!
+   - Tuyệt đối không tự ý gượng ép sang môn học khác (trừ khi người dùng yêu cầu).
+
+3. QUY CHUẨN CÔNG THỨC TOÁN HỌC & PHÂN SỐ (MATH/LATEX):
    - Mọi biểu thức toán học BẮT BUỘC viết dưới dạng LaTeX chuẩn ($inline$ hoặc $$display$$).
    - ĐỊNH DẠNG PHÂN SỐ/PHÂN THỨC: BẮT BUỘC viết đúng cú pháp \\\\frac{tử_số}{mẫu_số} hoặc \\\\dfrac{tử_số}{mẫu_số}.
-   - TUYỆT ĐỐI KHÔNG ĐẢO NGƯỢC THỨ TỰ: TỬ SỐ PHẢI Ở TRÊN (ngoặc nhọn thứ nhất), MẪU SỐ PHẢI Ở DƯỚI (ngoặc nhọn thứ hai).
-     + Ví dụ: 1 phần 3 PHẢI LÀ \\\\frac{1}{3}, TUYỆT ĐỐI KHÔNG VIẾT THÀNH \\\\frac{3}{1}.
-     + Ví dụ: Phân thức (2x-1)/(x+1) BẮT BUỘC LÀ \\\\frac{2x-1}{x+1}, TUYỆT ĐỐI KHÔNG ĐỔI THÀNH \\\\frac{x+1}{2x-1}.
+   - TUYỆT ĐỐI KHÔNG ĐẢO NGƯỢC THỨ TỰ: TỬ SỐ PHẢI Ở TRÊN (ngoặc nhọn thứ nhất), MẪU SỐ PHẢI Ở DƯỚI (ngoặc nhọn thứ hai) (ví dụ: 1/3 là \\\\frac{1}{3}).
 
-3. CHUẨN HÓA TIẾNG VIỆT & UNICODE (NFC):
+4. CHUẨN HÓA TIẾNG VIỆT & UNICODE (NFC):
    - Toàn bộ văn bản tiếng Việt BẮT BUỘC dùng mã Unicode dựng sẵn (NFC).
-   - Tuyệt đối không để tách rời nguyên âm và dấu thanh (như Haˋmso^ˊ).
 
-4. TIÊU CHÍ BỘ CÂU HỎI & TÍNH DUY NHẤT CỦA 4 PHƯƠNG ÁN:
-   - Biên soạn CHÍNH XÁC ĐỦ ${targetCount} CÂU HỎI trắc nghiệm chất lượng.
-   - "content": Nội dung câu hỏi rõ ràng, trực diện, tự thân hoàn chỉnh.
-   - "options": Đúng 4 phương án A, B, C, D (mảng 4 phần tử có content).
-   - TÍNH DUY NHẤT: 4 phương án A, B, C, D BẮT BUỘC có giá trị phân biệt tuyệt đối (TUYỆT ĐỐI KHÔNG TRÙNG LẶP NỘI DUNG GIỮA CÁC PHƯƠNG ÁN).
-   - TÍNH CHÍNH XÁC: DUY NHẤT 1 phương án có "isCorrect": true, 3 phương án còn lại "isCorrect": false. Nội dung phương án đúng PHẢI KHỚP 100% VỚI LỜI GIẢI.
-   - "explanation": Lời giải thích chi tiết, phân tích sâu từng bước và chỉ rõ vì sao đáp án đúng và vì sao các phương án khác sai.
+5. TIÊU CHÍ BỘ CÂU HỎI & TÍNH DUY NHẤT CỦA 4 PHƯƠNG ÁN:
+   - Biên soạn CHÍNH XÁC ĐỦ ${targetCount} CÂU HỎI trắc nghiệm chất lượng cao.
+   - Đúng 4 phương án A, B, C, D phân biệt hoàn toàn (TUYỆT ĐỐI KHÔNG TRÙNG LẶP).
+   - DUY NHẤT 1 phương án có "isCorrect": true, khớp 100% với lời giải.
+   - "explanation": Lời giải thích chi tiết, phân tích sâu từng bước và chỉ rõ căn cứ tính chất/định lý nào để chọn đáp án.
 
-5. KIỂM SOÁT ĐA PHƯƠNG TIỆN (HÌNH VẼ, ĐỒ THỊ, BẢNG BIẾN THIÊN):
+6. KIỂM SOÁT ĐA PHƯƠNG TIỆN:
    - TUYỆT ĐỐI KHÔNG sinh câu hỏi có cụm từ "như hình vẽ bên", "đồ thị dưới đây" nếu không có hình ảnh.
-   - Nếu muốn hỏi về bảng biến thiên: BẮT BUỘC vẽ bảng biến thiên đầy đủ bằng Markdown table (các dòng x, f'(x) hoặc y', f(x) hoặc y) ngay trong câu hỏi.
-   - Mọi câu hỏi phải tự thân hoàn chỉnh (self-contained), học sinh giải được 100% trực tiếp từ đề bài.
+   - Nếu có bảng biến thiên: BẮT BUỘC vẽ bảng biến thiên đầy đủ bằng Markdown table ngay trong câu hỏi.
+   - Mọi câu hỏi phải tự thân hoàn chỉnh (self-contained).
 
-6. TIÊU ĐỀ ĐỀ THI:
-   - "title": Đặt tên đề thi ngắn gọn, súc tích, phản ánh ĐÚNG 100% chủ đề theo mô tả của người dùng (Ví dụ: "Đề trắc nghiệm: [Tên chủ đề theo mô tả]"). TUYỆT ĐỐI KHÔNG tự động gắn tiền tố "Đề thi Toán lớp 12" nếu người dùng không yêu cầu môn Toán lớp 12!
-   - "subject": "${resolvedSubject || 'Kiến thức tổng hợp'}",
-   - "grade": "${resolvedGrade || 'Tự do'}".
+7. TIÊU ĐỀ ĐỀ THI:
+   - "title": Đặt tên đề thi ngắn gọn, súc tích, phản ánh ĐÚNG 100% chủ đề theo mô tả của người dùng (Ví dụ: "Đề trắc nghiệm: Bài 5 - Bất đẳng thức và tính chất"). TUYỆT ĐỐI KHÔNG tự động gắn tiền tố "Đề thi Toán lớp 12" nếu người dùng không yêu cầu môn Toán lớp 12!
+   - "subject": Xác định đúng tên môn học.
+   - "grade": Xác định đúng khối lớp.
 
 ĐỊNH DẠNG ĐẦU RA BẮT BUỘC: CHỈ TRẢ VỀ JSON DUY NHẤT:
 {
   "title": "Tiêu đề đề thi bám sát mô tả của người dùng",
-  "subject": "${resolvedSubject || 'Kiến thức tổng hợp'}",
-  "grade": "${resolvedGrade || 'Tự do'}",
+  "subject": "${resolvedSubject ? resolvedSubject : 'Tên môn học chuẩn xác'}",
+  "grade": "${gradeText ? gradeText : 'Khối lớp chuẩn xác (Ví dụ: Lớp 9, Lớp 10...)'}",
   "durationMinutes": ${targetCount <= 10 ? 15 : targetCount <= 25 ? 45 : 90},
   "questions": [
     {
       "content": "Nội dung câu hỏi 1...",
       "explanation": "Lời giải thích...",
       "options": [
-        {"content": "Đáp án mẫu 1", "isCorrect": false},
+        {"content": "Đáp án 1", "isCorrect": false},
         {"content": "Đáp án đúng chính xác", "isCorrect": true},
-        {"content": "Đáp án mẫu 3", "isCorrect": false},
-        {"content": "Đáp án mẫu 4", "isCorrect": false}
+        {"content": "Đáp án 3", "isCorrect": false},
+        {"content": "Đáp án 4", "isCorrect": false}
       ]
     }
   ]
@@ -575,12 +599,12 @@ ${userProvidedDesc}
 
 YÊU CẦU THIẾT LẬP:
 - Số lượng câu hỏi cần tạo: ĐỦ ${targetCount} CÂU HỎI TRẮC NGHIỆM
-${resolvedSubject ? `- Môn học: ${resolvedSubject}` : '- Môn học: Bám sát theo đúng chủ đề trong mô tả'}
-${resolvedGrade ? `- Khối lớp: Lớp ${resolvedGrade}` : '- Khối lớp: Tự do / Phù hợp theo chủ đề'}
+${resolvedSubject ? `- Môn học: ${resolvedSubject}` : '- Môn học: Tự động xác định đúng môn học tương ứng với bài học'}
+${gradeText ? `- Khối lớp: ${gradeText}` : '- Khối lớp: Tự động xác định đúng khối lớp của bài học theo chương trình GDPT 2018 (Ví dụ: Lớp 9)'}
 ${difficulty ? `- Mức độ nhận thức: ${difficulty}` : '- Mức độ: Phong phú, hợp lý'}
 ${detailedNotes ? `- Ghi chú thêm: ${detailedNotes}` : ''}
 
-Hãy đọc kỹ mô tả trên và tạo CHÍNH XÁC ĐỦ ${targetCount} câu hỏi trắc nghiệm bám sát 100% nội dung mô tả của người dùng. Không được lạc đề sang nội dung khác!`;
+Hãy đọc kỹ mô tả trên và tạo CHÍNH XÁC ĐỦ ${targetCount} câu hỏi trắc nghiệm bám sát 100% nội dung bài học. Không được lạc đề sang nội dung khác hoặc cấp học khác!`;
     }
 
     // 2. Gọi trực tiếp API Gateway (100% bằng AI)
@@ -735,12 +759,12 @@ Hãy đọc kỹ mô tả trên và tạo CHÍNH XÁC ĐỦ ${targetCount} câu 
 
     const candidateModels = [
       selectedModel,
-      'gemini-3.5-flash',
+      'gemini-3.5-flash-lite',
+      'gemini-flash-latest',
       'gemini-3.7-flash',
+      'gemini-3.5-flash',
       'gemini-3.6-flash',
       'gemini-3.8-flash',
-      'gemini-flash-latest',
-      'gemini-3.5-flash-lite',
       'gemini-flash-lite-latest',
       'gemini-3.1-flash-lite',
     ].filter((v, i, a) => a.indexOf(v) === i);
@@ -908,10 +932,39 @@ Hãy đọc kỹ mô tả trên và tạo CHÍNH XÁC ĐỦ ${targetCount} câu 
 
     const userTopicPreview = cleanVietnameseEncoding((effectiveMergedTopic || topic || '').slice(0, 50).trim());
     const defaultTitle = resolvedTitle || (fileName ? fileName.replace(/\.[^/.]+$/, '') : (userTopicPreview ? `Đề trắc nghiệm: ${userTopicPreview}` : 'Đề thi trắc nghiệm'));
+    let finalSubject = parsedData.subject || resolvedSubject || '';
+    if ((!finalSubject || finalSubject === 'Kiến thức tổng hợp') && resolvedSubject) {
+      finalSubject = resolvedSubject;
+    }
+    if (!finalSubject || finalSubject === 'Kiến thức tổng hợp') {
+      const detectFromContent = detectSubjectFromText((parsedData.title || '') + ' ' + (sanitizedQuestions[0]?.content || ''));
+      if (detectFromContent && detectFromContent !== 'Kiến thức tổng hợp') {
+        finalSubject = detectFromContent;
+      } else {
+        finalSubject = 'Kiến thức tổng hợp';
+      }
+    }
+
+    let finalGrade = parsedData.grade || (resolvedGrade ? (resolvedGrade.startsWith('Lớp') ? resolvedGrade : `Lớp ${resolvedGrade}`) : '') || '';
+    if ((!finalGrade || finalGrade === 'Tự do' || finalGrade === '12' || finalGrade === 'Lớp 12') && resolvedGrade && resolvedGrade !== '12') {
+      finalGrade = resolvedGrade.startsWith('Lớp') ? resolvedGrade : `Lớp ${resolvedGrade}`;
+    }
+    if (!finalGrade || finalGrade === 'Tự do') {
+      const detectGradeFromContent = detectGradeFromText((parsedData.title || '') + ' ' + (sanitizedQuestions[0]?.content || ''));
+      if (detectGradeFromContent && detectGradeFromContent !== 'Tự do') {
+        finalGrade = `Lớp ${detectGradeFromContent}`;
+      } else {
+        finalGrade = 'Tự do';
+      }
+    }
+    if (/^\d{1,2}$/.test(finalGrade.trim())) {
+      finalGrade = `Lớp ${finalGrade.trim()}`;
+    }
+
     const examResponse: GeneratedExamResponse = {
       title: cleanVietnameseEncoding(parsedData.title || defaultTitle),
-      subject: cleanVietnameseEncoding(parsedData.subject || resolvedSubject || 'Kiến thức tổng hợp'),
-      grade: cleanVietnameseEncoding(parsedData.grade || resolvedGrade || 'Tự do'),
+      subject: cleanVietnameseEncoding(finalSubject),
+      grade: cleanVietnameseEncoding(finalGrade),
       durationMinutes: Number(parsedData.durationMinutes) || (sanitizedQuestions.length <= 15 ? 45 : 90),
       questions: sanitizedQuestions,
       modelUsed: selectedModel,

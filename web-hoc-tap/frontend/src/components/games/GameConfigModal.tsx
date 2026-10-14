@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Settings,
   ListChecks,
@@ -9,17 +9,20 @@ import {
   Edit2,
   Check,
   X,
-  Volume2,
-  VolumeX,
-  Keyboard,
-  MousePointer,
-  Sparkles,
-  Shuffle,
   Clock,
+  Sparkles,
   ShieldAlert,
   Users,
   Play,
   Type,
+  FileText,
+  CheckCircle2,
+  ArrowRight,
+  ArrowLeft,
+  BookOpen,
+  MousePointer,
+  Keyboard,
+  Layers,
 } from 'lucide-react';
 
 export interface GameQuestionOption {
@@ -77,6 +80,7 @@ interface GameConfigModalProps {
   onSelectExam: (examId: string) => void;
   onStartGame: () => void;
   onSaveGame?: () => void;
+  initialStep?: 1 | 2 | 3;
 }
 
 export const GameConfigModal: React.FC<GameConfigModalProps> = ({
@@ -93,8 +97,17 @@ export const GameConfigModal: React.FC<GameConfigModalProps> = ({
   onSelectExam,
   onStartGame,
   onSaveGame,
+  initialStep = 1,
 }) => {
-  const [activeTab, setActiveTab] = useState<'settings' | 'questions'>('settings');
+  // Wizard steps: 1 = Chọn đề thi, 2 = Chọn lọc câu hỏi, 3 = Luật chơi & Bắt đầu
+  const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(initialStep);
+
+  // Sync initialStep when opened
+  useEffect(() => {
+    if (isOpen) {
+      setCurrentStep(initialStep);
+    }
+  }, [isOpen, initialStep]);
 
   // Question editing state
   const [editingQuestion, setEditingQuestion] = useState<GameQuestion | null>(null);
@@ -149,7 +162,6 @@ export const GameConfigModal: React.FC<GameConfigModalProps> = ({
     const validOptions = newOptions.filter((opt) => opt.content.trim().length > 0);
     if (validOptions.length < 2) return;
 
-    // Ensure at least one correct
     const hasCorrect = validOptions.some((opt) => opt.isCorrect);
     if (!hasCorrect) validOptions[0].isCorrect = true;
 
@@ -175,20 +187,25 @@ export const GameConfigModal: React.FC<GameConfigModalProps> = ({
   const selectedCount = questions.filter((q) => q.selected !== false).length;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/40 backdrop-blur-xs animate-fadeIn select-none">
-      <div className="w-full max-w-3xl bg-white dark:bg-[#1e1f20] rounded-2xl shadow-2xl border border-slate-200/80 dark:border-white/10 flex flex-col max-h-[90vh] overflow-hidden">
-        {/* Header */}
-        <div className="p-4 sm:p-5 border-b border-slate-200/80 dark:border-white/10 flex items-center justify-between gap-3 shrink-0">
-          <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-blue-500/10 text-google-blue dark:text-blue-400 flex items-center justify-center">
-              <Settings size={20} />
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/50 backdrop-blur-xs animate-fadeIn select-none">
+      <div className="w-full max-w-3xl bg-white dark:bg-[#1e1f20] rounded-2xl shadow-2xl border border-slate-200/80 dark:border-white/10 flex flex-col max-h-[92vh] overflow-hidden">
+        {/* MODAL HEADER */}
+        <div className="p-4 sm:p-5 border-b border-slate-200/80 dark:border-white/10 flex items-center justify-between gap-3 shrink-0 bg-white dark:bg-[#1e1f20]">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-blue-500/10 text-google-blue dark:text-blue-400 flex items-center justify-center shrink-0">
+              <Sparkles size={20} />
             </div>
             <div>
-              <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-zinc-100">
-                Thiết lập & Tùy chỉnh: {gameTitle}
-              </h2>
+              <div className="flex items-center gap-2">
+                <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-zinc-100">
+                  Tạo Trò chơi: {gameTitle}
+                </h2>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-950/80 dark:text-blue-300">
+                  Bước {currentStep}/3
+                </span>
+              </div>
               <p className="text-xs text-slate-500 dark:text-zinc-400">
-                Cấu hình luật chơi, thời gian và bộ câu hỏi lớp học
+                Quy trình từng bước thiết lập nguồn đề thi, câu hỏi và luật chơi lớp học
               </p>
             </div>
           </div>
@@ -196,46 +213,544 @@ export const GameConfigModal: React.FC<GameConfigModalProps> = ({
           <button
             onClick={onClose}
             className="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-500 hover:text-slate-800 dark:text-zinc-400 dark:hover:text-zinc-100 flex items-center justify-center transition-colors cursor-pointer"
+            title="Đóng cửa sổ"
           >
             <X size={16} />
           </button>
         </div>
 
-        {/* Navigation Tabs */}
-        <div className="flex items-center gap-2 px-5 pt-3 border-b border-slate-200/60 dark:border-white/5 shrink-0 bg-slate-50/50 dark:bg-[#18191a]/50">
-          <button
-            onClick={() => setActiveTab('settings')}
-            className={`pb-2.5 px-3 text-xs sm:text-sm font-semibold border-b-2 transition-colors cursor-pointer flex items-center gap-1.5 ${
-              activeTab === 'settings'
-                ? 'border-google-blue text-google-blue dark:text-blue-400'
-                : 'border-transparent text-slate-500 hover:text-slate-800 dark:text-zinc-400 dark:hover:text-zinc-200'
-            }`}
-          >
-            <Settings size={15} />
-            <span>Cấu hình luật chơi</span>
-          </button>
+        {/* STEPPER PROGRESS BAR (TỪNG BƯỚC) */}
+        <div className="px-4 sm:px-6 py-3 bg-slate-50/80 dark:bg-[#18191a]/80 border-b border-slate-200/60 dark:border-white/5 shrink-0">
+          <div className="flex items-center justify-between gap-1 sm:gap-3 max-w-xl mx-auto">
+            {/* Step 1 */}
+            <button
+              type="button"
+              onClick={() => setCurrentStep(1)}
+              className={`flex items-center gap-2 px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                currentStep === 1
+                  ? 'bg-google-blue text-white shadow-xs'
+                  : currentStep > 1
+                  ? 'text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/30'
+                  : 'text-slate-400 dark:text-zinc-500 hover:text-slate-700'
+              }`}
+            >
+              <span
+                className={`w-5 h-5 rounded-full flex items-center justify-center text-[11px] ${
+                  currentStep === 1
+                    ? 'bg-white text-google-blue'
+                    : currentStep > 1
+                    ? 'bg-emerald-500 text-white'
+                    : 'bg-slate-200 dark:bg-white/10 text-slate-500'
+                }`}
+              >
+                {currentStep > 1 ? <Check size={12} strokeWidth={3} /> : '1'}
+              </span>
+              <span className="hidden sm:inline">1. Chọn đề thi</span>
+              <span className="sm:hidden">1. Đề thi</span>
+            </button>
 
-          <button
-            onClick={() => setActiveTab('questions')}
-            className={`pb-2.5 px-3 text-xs sm:text-sm font-semibold border-b-2 transition-colors cursor-pointer flex items-center gap-1.5 ${
-              activeTab === 'questions'
-                ? 'border-google-blue text-google-blue dark:text-blue-400'
-                : 'border-transparent text-slate-500 hover:text-slate-800 dark:text-zinc-400 dark:hover:text-zinc-200'
-            }`}
-          >
-            <ListChecks size={15} />
-            <span>Bộ câu hỏi</span>
-            <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-blue-100 text-blue-700 dark:bg-blue-950/80 dark:text-blue-300 font-bold">
-              {selectedCount}/{questions.length}
-            </span>
-          </button>
+            {/* Line 1 -> 2 */}
+            <div
+              className={`flex-1 h-0.5 rounded-full transition-colors ${
+                currentStep > 1 ? 'bg-emerald-500' : 'bg-slate-200 dark:bg-white/10'
+              }`}
+            />
+
+            {/* Step 2 */}
+            <button
+              type="button"
+              onClick={() => setCurrentStep(2)}
+              className={`flex items-center gap-2 px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                currentStep === 2
+                  ? 'bg-google-blue text-white shadow-xs'
+                  : currentStep > 2
+                  ? 'text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/30'
+                  : 'text-slate-400 dark:text-zinc-500 hover:text-slate-700'
+              }`}
+            >
+              <span
+                className={`w-5 h-5 rounded-full flex items-center justify-center text-[11px] ${
+                  currentStep === 2
+                    ? 'bg-white text-google-blue'
+                    : currentStep > 2
+                    ? 'bg-emerald-500 text-white'
+                    : 'bg-slate-200 dark:bg-white/10 text-slate-500'
+                }`}
+              >
+                {currentStep > 2 ? <Check size={12} strokeWidth={3} /> : '2'}
+              </span>
+              <span className="hidden sm:inline">2. Chọn câu hỏi</span>
+              <span className="sm:hidden">2. Câu hỏi</span>
+            </button>
+
+            {/* Line 2 -> 3 */}
+            <div
+              className={`flex-1 h-0.5 rounded-full transition-colors ${
+                currentStep > 2 ? 'bg-emerald-500' : 'bg-slate-200 dark:bg-white/10'
+              }`}
+            />
+
+            {/* Step 3 */}
+            <button
+              type="button"
+              onClick={() => setCurrentStep(3)}
+              className={`flex items-center gap-2 px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                currentStep === 3
+                  ? 'bg-google-blue text-white shadow-xs'
+                  : 'text-slate-400 dark:text-zinc-500 hover:text-slate-700'
+              }`}
+            >
+              <span
+                className={`w-5 h-5 rounded-full flex items-center justify-center text-[11px] ${
+                  currentStep === 3
+                    ? 'bg-white text-google-blue'
+                    : 'bg-slate-200 dark:bg-white/10 text-slate-500'
+                }`}
+              >
+                3
+              </span>
+              <span className="hidden sm:inline">3. Luật chơi</span>
+              <span className="sm:hidden">3. Luật</span>
+            </button>
+          </div>
         </div>
 
-        {/* Content Body */}
+        {/* STEP CONTENT BODY */}
         <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-5">
-          {activeTab === 'settings' ? (
-            /* TAB 1: GAME RULES & CONFIG */
-            <div className="space-y-5">
+          {/* ============================================================ */}
+          {/* BƯỚC 1: CHỌN ĐỀ THI TỪ THƯ VIỆN                              */}
+          {/* ============================================================ */}
+          {currentStep === 1 && (
+            <div className="space-y-4 animate-fadeIn">
+              <div className="bg-blue-50/70 dark:bg-blue-950/20 p-4 rounded-2xl border border-blue-200/60 dark:border-blue-900/40">
+                <h3 className="text-sm font-bold text-slate-900 dark:text-zinc-100 flex items-center gap-2">
+                  <BookOpen size={17} className="text-google-blue" />
+                  <span>Bước 1: Chọn nguồn đề thi cho trò chơi</span>
+                </h3>
+                <p className="text-xs text-slate-600 dark:text-zinc-400 mt-1 leading-relaxed">
+                  Hệ thống hỗ trợ tự động tải câu hỏi từ các tài liệu bạn đã tạo trong kho đề thi, hoặc sử dụng ngay bộ câu hỏi mẫu để bắt đầu.
+                </p>
+              </div>
+
+              {/* Danh sách đề thi */}
+              <div className="space-y-2.5">
+                <label className="block text-xs font-bold text-slate-700 dark:text-zinc-300">
+                  Chọn đề thi từ kho tài liệu ({availableExams.length} đề thi sẵn có):
+                </label>
+
+                {availableExams.length > 0 ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[380px] overflow-y-auto pr-1">
+                    {availableExams.map((ex) => {
+                      const isSelected = selectedExamId === ex.id;
+                      return (
+                        <div
+                          key={ex.id}
+                          onClick={() => onSelectExam(ex.id)}
+                          className={`p-3.5 rounded-2xl border-2 transition-all cursor-pointer flex flex-col justify-between ${
+                            isSelected
+                              ? 'border-google-blue bg-blue-500/5 dark:bg-blue-950/40 shadow-xs'
+                              : 'border-slate-200/80 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20 bg-white dark:bg-[#18191a]'
+                          }`}
+                        >
+                          <div className="flex items-start gap-2.5">
+                            <div
+                              className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 mt-0.5 ${
+                                isSelected
+                                  ? 'bg-google-blue text-white'
+                                  : 'bg-slate-100 dark:bg-white/10 text-slate-500 dark:text-zinc-400'
+                              }`}
+                            >
+                              <FileText size={16} />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-zinc-100 line-clamp-2 leading-snug">
+                                {ex.title}
+                              </h4>
+                              <div className="flex items-center gap-2 mt-1.5">
+                                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-950/80 dark:text-blue-300">
+                                  {ex.questions.length} câu hỏi
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="mt-3 pt-2.5 border-t border-slate-100 dark:border-white/5 flex items-center justify-between">
+                            <span className="text-[11px] text-slate-400">
+                              {isSelected ? 'Đang chọn' : 'Bấm để chọn'}
+                            </span>
+                            <div
+                              className={`w-5 h-5 rounded-full flex items-center justify-center ${
+                                isSelected
+                                  ? 'bg-google-blue text-white'
+                                  : 'border border-slate-300 dark:border-slate-600'
+                              }`}
+                            >
+                              {isSelected && <Check size={12} strokeWidth={3} />}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="p-6 rounded-2xl bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200/70 dark:border-amber-900/40 text-center space-y-2">
+                    <p className="text-xs font-semibold text-amber-800 dark:text-amber-300">
+                      Chưa tìm thấy đề thi trắc nghiệm nào trong thư viện tài liệu.
+                    </p>
+                    <p className="text-xs text-slate-500 dark:text-zinc-400">
+                      Đừng lo! Bạn có thể sử dụng ngay bộ câu hỏi khởi động mẫu bên dưới hoặc tự thêm câu hỏi mới ở bước tiếp theo.
+                    </p>
+                  </div>
+                )}
+
+                {/* Option 2: Bộ câu hỏi khởi động mẫu */}
+                <div
+                  onClick={() => onSelectExam('trial_exam_default')}
+                  className={`p-3.5 rounded-2xl border-2 transition-all cursor-pointer flex items-center justify-between gap-3 ${
+                    selectedExamId === 'trial_exam_default' || !selectedExamId
+                      ? 'border-purple-500 bg-purple-500/5 dark:bg-purple-950/40 shadow-xs'
+                      : 'border-slate-200/80 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20 bg-white dark:bg-[#18191a]'
+                  }`}
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-9 h-9 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0">
+                      <Sparkles size={18} />
+                    </div>
+                    <div>
+                      <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-zinc-100">
+                        Bộ câu hỏi khởi động lớp học mẫu (10 câu hỏi đa dạng)
+                      </h4>
+                      <p className="text-[11px] text-slate-500 dark:text-zinc-400">
+                        Tích hợp sẵn câu hỏi đố vui kiến thức khoa học, tự nhiên & xã hội
+                      </p>
+                    </div>
+                  </div>
+
+                  <div
+                    className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 ${
+                      selectedExamId === 'trial_exam_default' || !selectedExamId
+                        ? 'bg-purple-600 text-white'
+                        : 'border border-slate-300 dark:border-slate-600'
+                    }`}
+                  >
+                    {(selectedExamId === 'trial_exam_default' || !selectedExamId) && (
+                      <Check size={12} strokeWidth={3} />
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ============================================================ */}
+          {/* BƯỚC 2: CHỌN LỌC & TÙY CHỈNH CÂU HỎI                         */}
+          {/* ============================================================ */}
+          {currentStep === 2 && (
+            <div className="space-y-4 animate-fadeIn">
+              {/* Header Action Bar */}
+              <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-[#18191a] border border-slate-200/60 dark:border-white/5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <ListChecks size={16} className="text-google-blue" />
+                    <span className="text-xs sm:text-sm font-bold text-slate-900 dark:text-zinc-100">
+                      Bước 2: Chọn lọc câu hỏi xuất hiện trong game
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-500 dark:text-zinc-400 mt-0.5">
+                    Đã chọn <b className="text-google-blue">{selectedCount}</b> trên tổng số{' '}
+                    <b>{questions.length}</b> câu hỏi
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2 flex-wrap">
+                  <button
+                    type="button"
+                    onClick={() => handleSelectAll(true)}
+                    className="px-2.5 py-1.5 rounded-lg bg-white dark:bg-[#282a2c] text-slate-600 dark:text-zinc-300 text-xs font-semibold hover:bg-slate-100 cursor-pointer border border-slate-200/80 dark:border-white/5 transition-colors"
+                  >
+                    Chọn tất cả
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleSelectAll(false)}
+                    className="px-2.5 py-1.5 rounded-lg bg-white dark:bg-[#282a2c] text-slate-600 dark:text-zinc-300 text-xs font-semibold hover:bg-slate-100 cursor-pointer border border-slate-200/80 dark:border-white/5 transition-colors"
+                  >
+                    Bỏ chọn hết
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleOpenAddQuestion}
+                    className="px-3 py-1.5 rounded-lg bg-google-blue text-white text-xs font-bold hover:bg-blue-600 flex items-center gap-1 cursor-pointer shadow-xs transition-colors"
+                  >
+                    <Plus size={14} /> <span>Thêm câu hỏi</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Form thêm câu hỏi mới inline */}
+              {isAddingNew && (
+                <div className="p-4 rounded-2xl bg-blue-50/70 dark:bg-blue-950/20 border-2 border-google-blue/40 space-y-3 animate-fadeIn">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-xs font-bold text-google-blue dark:text-blue-400">
+                      Tạo câu hỏi mới cho trò chơi
+                    </h4>
+                    <button
+                      type="button"
+                      onClick={() => setIsAddingNew(false)}
+                      className="p-1 rounded-md text-slate-400 hover:text-slate-600"
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+                  <textarea
+                    rows={2}
+                    value={newQuestionText}
+                    onChange={(e) => setNewQuestionText(e.target.value)}
+                    placeholder="Nhập nội dung câu hỏi..."
+                    className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-white/10 bg-white dark:bg-[#18191a] text-xs text-slate-800 dark:text-zinc-100 focus:outline-hidden"
+                  />
+                  <div className="space-y-2">
+                    <p className="text-[11px] font-medium text-slate-500">
+                      Nhập các phương án và tích chọn ô tròn cho đáp án đúng:
+                    </p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {newOptions.map((opt, i) => (
+                        <div
+                          key={i}
+                          className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-white dark:bg-[#18191a] border border-slate-200/80 dark:border-white/10"
+                        >
+                          <input
+                            type="radio"
+                            name="new_correct_opt"
+                            checked={opt.isCorrect}
+                            onChange={() =>
+                              setNewOptions(
+                                newOptions.map((o, idx) => ({ ...o, isCorrect: idx === i }))
+                              )
+                            }
+                            className="w-4 h-4 accent-emerald-600 cursor-pointer"
+                          />
+                          <span className="text-xs font-bold text-slate-400 w-4">
+                            {String.fromCharCode(65 + i)}
+                          </span>
+                          <input
+                            type="text"
+                            value={opt.content}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              setNewOptions(
+                                newOptions.map((o, idx) =>
+                                  idx === i ? { ...o, content: val } : o
+                                )
+                              );
+                            }}
+                            placeholder={`Phương án ${String.fromCharCode(65 + i)}`}
+                            className="flex-1 bg-transparent border-none text-xs text-slate-800 dark:text-zinc-100 focus:outline-hidden"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="flex justify-end gap-2 pt-1">
+                    <button
+                      type="button"
+                      onClick={() => setIsAddingNew(false)}
+                      className="px-3 py-1.5 rounded-lg bg-slate-200 dark:bg-white/10 text-xs font-medium cursor-pointer"
+                    >
+                      Hủy
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleSaveNewQuestion}
+                      className="px-4 py-1.5 rounded-lg bg-google-blue text-white text-xs font-semibold hover:bg-blue-600 cursor-pointer"
+                    >
+                      Lưu câu hỏi
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Form sửa câu hỏi inline */}
+              {editingQuestion && (
+                <div className="p-4 rounded-2xl bg-amber-50/70 dark:bg-amber-950/20 border-2 border-amber-500/40 space-y-3 animate-fadeIn">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-xs font-bold text-amber-700 dark:text-amber-400">
+                      Chỉnh sửa câu hỏi
+                    </h4>
+                    <button
+                      type="button"
+                      onClick={() => setEditingQuestion(null)}
+                      className="p-1 rounded-md text-slate-400 hover:text-slate-600"
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+                  <textarea
+                    rows={2}
+                    value={editingQuestion.content}
+                    onChange={(e) =>
+                      setEditingQuestion({ ...editingQuestion, content: e.target.value })
+                    }
+                    className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-white/10 bg-white dark:bg-[#18191a] text-xs text-slate-800 dark:text-zinc-100 focus:outline-hidden"
+                  />
+                  <div className="space-y-2">
+                    <p className="text-[11px] font-medium text-slate-500">
+                      Chọn ô tròn cho phương án đúng:
+                    </p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {editingQuestion.options.map((opt, i) => (
+                        <div
+                          key={i}
+                          className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-white dark:bg-[#18191a] border border-slate-200/80 dark:border-white/10"
+                        >
+                          <input
+                            type="radio"
+                            name="edit_correct_opt"
+                            checked={opt.isCorrect}
+                            onChange={() =>
+                              setEditingQuestion({
+                                ...editingQuestion,
+                                options: editingQuestion.options.map((o, idx) => ({
+                                  ...o,
+                                  isCorrect: idx === i,
+                                })),
+                              })
+                            }
+                            className="w-4 h-4 accent-emerald-600 cursor-pointer"
+                          />
+                          <span className="text-xs font-bold text-slate-400 w-4">
+                            {String.fromCharCode(65 + i)}
+                          </span>
+                          <input
+                            type="text"
+                            value={opt.content}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              setEditingQuestion({
+                                ...editingQuestion,
+                                options: editingQuestion.options.map((o, idx) =>
+                                  idx === i ? { ...o, content: val } : o
+                                ),
+                              });
+                            }}
+                            className="flex-1 bg-transparent border-none text-xs text-slate-800 dark:text-zinc-100 focus:outline-hidden"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="flex justify-end gap-2 pt-1">
+                    <button
+                      type="button"
+                      onClick={() => setEditingQuestion(null)}
+                      className="px-3 py-1.5 rounded-lg bg-slate-200 dark:bg-white/10 text-xs font-medium cursor-pointer"
+                    >
+                      Hủy
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleSaveEditQuestion}
+                      className="px-4 py-1.5 rounded-lg bg-amber-600 text-white text-xs font-semibold hover:bg-amber-700 cursor-pointer"
+                    >
+                      Cập nhật
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Danh sách câu hỏi có checkbox */}
+              <div className="space-y-2.5 max-h-[420px] overflow-y-auto pr-1">
+                {questions.length === 0 ? (
+                  <div className="py-12 text-center text-xs text-slate-400">
+                    Chưa có câu hỏi nào. Vui lòng bấm &quot;Thêm câu hỏi&quot; hoặc chọn đề thi khác ở Bước 1.
+                  </div>
+                ) : (
+                  questions.map((q, idx) => {
+                    const isSelected = q.selected !== false;
+                    return (
+                      <div
+                        key={q.id || idx}
+                        className={`p-3.5 rounded-2xl border transition-all flex items-start gap-3 ${
+                          isSelected
+                            ? 'bg-white dark:bg-[#18191a] border-slate-200/80 dark:border-white/10'
+                            : 'bg-slate-100/50 dark:bg-white/5 border-transparent opacity-60'
+                        }`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={() => handleToggleSelectQuestion(q.id)}
+                          className="mt-1 w-4 h-4 rounded-md accent-blue-600 cursor-pointer shrink-0"
+                          title={isSelected ? 'Bỏ chọn câu này' : 'Dùng câu này'}
+                        />
+
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="text-xs font-bold text-slate-500">
+                              Câu {idx + 1}
+                            </span>
+                          </div>
+                          <p className="text-xs sm:text-sm font-medium text-slate-800 dark:text-zinc-100 leading-snug">
+                            {q.content}
+                          </p>
+
+                          <div className="flex flex-wrap gap-1.5 mt-2">
+                            {q.options.map((opt, oIdx) => (
+                              <span
+                                key={oIdx}
+                                className={`text-[11px] px-2 py-0.5 rounded-md font-medium ${
+                                  opt.isCorrect
+                                    ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 font-semibold'
+                                    : 'bg-slate-100 text-slate-600 dark:bg-white/5 dark:text-zinc-400'
+                                }`}
+                              >
+                                {String.fromCharCode(65 + oIdx)}. {opt.content}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-1 shrink-0">
+                          <button
+                            type="button"
+                            onClick={() => setEditingQuestion(q)}
+                            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-zinc-200 hover:bg-slate-100 dark:hover:bg-white/10 transition-colors cursor-pointer"
+                            title="Sửa câu hỏi"
+                          >
+                            <Edit2 size={13} />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteQuestion(q.id)}
+                            className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors cursor-pointer"
+                            title="Xóa câu hỏi này"
+                          >
+                            <Trash2 size={13} />
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* ============================================================ */}
+          {/* BƯỚC 3: CẤU HÌNH LUẬT CHƠI & ĐỘI THI                         */}
+          {/* ============================================================ */}
+          {currentStep === 3 && (
+            <div className="space-y-4 animate-fadeIn">
+              <div className="bg-purple-50/70 dark:bg-purple-950/20 p-4 rounded-2xl border border-purple-200/60 dark:border-purple-900/40">
+                <h3 className="text-sm font-bold text-slate-900 dark:text-zinc-100 flex items-center gap-2">
+                  <Settings size={17} className="text-purple-600 dark:text-purple-400" />
+                  <span>Bước 3: Thiết lập luật chơi & thông số giảng dạy</span>
+                </h3>
+                <p className="text-xs text-slate-600 dark:text-zinc-400 mt-1 leading-relaxed">
+                  Tùy chỉnh thời gian trả lời, điều kiện giành chiến thắng và phân chia đội ngũ thi đấu trên lớp.
+                </p>
+              </div>
+
               {/* Tiêu đề trò chơi */}
               <div>
                 <label className="block text-xs font-bold text-slate-700 dark:text-zinc-300 mb-1.5">
@@ -250,11 +765,11 @@ export const GameConfigModal: React.FC<GameConfigModalProps> = ({
                 />
               </div>
 
-              {/* Tên 2 Đội (Đối kháng / Thi đấu) */}
-              <div className="p-4 rounded-xl bg-slate-50 dark:bg-[#18191a] border border-slate-200/60 dark:border-white/5 space-y-3">
+              {/* Tên 2 Đội thi đấu */}
+              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-[#18191a] border border-slate-200/60 dark:border-white/5 space-y-3">
                 <div className="flex items-center gap-2 text-xs font-bold text-slate-700 dark:text-zinc-300">
                   <Users size={15} className="text-blue-500" />
-                  <span>Tên các đội thi đấu</span>
+                  <span>Tên các đội thi đấu trên lớp</span>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
@@ -388,9 +903,8 @@ export const GameConfigModal: React.FC<GameConfigModalProps> = ({
                 </div>
               </div>
 
-              {/* Tùy chọn đảo & cỡ chữ */}
+              {/* Tùy chọn đảo câu hỏi & Cỡ chữ */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                {/* Đảo câu hỏi */}
                 <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-[#18191a] border border-slate-200/60 dark:border-white/5 flex items-center justify-between">
                   <div>
                     <div className="text-xs font-bold text-slate-700 dark:text-zinc-300">
@@ -406,7 +920,6 @@ export const GameConfigModal: React.FC<GameConfigModalProps> = ({
                   />
                 </div>
 
-                {/* Đảo đáp án */}
                 <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-[#18191a] border border-slate-200/60 dark:border-white/5 flex items-center justify-between">
                   <div>
                     <div className="text-xs font-bold text-slate-700 dark:text-zinc-300">
@@ -422,7 +935,6 @@ export const GameConfigModal: React.FC<GameConfigModalProps> = ({
                   />
                 </div>
 
-                {/* Cỡ chữ màn chiếu */}
                 <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-[#18191a] border border-slate-200/60 dark:border-white/5">
                   <div className="flex items-center gap-1.5 text-xs font-bold text-slate-700 dark:text-zinc-300 mb-1.5">
                     <Type size={14} className="text-indigo-500" />
@@ -442,339 +954,99 @@ export const GameConfigModal: React.FC<GameConfigModalProps> = ({
                 </div>
               </div>
             </div>
-          ) : (
-            /* TAB 2: QUESTIONS MANAGER & EDITOR */
-            <div className="space-y-4">
-              {/* Exam Source Selector */}
-              <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-[#18191a] border border-slate-200/60 dark:border-white/5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <div className="flex-1">
-                  <label className="block text-[11px] font-bold text-slate-500 dark:text-zinc-400 mb-1">
-                    Chọn đề thi từ kho tài liệu:
-                  </label>
-                  <select
-                    value={selectedExamId}
-                    onChange={(e) => onSelectExam(e.target.value)}
-                    className="w-full sm:max-w-md px-3 py-2 rounded-xl border border-slate-300 dark:border-white/10 bg-white dark:bg-[#282a2c] text-xs font-semibold text-slate-800 dark:text-zinc-100 cursor-pointer"
-                  >
-                    {availableExams.map((ex) => (
-                      <option key={ex.id} value={ex.id}>
-                        {ex.title} ({ex.questions.length} câu)
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="flex items-center gap-2 self-end sm:self-center">
-                  <button
-                    onClick={() => handleSelectAll(true)}
-                    className="px-2.5 py-1.5 rounded-lg bg-white dark:bg-[#282a2c] text-slate-600 dark:text-zinc-300 text-xs font-medium hover:bg-slate-100 cursor-pointer border border-slate-200/80 dark:border-white/5"
-                  >
-                    Chọn tất cả
-                  </button>
-                  <button
-                    onClick={() => handleSelectAll(false)}
-                    className="px-2.5 py-1.5 rounded-lg bg-white dark:bg-[#282a2c] text-slate-600 dark:text-zinc-300 text-xs font-medium hover:bg-slate-100 cursor-pointer border border-slate-200/80 dark:border-white/5"
-                  >
-                    Bỏ chọn hết
-                  </button>
-                  <button
-                    onClick={handleOpenAddQuestion}
-                    className="px-3 py-1.5 rounded-lg bg-google-blue text-white text-xs font-semibold hover:bg-blue-600 flex items-center gap-1 cursor-pointer shadow-xs"
-                  >
-                    <Plus size={14} /> Thêm câu hỏi
-                  </button>
-                </div>
-              </div>
-
-              {/* Add New Question Modal / Inline Box */}
-              {isAddingNew && (
-                <div className="p-4 rounded-xl bg-blue-50/60 dark:bg-blue-950/20 border-2 border-blue-500/40 space-y-3 animate-fadeIn">
-                  <div className="flex items-center justify-between">
-                    <h4 className="text-xs font-bold text-google-blue dark:text-blue-400">
-                      Tạo câu hỏi mới cho trò chơi
-                    </h4>
-                    <button
-                      onClick={() => setIsAddingNew(false)}
-                      className="p-1 rounded-md text-slate-400 hover:text-slate-600"
-                    >
-                      <X size={14} />
-                    </button>
-                  </div>
-                  <textarea
-                    rows={2}
-                    value={newQuestionText}
-                    onChange={(e) => setNewQuestionText(e.target.value)}
-                    placeholder="Nhập nội dung câu hỏi..."
-                    className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-white/10 bg-white dark:bg-[#18191a] text-xs text-slate-800 dark:text-zinc-100 focus:outline-hidden"
-                  />
-                  <div className="space-y-2">
-                    <p className="text-[11px] font-medium text-slate-500">
-                      Nhập các phương án và tích chọn ô tròn cho đáp án đúng:
-                    </p>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      {newOptions.map((opt, i) => (
-                        <div
-                          key={i}
-                          className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-white dark:bg-[#18191a] border border-slate-200/80 dark:border-white/10"
-                        >
-                          <input
-                            type="radio"
-                            name="new_correct_opt"
-                            checked={opt.isCorrect}
-                            onChange={() =>
-                              setNewOptions(
-                                newOptions.map((o, idx) => ({ ...o, isCorrect: idx === i }))
-                              )
-                            }
-                            className="w-4 h-4 accent-emerald-600 cursor-pointer"
-                          />
-                          <span className="text-xs font-bold text-slate-400 w-4">
-                            {String.fromCharCode(65 + i)}
-                          </span>
-                          <input
-                            type="text"
-                            value={opt.content}
-                            onChange={(e) => {
-                              const val = e.target.value;
-                              setNewOptions(
-                                newOptions.map((o, idx) =>
-                                  idx === i ? { ...o, content: val } : o
-                                )
-                              );
-                            }}
-                            placeholder={`Phương án ${String.fromCharCode(65 + i)}`}
-                            className="flex-1 bg-transparent border-none text-xs text-slate-800 dark:text-zinc-100 focus:outline-hidden"
-                          />
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="flex justify-end gap-2 pt-1">
-                    <button
-                      onClick={() => setIsAddingNew(false)}
-                      className="px-3 py-1.5 rounded-lg bg-slate-200 dark:bg-white/10 text-xs font-medium cursor-pointer"
-                    >
-                      Hủy
-                    </button>
-                    <button
-                      onClick={handleSaveNewQuestion}
-                      className="px-4 py-1.5 rounded-lg bg-google-blue text-white text-xs font-semibold hover:bg-blue-600 cursor-pointer"
-                    >
-                      Lưu câu hỏi
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* Edit Question Modal */}
-              {editingQuestion && (
-                <div className="p-4 rounded-xl bg-amber-50/60 dark:bg-amber-950/20 border-2 border-amber-500/40 space-y-3 animate-fadeIn">
-                  <div className="flex items-center justify-between">
-                    <h4 className="text-xs font-bold text-amber-700 dark:text-amber-400">
-                      Chỉnh sửa câu hỏi
-                    </h4>
-                    <button
-                      onClick={() => setEditingQuestion(null)}
-                      className="p-1 rounded-md text-slate-400 hover:text-slate-600"
-                    >
-                      <X size={14} />
-                    </button>
-                  </div>
-                  <textarea
-                    rows={2}
-                    value={editingQuestion.content}
-                    onChange={(e) =>
-                      setEditingQuestion({ ...editingQuestion, content: e.target.value })
-                    }
-                    className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-white/10 bg-white dark:bg-[#18191a] text-xs text-slate-800 dark:text-zinc-100 focus:outline-hidden"
-                  />
-                  <div className="space-y-2">
-                    <p className="text-[11px] font-medium text-slate-500">
-                      Chọn ô tròn cho phương án đúng:
-                    </p>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      {editingQuestion.options.map((opt, i) => (
-                        <div
-                          key={i}
-                          className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-white dark:bg-[#18191a] border border-slate-200/80 dark:border-white/10"
-                        >
-                          <input
-                            type="radio"
-                            name="edit_correct_opt"
-                            checked={opt.isCorrect}
-                            onChange={() =>
-                              setEditingQuestion({
-                                ...editingQuestion,
-                                options: editingQuestion.options.map((o, idx) => ({
-                                  ...o,
-                                  isCorrect: idx === i,
-                                })),
-                              })
-                            }
-                            className="w-4 h-4 accent-emerald-600 cursor-pointer"
-                          />
-                          <span className="text-xs font-bold text-slate-400 w-4">
-                            {String.fromCharCode(65 + i)}
-                          </span>
-                          <input
-                            type="text"
-                            value={opt.content}
-                            onChange={(e) => {
-                              const val = e.target.value;
-                              setEditingQuestion({
-                                ...editingQuestion,
-                                options: editingQuestion.options.map((o, idx) =>
-                                  idx === i ? { ...o, content: val } : o
-                                ),
-                              });
-                            }}
-                            className="flex-1 bg-transparent border-none text-xs text-slate-800 dark:text-zinc-100 focus:outline-hidden"
-                          />
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="flex justify-end gap-2 pt-1">
-                    <button
-                      onClick={() => setEditingQuestion(null)}
-                      className="px-3 py-1.5 rounded-lg bg-slate-200 dark:bg-white/10 text-xs font-medium cursor-pointer"
-                    >
-                      Hủy
-                    </button>
-                    <button
-                      onClick={handleSaveEditQuestion}
-                      className="px-4 py-1.5 rounded-lg bg-amber-600 text-white text-xs font-semibold hover:bg-amber-700 cursor-pointer"
-                    >
-                      Cập nhật
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* Questions List */}
-              <div className="space-y-2.5">
-                {questions.length === 0 ? (
-                  <div className="py-8 text-center text-xs text-slate-400">
-                    Chưa có câu hỏi nào trong đề thi này.
-                  </div>
-                ) : (
-                  questions.map((q, idx) => {
-                    const isSelected = q.selected !== false;
-                    return (
-                      <div
-                        key={q.id || idx}
-                        className={`p-3.5 rounded-xl border transition-all flex items-start gap-3 ${
-                          isSelected
-                            ? 'bg-white dark:bg-[#18191a] border-slate-200/80 dark:border-white/10'
-                            : 'bg-slate-100/50 dark:bg-white/5 border-transparent opacity-60'
-                        }`}
-                      >
-                        {/* Checkbox */}
-                        <input
-                          type="checkbox"
-                          checked={isSelected}
-                          onChange={() => handleToggleSelectQuestion(q.id)}
-                          className="mt-1 w-4 h-4 rounded-md accent-blue-600 cursor-pointer shrink-0"
-                          title={isSelected ? 'Bỏ chọn câu này' : 'Dùng câu này'}
-                        />
-
-                        {/* Content */}
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className="text-xs font-bold text-slate-500">
-                              Câu {idx + 1}
-                            </span>
-                          </div>
-                          <p className="text-xs sm:text-sm font-medium text-slate-800 dark:text-zinc-100 leading-snug">
-                            {q.content}
-                          </p>
-
-                          {/* Options pills */}
-                          <div className="flex flex-wrap gap-1.5 mt-2">
-                            {q.options.map((opt, oIdx) => (
-                              <span
-                                key={oIdx}
-                                className={`text-[11px] px-2 py-0.5 rounded-md font-medium ${
-                                  opt.isCorrect
-                                    ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 font-semibold'
-                                    : 'bg-slate-100 text-slate-600 dark:bg-white/5 dark:text-zinc-400'
-                                }`}
-                              >
-                                {String.fromCharCode(65 + oIdx)}. {opt.content}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-
-                        {/* Actions */}
-                        <div className="flex items-center gap-1 shrink-0">
-                          <button
-                            onClick={() => setEditingQuestion(q)}
-                            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-zinc-200 hover:bg-slate-100 dark:hover:bg-white/10 transition-colors cursor-pointer"
-                            title="Sửa câu hỏi"
-                          >
-                            <Edit2 size={13} />
-                          </button>
-                          <button
-                            onClick={() => handleDeleteQuestion(q.id)}
-                            className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors cursor-pointer"
-                            title="Xóa câu hỏi này"
-                          >
-                            <Trash2 size={13} />
-                          </button>
-                        </div>
-                      </div>
-                    );
-                  })
-                )}
-              </div>
-            </div>
           )}
         </div>
 
-        {/* Footer */}
-        <div className="p-4 sm:p-5 border-t border-slate-200/80 dark:border-white/10 flex items-center justify-between gap-3 shrink-0 bg-slate-50/70 dark:bg-[#18191a]/70">
+        {/* MODAL FOOTER WITH STEP-BY-STEP ACTIONS */}
+        <div className="p-4 sm:p-5 border-t border-slate-200/80 dark:border-white/10 flex items-center justify-between gap-3 shrink-0 bg-slate-50/80 dark:bg-[#18191a]/80">
           <div className="text-xs text-slate-500 dark:text-zinc-400">
-            {selectedCount > 0 ? (
+            {currentStep === 1 && (
               <span>
-                Đã sẵn sàng với <b className="text-slate-800 dark:text-zinc-200">{selectedCount}</b> câu hỏi
+                Đang nạp <b>{questions.length}</b> câu hỏi từ nguồn được chọn
               </span>
-            ) : (
-              <span className="text-rose-500 font-medium">Vui lòng chọn ít nhất 1 câu hỏi</span>
+            )}
+            {currentStep === 2 && (
+              <span>
+                Đã chọn <b>{selectedCount}</b>/{questions.length} câu hỏi
+              </span>
+            )}
+            {currentStep === 3 && (
+              <span>
+                Sẵn sàng thi đấu với <b>{selectedCount}</b> câu hỏi
+              </span>
             )}
           </div>
 
-          <div className="flex items-center gap-2 flex-wrap justify-end">
-            <button
-              onClick={onClose}
-              className="px-3.5 py-2 rounded-xl bg-white dark:bg-[#282a2c] hover:bg-slate-100 dark:hover:bg-white/10 text-slate-700 dark:text-zinc-300 text-xs font-semibold transition-colors cursor-pointer border border-slate-200/80 dark:border-white/10"
-            >
-              Hủy
-            </button>
-            {onSaveGame && (
+          <div className="flex items-center gap-2">
+            {/* Nút Quay lại */}
+            {currentStep > 1 && (
               <button
-                disabled={selectedCount === 0}
-                onClick={() => {
-                  onSaveGame();
-                  onClose();
-                }}
-                className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs"
+                type="button"
+                onClick={() => setCurrentStep((prev) => (prev > 1 ? ((prev - 1) as 1 | 2 | 3) : 1))}
+                className="px-3.5 py-2 rounded-xl bg-white dark:bg-[#282a2c] hover:bg-slate-100 dark:hover:bg-white/10 text-slate-700 dark:text-zinc-300 text-xs font-semibold transition-colors cursor-pointer border border-slate-200/80 dark:border-white/10 flex items-center gap-1.5"
               >
-                <span>💾 Lưu cài đặt trò chơi</span>
+                <ArrowLeft size={14} />
+                <span>Quay lại</span>
               </button>
             )}
-            <button
-              disabled={selectedCount === 0}
-              onClick={() => {
-                if (onSaveGame) onSaveGame();
-                onClose();
-                onStartGame();
-              }}
-              className="px-4 py-2 rounded-xl bg-google-blue hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer shadow-sm"
-            >
-              <Play size={14} className="fill-white" />
-              <span>Lưu & Chơi ngay</span>
-            </button>
+
+            {/* Bước 1: Sang Bước 2 */}
+            {currentStep === 1 && (
+              <button
+                type="button"
+                onClick={() => setCurrentStep(2)}
+                className="px-4 py-2 rounded-xl bg-google-blue hover:bg-blue-600 text-white text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-xs active:scale-95"
+              >
+                <span>Tiếp tục: Chọn câu hỏi</span>
+                <ArrowRight size={14} />
+              </button>
+            )}
+
+            {/* Bước 2: Sang Bước 3 */}
+            {currentStep === 2 && (
+              <button
+                type="button"
+                disabled={selectedCount === 0}
+                onClick={() => setCurrentStep(3)}
+                className="px-4 py-2 rounded-xl bg-google-blue hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-xs active:scale-95"
+              >
+                <span>Tiếp tục: Cấu hình luật</span>
+                <ArrowRight size={14} />
+              </button>
+            )}
+
+            {/* Bước 3: Lưu bài hoặc Bắt đầu ngay */}
+            {currentStep === 3 && (
+              <>
+                {onSaveGame && (
+                  <button
+                    type="button"
+                    disabled={selectedCount === 0}
+                    onClick={() => {
+                      onSaveGame();
+                      onClose();
+                    }}
+                    className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-xs active:scale-95"
+                  >
+                    <Check size={14} />
+                    <span>Lưu bài chơi</span>
+                  </button>
+                )}
+                <button
+                  type="button"
+                  disabled={selectedCount === 0}
+                  onClick={() => {
+                    if (onSaveGame) onSaveGame();
+                    onClose();
+                    onStartGame();
+                  }}
+                  className="px-4 py-2 rounded-xl bg-google-blue hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-sm active:scale-95"
+                >
+                  <Play size={14} className="fill-white" />
+                  <span>Bắt đầu dạy ngay</span>
+                </button>
+              </>
+            )}
           </div>
         </div>
       </div>

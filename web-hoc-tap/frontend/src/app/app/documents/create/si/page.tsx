@@ -9,6 +9,7 @@ import { Sparkles, Check, Wand2, ChevronRight, AlertCircle, FileUp, Camera, Book
 import { AiToolRegistry } from '@/lib/ai/aiToolRegistry';
 import { useAuthStore } from '@/store/useAuthStore';
 import { syncExamActionToDocument } from '@/lib/examDocumentSync';
+import { detectSubjectFromText, detectGradeFromText } from '@/lib/examStructureParser';
 
 function AiQuizCreateContent() {
   const router = useRouter();
@@ -48,6 +49,22 @@ function AiQuizCreateContent() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
+  const handleTopicChange = (val: string) => {
+    setAiTopic(val);
+    if (!docSubject) {
+      const s = detectSubjectFromText(val);
+      if (s && s !== 'Kiến thức tổng hợp') {
+        setDocSubject(s);
+      }
+    }
+    if (!docGrade) {
+      const g = detectGradeFromText(val);
+      if (g && g !== 'Tự do') {
+        setDocGrade(g);
+      }
+    }
+  };
+
   const handleGenerate = async () => {
     if (!aiTopic.trim()) {
       setErrorMessage('Vui lòng nhập mô tả bài học hoặc chủ đề!');
@@ -81,12 +98,17 @@ function AiQuizCreateContent() {
       }
 
       const generatedExam = data.exam;
+      let finalSubject = generatedExam.subject || docSubject || 'Kiến thức tổng hợp';
+      let finalGrade = generatedExam.grade || (docGrade ? `Lớp ${docGrade}` : 'Tự do');
+      if (/^\d{1,2}$/.test(finalGrade.trim())) {
+        finalGrade = `Lớp ${finalGrade.trim()}`;
+      }
 
       // Save the real AI generated exam into Document storage
       let result = AiToolRegistry.createExam({
         title: generatedExam.title,
-        subject: generatedExam.subject || docSubject || 'Kiến thức tổng hợp',
-        grade: generatedExam.grade || docGrade || 'Tự do',
+        subject: finalSubject,
+        grade: finalGrade,
         durationMinutes: generatedExam.durationMinutes || 45,
         questions: generatedExam.questions,
         folderId: folderId || undefined,
@@ -219,7 +241,7 @@ function AiQuizCreateContent() {
                 rows={4}
                 placeholder="Mô tả"
                 value={aiTopic}
-                onChange={(e) => setAiTopic(e.target.value)}
+                onChange={(e) => handleTopicChange(e.target.value)}
                 style={{ resize: 'none' }}
                 className="w-full px-4 py-3 bg-google-input dark:bg-google-input-dark border border-slate-200/60 dark:border-transparent text-slate-900 dark:text-slate-100 rounded-xl text-sm outline-none focus:outline-none placeholder-slate-400 dark:placeholder-slate-500 transition-colors resize-none leading-relaxed"
                 required

@@ -97,6 +97,13 @@ function AutoGrowingTextarea({
   );
 }
 
+function normalizeGradeLabel(g?: string): string {
+  if (!g || g === 'Tự do') return 'Tự do';
+  const trimmed = g.trim();
+  if (/^\d{1,2}$/.test(trimmed)) return `Lớp ${trimmed}`;
+  return trimmed;
+}
+
 function DocumentCreateContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -173,7 +180,7 @@ function DocumentCreateContent() {
         // Nhận diện thành công 100% bằng thuật toán từ file (không dùng AI, 100% dữ liệu thật từ file)
         const detectedTitle = deterministicResult.title || cleanName;
         const detectedSubject = deterministicResult.subject || 'Kiến thức tổng hợp';
-        const detectedGrade = deterministicResult.grade || 'Tự do';
+        const detectedGrade = normalizeGradeLabel(deterministicResult.grade);
         const durationMinutes = deterministicResult.durationMinutes || 45;
 
         setDocTitle(detectedTitle);
@@ -251,7 +258,7 @@ function DocumentCreateContent() {
 
       const detectedTitle = examData.title || cleanName;
       const detectedSubject = examData.subject || 'Kiến thức tổng hợp';
-      const detectedGrade = examData.grade || 'Tự do';
+      const detectedGrade = normalizeGradeLabel(examData.grade);
 
       setDocTitle(detectedTitle);
       setDocSubject(detectedSubject);

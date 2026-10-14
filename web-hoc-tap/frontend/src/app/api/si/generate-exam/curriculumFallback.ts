@@ -23,9 +23,53 @@ interface FallbackTemplate {
 }
 
 const CURRICULUM_BANK: FallbackTemplate[] = [
+  // --- TOÁN HỌC LỚP 9 ---
+  {
+    subject: 'Toán',
+    gradePattern: /9|thcs/i,
+    topicKeywords: ['bất đẳng thức', 'tính chất', 'thứ tự', 'so sánh', 'bđt'],
+    questions: [
+      {
+        content: 'Cho $a < b$. Khẳng định nào sau đây là ĐÚNG?',
+        options: ['$a + 3 < b + 3$', '$a + 3 > b + 3$', '$a - 2 > b - 2$', '$a + 5 \\ge b + 5$'],
+        correctAnswer: '$a + 3 < b + 3$',
+        explanation: 'Theo tính chất liên hệ giữa thứ tự và phép cộng: Khi cộng cùng một số vào cả hai vế của một bất đẳng thức thì được bất đẳng thức mới cùng chiều. Do $a < b$ nên $a + 3 < b + 3$.',
+      },
+      {
+        content: 'Cho $a < b$. Khi nhân cả hai vế với số âm $-2$, ta được khẳng định nào sau đây là ĐÚNG?',
+        options: ['$-2a > -2b$', '$-2a < -2b$', '$-2a \\le -2b$', '$-2a = -2b$'],
+        correctAnswer: '$-2a > -2b$',
+        explanation: 'Theo tính chất liên hệ giữa thứ tự và phép nhân: Khi nhân cả hai vế của một bất đẳng thức với cùng một số âm, ta phải đổi chiều bất đẳng thức. Do đó $a < b \\Rightarrow -2a > -2b$.',
+      },
+      {
+        content: 'Cho $x - 5 > y - 5$. So sánh $x$ và $y$ ta được kết quả là:',
+        options: ['$x > y$', '$x < y$', '$x = y$', '$x \\le y$'],
+        correctAnswer: '$x > y$',
+        explanation: 'Cộng cả hai vế của bất đẳng thức $x - 5 > y - 5$ với $5$, ta được $x > y$.',
+      },
+      {
+        content: 'Cho $a > b$ và $c < 0$. Bất đẳng thức nào sau đây luôn ĐÚNG?',
+        options: ['$ac < bc$', '$ac > bc$', '$\\frac{a}{c} > \\frac{b}{c}$', '$a + c < b + c$'],
+        correctAnswer: '$ac < bc$',
+        explanation: 'Vì $c < 0$ (số âm), nhân cả hai vế của bất đẳng thức $a > b$ với $c$ sẽ đổi chiều bất đẳng thức thành $ac < bc$.',
+      },
+      {
+        content: 'Biết $a \\le b$. Khẳng định nào sau đây là SAI?',
+        options: ['$-3a \\le -3b$', '$2a \\le 2b$', '$a - 1 \\le b - 1$', '$-a \\ge -b$'],
+        correctAnswer: '$-3a \\le -3b$',
+        explanation: 'Khi nhân cả hai vế của $a \\le b$ với số âm $-3$, bất đẳng thức phải đổi chiều thành $-3a \\ge -3b$. Do đó $-3a \\le -3b$ là khẳng định SAI.',
+      },
+      {
+        content: 'Nếu $a < b$ và $b < c$ thì ta có $a < c$. Đây là tính chất gì của bất đẳng thức?',
+        options: ['Tính chất bắc cầu', 'Tính chất giao hoán', 'Tính chất kết hợp', 'Tính chất phân phối'],
+        correctAnswer: 'Tính chất bắc cầu',
+        explanation: 'Tính chất: Nếu $a < b$ và $b < c$ thì $a < c$ được gọi là tính chất bắc cầu của thứ tự và bất đẳng thức.',
+      },
+    ],
+  },
   // --- TOÁN HỌC ---
   {
-    subject: 'Toán học',
+    subject: 'Toán',
     gradePattern: /10|11|12|thpt/i,
     topicKeywords: ['hàm số', 'parabol', 'bậc hai', 'đồ thị'],
     questions: [
@@ -263,20 +307,38 @@ export function generateCurriculumFallbackExam(params: {
   grade: string;
   questions: GeneratedQuestion[];
 } {
-  const normSubject = (params.subject || 'Toán học').trim();
-  const normGrade = (params.grade || '10').trim();
+  const normSubject = (params.subject || 'Toán').trim();
+  const normGrade = (params.grade || '9').trim();
   const normTopic = (params.topic || 'Kiến thức trọng tâm').trim();
   const count = Math.max(1, Math.min(params.targetCount || 10, 30));
 
-  // 1. Tìm template phù hợp nhất
+  // 1. Tìm template phù hợp nhất theo môn, khối lớp và chủ đề
   let matchedTemplate = CURRICULUM_BANK.find((t) => {
-    const subMatch = t.subject.toLowerCase() === normSubject.toLowerCase();
+    const subMatch =
+      t.subject.toLowerCase() === normSubject.toLowerCase() ||
+      (normSubject.toLowerCase().includes('toán') && t.subject.toLowerCase().includes('toán'));
     const topicMatch = t.topicKeywords.some((k) => normTopic.toLowerCase().includes(k.toLowerCase()));
-    return subMatch && topicMatch;
+    const gradeMatch = typeof t.gradePattern === 'string' ? t.gradePattern === normGrade : t.gradePattern.test(normGrade);
+    return subMatch && topicMatch && gradeMatch;
   });
 
   if (!matchedTemplate) {
-    matchedTemplate = CURRICULUM_BANK.find((t) => t.subject.toLowerCase() === normSubject.toLowerCase());
+    matchedTemplate = CURRICULUM_BANK.find((t) => {
+      const subMatch =
+        t.subject.toLowerCase() === normSubject.toLowerCase() ||
+        (normSubject.toLowerCase().includes('toán') && t.subject.toLowerCase().includes('toán'));
+      const topicMatch = t.topicKeywords.some((k) => normTopic.toLowerCase().includes(k.toLowerCase()));
+      return subMatch && topicMatch;
+    });
+  }
+
+  if (!matchedTemplate) {
+    matchedTemplate = CURRICULUM_BANK.find((t) => {
+      return (
+        t.subject.toLowerCase() === normSubject.toLowerCase() ||
+        (normSubject.toLowerCase().includes('toán') && t.subject.toLowerCase().includes('toán'))
+      );
+    });
   }
 
   if (!matchedTemplate) {
