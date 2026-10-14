@@ -76,7 +76,7 @@ export const AppShell: React.FC<AppShellProps> = ({
 
   const navItems = [
     { label: 'Trang chủ', href: '/dashboard', icon: Home },
-    { label: 'Trợ lý SI', href: '/ai', icon: Sparkles },
+    { label: 'Trợ lý SI', href: '/si', icon: Sparkles },
     { label: 'Lớp học của tôi', href: '/classes', icon: GraduationCap },
     { label: 'Tài liệu', href: '/documents', icon: FileText },
     { label: 'Trò chơi lớp học', href: '/games', icon: Gamepad2 },
@@ -292,11 +292,11 @@ export const AppShell: React.FC<AppShellProps> = ({
             <main
               id="app-main-viewport"
               className={`flex-1 w-full ${
-                pathname?.startsWith('/app/ai') || pathname?.startsWith('/ai')
+                pathname?.startsWith('/app/si') || pathname?.startsWith('/si') || pathname?.startsWith('/app/ai') || pathname?.startsWith('/ai')
                   ? 'p-0 flex flex-col overflow-hidden no-scrollbar'
                   : 'overflow-y-auto overflow-x-hidden px-3 sm:px-4 pb-3.5 pt-4'
               }`}
-              style={pathname?.startsWith('/app/ai') || pathname?.startsWith('/ai') ? undefined : { scrollbarGutter: 'stable' }}
+              style={pathname?.startsWith('/app/si') || pathname?.startsWith('/si') || pathname?.startsWith('/app/ai') || pathname?.startsWith('/ai') ? undefined : { scrollbarGutter: 'stable' }}
             >
               {/* Action / Title Bar Header */}
               {(title || action) && (

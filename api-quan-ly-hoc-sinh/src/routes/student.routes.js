@@ -20,6 +20,7 @@ router.post('/:id/health', protect, authorize('admin', 'teacher'), ...validation
 router.get('/:id/behavior', protect, ...validation.idParam(), requireStudentAccess(), studentController.getStudentBehavior);
 router.post('/:id/behavior', protect, authorize('admin', 'teacher'), ...validation.idParam(), requireStudentAccess(), validation.behavior, studentController.addStudentBehavior);
 router.delete('/:id/behavior/:behaviorId', protect, authorize('admin', 'teacher'), ...validation.idParam(), ...validation.idParam('behaviorId'), requireStudentAccess(), studentController.deleteStudentBehavior);
+router.get('/:id/si-prediction', protect, ...validation.idParam(), requireStudentAccess(), studentController.getStudentAiPrediction);
 router.get('/:id/ai-prediction', protect, ...validation.idParam(), requireStudentAccess(), studentController.getStudentAiPrediction);
 
 module.exports = router;

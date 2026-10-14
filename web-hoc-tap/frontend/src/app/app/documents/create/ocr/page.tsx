@@ -138,7 +138,7 @@ function OcrQuizCreateContent() {
       // 2. CHỈ KHI THUẬT TOÁN KHÔNG PHÂN TÍCH ĐƯỢC (Ảnh chụp, scan, viết tay) -> MỚI DÙNG SI
       const extracted = await extractFileForAi(selectedImage);
 
-      const res = await fetch('/api/ai/generate-exam', {
+      const res = await fetch('/api/si/generate-exam', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

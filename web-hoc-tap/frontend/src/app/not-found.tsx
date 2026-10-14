@@ -177,7 +177,7 @@ export default function NotFound() {
               </Link>
 
               <Link
-                href="/app/ai"
+                href="/app/si"
                 className="p-4 rounded-2xl bg-white dark:bg-google-card-dark border border-slate-200/80 dark:border-slate-800 shadow-xs hover:border-purple-400 dark:hover:border-purple-500/50 hover:shadow-md transition-all group flex items-start gap-3.5"
               >
                 <div className="w-10 h-10 rounded-xl bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">

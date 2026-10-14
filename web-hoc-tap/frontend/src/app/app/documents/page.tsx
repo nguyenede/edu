@@ -1217,7 +1217,7 @@ function DocumentsPageContent() {
         }
 
         const extracted = await extractFileForAi(file);
-        const res = await fetch('/api/ai/generate-exam', {
+        const res = await fetch('/api/si/generate-exam', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -1225,7 +1225,7 @@ function DocumentsPageContent() {
             documentText: extracted.text || '',
             imageBase64: extracted.imageBase64 || null,
             fileName: file.name,
-            model: 'gemini-3.5-flash-lite',
+            model: 'gemini-3.5-flash',
           }),
         });
 
@@ -1316,7 +1316,7 @@ function DocumentsPageContent() {
           }
 
           const extracted = await extractFileForAi(file);
-          const res = await fetch('/api/ai/generate-exam', {
+          const res = await fetch('/api/si/generate-exam', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -1324,7 +1324,7 @@ function DocumentsPageContent() {
               documentText: extracted.text || '',
               imageBase64: extracted.imageBase64 || null,
               fileName: file.name,
-              model: 'gemini-3.5-flash-lite',
+              model: 'gemini-3.5-flash',
             }),
           });
           const data = await res.json();

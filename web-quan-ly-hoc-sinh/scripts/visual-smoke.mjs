@@ -141,7 +141,7 @@ try {
   const adminRoutes = [
     '/students', '/students/create', '/teachers', '/teachers/create', '/classes', '/subjects',
     '/schedules', '/grades', '/attendance', '/payments', '/notifications', '/parents', '/settings',
-    '/reports', '/audit', '/profile', '/ai-advisor'
+    '/reports', '/audit', '/profile', '/si-advisor'
   ];
   for (const route of adminRoutes) {
     const issueStart = runtimeIssues.length;

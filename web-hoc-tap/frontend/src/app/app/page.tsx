@@ -189,7 +189,7 @@ export default function DashboardPage() {
               </div>
 
               <div
-                onClick={() => router.push('/app/ai')}
+                onClick={() => router.push('/app/si')}
                 className="p-4 bg-google-hover dark:bg-google-hover-dark rounded-2xl cursor-pointer hover:bg-slate-200/70 dark:hover:bg-slate-800 transition-colors flex items-center gap-4"
               >
                 <div className="w-10 h-10 rounded-xl bg-purple-100 dark:bg-purple-950/60 flex items-center justify-center text-purple-600 dark:text-purple-400 shrink-0">

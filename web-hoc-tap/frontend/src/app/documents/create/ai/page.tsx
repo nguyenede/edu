@@ -1,1 +1,1 @@
-export { default } from '../../../app/documents/create/ai/page';
+export { default } from '../../../app/documents/create/si/page';

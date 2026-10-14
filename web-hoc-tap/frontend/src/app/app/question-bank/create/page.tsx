@@ -60,7 +60,7 @@ export default function CreateQuestionPage() {
     setErrorMsg(null);
 
     try {
-      const res = await fetch('/api/ai/generate-exam', {
+      const res = await fetch('/api/si/generate-exam', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

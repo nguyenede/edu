@@ -50,7 +50,7 @@ const AiAdvisorPage: React.FC = () => {
     // Fetch initial metrics by sending a general helper request to trigger student profile load
     const fetchInitialMetrics = async () => {
       try {
-        const res = await api.post('/reports/ai-advisor/chat', { message: 'hello' });
+        const res = await api.post('/reports/si-advisor/chat', { message: 'hello' });
         if (res.data.success && res.data.data.analyzedStudent) {
           setMetrics(res.data.data.analyzedStudent);
         }
@@ -80,7 +80,7 @@ const AiAdvisorPage: React.FC = () => {
     setIsLoading(true);
 
     try {
-      const res = await api.post('/reports/ai-advisor/chat', { message: textToSend });
+      const res = await api.post('/reports/si-advisor/chat', { message: textToSend });
       
       if (res.data.success) {
         const aiMsg: Message = {

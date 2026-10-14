@@ -8,6 +8,7 @@ router.get('/dashboard', protect, reportController.getDashboardStats);
 router.get('/student-growth', protect, authorize('admin'), reportController.getStudentGrowth);
 router.get('/grade-distribution', protect, authorize('admin'), reportController.getGradeDistribution);
 router.get('/search', protect, authorize('admin', 'teacher'), validation.globalSearch, reportController.globalSearch);
+router.post('/si-advisor/chat', protect, validation.aiChat, reportController.aiAdvisorChat);
 router.post('/ai-advisor/chat', protect, validation.aiChat, reportController.aiAdvisorChat);
 
 module.exports = router;

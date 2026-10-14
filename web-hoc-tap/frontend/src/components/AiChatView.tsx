@@ -250,7 +250,7 @@ export default function AiChatView({ initialSessionId }: { initialSessionId?: st
       try {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 1000);
-        const res = await fetch('/api/ai-chat/sessions', {
+        const res = await fetch('/api/si-chat/sessions', {
           headers: { Authorization: `Bearer ${token}` },
           signal: controller.signal,
         }).finally(() => clearTimeout(timeoutId));
@@ -322,7 +322,7 @@ export default function AiChatView({ initialSessionId }: { initialSessionId?: st
         if (token && sessionToSync) {
           const syncCtrl = new AbortController();
           const syncTimer = setTimeout(() => syncCtrl.abort(), 1000);
-          fetch(`/api/ai-chat/sessions/${sessionId}`, {
+          fetch(`/api/si-chat/sessions/${sessionId}`, {
             method: 'PUT',
             headers: {
               'Content-Type': 'application/json',
@@ -356,7 +356,7 @@ export default function AiChatView({ initialSessionId }: { initialSessionId?: st
     setActiveSessionId(sessionId);
     const target = sessions.find((s) => s.id === sessionId);
     setMessages(target ? target.messages : []);
-    router.push(`/app/ai/c/${sessionId}`);
+    router.push(`/app/si/c/${sessionId}`);
   };
 
   const handleCreateNewChat = () => {
@@ -364,7 +364,7 @@ export default function AiChatView({ initialSessionId }: { initialSessionId?: st
     setActiveSessionId(null);
     setMessages([]);
     setInputPrompt('');
-    router.push('/app/ai');
+    router.push('/app/si');
     setTimeout(() => textareaRef.current?.focus(), 50);
   };
 
@@ -423,7 +423,7 @@ export default function AiChatView({ initialSessionId }: { initialSessionId?: st
         return;
       }
 
-      const audio = new Audio(`/api/ai/tts?text=${encodeURIComponent(cleanText)}`);
+      const audio = new Audio(`/api/si/tts?text=${encodeURIComponent(cleanText)}`);
       audioRef.current = audio;
 
       audio.onended = () => {
@@ -556,7 +556,7 @@ export default function AiChatView({ initialSessionId }: { initialSessionId?: st
     activeSessionIdRef.current = currentSessionId;
     setActiveSessionId(currentSessionId);
     if (typeof window !== 'undefined') {
-      window.history.pushState(null, '', `/app/ai/c/${currentSessionId}`);
+      window.history.pushState(null, '', `/app/si/c/${currentSessionId}`);
     }
     persistSessionMessages(currentSessionId, newMessages, textToSend);
 
@@ -598,7 +598,7 @@ export default function AiChatView({ initialSessionId }: { initialSessionId?: st
         content: m.text,
       }));
 
-      const res = await fetch('/api/ai/chat', {
+      const res = await fetch('/api/si/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

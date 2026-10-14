@@ -186,7 +186,7 @@ const AiDiagnosticsHub: React.FC = () => {
     if (!selectedStudentId) return;
     setIsLoading(true);
     try {
-      const res = await api.get(`/students/${selectedStudentId}/ai-prediction`);
+      const res = await api.get(`/students/${selectedStudentId}/si-prediction`);
       setPrediction(res.data.data);
     } catch (e) {
       console.error(e);

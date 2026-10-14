@@ -66,7 +66,7 @@ function BankQuizCreateContent() {
     const difficulty = template ? template.difficulty : 'Thông hiểu';
 
     try {
-      const res = await fetch('/api/ai/generate-exam', {
+      const res = await fetch('/api/si/generate-exam', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -161,7 +161,7 @@ function BankQuizCreateContent() {
             menuTitle="Phương thức tạo đề"
             items={[
               { label: 'Tải lên Word/PDF', href: `/app/documents/create${targetQuery}` },
-              { label: 'Tạo đề bằng SI', href: `/app/documents/create/ai${targetQuery}` },
+              { label: 'Tạo đề bằng SI', href: `/app/documents/create/si${targetQuery}` },
               { label: 'Nhận diện ảnh (OCR)', href: `/app/documents/create/ocr${targetQuery}` },
               { label: 'Ngân hàng câu hỏi', href: `/app/documents/create/bank${targetQuery}` },
               { label: 'Nhập thủ công', href: `/app/documents/create/manual${targetQuery}` },

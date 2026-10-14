@@ -171,8 +171,12 @@ const router = createBrowserRouter([
         element: <RoleRoute roles={['admin']}><ParentManagementPage /></RoleRoute>,
       },
       {
-        path: 'ai-advisor',
+        path: 'si-advisor',
         element: <AiAdvisorPage />,
+      },
+      {
+        path: 'ai-advisor',
+        element: <Navigate to="/si-advisor" replace />,
       },
     ],
   },

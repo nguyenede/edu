@@ -223,7 +223,7 @@ function DocumentCreateContent() {
       const aiController = new AbortController();
       const aiTimeoutId = setTimeout(() => aiController.abort(), 20000);
 
-      const res = await fetch('/api/ai/generate-exam', {
+      const res = await fetch('/api/si/generate-exam', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         signal: aiController.signal,
@@ -233,7 +233,7 @@ function DocumentCreateContent() {
           imageBase64: extracted.imageBase64 || null,
           fileName: file.name,
           numQuestions: 15,
-          model: 'gemini-2.5-flash',
+          model: 'gemini-3.5-flash',
         }),
       }).finally(() => clearTimeout(aiTimeoutId));
 
@@ -693,7 +693,7 @@ function DocumentCreateContent() {
               {/* DÒNG 2: TẠO ĐỀ THI BẰNG AI */}
               <button
                 type="button"
-                onClick={() => router.push('/app/documents/create/ai' + targetQuery)}
+                onClick={() => router.push('/app/documents/create/si' + targetQuery)}
                 className="w-full p-4 bg-white dark:bg-slate-900 hover:bg-amber-50/50 dark:hover:bg-slate-800/80 border border-slate-200 dark:border-slate-800 rounded-2xl transition-all text-left flex items-center justify-between group shadow-xs cursor-pointer"
               >
                 <div className="flex items-center gap-3.5">

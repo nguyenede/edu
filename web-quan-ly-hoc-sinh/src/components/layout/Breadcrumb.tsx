@@ -17,6 +17,7 @@ const routeLabels: Record<string, string> = {
   audit: 'Nhật ký',
   profile: 'Hồ sơ',
   settings: 'Cài đặt',
+  'si-advisor': 'SI Advisor',
   'ai-advisor': 'SI Advisor',
 };
 
@@ -31,7 +32,7 @@ const navigationRoutes = [
   { path: '/attendance', label: 'Chuyên cần' },
   { path: '/payments', label: 'Học phí' },
   { path: '/reports', label: 'Báo cáo' },
-  { path: '/ai-advisor', label: 'SI Advisor' },
+  { path: '/si-advisor', label: 'SI Advisor' },
   { path: '/settings', label: 'Cài đặt' },
 ];
 

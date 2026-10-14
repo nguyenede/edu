@@ -238,7 +238,7 @@ export const FeatureBentoGrid: React.FC = () => {
           <div className="pt-6">
             <button
               type="button"
-              onClick={() => router.push('/ai')}
+              onClick={() => router.push('/si')}
               className="inline-flex items-center gap-1 text-xs font-bold text-purple-600 dark:text-purple-400 hover:underline cursor-pointer"
             >
               Trò chuyện cùng SI Kiyo <ArrowUpRight size={14} />

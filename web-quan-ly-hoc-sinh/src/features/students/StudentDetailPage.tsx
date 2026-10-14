@@ -248,7 +248,7 @@ const StudentDetailPage: React.FC = () => {
   const fetchAiPrediction = async () => {
     setIsLoadingAi(true);
     try {
-      const res = await api.get(`/students/${id}/ai-prediction`);
+      const res = await api.get(`/students/${id}/si-prediction`);
       setAiPrediction(res.data.data);
     } catch (e) {
       console.error('Error fetching AI prediction:', e);

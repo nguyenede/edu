@@ -3,7 +3,7 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { AiChatService } from './ai-chat.service';
 
 @UseGuards(JwtAuthGuard)
-@Controller('ai-chat')
+@Controller(['si-chat', 'ai-chat'])
 export class AiChatController {
   constructor(private aiChatService: AiChatService) {}
 
