@@ -49,6 +49,7 @@ import {
   gradeAssignmentSubmission,
   deleteClassAssignment,
 } from '@/lib/classesApi';
+import { safeLocalStorageGet } from '@/lib/safeStorage';
 
 // Error Boundary for Math/KaTeX rendering
 class MathErrorBoundary extends Component<{ fallback: ReactNode; children: ReactNode }, { hasError: boolean }> {
@@ -227,6 +228,7 @@ export default function AssignmentDetailPage() {
   const [qrCodeUrl, setQrCodeUrl] = useState('');
   const [copiedLink, setCopiedLink] = useState(false);
   const [copiedPin, setCopiedPin] = useState(false);
+  const [showInlineFallback, setShowInlineFallback] = useState(false);
 
   const isTeacher = useMemo(() => {
     if (!user) return true;
@@ -235,12 +237,25 @@ export default function AssignmentDetailPage() {
   }, [user]);
 
   const displayPin = useMemo(() => {
-    return (
-      assignment?.pin ||
-      assignment?.pinCode ||
-      (assignment?.id ? String(assignment.id).replace(/\D/g, '').slice(-6) : '') ||
-      '123456'
-    );
+    if (assignment?.pin && String(assignment.pin).trim()) return String(assignment.pin).trim();
+    if (assignment?.pinCode && String(assignment.pinCode).trim()) return String(assignment.pinCode).trim();
+    try {
+      const rawHw = safeLocalStorageGet('app_blooket_homeworks');
+      if (rawHw) {
+        const hwList = JSON.parse(rawHw);
+        if (Array.isArray(hwList)) {
+          const found = hwList.find((h: any) => h.id === assignment?.id || h.title === assignment?.title || h.pin === assignment?.id);
+          if (found?.pin) return String(found.pin).trim();
+        }
+      }
+    } catch (_) {}
+    if (assignment?.description && typeof assignment.description === 'string') {
+      const match = assignment.description.match(/"pin":\s*"(\d+)"/);
+      if (match && match[1]) return match[1];
+    }
+    const numericPart = assignment?.id ? String(assignment.id).replace(/\D/g, '').slice(-6) : '';
+    if (numericPart && numericPart.length === 6) return numericPart;
+    return assignment?.id || '123456';
   }, [assignment]);
 
   const playUrl = useMemo(() => {
@@ -337,9 +352,9 @@ export default function AssignmentDetailPage() {
     a.click();
   };
 
-  // Student Anti-Cheating real-time listener on /assignments/[id]
+  // Student Anti-Cheating real-time listener on /assignments/[id] (Chỉ kích hoạt khi chọn làm bài trực tiếp trên trang này)
   useEffect(() => {
-    if (isTeacher || mySubmission || !assignment?.antiCheat) return;
+    if (isTeacher || mySubmission || !assignment?.antiCheat || !showInlineFallback) return;
 
     const maxAllowed = assignment.antiCheatConfig?.maxViolations || 3;
 
@@ -411,7 +426,7 @@ export default function AssignmentDetailPage() {
       document.removeEventListener('cut', handleCopy);
       document.removeEventListener('contextmenu', handleContextMenu);
     };
-  }, [isTeacher, mySubmission, assignment?.antiCheat]);
+  }, [isTeacher, mySubmission, assignment?.antiCheat, showInlineFallback]);
 
   const handleStudentSubmit = async (overrideMeta?: any) => {
     setSubmitting(true);
@@ -728,11 +743,23 @@ export default function AssignmentDetailPage() {
                         Bạn đã hoàn thành bài tập này
                       </span>
                     </div>
-                    <Badge variant={mySubmission.status === 'GRADED' ? 'success' : 'warning'}>
-                      {mySubmission.status === 'GRADED'
-                        ? `Điểm: ${mySubmission.score} / ${assignment.maxScore}`
-                        : 'Đang chờ giáo viên chấm'}
-                    </Badge>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        onClick={() => window.open(playUrl, '_blank')}
+                        className="gap-1.5 text-xs text-blue-600 cursor-pointer"
+                      >
+                        <Play size={13} className="fill-current" />
+                        <span>Xem trong phòng thi (Tab mới)</span>
+                        <ExternalLink size={12} className="opacity-80" />
+                      </Button>
+                      <Badge variant={mySubmission.status === 'GRADED' ? 'success' : 'warning'}>
+                        {mySubmission.status === 'GRADED'
+                          ? `Điểm: ${mySubmission.score} / ${assignment.maxScore}`
+                          : 'Đang chờ giáo viên chấm'}
+                      </Badge>
+                    </div>
                   </div>
 
                   {mySubmission.feedback && (
@@ -770,13 +797,104 @@ export default function AssignmentDetailPage() {
                     </div>
                   </div>
                 </div>
+              ) : !showInlineFallback ? (
+                /* Primary Exam Entry: Open in dedicated clean player tab */
+                <div className="p-8 sm:p-10 bg-white dark:bg-[#1f2023] border border-slate-200/80 dark:border-slate-800 rounded-3xl text-center space-y-6 shadow-xs">
+                  <div className="w-16 h-16 rounded-2xl bg-blue-50 dark:bg-blue-950/60 text-google-blue dark:text-blue-400 flex items-center justify-center mx-auto shadow-xs">
+                    <Play size={32} className="fill-current ml-1" />
+                  </div>
+
+                  <div className="max-w-md mx-auto space-y-2">
+                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 text-xs font-semibold">
+                      <BookOpen size={13} />
+                      <span>Phòng thi trực tuyến chuyên dụng</span>
+                    </div>
+                    <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100">
+                      {assignment.title}
+                    </h3>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                      Bài thi được thực hiện trên phòng thi toàn màn hình chuyên biệt để đảm bảo không bị gián đoạn và áp dụng quy chế làm bài công bằng.
+                    </p>
+                  </div>
+
+                  {/* Badges / Exam Metadata */}
+                  <div className="flex flex-wrap items-center justify-center gap-2.5 text-xs">
+                    <div className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 font-medium flex items-center gap-1.5">
+                      <Clock size={14} className="text-blue-500" />
+                      <span>{assignment.durationMinutes ? `${assignment.durationMinutes} phút` : 'Không giới hạn giờ'}</span>
+                    </div>
+                    <div className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 font-medium flex items-center gap-1.5">
+                      <FileCheck size={14} className="text-emerald-500" />
+                      <span>{normalizedQuestions.length > 0 ? `${normalizedQuestions.length} câu trắc nghiệm` : 'Tự luận'}</span>
+                    </div>
+                    <div className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 font-medium flex items-center gap-1.5">
+                      <Award size={14} className="text-amber-500" />
+                      <span>Thang điểm: {assignment.maxScore || 10}</span>
+                    </div>
+                    {assignment.antiCheat && (
+                      <div className="px-3 py-1.5 rounded-xl bg-purple-50 dark:bg-purple-950/50 text-purple-700 dark:text-purple-300 font-medium flex items-center gap-1.5 border border-purple-200/50 dark:border-purple-800/50">
+                        <ShieldCheck size={14} className="text-purple-500" />
+                        <span>Giám sát chống gian lận</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Primary CTA Button: Launch Exam in New Tab */}
+                  <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
+                    <Button
+                      size="lg"
+                      onClick={() => window.open(playUrl, '_blank')}
+                      className="w-full sm:w-auto px-8 py-3.5 text-sm font-bold bg-google-blue hover:bg-[#1557b0] active:scale-95 text-white rounded-xl shadow-md gap-2.5 transition-all cursor-pointer"
+                    >
+                      <Play size={18} className="fill-current" />
+                      <span>VÀO PHÒNG THI LÀM BÀI (MỞ TAB MỚI)</span>
+                      <ExternalLink size={16} className="opacity-80" />
+                    </Button>
+                  </div>
+
+                  <div className="pt-2 flex flex-col items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => fetchData()}
+                      className="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer"
+                    >
+                      <RotateCcw size={13} />
+                      <span>Đã nộp bài ở tab kia? Nhấn để tải lại kết quả</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowInlineFallback(true)}
+                      className="text-[11px] text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 underline cursor-pointer mt-1"
+                    >
+                      Làm bài trực tiếp tại trang này (chế độ dự phòng)
+                    </button>
+                  </div>
+                </div>
               ) : (
-                /* Student Submission Form */
+                /* Student Submission Form (Fallback) */
                 <div className="space-y-5">
+                  <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
+                    <button
+                      type="button"
+                      onClick={() => setShowInlineFallback(false)}
+                      className="text-xs text-blue-600 hover:underline flex items-center gap-1 cursor-pointer font-medium"
+                    >
+                      <ArrowLeft size={13} /> Quay lại chế độ phòng thi mở tab mới
+                    </button>
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      onClick={() => window.open(playUrl, '_blank')}
+                      className="gap-1.5 text-xs text-blue-600"
+                    >
+                      <Play size={13} /> Mở phòng thi (Tab mới)
+                    </Button>
+                  </div>
+
                   <div className="flex items-center justify-between">
                     <div className="space-y-0.5">
                       <h3 className="font-bold text-sm text-slate-950 dark:text-slate-100">
-                        Làm bài tập
+                        Làm bài tập (Dự phòng)
                       </h3>
                       {assignment.antiCheat && (
                         <div className="flex items-center gap-1.5 text-xs text-purple-600 dark:text-purple-400 font-semibold">
@@ -785,16 +903,6 @@ export default function AssignmentDetailPage() {
                         </div>
                       )}
                     </div>
-                    {assignment.pin && (
-                      <Button
-                        size="sm"
-                        variant="secondary"
-                        onClick={() => window.open(`/play?pin=${assignment.pin}`, '_blank')}
-                        className="gap-1.5 text-xs text-blue-600"
-                      >
-                        <Play size={13} /> Làm qua Blooket Game
-                      </Button>
-                    )}
                   </div>
 
                   {antiCheatWarning && (

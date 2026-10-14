@@ -80,6 +80,15 @@ export const BoatRaceGame: React.FC<BoatRaceGameProps> = ({
     return () => clearInterval(timer);
   }, [timerSeconds, isTimerPaused, isAnswerRevealed, winnerTeamId]);
 
+  // Listen to fullscreen changes (e.g. user pressed Esc or F11)
+  useEffect(() => {
+    const handleFsChange = () => {
+      setIsFullscreen(Boolean(document.fullscreenElement));
+    };
+    document.addEventListener('fullscreenchange', handleFsChange);
+    return () => document.removeEventListener('fullscreenchange', handleFsChange);
+  }, []);
+
   const toggleSound = () => {
     gameAudio.enabled = !soundEnabled;
     setSoundEnabled(!soundEnabled);
@@ -224,7 +233,7 @@ export const BoatRaceGame: React.FC<BoatRaceGameProps> = ({
   ];
 
   return (
-    <div className="w-full bg-[#f8fafc] dark:bg-[#131416] rounded-2xl border border-slate-200/80 dark:border-white/10 overflow-hidden flex flex-col transition-all">
+    <div className="w-full min-h-screen flex-1 bg-[#f8fafc] dark:bg-[#131416] flex flex-col transition-all">
       {/* 1. TEACHER CLASSROOM HEADER */}
       <ClassroomTeacherHeader
         title={examTitle}
@@ -252,18 +261,18 @@ export const BoatRaceGame: React.FC<BoatRaceGameProps> = ({
         onOpenSettings={onOpenSettings}
       />
 
-      {/* 2. WIDESCREEN 16:9 GRID LAYOUT */}
-      <div className="p-3 sm:p-5 grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-5 items-stretch">
-        {/* LEFT COLUMN: MINIMALIST BOAT RACE STAGE (lg:col-span-5) */}
-        <div className="lg:col-span-5 flex flex-col justify-between space-y-3">
-          <div className="bg-white dark:bg-[#1a1b1e] rounded-2xl p-4 sm:p-5 border border-slate-200/80 dark:border-white/10 shadow-xs flex flex-col justify-between space-y-4 flex-1">
+      {/* 2. WIDESCREEN FULL VIEWPORT 16:9 GRID LAYOUT */}
+      <div className="p-3 sm:p-5 lg:p-6 grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 items-stretch flex-1">
+        {/* LEFT COLUMN: BOAT RACE STAGE (lg:col-span-5) */}
+        <div className="lg:col-span-5 flex flex-col justify-between space-y-4">
+          <div className="bg-white dark:bg-[#1a1b1e] rounded-2xl p-5 sm:p-6 border border-slate-200/80 dark:border-white/10 shadow-xs flex flex-col justify-between space-y-6 flex-1">
             {/* Header info */}
-            <div className="flex items-center justify-between text-xs font-bold pb-2 border-b border-slate-100 dark:border-white/10">
+            <div className="flex items-center justify-between text-xs sm:text-sm font-bold pb-3 border-b border-slate-100 dark:border-white/10">
               <span className="flex items-center gap-1.5 text-blue-600 dark:text-blue-400">
-                <Flag size={13} />
+                <Flag size={16} />
                 <span>Vạch xuất phát</span>
               </span>
-              <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+              <span className="text-[11px] sm:text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider bg-slate-100 dark:bg-white/5 px-2.5 py-1 rounded-md">
                 Mỗi câu đúng +{stepPerCorrect}%
               </span>
               <span className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400">
@@ -272,65 +281,97 @@ export const BoatRaceGame: React.FC<BoatRaceGameProps> = ({
             </div>
 
             {/* Lane 1: Thuyền Xanh */}
-            <div className="space-y-1.5">
-              <div className="flex items-center justify-between text-xs font-bold text-slate-700 dark:text-zinc-200">
-                <span className="flex items-center gap-1.5 text-blue-600 dark:text-blue-400">
-                  <span className="w-2.5 h-2.5 rounded-full bg-blue-600" />
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-sm sm:text-base font-extrabold text-slate-700 dark:text-zinc-200">
+                <span className="flex items-center gap-2 text-blue-600 dark:text-blue-400">
+                  <span className="w-3.5 h-3.5 rounded-full bg-blue-600 shadow-sm" />
                   {team1Name}
                 </span>
-                <span className="font-mono text-xs font-black">{team1Progress}%</span>
+                <span className="font-mono text-base sm:text-xl font-black text-blue-600 dark:text-blue-400">
+                  {team1Progress}%
+                </span>
               </div>
-              <div className="relative w-full h-10 bg-slate-100 dark:bg-white/5 rounded-xl overflow-hidden border border-slate-200/70 dark:border-white/10 flex items-center">
+              <div className="relative w-full h-16 sm:h-20 lg:h-24 bg-gradient-to-r from-blue-50/80 via-sky-50 to-indigo-50/90 dark:from-blue-950/40 dark:via-sky-950/30 dark:to-indigo-950/40 rounded-2xl overflow-hidden border border-blue-200/60 dark:border-blue-900/40 flex items-center shadow-inner">
+                {/* Water wave texture / ripple progress */}
                 <div
-                  className="h-full bg-blue-100 dark:bg-blue-950/60 transition-all duration-500 ease-out"
+                  className="h-full bg-gradient-to-r from-blue-400/20 via-sky-400/30 to-blue-500/40 dark:from-blue-600/30 dark:to-cyan-500/40 transition-all duration-700 ease-out"
                   style={{ width: `${team1Progress}%` }}
                 />
+                {/* Water ripples */}
+                <div className="absolute inset-0 opacity-15 pointer-events-none flex items-center justify-around text-lg select-none">
+                  <span>〰️</span>
+                  <span>〰️</span>
+                  <span>〰️</span>
+                  <span>〰️</span>
+                </div>
                 {/* Boat icon */}
                 <div
-                  className="absolute top-1/2 -translate-y-1/2 transition-all duration-500 ease-out flex items-center z-10"
-                  style={{ left: `calc(${team1Progress * 0.85}% + 4px)` }}
+                  className="absolute top-1/2 -translate-y-1/2 transition-all duration-700 ease-out flex items-center z-10 select-none"
+                  style={{ left: `calc(${team1Progress * 0.82}% + 6px)` }}
                 >
-                  <span className="text-2xl filter drop-shadow-xs">🛶</span>
+                  <span className="text-3xl sm:text-4xl lg:text-5xl filter drop-shadow-md">🛶</span>
                 </div>
-                <div className="absolute right-0 top-0 bottom-0 w-2 bg-amber-400" />
+                {/* Checkered Finish Gate */}
+                <div className="absolute right-0 top-0 bottom-0 w-4 sm:w-5 bg-[repeating-linear-gradient(45deg,#f59e0b,#f59e0b_6px,#fbbf24_6px,#fbbf24_12px)] border-l-2 border-amber-500" />
               </div>
             </div>
 
             {/* Lane 2: Thuyền Đỏ */}
-            <div className="space-y-1.5">
-              <div className="flex items-center justify-between text-xs font-bold text-slate-700 dark:text-zinc-200">
-                <span className="flex items-center gap-1.5 text-rose-600 dark:text-rose-400">
-                  <span className="w-2.5 h-2.5 rounded-full bg-rose-600" />
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-sm sm:text-base font-extrabold text-slate-700 dark:text-zinc-200">
+                <span className="flex items-center gap-2 text-rose-600 dark:text-rose-400">
+                  <span className="w-3.5 h-3.5 rounded-full bg-rose-600 shadow-sm" />
                   {team2Name}
                 </span>
-                <span className="font-mono text-xs font-black">{team2Progress}%</span>
+                <span className="font-mono text-base sm:text-xl font-black text-rose-600 dark:text-rose-400">
+                  {team2Progress}%
+                </span>
               </div>
-              <div className="relative w-full h-10 bg-slate-100 dark:bg-white/5 rounded-xl overflow-hidden border border-slate-200/70 dark:border-white/10 flex items-center">
+              <div className="relative w-full h-16 sm:h-20 lg:h-24 bg-gradient-to-r from-rose-50/80 via-pink-50 to-orange-50/90 dark:from-rose-950/40 dark:via-pink-950/30 dark:to-orange-950/40 rounded-2xl overflow-hidden border border-rose-200/60 dark:border-rose-900/40 flex items-center shadow-inner">
+                {/* Water wave texture / ripple progress */}
                 <div
-                  className="h-full bg-rose-100 dark:bg-rose-950/60 transition-all duration-500 ease-out"
+                  className="h-full bg-gradient-to-r from-rose-400/20 via-pink-400/30 to-rose-500/40 dark:from-rose-600/30 dark:to-pink-500/40 transition-all duration-700 ease-out"
                   style={{ width: `${team2Progress}%` }}
                 />
+                {/* Water ripples */}
+                <div className="absolute inset-0 opacity-15 pointer-events-none flex items-center justify-around text-lg select-none">
+                  <span>〰️</span>
+                  <span>〰️</span>
+                  <span>〰️</span>
+                  <span>〰️</span>
+                </div>
                 {/* Boat icon */}
                 <div
-                  className="absolute top-1/2 -translate-y-1/2 transition-all duration-500 ease-out flex items-center z-10"
-                  style={{ left: `calc(${team2Progress * 0.85}% + 4px)` }}
+                  className="absolute top-1/2 -translate-y-1/2 transition-all duration-700 ease-out flex items-center z-10 select-none"
+                  style={{ left: `calc(${team2Progress * 0.82}% + 6px)` }}
                 >
-                  <span className="text-2xl filter drop-shadow-xs">⛵</span>
+                  <span className="text-3xl sm:text-4xl lg:text-5xl filter drop-shadow-md">⛵</span>
                 </div>
-                <div className="absolute right-0 top-0 bottom-0 w-2 bg-amber-400" />
+                {/* Checkered Finish Gate */}
+                <div className="absolute right-0 top-0 bottom-0 w-4 sm:w-5 bg-[repeating-linear-gradient(45deg,#f59e0b,#f59e0b_6px,#fbbf24_6px,#fbbf24_12px)] border-l-2 border-amber-500" />
               </div>
             </div>
 
             {/* Bottom Status Tips */}
-            <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
-              <span>Đang giải: <b>Câu {currentIndex + 1}</b></span>
-              <span>Dẫn đầu: <b>{team1Progress > team2Progress ? team1Name : team2Progress > team1Progress ? team2Name : 'Hòa nhau'}</b></span>
+            <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5 flex items-center justify-between text-xs sm:text-sm text-slate-600 dark:text-slate-300">
+              <span className="flex items-center gap-1.5">
+                <span>Đang giải:</span>
+                <b className="px-2.5 py-0.5 rounded-md bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 font-bold">
+                  Câu {currentIndex + 1}
+                </b>
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span>Dẫn đầu:</span>
+                <b className="font-extrabold text-slate-900 dark:text-white">
+                  {team1Progress > team2Progress ? team1Name : team2Progress > team1Progress ? team2Name : 'Hòa nhau'}
+                </b>
+              </span>
             </div>
           </div>
         </div>
 
         {/* RIGHT COLUMN: CLASSROOM QUESTION & TEACHING BOARD (lg:col-span-7) */}
-        <div className="lg:col-span-7 flex flex-col">
+        <div className="lg:col-span-7 flex flex-col h-full">
           {currentQ ? (
             <ClassroomQuestionCard
               question={currentQ}

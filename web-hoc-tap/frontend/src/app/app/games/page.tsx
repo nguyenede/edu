@@ -480,45 +480,109 @@ export default function GamesHubPage() {
     return list;
   }, [playingLesson]);
 
+  // Khi đang chơi trò chơi (giảng dạy trên lớp):
+  // Hiển thị TOÀN MÀN HÌNH (Full Viewport / Không bị thu nhỏ bởi Sidebar & Navbar)
+  if (playingLesson) {
+    return (
+      <div className="fixed inset-0 z-50 w-screen h-screen bg-[#f8fafc] dark:bg-[#131416] text-slate-900 dark:text-slate-100 flex flex-col overflow-y-auto select-none">
+        {playingLesson.gameType === 'tug_of_war' && (
+          <TugOfWarGame
+            examTitle={playingLesson.title}
+            questions={activeQuestions}
+            onBack={() => setPlayingLesson(null)}
+            config={playingLesson.config}
+            onOpenSettings={() => handleOpenEditModal(playingLesson)}
+          />
+        )}
+        {playingLesson.gameType === 'lucky_wheel' && (
+          <LuckyWheelGame
+            examTitle={playingLesson.title}
+            questions={activeQuestions}
+            onBack={() => setPlayingLesson(null)}
+            config={playingLesson.config}
+            onOpenSettings={() => handleOpenEditModal(playingLesson)}
+          />
+        )}
+        {playingLesson.gameType === 'boat_race' && (
+          <BoatRaceGame
+            examTitle={playingLesson.title}
+            questions={activeQuestions}
+            onBack={() => setPlayingLesson(null)}
+            config={playingLesson.config}
+            onOpenSettings={() => handleOpenEditModal(playingLesson)}
+          />
+        )}
+        {playingLesson.gameType === 'zombie' && (
+          <ZombieDefenseGame
+            examTitle={playingLesson.title}
+            questions={activeQuestions}
+            onBack={() => setPlayingLesson(null)}
+            config={playingLesson.config}
+            onOpenSettings={() => handleOpenEditModal(playingLesson)}
+          />
+        )}
+        {playingLesson.gameType === 'gold_miner' && (
+          <GoldMinerGame
+            examTitle={playingLesson.title}
+            questions={activeQuestions}
+            onBack={() => setPlayingLesson(null)}
+            config={playingLesson.config}
+            onOpenSettings={() => handleOpenEditModal(playingLesson)}
+          />
+        )}
+        {playingLesson.gameType === 'fruit_slash' && (
+          <FruitSlashGame
+            examTitle={playingLesson.title}
+            questions={activeQuestions}
+            onBack={() => setPlayingLesson(null)}
+            config={playingLesson.config}
+            onOpenSettings={() => handleOpenEditModal(playingLesson)}
+          />
+        )}
+        {playingLesson.gameType === 'whack_a_mole' && (
+          <WhackAMoleGame
+            examTitle={playingLesson.title}
+            questions={activeQuestions}
+            onBack={() => setPlayingLesson(null)}
+            config={playingLesson.config}
+            onOpenSettings={() => handleOpenEditModal(playingLesson)}
+          />
+        )}
+        {playingLesson.gameType === 'bubble_pop' && (
+          <BubblePopGame
+            examTitle={playingLesson.title}
+            questions={activeQuestions}
+            onBack={() => setPlayingLesson(null)}
+            config={playingLesson.config}
+            onOpenSettings={() => handleOpenEditModal(playingLesson)}
+          />
+        )}
+
+        {/* Modal chỉnh sửa cấu hình nếu mở từ trong game */}
+        <GameConfigModal
+          isOpen={isConfigModalOpen}
+          onClose={() => setIsConfigModalOpen(false)}
+          gameTitle={activeCategory ? getCategoryMeta(activeCategory).title : 'Trò chơi'}
+          gameId={activeCategory || 'tug_of_war'}
+          config={gameConfig}
+          onChangeConfig={setGameConfig}
+          questions={customQuestions}
+          onChangeQuestions={setCustomQuestions}
+          availableExams={exams}
+          selectedExamId={selectedExamId}
+          onSelectExam={handleSelectExamInModal}
+          onSaveGame={handleSaveLesson}
+          initialStep={editingLessonId ? 3 : 1}
+          onStartGame={() => setIsConfigModalOpen(false)}
+        />
+      </div>
+    );
+  }
+
   return (
     <AppShell
       title={
-        playingLesson ? (
-          <div className="flex items-center gap-1 text-2xl tracking-tight text-slate-900 dark:text-slate-100 flex-wrap -ml-2">
-            <button
-              type="button"
-              onClick={() => {
-                setPlayingLesson(null);
-                setActiveCategory(null);
-              }}
-              className="transition-colors cursor-pointer px-2 py-0.5 rounded-xl hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-900 dark:text-white font-semibold"
-            >
-              Trò chơi lớp học
-            </button>
-            <BreadcrumbChevron
-              menuTitle="Danh sách trò chơi"
-              items={GAME_LIST.map((g) => ({
-                label: g.title,
-                icon: getGameCustomIcon(g.id, 18),
-                onClick: () => {
-                  setPlayingLesson(null);
-                  setActiveCategory(g.id);
-                },
-              }))}
-            />
-            <button
-              type="button"
-              onClick={() => setPlayingLesson(null)}
-              className="transition-colors cursor-pointer px-2 py-0.5 rounded-xl hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-900 dark:text-white font-normal"
-            >
-              {getCategoryMeta(activeCategory).title}
-            </button>
-            <BreadcrumbChevron fallbackToStaticChevron={true} />
-            <span className="px-2 py-0.5 rounded-xl text-slate-900 dark:text-white font-normal truncate max-w-xs sm:max-w-md">
-              {playingLesson.title}
-            </span>
-          </div>
-        ) : activeCategory ? (
+        activeCategory ? (
           <div className="flex items-center gap-1 text-2xl tracking-tight text-slate-900 dark:text-slate-100 flex-wrap -ml-2">
             <button
               type="button"
@@ -548,7 +612,7 @@ export default function GamesHubPage() {
         )
       }
       action={
-        activeCategory && !playingLesson ? (
+        activeCategory ? (
           <Button
             size="sm"
             onClick={handleOpenCreateModal}
@@ -561,83 +625,7 @@ export default function GamesHubPage() {
       }
     >
       <div className="space-y-4">
-        {/* LEVEL 3: ACTIVE PLAYING GAME */}
-        {playingLesson ? (
-          <div>
-            {playingLesson.gameType === 'tug_of_war' && (
-              <TugOfWarGame
-                examTitle={playingLesson.title}
-                questions={activeQuestions}
-                onBack={() => setPlayingLesson(null)}
-                config={playingLesson.config}
-                onOpenSettings={() => handleOpenEditModal(playingLesson)}
-              />
-            )}
-            {playingLesson.gameType === 'lucky_wheel' && (
-              <LuckyWheelGame
-                examTitle={playingLesson.title}
-                questions={activeQuestions}
-                onBack={() => setPlayingLesson(null)}
-                config={playingLesson.config}
-                onOpenSettings={() => handleOpenEditModal(playingLesson)}
-              />
-            )}
-            {playingLesson.gameType === 'boat_race' && (
-              <BoatRaceGame
-                examTitle={playingLesson.title}
-                questions={activeQuestions}
-                onBack={() => setPlayingLesson(null)}
-                config={playingLesson.config}
-                onOpenSettings={() => handleOpenEditModal(playingLesson)}
-              />
-            )}
-            {playingLesson.gameType === 'zombie' && (
-              <ZombieDefenseGame
-                examTitle={playingLesson.title}
-                questions={activeQuestions}
-                onBack={() => setPlayingLesson(null)}
-                config={playingLesson.config}
-                onOpenSettings={() => handleOpenEditModal(playingLesson)}
-              />
-            )}
-            {playingLesson.gameType === 'gold_miner' && (
-              <GoldMinerGame
-                examTitle={playingLesson.title}
-                questions={activeQuestions}
-                onBack={() => setPlayingLesson(null)}
-                config={playingLesson.config}
-                onOpenSettings={() => handleOpenEditModal(playingLesson)}
-              />
-            )}
-            {playingLesson.gameType === 'fruit_slash' && (
-              <FruitSlashGame
-                examTitle={playingLesson.title}
-                questions={activeQuestions}
-                onBack={() => setPlayingLesson(null)}
-                config={playingLesson.config}
-                onOpenSettings={() => handleOpenEditModal(playingLesson)}
-              />
-            )}
-            {playingLesson.gameType === 'whack_a_mole' && (
-              <WhackAMoleGame
-                examTitle={playingLesson.title}
-                questions={activeQuestions}
-                onBack={() => setPlayingLesson(null)}
-                config={playingLesson.config}
-                onOpenSettings={() => handleOpenEditModal(playingLesson)}
-              />
-            )}
-            {playingLesson.gameType === 'bubble_pop' && (
-              <BubblePopGame
-                examTitle={playingLesson.title}
-                questions={activeQuestions}
-                onBack={() => setPlayingLesson(null)}
-                config={playingLesson.config}
-                onOpenSettings={() => handleOpenEditModal(playingLesson)}
-              />
-            )}
-          </div>
-        ) : activeCategory ? (
+        {activeCategory ? (
           /* LEVEL 2: "[TÊN GAME] CỦA TÔI ({N})" WORKSPACE VIEW (Đồng bộ chuẩn giao diện KiyoEdu) */
           <div className="space-y-4">
             {/* Header info bar */}

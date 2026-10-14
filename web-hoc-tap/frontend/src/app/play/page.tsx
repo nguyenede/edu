@@ -124,7 +124,7 @@ function BlooketPlayContent() {
 
   // Auto-load PIN if provided in query
   useEffect(() => {
-    if (initialPin && initialPin.trim().length === 6) {
+    if (initialPin && initialPin.trim().length > 0) {
       handleLookupPin(initialPin.trim());
     }
   }, [initialPin]);

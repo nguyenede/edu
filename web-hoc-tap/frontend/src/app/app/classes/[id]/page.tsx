@@ -27,7 +27,10 @@ import {
   BookOpen,
   Send,
   Search,
+  Play,
+  ExternalLink,
 } from 'lucide-react';
+import { safeLocalStorageGet } from '@/lib/safeStorage';
 import QRCode from 'qrcode';
 import * as XLSX from 'xlsx';
 import { listDocumentFiles } from '@/lib/documentsApi';
@@ -107,7 +110,42 @@ export default function ClassDetailPage() {
   const [documentFiles, setDocumentFiles] = useState<any[]>([]);
   const [linkedDocumentFileId, setLinkedDocumentFileId] = useState('');
 
-  const isTeacher = user?.role === 'TEACHER';
+  const isTeacher = useMemo(() => {
+    if (!user) return false;
+    const r = (user.role || '').toUpperCase();
+    return r === 'TEACHER' || r === 'ADMIN' || r === 'GIAOVIEN';
+  }, [user]);
+
+  const resolveAssignmentPin = (assign: any): string => {
+    if (assign?.pin && String(assign.pin).trim()) {
+      return String(assign.pin).trim();
+    }
+    if (assign?.pinCode && String(assign.pinCode).trim()) {
+      return String(assign.pinCode).trim();
+    }
+    try {
+      const rawHw = safeLocalStorageGet('app_blooket_homeworks');
+      if (rawHw) {
+        const hwList = JSON.parse(rawHw);
+        if (Array.isArray(hwList)) {
+          const found = hwList.find((h: any) => h.id === assign.id || h.title === assign.title || h.pin === assign.id);
+          if (found?.pin) return String(found.pin).trim();
+        }
+      }
+    } catch (_) {}
+    if (assign?.description && typeof assign.description === 'string') {
+      const match = assign.description.match(/"pin":\s*"(\d+)"/);
+      if (match && match[1]) return match[1];
+    }
+    const numericPart = assign?.id ? String(assign.id).replace(/\D/g, '').slice(-6) : '';
+    if (numericPart && numericPart.length === 6) return numericPart;
+    return String(assign.id);
+  };
+
+  const handleOpenExamInNewTab = (assign: any) => {
+    const pin = resolveAssignmentPin(assign);
+    window.open(`/play?pin=${pin}`, '_blank');
+  };
 
   // Tự động chuyển hướng xóa bỏ dấu gạch dưới '_' trên URL nếu đường dẫn hiện tại chứa '_'
   useEffect(() => {
@@ -516,15 +554,26 @@ export default function ClassDetailPage() {
                 {assignments.map((assign) => (
                   <div
                     key={assign.id}
-                    onClick={() => router.push(`/app/assignments/${assign.id}`)}
-                    className="py-3.5 px-2 flex justify-between items-center cursor-pointer select-none hover:bg-slate-50/50 dark:hover:bg-slate-900/30 rounded-lg transition-colors group"
+                    onClick={() => {
+                      if (isTeacher) {
+                        router.push(`/app/assignments/${assign.id}`);
+                      } else {
+                        handleOpenExamInNewTab(assign);
+                      }
+                    }}
+                    className="py-3.5 px-3 flex justify-between items-center cursor-pointer select-none hover:bg-blue-50/50 dark:hover:bg-blue-950/20 rounded-xl transition-all border border-transparent hover:border-blue-100 dark:hover:border-blue-900/40 group"
                   >
                     <div className="space-y-1">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <h4 className="font-bold text-sm text-slate-900 dark:text-slate-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
                           {assign.title}
                         </h4>
                         {assign.quiz && <Badge variant="info">Trắc nghiệm</Badge>}
+                        {assign.antiCheat && (
+                          <span className="text-[10px] font-semibold text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-950/50 px-2 py-0.5 rounded-full border border-purple-200/60 dark:border-purple-800/60">
+                            Chống gian lận
+                          </span>
+                        )}
                       </div>
                       <p className="text-xs text-slate-500 flex items-center gap-1.5">
                         <Calendar size={13} />
@@ -536,24 +585,54 @@ export default function ClassDetailPage() {
                     </div>
 
                     <div className="flex items-center gap-3">
-                      <div className="text-right">
+                      <div className="text-right hidden sm:block">
                         <span className="text-xs font-semibold text-slate-600 dark:text-slate-400 block">
                           Thang điểm: {assign.maxScore}
                         </span>
                       </div>
 
-                      {isTeacher && (
+                      {!isTeacher ? (
                         <button
                           type="button"
                           onClick={(e) => {
                             e.stopPropagation();
-                            setAssignmentToDelete(assign);
+                            handleOpenExamInNewTab(assign);
                           }}
-                          className="p-1.5 rounded text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors cursor-pointer"
-                          title="Xóa bài tập"
+                          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-white bg-google-blue hover:bg-[#1557b0] active:scale-95 rounded-xl shadow-xs transition-all cursor-pointer"
+                          title="Mở phòng thi làm bài trong tab mới"
                         >
-                          <Trash2 size={16} />
+                          <Play size={13} className="fill-current" />
+                          <span>Vào làm bài</span>
+                          <ExternalLink size={12} className="opacity-80" />
                         </button>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleOpenExamInNewTab(assign);
+                            }}
+                            className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-950/40 rounded-lg transition-colors cursor-pointer"
+                            title="Làm thử đề thi trong tab mới"
+                          >
+                            <Play size={12} />
+                            <span>Thi thử</span>
+                            <ExternalLink size={11} className="opacity-70" />
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setAssignmentToDelete(assign);
+                            }}
+                            className="p-1.5 rounded text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors cursor-pointer"
+                            title="Xóa bài tập"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
                       )}
 
                       <ChevronRight size={16} className="text-slate-400 group-hover:translate-x-0.5 transition-transform" />

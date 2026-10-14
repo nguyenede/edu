@@ -270,7 +270,7 @@ export async function getHomeworkByPin(pin: string): Promise<HomeworkItem | null
                   [];
                 found = {
                   id: match.id,
-                  pin: cleanPin,
+                  pin: match.pin || cleanPin,
                   title: match.title,
                   description: (match.description || '').replace(/<!--CONFIG:[\s\S]*?-->/, '').trim(),
                   classId: match.classId,
@@ -596,6 +596,12 @@ export async function submitHomework(
     legacySubs.unshift(legacyItem);
   }
   safeLocalStorageSet(legacyKey, JSON.stringify(legacySubs));
+
+  // Lưu ngay cho phía học sinh (mySubmission)
+  safeLocalStorageSet(`app_my_assignment_sub_${data.homeworkId}`, JSON.stringify(legacyItem));
+  if (hw && hw.id && hw.id !== data.homeworkId) {
+    safeLocalStorageSet(`app_my_assignment_sub_${hw.id}`, JSON.stringify(legacyItem));
+  }
 
   return submission;
 }

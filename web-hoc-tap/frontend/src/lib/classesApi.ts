@@ -940,6 +940,27 @@ export async function fetchMyAssignmentSubmission(token: string | null, assignme
       return JSON.parse(raw);
     } catch (_) {}
   }
+
+  // Fallback: Tìm trong danh sách nộp bài nếu học sinh nộp qua phòng thi /play
+  try {
+    const currentU = getStoredUser();
+    if (currentU) {
+      const subs = await fetchAssignmentSubmissions(token, assignmentId);
+      const mySub = subs.find((s) => {
+        const sId = s.student?.id || s.studentId;
+        const sName = (s.student?.profile?.name || s.student?.name || s.studentName || '').toLowerCase().trim();
+        const uName = (currentU.name || '').toLowerCase().trim();
+        const sEmail = (s.student?.email || s.email || '').toLowerCase().trim();
+        const uEmail = (currentU.email || '').toLowerCase().trim();
+        return (sId && sId === currentU.id) || (sName && sName === uName) || (sEmail && sEmail === uEmail);
+      });
+      if (mySub) {
+        safeLocalStorageSet(storageKey, JSON.stringify(mySub));
+        return mySub;
+      }
+    }
+  } catch (_) {}
+
   return null;
 }
 
