@@ -28,7 +28,7 @@ export default function GlobalError({
               </svg>
             </div>
             <span style={{ fontSize: '18px', fontWeight: '800', color: '#1e293b', letterSpacing: '-0.5px' }}>
-              HocRealtime
+              KiyoEdu
             </span>
           </div>
 

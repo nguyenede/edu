@@ -573,7 +573,7 @@ export default function PlansPage() {
                       Cảm ơn sự ủng hộ của bạn!
                     </h4>
                     <p className="text-xs text-slate-500">
-                      Đội ngũ phát triển HocRealtime chân thành cảm ơn đóng góp của bạn.
+                      Đội ngũ phát triển KiyoEdu chân thành cảm ơn đóng góp của bạn.
                     </p>
                   </div>
 

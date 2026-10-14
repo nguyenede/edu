@@ -949,8 +949,17 @@ Hãy đọc kỹ mô tả trên và tạo CHÍNH XÁC ĐỦ ${targetCount} câu 
     if ((!finalGrade || finalGrade === 'Tự do' || finalGrade === '12' || finalGrade === 'Lớp 12') && resolvedGrade && resolvedGrade !== '12') {
       finalGrade = resolvedGrade.startsWith('Lớp') ? resolvedGrade : `Lớp ${resolvedGrade}`;
     }
-    if (!finalGrade || finalGrade === 'Tự do') {
-      const detectGradeFromContent = detectGradeFromText((parsedData.title || '') + ' ' + (sanitizedQuestions[0]?.content || ''));
+
+    // Kiểm tra chéo với nội dung tiêu đề, mô tả và câu hỏi thực tế
+    const detectGradeFromContent = detectGradeFromText(
+      (parsedData.title || '') + ' ' + combinedSearchText + ' ' + (sanitizedQuestions[0]?.content || '')
+    );
+    if (detectGradeFromContent && detectGradeFromContent !== 'Tự do' && detectGradeFromContent !== '12') {
+      // Nếu bài học thuộc THCS hoặc Tiểu học (Lớp 1-9), tuyệt đối không để AI giữ nhãn Lớp 12
+      if (!resolvedGrade || finalGrade === '12' || finalGrade === 'Lớp 12' || finalGrade === 'Tự do') {
+        finalGrade = `Lớp ${detectGradeFromContent}`;
+      }
+    } else if (!finalGrade || finalGrade === 'Tự do') {
       if (detectGradeFromContent && detectGradeFromContent !== 'Tự do') {
         finalGrade = `Lớp ${detectGradeFromContent}`;
       } else {

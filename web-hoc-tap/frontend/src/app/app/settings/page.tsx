@@ -849,7 +849,7 @@ export default function SettingsPage(props: any) {
                         Thông tin cá nhân
                       </h2>
                       <p className="text-xs text-slate-500 dark:text-slate-400">
-                        Thông tin cơ bản về bạn và tài khoản sử dụng trên hệ thống HocRealtime
+                        Thông tin cơ bản về bạn và tài khoản sử dụng trên hệ thống KiyoEdu
                       </p>
                     </div>
 
@@ -1782,7 +1782,7 @@ export default function SettingsPage(props: any) {
                         Dữ liệu và quyền riêng tư
                       </h2>
                       <p className="text-xs text-slate-500 dark:text-slate-400">
-                        Tùy chọn cho dữ liệu của bạn trên hệ thống HocRealtime
+                        Tùy chọn cho dữ liệu của bạn trên hệ thống KiyoEdu
                       </p>
                     </div>
 
@@ -1855,7 +1855,7 @@ export default function SettingsPage(props: any) {
                         Gói Hội viên Pro
                       </h2>
                       <p className="text-xs text-slate-500 dark:text-slate-400">
-                        Nâng cấp tài khoản để mở khóa toàn bộ sức mạnh của HocRealtime
+                        Nâng cấp tài khoản để mở khóa toàn bộ sức mạnh của KiyoEdu
                       </p>
                     </div>
 
@@ -1866,7 +1866,7 @@ export default function SettingsPage(props: any) {
                             Gói đề xuất
                           </span>
                           <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100">
-                            HocRealtime Pro Unlimted
+                            KiyoEdu Pro Unlimited
                           </h3>
                         </div>
                         <Badge variant="warning">VIP</Badge>

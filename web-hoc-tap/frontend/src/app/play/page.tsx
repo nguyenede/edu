@@ -553,7 +553,7 @@ function BlooketPlayContent() {
                 E
               </div>
               <span className="font-bold text-base tracking-tight text-slate-900 dark:text-slate-100">
-                HocRealtime
+                KiyoEdu
               </span>
             </div>
           </div>
@@ -753,7 +753,7 @@ function BlooketPlayContent() {
 
         {/* Footer */}
         <footer className="text-center text-xs text-slate-400 py-3">
-          HocRealtime &bull; Hệ thống làm bài trực tuyến chuẩn GDPT
+          KiyoEdu &bull; Hệ thống làm bài trực tuyến chuẩn GDPT
         </footer>
       </div>
     );
@@ -955,7 +955,7 @@ function BlooketPlayContent() {
         </main>
 
         <footer className="text-center text-xs text-slate-400 py-3">
-          HocRealtime &bull; Đã lưu kết quả bài nộp an toàn
+          KiyoEdu &bull; Đã lưu kết quả bài nộp an toàn
         </footer>
       </div>
     );
@@ -1184,7 +1184,7 @@ function BlooketPlayContent() {
 
       {/* Footer info */}
       <footer className="text-center text-xs text-slate-400 py-3 border-t border-slate-200/50 dark:border-slate-800/50">
-        HocRealtime Play &bull; Đã hoàn thành {Object.keys(selectedAnswers).length} / {totalQ} câu
+        KiyoEdu Play &bull; Đã hoàn thành {Object.keys(selectedAnswers).length} / {totalQ} câu
       </footer>
     </div>
   );

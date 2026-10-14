@@ -11,7 +11,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: 'HocRealtime - Nền tảng Giáo dục & Quản lý Học tập Thông minh',
+  title: 'KiyoEdu - Nền tảng Giáo dục & Quản lý Học tập Thông minh',
   description: 'Nền tảng giao bài, chấm điểm và tạo đề kiểm tra phân hóa tự động chuẩn Bộ GD&ĐT',
 };
 

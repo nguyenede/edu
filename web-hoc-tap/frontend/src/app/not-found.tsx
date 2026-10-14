@@ -49,11 +49,16 @@ export default function NotFound() {
               </svg>
             </div>
             <div className="flex flex-col">
-              <span className="text-lg font-extrabold tracking-tight text-slate-800 dark:text-slate-100 leading-tight">
-                HocRealtime
-              </span>
+              <div className="flex items-center gap-1.5">
+                <span className="text-lg sm:text-xl font-black tracking-tight text-slate-900 dark:text-slate-100">
+                  KiyoEdu
+                </span>
+                <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-100 dark:bg-blue-950 text-google-blue">
+                  v2.0
+                </span>
+              </div>
               <span className="text-[10px] font-semibold text-google-blue -mt-0.5 tracking-wider uppercase">
-                KiyoEdu Platform
+                Hệ thống Học tập & Quản lý Giáo dục
               </span>
             </div>
           </Link>
@@ -125,7 +130,7 @@ export default function NotFound() {
             <Button
               variant="outline"
               size="md"
-              onClick={() => router.push('/documents')}
+              onClick={() => router.push('/app/documents')}
               className="gap-2 font-semibold"
             >
               <FileText size={16} /> Kho tài liệu & Đề thi
@@ -219,10 +224,10 @@ export default function NotFound() {
         <div className="max-w-6xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span>Hệ thống HocRealtime đang hoạt động bình thường</span>
+            <span>Hệ thống KiyoEdu đang hoạt động bình thường</span>
           </div>
           <div>
-            <span>© {new Date().getFullYear()} HocRealtime - KiyoEdu. Bản quyền thuộc về nền tảng.</span>
+            <span>© {new Date().getFullYear()} KiyoEdu Platform. Bản quyền thuộc về nền tảng.</span>
           </div>
         </div>
       </footer>

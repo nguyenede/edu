@@ -22,7 +22,7 @@ export default function HelpPage() {
           <div>
             <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-slate-100 flex items-center gap-2">
               <HelpCircle size={22} className="text-google-blue" />
-              Hướng dẫn sử dụng HocRealtime
+              Hướng dẫn sử dụng KiyoEdu
             </h1>
             <p className="text-xs text-slate-500 dark:text-slate-400">
               Nền tảng Giáo dục trực tuyến & Quản lý học tập thông minh
