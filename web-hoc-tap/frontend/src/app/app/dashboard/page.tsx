@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/useAuthStore';
 import { AppShell } from '@/components/AppShell';
@@ -35,7 +35,11 @@ export default function DashboardPage() {
   const [joinCode, setJoinCode] = useState('');
   const [formError, setFormError] = useState<string | null>(null);
 
-  const isTeacher = user?.role === 'TEACHER';
+  const isTeacher = useMemo(() => {
+    if (!user) return false;
+    const r = (user.role || '').toUpperCase();
+    return r === 'TEACHER' || r === 'ADMIN' || r === 'GIAOVIEN';
+  }, [user]);
 
   useEffect(() => {
     const activeToken = token || (typeof window !== 'undefined' ? localStorage.getItem('token') : null);
@@ -109,7 +113,7 @@ export default function DashboardPage() {
   };
 
   const currentUser = user;
-  const isTeacherUser = currentUser?.role === 'TEACHER';
+  const isTeacherUser = isTeacher;
 
   return (
     <AppShell

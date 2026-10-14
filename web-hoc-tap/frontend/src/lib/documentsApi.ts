@@ -16,6 +16,14 @@ import {
   DocumentFolderItem,
 } from './indexedDbStorage';
 import { safeLocalStorageSet } from './safeStorage';
+import { getStoredUser } from '@/store/useAuthStore';
+
+function isCurrentUserTeacher(): boolean {
+  const currentU = getStoredUser();
+  if (!currentU) return false;
+  const role = (currentU.role || '').toUpperCase();
+  return role === 'TEACHER' || role === 'ADMIN' || role === 'GIAOVIEN';
+}
 
 export {
   matchDocId,
@@ -57,6 +65,14 @@ async function parseResponse(res: Response) {
 }
 
 export async function listDocuments(token: string, folderId?: string | null) {
+  // BẢO MẬT: Tài khoản học sinh (STUDENT) tuyệt đối KHÔNG có quyền truy cập kho tài liệu & đề thi của giáo viên
+  if (!isCurrentUserTeacher()) {
+    return {
+      folders: [],
+      files: [],
+    };
+  }
+
   // 1. Ưu tiên lấy ngay từ IndexedDB (Tốc độ 0ms, đầy đủ dữ liệu offline)
   if (typeof window !== 'undefined') {
     try {
@@ -230,6 +246,11 @@ export async function createDocumentFile(token: string, payload: any): Promise<a
 }
 
 export async function listDocumentFiles(token: string) {
+  // BẢO MẬT: Tài khoản học sinh (STUDENT) không thể truy cập danh sách tài liệu
+  if (!isCurrentUserTeacher()) {
+    return [];
+  }
+
   if (typeof window !== 'undefined') {
     try {
       const idbFiles = await idbGetAllDocuments();
@@ -257,6 +278,10 @@ export async function listDocumentFiles(token: string) {
 
 export async function getDocumentFile(token: string, id: string): Promise<DocumentFileItem | null> {
   if (!id) return null;
+  // BẢO MẬT: Học sinh không thể đọc chi tiết tài liệu & đáp án của giáo viên
+  if (!isCurrentUserTeacher()) {
+    return null;
+  }
 
   // 1. KIỂM TRA NGAY TRÊN INDEXEDDB & LOCALSTORAGE (Tốc độ 0ms, tức thì, chống treo)
   if (typeof window !== 'undefined') {

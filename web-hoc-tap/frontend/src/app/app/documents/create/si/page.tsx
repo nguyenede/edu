@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { AppShell } from '@/components/AppShell';
 import { BreadcrumbChevron } from '@/components/BreadcrumbChevron';
 import { Button } from '@/components/Button';
-import { Sparkles, Check, Wand2, ChevronRight, AlertCircle, FileUp, Camera, BookOpen, PenTool } from 'lucide-react';
+import { Sparkles, Check, Wand2, ChevronRight, AlertCircle, FileUp, Camera, BookOpen, PenTool, Lock } from 'lucide-react';
 import { AiToolRegistry } from '@/lib/ai/aiToolRegistry';
 import { useAuthStore } from '@/store/useAuthStore';
 import { syncExamActionToDocument } from '@/lib/examDocumentSync';
@@ -38,7 +38,19 @@ function AiQuizCreateContent() {
   }, [rawFolderId, rawFolderName]);
 
   const targetQuery = '';
-  const token = useAuthStore((state) => state.token);
+  const { user, token } = useAuthStore();
+  const isTeacher = React.useMemo(() => {
+    if (!user) return false;
+    const r = (user.role || '').toUpperCase();
+    return r === 'TEACHER' || r === 'ADMIN' || r === 'GIAOVIEN';
+  }, [user]);
+
+  // BẢO MẬT: Chuyển hướng học sinh về Lớp học nếu truy cập trang tạo đề thi
+  useEffect(() => {
+    if (user && !isTeacher) {
+      router.replace('/classes');
+    }
+  }, [user, isTeacher, router]);
 
   const [aiTopic, setAiTopic] = useState('');
   const [docGrade, setDocGrade] = useState('');
@@ -131,6 +143,25 @@ function AiQuizCreateContent() {
       setIsGenerating(false);
     }
   };
+
+  if (user && !isTeacher) {
+    return (
+      <AppShell>
+        <div className="flex flex-col items-center justify-center min-h-[60vh] text-center p-6">
+          <div className="w-16 h-16 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center text-red-600 dark:text-red-400 mb-4">
+            <Lock size={32} />
+          </div>
+          <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-2">Quyền truy cập bị hạn chế</h2>
+          <p className="text-slate-600 dark:text-slate-400 max-w-md text-sm mb-4">
+            Chỉ tài khoản giáo viên mới có quyền tạo đề thi và quản lý tài liệu. Đang chuyển hướng bạn về danh sách lớp học...
+          </p>
+          <Button onClick={() => router.replace('/classes')} className="bg-primary hover:bg-primary/90 text-white text-sm">
+            Về trang Lớp học
+          </Button>
+        </div>
+      </AppShell>
+    );
+  }
 
   return (
     <AppShell

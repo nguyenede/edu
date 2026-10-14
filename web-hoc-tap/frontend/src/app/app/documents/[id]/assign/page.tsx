@@ -167,7 +167,20 @@ function AssignPageContent() {
   const params = useParams();
   const searchParams = useSearchParams();
   const fileId = (params?.id as string) || '';
-  const { token } = useAuthStore();
+  const { user, token } = useAuthStore();
+
+  const isTeacher = React.useMemo(() => {
+    if (!user) return false;
+    const r = (user.role || '').toUpperCase();
+    return r === 'TEACHER' || r === 'ADMIN' || r === 'GIAOVIEN';
+  }, [user]);
+
+  // BẢO MẬT: Chuyển hướng học sinh về Lớp học nếu truy cập trang giao bài của giáo viên
+  useEffect(() => {
+    if (user && !isTeacher) {
+      router.replace('/classes');
+    }
+  }, [user, isTeacher, router]);
 
   const [isLoading, setIsLoading] = useState(true);
   const [fileItem, setFileItem] = useState<any>(null);
@@ -436,6 +449,29 @@ function AssignPageContent() {
         <div className="p-16 text-center space-y-3">
           <Loader2 size={36} className="animate-spin text-google-blue mx-auto" />
           <p className="text-xs text-slate-500 font-medium">Đang tải thông tin tài liệu...</p>
+        </div>
+      </AppShell>
+    );
+  }
+
+  if (user && !isTeacher) {
+    return (
+      <AppShell title="Giao bài tập">
+        <div className="flex flex-col items-center justify-center py-24 px-4 text-center space-y-4">
+          <div className="w-16 h-16 rounded-2xl bg-amber-50 dark:bg-amber-950/50 flex items-center justify-center text-amber-600">
+            <Lock size={32} />
+          </div>
+          <div className="space-y-1.5 max-w-md">
+            <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">
+              Quyền truy cập bị từ chối
+            </h3>
+            <p className="text-xs text-slate-500 leading-relaxed">
+              Tài khoản học sinh không thể truy cập tính năng giao bài tập của giáo viên. Vui lòng vào mục Lớp học để xem bài tập và đề thi được giao.
+            </p>
+          </div>
+          <Button onClick={() => router.push('/classes')} className="mt-2">
+            Về lớp học của tôi
+          </Button>
         </div>
       </AppShell>
     );

@@ -7,11 +7,24 @@ import { BreadcrumbChevron } from '@/components/BreadcrumbChevron';
 import { useAuthStore } from '@/store/useAuthStore';
 import { Button } from '@/components/Button';
 import { Input } from '@/components/Input';
-import { ArrowLeft, BookOpen, Check, Plus, Trash2, Sparkles, Loader2, ChevronRight, PlusCircle, FileUp } from 'lucide-react';
+import { ArrowLeft, BookOpen, Check, Plus, Trash2, Sparkles, Loader2, ChevronRight, PlusCircle, FileUp, Lock } from 'lucide-react';
 
 export default function CreateQuestionPage() {
   const router = useRouter();
-  const { token } = useAuthStore();
+  const { user, token } = useAuthStore();
+
+  const isTeacher = React.useMemo(() => {
+    if (!user) return false;
+    const r = (user.role || '').toUpperCase();
+    return r === 'TEACHER' || r === 'ADMIN' || r === 'GIAOVIEN';
+  }, [user]);
+
+  // BẢO MẬT: Chuyển hướng học sinh về Lớp học nếu truy cập trang tạo câu hỏi
+  React.useEffect(() => {
+    if (user && !isTeacher) {
+      router.replace('/classes');
+    }
+  }, [user, isTeacher, router]);
 
   const [qContent, setQContent] = useState('');
   const [qType, setQType] = useState('MULTIPLE_CHOICE');
@@ -136,6 +149,25 @@ export default function CreateQuestionPage() {
       setLoading(false);
     }
   };
+
+  if (user && !isTeacher) {
+    return (
+      <AppShell>
+        <div className="flex flex-col items-center justify-center min-h-[60vh] text-center p-6">
+          <div className="w-16 h-16 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center text-red-600 dark:text-red-400 mb-4">
+            <Lock size={32} />
+          </div>
+          <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-2">Quyền truy cập bị hạn chế</h2>
+          <p className="text-slate-600 dark:text-slate-400 max-w-md text-sm mb-4">
+            Chỉ tài khoản giáo viên mới có quyền tạo câu hỏi. Đang chuyển hướng bạn về danh sách lớp học...
+          </p>
+          <Button onClick={() => router.replace('/classes')} className="bg-primary hover:bg-primary/90 text-white text-sm">
+            Về trang Lớp học
+          </Button>
+        </div>
+      </AppShell>
+    );
+  }
 
   return (
     <AppShell

@@ -1,19 +1,9 @@
-'use client';
-
-import React, { useState } from 'react';
+import React from 'react';
 import {
   CheckCircle2,
   XCircle,
-  HelpCircle,
-  ChevronRight,
   ChevronLeft,
-  Sparkles,
   ArrowRight,
-  BookOpen,
-  Award,
-  Eye,
-  EyeOff,
-  Plus,
 } from 'lucide-react';
 
 export interface ClassroomOption {
@@ -66,7 +56,6 @@ export const ClassroomQuestionCard: React.FC<ClassroomQuestionCardProps> = ({
   isRevealed,
   fontSize,
   onSelectOption,
-  onManualReveal,
   onAwardTeamPoint,
   team1Name = 'Đội 1',
   team2Name = 'Đội 2',
@@ -76,8 +65,6 @@ export const ClassroomQuestionCard: React.FC<ClassroomQuestionCardProps> = ({
   isFirstQuestion = false,
   isLastQuestion,
 }) => {
-  const [showExplanation, setShowExplanation] = useState(false);
-
   const questionTextSize =
     fontSize === 'xlarge'
       ? 'text-2xl sm:text-3xl md:text-4xl'
@@ -96,16 +83,16 @@ export const ClassroomQuestionCard: React.FC<ClassroomQuestionCardProps> = ({
     answeredOptionIdx !== null && Boolean(question.options[answeredOptionIdx]?.isCorrect);
 
   return (
-    <div className="w-full bg-white dark:bg-[#1a1b1e] rounded-2xl p-5 sm:p-7 border border-slate-200/80 dark:border-white/10 shadow-xs flex flex-col justify-between space-y-5 sm:space-y-6 transition-all h-full flex-1">
+    <div className="w-full bg-white dark:bg-[#1a1b1e] rounded-2xl p-6 sm:p-8 lg:p-10 border border-slate-200/80 dark:border-white/10 shadow-xs flex flex-col justify-between space-y-6 sm:space-y-8 transition-all h-full flex-1">
       {/* 1. TOP STATUS BAR: QUESTION INDEX, ACTIVE TURN & FEEDBACK */}
       <div className="flex flex-wrap items-center justify-between gap-2 pb-3.5 border-b border-slate-100 dark:border-white/10">
         <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
-          <span className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-white/10 text-slate-800 dark:text-zinc-200 font-bold text-xs sm:text-sm">
+          <span className="px-3.5 py-1.5 rounded-xl bg-slate-100 dark:bg-white/10 text-slate-800 dark:text-zinc-200 font-bold text-xs sm:text-sm">
             Câu {questionNumber} / {totalQuestions}
           </span>
 
           {activeTeamName && (
-            <span className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-blue-50/70 dark:bg-blue-950/30 text-xs sm:text-sm font-bold text-blue-700 dark:text-blue-300">
+            <span className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-blue-50/70 dark:bg-blue-950/30 text-xs sm:text-sm font-bold text-blue-700 dark:text-blue-300">
               <span className={`w-2.5 h-2.5 rounded-full ${activeTeamColor} animate-pulse`} />
               <span>Lượt: <b>{activeTeamName}</b></span>
             </span>
@@ -125,12 +112,7 @@ export const ClassroomQuestionCard: React.FC<ClassroomQuestionCardProps> = ({
                 <XCircle size={16} className="text-rose-600 dark:text-rose-400" />
                 <span>Chưa đúng</span>
               </span>
-            ) : (
-              <span className="flex items-center gap-1.5 text-xs sm:text-sm font-bold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/40 px-3 py-1.5 rounded-xl border border-blue-200 dark:border-blue-800">
-                <Eye size={16} className="text-blue-600 dark:text-blue-400" />
-                <span>Đáp án mở</span>
-              </span>
-            )}
+            ) : null}
           </div>
         )}
       </div>
@@ -145,7 +127,7 @@ export const ClassroomQuestionCard: React.FC<ClassroomQuestionCardProps> = ({
       </div>
 
       {/* 3. MINIMALIST OPTIONS GRID (A, B, C, D) */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-4 pt-1 flex-1">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5 pt-1 flex-1">
         {(question.options || []).length === 0 ? (
           <div className="col-span-2 p-8 text-center text-sm text-slate-500 bg-slate-50 dark:bg-white/5 rounded-2xl border border-slate-200/60 dark:border-white/10">
             Không tìm thấy phương án trả lời.
@@ -178,11 +160,11 @@ export const ClassroomQuestionCard: React.FC<ClassroomQuestionCardProps> = ({
                 key={idx}
                 type="button"
                 onClick={() => onSelectOption(idx)}
-                className={`w-full p-4 sm:p-5 md:p-6 rounded-2xl border text-left font-medium transition-all flex items-center gap-3.5 sm:gap-4 cursor-pointer shadow-2xs min-h-[68px] sm:min-h-[80px] ${itemClass}`}
+                className={`w-full p-5 sm:p-6 lg:p-7 rounded-2xl border text-left font-medium transition-all flex items-center gap-4 sm:gap-5 cursor-pointer shadow-2xs hover:shadow-md min-h-[72px] sm:min-h-[84px] ${itemClass}`}
               >
                 {/* Minimalist Letter Badge */}
                 <div
-                  className={`w-9 h-9 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center font-black text-sm sm:text-base md:text-lg shrink-0 ${badgeClass}`}
+                  className={`w-10 h-10 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center font-black text-sm sm:text-base md:text-lg shrink-0 ${badgeClass}`}
                 >
                   {label}
                 </div>
@@ -205,55 +187,16 @@ export const ClassroomQuestionCard: React.FC<ClassroomQuestionCardProps> = ({
         )}
       </div>
 
-      {/* 4. EXPANDABLE TEACHER EXPLANATION BOX */}
-      {showExplanation && question.explanation && (
-        <div className="p-4 rounded-2xl bg-amber-50/80 dark:bg-amber-950/30 border border-amber-200/80 dark:border-amber-800/40 text-xs sm:text-sm text-slate-800 dark:text-amber-100 leading-relaxed animate-in fade-in-0 duration-150">
-          <div className="flex items-center gap-2 font-bold text-amber-800 dark:text-amber-300 mb-1.5">
-            <Sparkles size={16} className="text-amber-500" />
-            <span>Lời giải & Chốt kiến thức:</span>
-          </div>
-          <p className="whitespace-pre-line font-medium leading-relaxed">{question.explanation}</p>
-        </div>
-      )}
-
-      {/* 5. TEACHER ACTION TOOLBAR (BOTTOM BAR) */}
-      <div className="pt-3.5 border-t border-slate-100 dark:border-white/10 flex flex-wrap items-center justify-between gap-3">
-        {/* Left Actions: Reveal Answer & Explanation */}
-        <div className="flex items-center gap-2 flex-wrap">
-          {onManualReveal && (
-            <button
-              type="button"
-              onClick={onManualReveal}
-              className={`flex items-center gap-2 px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl border text-xs sm:text-sm font-bold transition-all cursor-pointer ${
-                isRevealed
-                  ? 'bg-slate-100 dark:bg-white/10 border-slate-200 dark:border-white/10 text-slate-700 dark:text-zinc-200'
-                  : 'bg-blue-50 dark:bg-blue-950/40 border-blue-200 dark:border-blue-800 text-google-blue dark:text-blue-300 hover:bg-blue-100'
-              }`}
-              title="Hiện đáp án đúng của câu này"
-            >
-              {isRevealed ? <EyeOff size={15} /> : <Eye size={15} />}
-              <span>{isRevealed ? 'Đã mở đáp án' : 'Hiện đáp án 👁️'}</span>
-            </button>
-          )}
-
-          {question.explanation && (
-            <button
-              type="button"
-              onClick={() => setShowExplanation(!showExplanation)}
-              className="flex items-center gap-2 px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/40 dark:hover:bg-amber-900/40 text-amber-800 dark:text-amber-300 text-xs sm:text-sm font-bold transition-all cursor-pointer border border-amber-200 dark:border-amber-800"
-            >
-              <BookOpen size={15} />
-              <span>{showExplanation ? 'Ẩn lời giải' : 'Giải thích 💡'}</span>
-            </button>
-          )}
-
-          {/* Award Points for Teams Directly */}
+      {/* 4. TEACHER ACTION TOOLBAR (BOTTOM BAR) */}
+      <div className="pt-4 border-t border-slate-100 dark:border-white/10 flex flex-wrap items-center justify-between gap-3">
+        {/* Left: Quick point award buttons */}
+        <div className="flex items-center gap-2">
           {onAwardTeamPoint && (
-            <div className="hidden sm:flex items-center gap-1.5 pl-1.5 border-l border-slate-200 dark:border-white/10">
+            <div className="flex items-center gap-2">
               <button
                 type="button"
                 onClick={() => onAwardTeamPoint('team1')}
-                className="px-3 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 text-xs sm:text-sm font-bold transition-all cursor-pointer border border-blue-200/80 dark:border-blue-800/60"
+                className="px-3.5 py-2 rounded-xl bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 text-xs sm:text-sm font-bold transition-all cursor-pointer border border-blue-200/80 dark:border-blue-800/60"
                 title={`Cộng 1 điểm cho ${team1Name}`}
               >
                 +1 {team1Name}
@@ -261,7 +204,7 @@ export const ClassroomQuestionCard: React.FC<ClassroomQuestionCardProps> = ({
               <button
                 type="button"
                 onClick={() => onAwardTeamPoint('team2')}
-                className="px-3 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 text-xs sm:text-sm font-bold transition-all cursor-pointer border border-rose-200/80 dark:border-rose-800/60"
+                className="px-3.5 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 text-xs sm:text-sm font-bold transition-all cursor-pointer border border-rose-200/80 dark:border-rose-800/60"
                 title={`Cộng 1 điểm cho ${team2Name}`}
               >
                 +1 {team2Name}
@@ -288,7 +231,7 @@ export const ClassroomQuestionCard: React.FC<ClassroomQuestionCardProps> = ({
           <button
             type="button"
             onClick={onNextQuestion}
-            className="flex items-center gap-2 px-5 sm:px-6 py-2 sm:py-2.5 rounded-xl bg-google-blue hover:bg-blue-600 text-white text-xs sm:text-sm font-bold shadow-xs transition-all cursor-pointer active:scale-95"
+            className="flex items-center gap-2 px-6 sm:px-7 py-2.5 rounded-xl bg-google-blue hover:bg-blue-600 text-white text-sm sm:text-base font-bold shadow-xs transition-all cursor-pointer active:scale-95"
           >
             <span>{isLastQuestion ? 'Tổng kết 🏆' : 'Câu tiếp theo'}</span>
             <ArrowRight size={16} />

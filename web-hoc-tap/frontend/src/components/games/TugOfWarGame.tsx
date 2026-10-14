@@ -82,6 +82,15 @@ export const TugOfWarGame: React.FC<TugOfWarGameProps> = ({
     return () => clearInterval(timer);
   }, [timerSeconds, isTimerPaused, isAnswerRevealed, winnerTeamId]);
 
+  // Listen to fullscreen changes
+  useEffect(() => {
+    const handleFsChange = () => {
+      setIsFullscreen(Boolean(document.fullscreenElement));
+    };
+    document.addEventListener('fullscreenchange', handleFsChange);
+    return () => document.removeEventListener('fullscreenchange', handleFsChange);
+  }, []);
+
   const toggleSound = () => {
     gameAudio.enabled = !soundEnabled;
     setSoundEnabled(!soundEnabled);
@@ -226,7 +235,7 @@ export const TugOfWarGame: React.FC<TugOfWarGameProps> = ({
   const ropePercentage = 50 + (ropePosition / maxPullLimit) * 38;
 
   return (
-    <div className="w-full bg-[#f8fafc] dark:bg-[#131416] rounded-2xl border border-slate-200/80 dark:border-white/10 overflow-hidden flex flex-col transition-all">
+    <div className="w-full min-h-screen flex-1 bg-[#f8fafc] dark:bg-[#131416] flex flex-col transition-all">
       {/* 1. TEACHER HEADER BAR */}
       <ClassroomTeacherHeader
         title={examTitle}
@@ -254,12 +263,12 @@ export const TugOfWarGame: React.FC<TugOfWarGameProps> = ({
         onOpenSettings={onOpenSettings}
       />
 
-      {/* 2. WIDESCREEN 16:9 GRID LAYOUT */}
-      <div className="p-3 sm:p-5 grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-5 items-stretch">
-        {/* LEFT COLUMN: MINIMALIST TUG OF WAR ARENA (lg:col-span-5) */}
-        <div className="lg:col-span-5 flex flex-col justify-between space-y-3">
+      {/* 2. WIDESCREEN FULL VIEWPORT 16:9 GRID LAYOUT */}
+      <div className="p-3 sm:p-5 lg:p-6 grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 items-stretch flex-1">
+        {/* LEFT COLUMN: TUG OF WAR ARENA (lg:col-span-5) */}
+        <div className="lg:col-span-5 flex flex-col justify-between space-y-4">
           {/* Minimalist Rope Arena */}
-          <div className="bg-white dark:bg-[#1a1b1e] rounded-2xl p-4 sm:p-5 border border-slate-200/80 dark:border-white/10 shadow-xs flex flex-col justify-between space-y-4 flex-1">
+          <div className="bg-white dark:bg-[#1a1b1e] rounded-2xl p-5 sm:p-6 border border-slate-200/80 dark:border-white/10 shadow-xs flex flex-col justify-between space-y-5 flex-1">
             {/* Arena Header */}
             <div className="flex items-center justify-between text-xs font-bold pb-2 border-b border-slate-100 dark:border-white/10">
               <span className="text-blue-600 dark:text-blue-400 font-extrabold flex items-center gap-1.5">

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuthStore } from '../store/useAuthStore';
 import { ThemeToggle } from './ThemeToggle';
@@ -72,19 +72,23 @@ export const AppShell: React.FC<AppShellProps> = ({
     return () => document.removeEventListener('keydown', handleEscape);
   }, []);
 
-  const isTeacher = isMounted && user?.role === 'TEACHER';
+  const isTeacher = useMemo(() => {
+    if (!isMounted || !user) return false;
+    const r = (user.role || '').toUpperCase();
+    return r === 'TEACHER' || r === 'ADMIN' || r === 'GIAOVIEN';
+  }, [isMounted, user]);
 
   const navItems = [
     { label: 'Trang chủ', href: '/dashboard', icon: Home },
     { label: 'Trợ lý SI', href: '/si', icon: Sparkles },
     { label: 'Lớp học của tôi', href: '/classes', icon: GraduationCap },
-    { label: 'Tài liệu', href: '/documents', icon: FileText },
-    { label: 'Trò chơi lớp học', href: '/games', icon: Gamepad2 },
     ...(isTeacher
       ? [
+          { label: 'Kho tài liệu & Đề thi', href: '/documents', icon: FileText },
           { label: 'Ngân hàng câu hỏi', href: '/question-bank', icon: BookOpen },
         ]
       : []),
+    { label: 'Trò chơi lớp học', href: '/games', icon: Gamepad2 },
     { label: 'Báo cáo', href: '/results', icon: BarChart3 },
     { label: 'Thông báo', href: '/notifications', icon: Bell },
     { label: 'Cài đặt', href: '/settings', icon: Settings },

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef, useLayoutEffect, Suspense } from 'react';
+import React, { useState, useEffect, useRef, useLayoutEffect, useMemo, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { AppShell } from '@/components/AppShell';
 import { BreadcrumbChevron } from '@/components/BreadcrumbChevron';
@@ -62,6 +62,7 @@ import {
   X,
   Check,
   Gamepad2,
+  Lock,
 } from 'lucide-react';
 
 interface DocumentFolderItem {
@@ -84,6 +85,19 @@ function DocumentsPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user, token } = useAuthStore();
+
+  const isTeacher = useMemo(() => {
+    if (!user) return false;
+    const r = (user.role || '').toUpperCase();
+    return r === 'TEACHER' || r === 'ADMIN' || r === 'GIAOVIEN';
+  }, [user]);
+
+  // BẢO MẬT: Chuyển hướng học sinh về Lớp học nếu truy cập kho tài liệu của giáo viên
+  useEffect(() => {
+    if (user && !isTeacher) {
+      router.replace('/classes');
+    }
+  }, [user, isTeacher, router]);
 
   const [currentFolderId, setCurrentFolderId] = useState<string | null>(null);
 
@@ -172,6 +186,7 @@ function DocumentsPageContent() {
   };
 
   useEffect(() => {
+    if (!isTeacher) return;
     if (typeof window !== 'undefined') {
       let didCancel = false;
 
@@ -227,7 +242,7 @@ function DocumentsPageContent() {
   }, []);
 
   useEffect(() => {
-    if (!token) return;
+    if (!token || !isTeacher) return;
     let didCancel = false;
 
     const loadRemoteDocuments = async () => {
@@ -1592,6 +1607,29 @@ function DocumentsPageContent() {
     }
     router.push('/documents/create');
   };
+
+  if (user && !isTeacher) {
+    return (
+      <AppShell title="Kho tài liệu & Đề thi">
+        <div className="flex flex-col items-center justify-center py-24 px-4 text-center space-y-4">
+          <div className="w-16 h-16 rounded-2xl bg-amber-50 dark:bg-amber-950/50 flex items-center justify-center text-amber-600">
+            <Lock size={32} />
+          </div>
+          <div className="space-y-1.5 max-w-md">
+            <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">
+              Khu vực dành riêng cho Giáo viên
+            </h3>
+            <p className="text-xs text-slate-500 leading-relaxed">
+              Tài khoản học sinh không thể truy cập kho quản lý tài liệu và đề thi của giáo viên. Vui lòng vào mục Lớp học để xem các bài tập và đề thi được giao.
+            </p>
+          </div>
+          <Button onClick={() => router.push('/classes')} className="mt-2">
+            Về lớp học của tôi
+          </Button>
+        </div>
+      </AppShell>
+    );
+  }
 
   return (
     <AppShell

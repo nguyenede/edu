@@ -18,6 +18,7 @@ import {
   Loader2,
   Send,
   Gamepad2,
+  Lock,
 } from 'lucide-react';
 import { ParsedQuiz } from '@/lib/docParser';
 import { cleanAndEnrichMathFormulas } from '@/lib/examStructureParser';
@@ -267,7 +268,20 @@ function DocumentDynamicViewPageContent() {
   const router = useRouter();
   const params = useParams();
   const searchParams = useSearchParams();
-  const { token } = useAuthStore();
+  const { user, token } = useAuthStore();
+
+  const isTeacher = React.useMemo(() => {
+    if (!user) return false;
+    const r = (user.role || '').toUpperCase();
+    return r === 'TEACHER' || r === 'ADMIN' || r === 'GIAOVIEN';
+  }, [user]);
+
+  // BẢO MẬT: Chuyển hướng học sinh về Lớp học nếu truy cập đề thi gốc của giáo viên
+  useEffect(() => {
+    if (user && !isTeacher) {
+      router.replace('/classes');
+    }
+  }, [user, isTeacher, router]);
 
   const fileId = (params?.id as string) || '';
   const searchFolderId = searchParams?.get('folderId') || null;
@@ -557,6 +571,29 @@ function DocumentDynamicViewPageContent() {
         <div className="p-16 text-center space-y-3">
           <Loader2 size={36} className="animate-spin text-google-blue mx-auto" />
           <p className="text-xs text-slate-500 font-medium">Đang tải và chuẩn bị nội dung đề thi...</p>
+        </div>
+      </AppShell>
+    );
+  }
+
+  if (user && !isTeacher) {
+    return (
+      <AppShell title="Xem đề thi">
+        <div className="flex flex-col items-center justify-center py-24 px-4 text-center space-y-4">
+          <div className="w-16 h-16 rounded-2xl bg-amber-50 dark:bg-amber-950/50 flex items-center justify-center text-amber-600">
+            <Lock size={32} />
+          </div>
+          <div className="space-y-1.5 max-w-md">
+            <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">
+              Quy chế bảo mật bài thi
+            </h3>
+            <p className="text-xs text-slate-500 leading-relaxed">
+              Tài khoản học sinh không thể truy cập nội dung đề thi và đáp án của giáo viên. Vui lòng vào mục Lớp học để xem bài tập và đề thi được giao.
+            </p>
+          </div>
+          <Button onClick={() => router.push('/classes')} className="mt-2">
+            Về lớp học của tôi
+          </Button>
         </div>
       </AppShell>
     );
