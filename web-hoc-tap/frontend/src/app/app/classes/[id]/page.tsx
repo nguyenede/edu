@@ -161,6 +161,12 @@ export default function ClassDetailPage() {
   }, [classId, router]);
 
   useEffect(() => {
+    if (!isTeacher && activeTab === 'students') {
+      setActiveTab('assignments');
+    }
+  }, [isTeacher, activeTab]);
+
+  useEffect(() => {
     const activeToken = token || (typeof window !== 'undefined' ? localStorage.getItem('token') : null);
     if (!activeToken) {
       router.push('/login');
@@ -514,16 +520,18 @@ export default function ClassDetailPage() {
             Bài tập & Đề thi ({assignments.length})
           </button>
 
-          <button
-            onClick={() => setActiveTab('students')}
-            className={`text-sm transition-colors whitespace-nowrap cursor-pointer ${
-              activeTab === 'students'
-                ? 'text-blue-600 dark:text-blue-400 font-bold'
-                : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 font-medium'
-            }`}
-          >
-            Danh sách Học sinh ({members.length})
-          </button>
+          {isTeacher && (
+            <button
+              onClick={() => setActiveTab('students')}
+              className={`text-sm transition-colors whitespace-nowrap cursor-pointer ${
+                activeTab === 'students'
+                  ? 'text-blue-600 dark:text-blue-400 font-bold'
+                  : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 font-medium'
+              }`}
+            >
+              Danh sách Học sinh ({members.length})
+            </button>
+          )}
 
 
 
@@ -644,8 +652,8 @@ export default function ClassDetailPage() {
           </div>
         )}
 
-        {/* Tab 2: Students List (Original Minimal UI with requested features) */}
-        {activeTab === 'students' && (
+        {/* Tab 2: Students List (Teacher only) */}
+        {isTeacher && activeTab === 'students' && (
           <div className="space-y-4">
             {/* Action Bar for Students */}
             {isTeacher && (
@@ -713,14 +721,16 @@ export default function ClassDetailPage() {
                         </div>
                       </div>
 
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setStudentToDelete(studentId)}
-                        className="text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20 text-xs"
-                      >
-                        Xóa khỏi lớp
-                      </Button>
+                      {isTeacher && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setStudentToDelete(studentId)}
+                          className="text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20 text-xs"
+                        >
+                          Xóa khỏi lớp
+                        </Button>
+                      )}
                     </div>
                   );
                 })}
@@ -732,81 +742,94 @@ export default function ClassDetailPage() {
 
 
         {/* Tab 4: Gradebook / Bảng điểm */}
-        {activeTab === 'gradebook' && (
-          <div className="space-y-4">
-            {members.length === 0 ? (
-              <p className="text-xs text-slate-400 py-8 text-center">Chưa có học sinh trong lớp để thống kê điểm.</p>
-            ) : (
-              <div className="overflow-x-auto rounded-lg border border-slate-100 dark:border-slate-800">
-                <table className="w-full text-left text-xs">
-                  <thead className="bg-slate-50 dark:bg-slate-900/60 border-b border-slate-100 dark:border-slate-800 text-slate-600 dark:text-slate-300 font-semibold">
-                    <tr>
-                      <th className="py-2.5 px-3 w-12 text-center">STT</th>
-                      <th className="py-2.5 px-3 min-w-[140px]">Học sinh</th>
-                      {assignments.map((asg) => (
-                        <th key={asg.id} className="py-2.5 px-3 text-center min-w-[100px]">
-                          <div className="truncate max-w-[120px]" title={asg.title}>{asg.title}</div>
-                          <span className="text-[10px] text-slate-400 font-normal">({asg.maxScore}đ)</span>
-                        </th>
-                      ))}
-                      <th className="py-2.5 px-3 text-center font-bold text-blue-600">ĐTB</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                    {members.map((m, idx) => {
-                      const name = m.student?.profile?.name || m.name || 'Học sinh';
-                      const studentId = m.student?.id || m.studentId || m.id;
-                      const studentEmail = (m.student?.email || m.email || '').toLowerCase().trim();
-                      const cleanName = name.toLowerCase().trim();
+        {activeTab === 'gradebook' && (() => {
+          const displayedMembers = members.filter((m) => {
+            if (isTeacher) return true;
+            const studentId = m.student?.id || m.studentId || m.id;
+            const studentEmail = (m.student?.email || m.email || '').toLowerCase().trim();
+            const myId = user?.id;
+            const myEmail = (user?.email || '').toLowerCase().trim();
+            return (myId && studentId === myId) || (myEmail && studentEmail === myEmail);
+          });
 
-                      // Collect graded scores for this student across all class assignments
-                      const scores: number[] = [];
-                      const assignmentCells = assignments.map((asg) => {
-                        const subs = submissionsMap[asg.id] || [];
-                        const sub = subs.find((s: any) => {
-                          if (studentId && (s.studentId === studentId || s.student?.id === studentId)) return true;
-                          if (studentEmail && ((s.student?.email || '').toLowerCase().trim() === studentEmail)) return true;
-                          if (cleanName && ((s.student?.profile?.name || s.studentName || s.student?.name || '').toLowerCase().trim() === cleanName)) return true;
-                          return false;
-                        });
+          return (
+            <div className="space-y-4">
+              {displayedMembers.length === 0 ? (
+                <p className="text-xs text-slate-400 py-8 text-center">
+                  {isTeacher ? 'Chưa có học sinh trong lớp để thống kê điểm.' : 'Chưa có dữ liệu điểm của bạn trong lớp học này.'}
+                </p>
+              ) : (
+                <div className="overflow-x-auto rounded-lg border border-slate-100 dark:border-slate-800">
+                  <table className="w-full text-left text-xs">
+                    <thead className="bg-slate-50 dark:bg-slate-900/60 border-b border-slate-100 dark:border-slate-800 text-slate-600 dark:text-slate-300 font-semibold">
+                      <tr>
+                        <th className="py-2.5 px-3 w-12 text-center">STT</th>
+                        <th className="py-2.5 px-3 min-w-[140px]">{isTeacher ? 'Học sinh' : 'Tên bạn'}</th>
+                        {assignments.map((asg) => (
+                          <th key={asg.id} className="py-2.5 px-3 text-center min-w-[100px]">
+                            <div className="truncate max-w-[120px]" title={asg.title}>{asg.title}</div>
+                            <span className="text-[10px] text-slate-400 font-normal">({asg.maxScore}đ)</span>
+                          </th>
+                        ))}
+                        <th className="py-2.5 px-3 text-center font-bold text-blue-600">ĐTB</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                      {displayedMembers.map((m, idx) => {
+                        const name = m.student?.profile?.name || m.name || 'Học sinh';
+                        const studentId = m.student?.id || m.studentId || m.id;
+                        const studentEmail = (m.student?.email || m.email || '').toLowerCase().trim();
+                        const cleanName = name.toLowerCase().trim();
 
-                        if (sub && sub.score !== null && sub.score !== undefined) {
-                          scores.push(Number(sub.score));
+                        // Collect graded scores for this student across all class assignments
+                        const scores: number[] = [];
+                        const assignmentCells = assignments.map((asg) => {
+                          const subs = submissionsMap[asg.id] || [];
+                          const sub = subs.find((s: any) => {
+                            if (studentId && (s.studentId === studentId || s.student?.id === studentId)) return true;
+                            if (studentEmail && ((s.student?.email || '').toLowerCase().trim() === studentEmail)) return true;
+                            if (cleanName && ((s.student?.profile?.name || s.studentName || s.student?.name || '').toLowerCase().trim() === cleanName)) return true;
+                            return false;
+                          });
+
+                          if (sub && sub.score !== null && sub.score !== undefined) {
+                            scores.push(Number(sub.score));
+                            return (
+                              <td key={asg.id} className="py-2.5 px-3 text-center font-semibold text-emerald-600 dark:text-emerald-400">
+                                {sub.score}
+                              </td>
+                            );
+                          }
+
                           return (
-                            <td key={asg.id} className="py-2.5 px-3 text-center font-semibold text-emerald-600 dark:text-emerald-400">
-                              {sub.score}
+                            <td key={asg.id} className="py-2.5 px-3 text-center text-slate-400">
+                              -
                             </td>
                           );
-                        }
+                        });
+
+                        const avgScore = scores.length > 0
+                          ? (scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(1)
+                          : '-';
 
                         return (
-                          <td key={asg.id} className="py-2.5 px-3 text-center text-slate-400">
-                            -
-                          </td>
+                          <tr key={m.id || idx} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30">
+                            <td className="py-2.5 px-3 text-center text-slate-400">{idx + 1}</td>
+                            <td className="py-2.5 px-3 font-medium text-slate-900 dark:text-slate-100">{name}</td>
+                            {assignmentCells}
+                            <td className="py-2.5 px-3 text-center font-bold text-blue-600 dark:text-blue-400">
+                              {avgScore}
+                            </td>
+                          </tr>
                         );
-                      });
-
-                      const avgScore = scores.length > 0
-                        ? (scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(1)
-                        : '-';
-
-                      return (
-                        <tr key={m.id || idx} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30">
-                          <td className="py-2.5 px-3 text-center text-slate-400">{idx + 1}</td>
-                          <td className="py-2.5 px-3 font-medium text-slate-900 dark:text-slate-100">{name}</td>
-                          {assignmentCells}
-                          <td className="py-2.5 px-3 text-center font-bold text-blue-600 dark:text-blue-400">
-                            {avgScore}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-        )}
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          );
+        })()}
       </div>
 
       {/* ==================== MODALS ==================== */}

@@ -69,7 +69,11 @@ export default function ClassesPage() {
   const [targetYear, setTargetYear] = useState('2027 - 2028');
   const [selectedClassIdsToCopy, setSelectedClassIdsToCopy] = useState<string[]>([]);
 
-  const isTeacher = user?.role === 'TEACHER';
+  const isTeacher = React.useMemo(() => {
+    if (!user) return false;
+    const r = (user.role || '').toUpperCase();
+    return r === 'TEACHER' || r === 'ADMIN' || r === 'GIAOVIEN';
+  }, [user]);
 
   const loadClasses = useCallback(async () => {
     setLoading(true);

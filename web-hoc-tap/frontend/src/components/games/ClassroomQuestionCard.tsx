@@ -41,7 +41,7 @@ interface ClassroomQuestionCardProps {
 
 const formatContent = (str?: string) => {
   if (!str) return '';
-  return str.replace(/^\$+|\$+$/g, '').trim();
+  return str.replace(/\$+/g, '').trim();
 };
 
 const OPTION_LABELS = ['A', 'B', 'C', 'D', 'E', 'F'];
@@ -83,9 +83,9 @@ export const ClassroomQuestionCard: React.FC<ClassroomQuestionCardProps> = ({
     answeredOptionIdx !== null && Boolean(question.options[answeredOptionIdx]?.isCorrect);
 
   return (
-    <div className="w-full bg-white dark:bg-[#1a1b1e] rounded-2xl p-6 sm:p-8 lg:p-10 border border-slate-200/80 dark:border-white/10 shadow-xs flex flex-col justify-between space-y-6 sm:space-y-8 transition-all h-full flex-1">
+    <div className="w-full bg-white dark:bg-[#1a1b1e] rounded-3xl p-6 sm:p-8 lg:p-10 flex flex-col justify-between space-y-6 sm:space-y-8 transition-all h-full flex-1">
       {/* 1. TOP STATUS BAR: QUESTION INDEX, ACTIVE TURN & FEEDBACK */}
-      <div className="flex flex-wrap items-center justify-between gap-2 pb-3.5 border-b border-slate-100 dark:border-white/10">
+      <div className="flex flex-wrap items-center justify-between gap-2 pb-2">
         <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
           <span className="px-3.5 py-1.5 rounded-xl bg-slate-100 dark:bg-white/10 text-slate-800 dark:text-zinc-200 font-bold text-xs sm:text-sm">
             Câu {questionNumber} / {totalQuestions}
@@ -103,12 +103,12 @@ export const ClassroomQuestionCard: React.FC<ClassroomQuestionCardProps> = ({
         {isRevealed && (
           <div className="flex items-center gap-1.5 animate-in fade-in-0 duration-150">
             {answeredCorrect ? (
-              <span className="flex items-center gap-1.5 text-xs sm:text-sm font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 px-3 py-1.5 rounded-xl border border-emerald-200 dark:border-emerald-800">
+              <span className="flex items-center gap-1.5 text-xs sm:text-sm font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 px-3 py-1.5 rounded-xl">
                 <CheckCircle2 size={16} className="text-emerald-600 dark:text-emerald-400" />
                 <span>Chính xác</span>
               </span>
             ) : answeredOptionIdx !== null ? (
-              <span className="flex items-center gap-1.5 text-xs sm:text-sm font-bold text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/40 px-3 py-1.5 rounded-xl border border-rose-200 dark:border-rose-800">
+              <span className="flex items-center gap-1.5 text-xs sm:text-sm font-bold text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/40 px-3 py-1.5 rounded-xl">
                 <XCircle size={16} className="text-rose-600 dark:text-rose-400" />
                 <span>Chưa đúng</span>
               </span>
@@ -126,10 +126,10 @@ export const ClassroomQuestionCard: React.FC<ClassroomQuestionCardProps> = ({
         </h2>
       </div>
 
-      {/* 3. MINIMALIST OPTIONS GRID (A, B, C, D) */}
+      {/* 3. OPTIONS GRID (A, B, C, D) - KHÔNG KHUNG VIỀN CỒNG KỀNH */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5 pt-1 flex-1">
         {(question.options || []).length === 0 ? (
-          <div className="col-span-2 p-8 text-center text-sm text-slate-500 bg-slate-50 dark:bg-white/5 rounded-2xl border border-slate-200/60 dark:border-white/10">
+          <div className="col-span-2 p-8 text-center text-sm text-slate-500 bg-slate-50 dark:bg-white/5 rounded-2xl">
             Không tìm thấy phương án trả lời.
           </div>
         ) : (
@@ -139,19 +139,19 @@ export const ClassroomQuestionCard: React.FC<ClassroomQuestionCardProps> = ({
             const isSelected = answeredOptionIdx === idx;
             const cleanContent = formatContent((opt?.content || '').replace(/^[A-F][\s.:)-]+/i, ''));
 
-            let itemClass = 'bg-slate-50/70 hover:bg-slate-100/90 dark:bg-white/5 dark:hover:bg-white/10 border-slate-200/80 dark:border-white/10 text-slate-900 dark:text-zinc-100';
-            let badgeClass = 'bg-white dark:bg-[#25262b] text-slate-700 dark:text-zinc-300 border border-slate-200 dark:border-white/10';
+            let itemClass = 'bg-slate-100/70 hover:bg-slate-200/80 dark:bg-white/5 dark:hover:bg-white/10 text-slate-900 dark:text-zinc-100';
+            let badgeClass = 'bg-white dark:bg-[#25262b] text-slate-700 dark:text-zinc-300';
 
             if (isRevealed) {
               if (isCorrect) {
-                itemClass = 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-500 text-emerald-900 dark:text-emerald-100 ring-2 ring-emerald-500/30 font-bold';
-                badgeClass = 'bg-emerald-600 text-white font-bold border-transparent';
+                itemClass = 'bg-emerald-500 text-white font-bold';
+                badgeClass = 'bg-white/20 text-white font-bold';
               } else if (isSelected && !isCorrect) {
-                itemClass = 'bg-rose-50 dark:bg-rose-950/40 border-rose-500 text-rose-900 dark:text-rose-100 ring-1 ring-rose-500/30';
-                badgeClass = 'bg-rose-600 text-white font-bold border-transparent';
+                itemClass = 'bg-rose-500 text-white font-bold';
+                badgeClass = 'bg-white/20 text-white font-bold';
               } else {
-                itemClass = 'opacity-40 bg-slate-50/40 dark:bg-white/5 border-slate-200/50 dark:border-white/5 text-slate-400';
-                badgeClass = 'bg-slate-200 dark:bg-zinc-800 text-slate-400 border-transparent';
+                itemClass = 'opacity-35 bg-slate-100/40 dark:bg-white/5 text-slate-400';
+                badgeClass = 'bg-slate-200 dark:bg-zinc-800 text-slate-400';
               }
             }
 
@@ -160,7 +160,7 @@ export const ClassroomQuestionCard: React.FC<ClassroomQuestionCardProps> = ({
                 key={idx}
                 type="button"
                 onClick={() => onSelectOption(idx)}
-                className={`w-full p-5 sm:p-6 lg:p-7 rounded-2xl border text-left font-medium transition-all flex items-center gap-4 sm:gap-5 cursor-pointer shadow-2xs hover:shadow-md min-h-[72px] sm:min-h-[84px] ${itemClass}`}
+                className={`w-full p-5 sm:p-6 lg:p-7 rounded-2xl text-left font-medium transition-all flex items-center gap-4 sm:gap-5 cursor-pointer min-h-[72px] sm:min-h-[84px] ${itemClass}`}
               >
                 {/* Minimalist Letter Badge */}
                 <div
@@ -176,10 +176,10 @@ export const ClassroomQuestionCard: React.FC<ClassroomQuestionCardProps> = ({
 
                 {/* Status indicator icon on revealed */}
                 {isRevealed && isCorrect && (
-                  <CheckCircle2 size={24} className="text-emerald-600 dark:text-emerald-400 shrink-0" />
+                  <CheckCircle2 size={24} className="text-white shrink-0" />
                 )}
                 {isRevealed && isSelected && !isCorrect && (
-                  <XCircle size={24} className="text-rose-600 dark:text-rose-400 shrink-0" />
+                  <XCircle size={24} className="text-white shrink-0" />
                 )}
               </button>
             );
@@ -188,7 +188,7 @@ export const ClassroomQuestionCard: React.FC<ClassroomQuestionCardProps> = ({
       </div>
 
       {/* 4. TEACHER ACTION TOOLBAR (BOTTOM BAR) */}
-      <div className="pt-4 border-t border-slate-100 dark:border-white/10 flex flex-wrap items-center justify-between gap-3">
+      <div className="pt-4 flex flex-wrap items-center justify-between gap-3">
         {/* Left: Quick point award buttons */}
         <div className="flex items-center gap-2">
           {onAwardTeamPoint && (
@@ -196,7 +196,7 @@ export const ClassroomQuestionCard: React.FC<ClassroomQuestionCardProps> = ({
               <button
                 type="button"
                 onClick={() => onAwardTeamPoint('team1')}
-                className="px-3.5 py-2 rounded-xl bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 text-xs sm:text-sm font-bold transition-all cursor-pointer border border-blue-200/80 dark:border-blue-800/60"
+                className="px-3.5 py-2 rounded-xl bg-blue-100/70 hover:bg-blue-100 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 text-xs sm:text-sm font-bold transition-all cursor-pointer shadow-2xs"
                 title={`Cộng 1 điểm cho ${team1Name}`}
               >
                 +1 {team1Name}
@@ -204,7 +204,7 @@ export const ClassroomQuestionCard: React.FC<ClassroomQuestionCardProps> = ({
               <button
                 type="button"
                 onClick={() => onAwardTeamPoint('team2')}
-                className="px-3.5 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 text-xs sm:text-sm font-bold transition-all cursor-pointer border border-rose-200/80 dark:border-rose-800/60"
+                className="px-3.5 py-2 rounded-xl bg-rose-100/70 hover:bg-rose-100 dark:bg-rose-950/50 text-rose-700 dark:text-rose-300 text-xs sm:text-sm font-bold transition-all cursor-pointer shadow-2xs"
                 title={`Cộng 1 điểm cho ${team2Name}`}
               >
                 +1 {team2Name}
