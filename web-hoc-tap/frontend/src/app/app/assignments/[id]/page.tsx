@@ -907,7 +907,7 @@ export default function AssignmentDetailPage() {
 
             {selectedSub ? (
               /* Grading Form Panel */
-              <div className="p-4 bg-slate-50/70 dark:bg-slate-900/40 rounded-2xl space-y-4 sticky top-20">
+              <div className="p-4 bg-slate-50/70 dark:bg-slate-900/40 rounded-2xl space-y-4">
                 <div className="space-y-1 pb-2 border-b border-slate-200/60 dark:border-slate-800/60">
                   <h3 className="font-semibold text-sm text-slate-950 dark:text-slate-100">
                     Chấm điểm bài nộp
