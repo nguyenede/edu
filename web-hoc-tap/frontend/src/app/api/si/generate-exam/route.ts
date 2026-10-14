@@ -1,5 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { parseExamFromStructuredText, validateDeterministicResult } from '@/lib/examStructureParser';
+import {
+  parseExamFromStructuredText,
+  validateDeterministicResult,
+  detectSubjectFromText,
+  detectGradeFromText,
+} from '@/lib/examStructureParser';
 import { validateAndSanitizeQuestions, cleanVietnameseEncoding } from '@/lib/questionValidator';
 import { generateCurriculumFallbackExam } from './curriculumFallback';
 
@@ -246,42 +251,22 @@ function extractQuestionsFromAiOutput(rawText: string): any {
  * Tự động nhận diện chủ đề, môn học và khối lớp từ văn bản hoặc mô tả
  */
 function detectDocumentTopicAndSubject(text: string, fileName?: string): { subject: string; grade: string; title: string } {
-  const combined = `${fileName || ''} ${text || ''}`.toLowerCase();
+  const combined = `${fileName || ''} ${text || ''}`.trim();
 
-  let subject = 'Kiến thức tổng hợp';
-  let grade = '12';
-
-  if (combined.includes('doanh nghiệp') || combined.includes('thuế') || combined.includes('pháp luật') || combined.includes('kinh tế') || combined.includes('hợp đồng') || combined.includes('gdcd')) {
-    subject = 'Kinh tế & Pháp luật';
-  } else if (combined.includes('hóa học') || combined.includes('axit') || combined.includes('bazơ') || combined.includes('nguyên tử') || combined.includes('phản ứng')) {
-    subject = 'Hóa học';
-  } else if (combined.includes('sinh học') || combined.includes('tế bào') || combined.includes('di truyền') || combined.includes('adn') || combined.includes('quang hợp')) {
-    subject = 'Sinh học';
-  } else if (combined.includes('vật lý') || combined.includes('vật lí') || combined.includes('vận tốc') || combined.includes('gia tốc') || combined.includes('điện tích') || combined.includes('newton')) {
-    subject = 'Vật lý';
-  } else if (combined.includes('lịch sử') || combined.includes('chiến dịch') || combined.includes('cách mạng') || combined.includes('kháng chiến') || combined.includes('năm 1945') || combined.includes('hiệp định')) {
-    subject = 'Lịch sử';
-  } else if (combined.includes('địa lý') || combined.includes('địa lí') || combined.includes('khí hậu') || combined.includes('địa hình') || combined.includes('sông ngòi')) {
-    subject = 'Địa lý';
-  } else if (combined.includes('ngữ văn') || combined.includes('văn học') || combined.includes('tác phẩm') || combined.includes('nhân vật') || combined.includes('đoạn trích')) {
-    subject = 'Ngữ văn';
-  } else if (combined.includes('tiếng anh') || combined.includes('english') || combined.includes('grammar') || combined.includes('vocabulary')) {
-    subject = 'Tiếng Anh';
-  } else if (combined.includes('tin học') || combined.includes('thuật toán') || combined.includes('lập trình') || combined.includes('python')) {
-    subject = 'Tin học';
-  } else if (combined.includes('toán') || combined.includes('phương trình') || combined.includes('hàm số') || combined.includes('đạo hàm') || combined.includes('hình học') || combined.includes('tích phân')) {
-    subject = 'Toán';
+  let subject = '';
+  const detectedSub = detectSubjectFromText(combined);
+  if (detectedSub && detectedSub !== 'Kiến thức tổng hợp') {
+    subject = detectedSub;
   }
 
-  for (let i = 12; i >= 1; i--) {
-    if (combined.includes(`lớp ${i}`) || combined.includes(`lop ${i}`) || combined.includes(`khối ${i}`)) {
-      grade = i.toString();
-      break;
-    }
+  let grade = '';
+  const detectedG = detectGradeFromText(combined);
+  if (detectedG && detectedG !== 'Tự do') {
+    grade = detectedG;
   }
 
   const cleanFileName = (fileName || '').replace(/\.[^/.]+$/, '').trim();
-  const title = cleanFileName ? `Bài kiểm tra: ${cleanFileName}` : `Đề kiểm tra môn ${subject}`;
+  const title = cleanFileName ? `Bài kiểm tra: ${cleanFileName}` : (subject ? `Đề kiểm tra môn ${subject}` : 'Đề kiểm tra kiến thức');
 
   return { subject, grade, title };
 }
@@ -315,41 +300,32 @@ export async function POST(req: NextRequest) {
       : (topic ? String(topic).split(/[\n;]+/).map((t) => t.trim()).filter(Boolean) : []);
     const effectiveMergedTopic = rawTopicsList.length > 0
       ? rawTopicsList.join('; ')
-      : (customPrompt || topic || (mode === 'suggest' ? 'Kiến thức trọng tâm' : 'Kiến thức tổng hợp'));
+      : (customPrompt || topic || (mode === 'suggest' ? 'Kiến thức trọng tâm' : 'Kiến thức bài học'));
 
     let resolvedSubject = subject && subject.trim() ? subject.trim() : '';
     let resolvedGrade = grade && grade.trim() ? grade.trim() : '';
     let resolvedTitle = '';
 
-    if (documentText || fileName) {
-      const detected = detectDocumentTopicAndSubject(documentText, fileName);
-      if (!resolvedSubject) resolvedSubject = detected.subject;
-      if (!resolvedGrade) resolvedGrade = detected.grade;
-      resolvedTitle = detected.title;
-    } else {
-      const lowerTopic = effectiveMergedTopic.toLowerCase();
-      if (!resolvedSubject) {
-        if (lowerTopic.includes('sinh học') || lowerTopic.includes('tế bào') || lowerTopic.includes('quang hợp') || lowerTopic.includes('adn') || lowerTopic.includes('di truyền')) resolvedSubject = 'Sinh học';
-        else if (lowerTopic.includes('lịch sử') || lowerTopic.includes('kháng chiến') || lowerTopic.includes('chiến dịch') || lowerTopic.includes('cách mạng') || lowerTopic.includes('thế chiến')) resolvedSubject = 'Lịch sử';
-        else if (lowerTopic.includes('hóa học') || lowerTopic.includes('axit') || lowerTopic.includes('bazơ') || lowerTopic.includes('phản ứng') || lowerTopic.includes('oxit')) resolvedSubject = 'Hóa học';
-        else if (lowerTopic.includes('vật lý') || lowerTopic.includes('vật lí') || lowerTopic.includes('dao động') || lowerTopic.includes('lực') || lowerTopic.includes('điện tích')) resolvedSubject = 'Vật lý';
-        else if (lowerTopic.includes('địa lý') || lowerTopic.includes('địa lí') || lowerTopic.includes('khí hậu') || lowerTopic.includes('địa hình')) resolvedSubject = 'Địa lý';
-        else if (lowerTopic.includes('ngữ văn') || lowerTopic.includes('văn học') || lowerTopic.includes('truyện kiều') || lowerTopic.includes('thơ')) resolvedSubject = 'Ngữ văn';
-        else if (lowerTopic.includes('tin học') || lowerTopic.includes('lập trình') || lowerTopic.includes('python') || lowerTopic.includes('thuật toán')) resolvedSubject = 'Tin học';
-        else if (lowerTopic.includes('tiếng anh') || lowerTopic.includes('english') || lowerTopic.includes('grammar') || lowerTopic.includes('vocabulary')) resolvedSubject = 'Tiếng Anh';
-        else if (lowerTopic.includes('kinh tế') || lowerTopic.includes('pháp luật') || lowerTopic.includes('gdcd') || lowerTopic.includes('doanh nghiệp')) resolvedSubject = 'Kinh tế & Pháp luật';
-        else if (lowerTopic.includes('toán') || lowerTopic.includes('phương trình') || lowerTopic.includes('hệ phương trình') || lowerTopic.includes('hàm số') || lowerTopic.includes('đại số')) resolvedSubject = 'Toán';
-        else resolvedSubject = '';
-      }
+    const combinedSearchText = `${fileName || ''} ${documentText || ''} ${effectiveMergedTopic || ''} ${topic || ''}`.trim();
 
-      if (!resolvedGrade) {
-        for (let g = 12; g >= 1; g--) {
-          if (lowerTopic.includes(`lớp ${g}`) || lowerTopic.includes(`lop ${g}`) || lowerTopic.includes(`khối ${g}`)) {
-            resolvedGrade = g.toString();
-            break;
-          }
-        }
+    if (!resolvedSubject) {
+      const detectedSub = detectSubjectFromText(combinedSearchText);
+      if (detectedSub && detectedSub !== 'Kiến thức tổng hợp') {
+        resolvedSubject = detectedSub;
       }
+    }
+
+    if (!resolvedGrade) {
+      const detectedG = detectGradeFromText(combinedSearchText);
+      if (detectedG && detectedG !== 'Tự do') {
+        resolvedGrade = detectedG;
+      }
+    }
+
+    if (fileName) {
+      resolvedTitle = `Bài kiểm tra: ${fileName.replace(/\.[^/.]+$/, '').trim()}`;
+    } else if (effectiveMergedTopic && effectiveMergedTopic.length <= 60 && !effectiveMergedTopic.includes('\n')) {
+      resolvedTitle = `Đề trắc nghiệm: ${effectiveMergedTopic.trim()}`;
     }
 
     const startTime = Date.now();

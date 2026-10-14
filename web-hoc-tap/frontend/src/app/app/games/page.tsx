@@ -14,6 +14,7 @@ import { GoldMinerGame } from '@/components/games/GoldMinerGame';
 import { FruitSlashGame } from '@/components/games/FruitSlashGame';
 import { WhackAMoleGame } from '@/components/games/WhackAMoleGame';
 import { BubblePopGame } from '@/components/games/BubblePopGame';
+import { getGameCustomIcon } from '@/components/games/GameCustomIcons';
 import {
   GameConfigModal,
   GameSettingsConfig,
@@ -484,11 +485,7 @@ export default function GamesHubPage() {
               menuTitle="Danh sách trò chơi"
               items={GAME_LIST.map((g) => ({
                 label: g.title,
-                icon: (
-                  <span className={`w-5 h-5 rounded-md flex items-center justify-center text-xs shrink-0 ${g.iconBg}`}>
-                    {g.iconEmoji}
-                  </span>
-                ),
+                icon: getGameCustomIcon(g.id, 18),
                 onClick: () => {
                   setPlayingLesson(null);
                   setActiveCategory(g.id);
@@ -520,11 +517,7 @@ export default function GamesHubPage() {
               menuTitle="Danh sách trò chơi"
               items={GAME_LIST.map((g) => ({
                 label: g.title,
-                icon: (
-                  <span className={`w-5 h-5 rounded-md flex items-center justify-center text-xs shrink-0 ${g.iconBg}`}>
-                    {g.iconEmoji}
-                  </span>
-                ),
+                icon: getGameCustomIcon(g.id, 18),
                 onClick: () => setActiveCategory(g.id),
               }))}
             />
@@ -773,8 +766,8 @@ export default function GamesHubPage() {
                     <div>
                       {/* Top Icon & Badge */}
                       <div className="flex items-center justify-between gap-2 mb-3">
-                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-xl ${game.iconBg}`}>
-                          {game.iconEmoji}
+                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${game.iconBg}`}>
+                          {getGameCustomIcon(game.id, 24)}
                         </div>
                         <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${game.badgeColor}`}>
                           {game.badge}

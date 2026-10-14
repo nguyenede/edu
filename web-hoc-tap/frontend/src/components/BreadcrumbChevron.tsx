@@ -213,9 +213,11 @@ export function BreadcrumbChevron({
                   className="w-full text-left px-3 py-1.5 flex items-center gap-2 hover:bg-slate-200/60 dark:hover:bg-white/10 active:bg-slate-300/60 dark:active:bg-white/15 text-slate-800 dark:text-slate-200 transition-colors cursor-pointer text-xs"
                 >
                   {item.icon ? (
-                    <span className="shrink-0">{item.icon}</span>
+                    <span className="shrink-0 flex items-center justify-center">{item.icon}</span>
                   ) : (
-                    <Folder size={14} className="text-amber-500 fill-amber-500/20 shrink-0" />
+                    <span className="w-3.5 h-3.5 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center shrink-0">
+                      <span className="w-1.5 h-1.5 rounded-full bg-slate-500 dark:bg-slate-300" />
+                    </span>
                   )}
                   <span className="truncate">{item.label || item.name}</span>
                 </button>

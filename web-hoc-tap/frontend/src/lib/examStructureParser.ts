@@ -61,31 +61,195 @@ export function normalizeText(text: string): string {
 /**
  * Tự động nhận diện Môn học từ tiêu đề hoặc nội dung tài liệu
  */
+/**
+ * Tự động nhận diện Môn học từ tiêu đề hoặc nội dung tài liệu chuẩn GDPT Việt Nam
+ */
 export function detectSubjectFromText(text: string): string {
+  if (!text) return 'Kiến thức tổng hợp';
   const lower = text.toLowerCase();
-  if (/toán|đại số|hình học|giải tích|toán học/.test(lower)) return 'Toán';
-  if (/vật lý|vật lí|quang học|cơ học|điện xoay chiều/.test(lower)) return 'Vật lý';
-  if (/hóa học|hóa vô cơ|hóa hữu cơ|hóa 1/.test(lower)) return 'Hóa học';
-  if (/sinh học|di truyền|sinh thái|tế bào/.test(lower)) return 'Sinh học';
-  if (/tiếng anh|english|ngữ pháp|từ vựng|reading|listening/.test(lower)) return 'Tiếng Anh';
-  if (/ngữ văn|văn học|tác phẩm|ngữ pháp tiếng việt/.test(lower)) return 'Ngữ văn';
-  if (/lịch sử|sử học|chiến tranh|kháng chiến/.test(lower)) return 'Lịch sử';
-  if (/địa lý|địa lí|khí hậu|địa hình/.test(lower)) return 'Địa lý';
-  if (/tin học|tin |lập trình|thuật toán|pascal|python|c\+\+/.test(lower)) return 'Tin học';
-  if (/gdcd|giáo dục công dân|gdkt&pl|pháp luật/.test(lower)) return 'GDCD';
-  if (/công nghệ|kỹ thuật/.test(lower)) return 'Công nghệ';
+
+  // 1. Toán học (bao gồm Đại số, Hình học, Bất đẳng thức, Giải tích...)
+  if (
+    /toán|toan|đại số|dai so|hình học|hinh hoc|giải tích|giai tich|bất đẳng thức|bat dang thuc|bđt|bdt|bất phương trình|bat phuong trinh|bpt|phương trình|phuong trinh|hệ phương trình|he phuong trinh|hpt|hàm số|ham so|đạo hàm|dao ham|tích phân|tich phan|nguyên hàm|nguyen ham|lượng giác|vecto|vectơ|toạ độ|tọa độ|tam giác|tứ giác|đường tròn|parabol|hypebol|elip|căn bậc hai|căn thức|hằng đẳng thức|hang dang thuc|xác suất|thống kê|dãy số|cấp số cộng|cấp số nhân|nhị thức newton|thales|ta-lét|talét|pythagore|pytago|pitago|tam thức bậc hai|dấu của tam thức|logarit|khối đa diện|hình không gian/.test(
+      lower
+    )
+  ) {
+    return 'Toán';
+  }
+
+  // 2. Vật lý (Cơ, Nhiệt, Điện, Quang, Hạt nhân...)
+  if (
+    /vật lý|vật lí|vat ly|vat li|cơ học|nhiệt học|quang học|điện xoay chiều|vận tốc|gia tốc|newton|động năng|thế năng|cơ năng|dao động điều hòa|con lắc|sóng cơ|giao thoa sóng|sóng điện từ|dòng điện|điện tích|điện trường|tụ điện|khúc xạ|thấu kính|quang phổ|hạt nhân nguyên tử|phóng xạ/.test(
+      lower
+    )
+  ) {
+    return 'Vật lý';
+  }
+
+  // 3. Hóa học
+  if (
+    /hóa học|hoa hoc|hóa vô cơ|hóa hữu cơ|nguyên tử|phân tử|bảng tuần hoàn|liên kết hóa học|phản ứng|axit|bazơ|bazo|oxit|muối|kim loại|phi kim|hiđrocacbon|ankan|anken|ankin|este|lipit|chất béo|cacbohiđrat|glucozơ|amin|amino axit|peptit|protein|polime|oxi hóa khử|điện phân|đồng phân/.test(
+      lower
+    )
+  ) {
+    return 'Hóa học';
+  }
+
+  // 4. Sinh học & Khoa học tự nhiên (KHTN)
+  if (
+    /sinh học|sinh hoc|khtn|khoa học tự nhiên|tế bào|màng sinh chất|quang hợp|hô hấp|trao đổi chất|adn|arn|axit nucleic|gen|mã di truyền|phiên mã|dịch mã|đột biến|nhiễm sắc thể|nst|nguyên phân|giảm phân|menden|di truyền|phả hệ|tiến hóa|sinh thái|quần thể|quần xã|hệ sinh thái|chuỗi thức ăn/.test(
+      lower
+    )
+  ) {
+    return 'Sinh học';
+  }
+
+  // 5. Tiếng Anh
+  if (
+    /tiếng anh|tieng anh|english|grammar|vocabulary|reading|listening|writing|speaking|present simple|past simple|present perfect|conditional sentence|passive voice|relative clause|reported speech|preposition/.test(
+      lower
+    )
+  ) {
+    return 'Tiếng Anh';
+  }
+
+  // 6. Ngữ văn
+  if (
+    /ngữ văn|ngu van|văn học|van hoc|tác phẩm|tac pham|nhân vật|đoạn trích|thơ |truyện|nghị luận|biện pháp tu từ|truyện kiều|vợ chồng a phủ|vợ nhặt|chí phèo|lão hạc|tắt đèn|sóng xuân quỳnh|tây tiến|đất nước|đồng chí|lặng lẽ sa pa|chiếc lược ngà|bếp lửa|ánh trăng|dế mèn phiêu lưu/.test(
+      lower
+    )
+  ) {
+    return 'Ngữ văn';
+  }
+
+  // 7. Lịch sử
+  if (
+    /lịch sử|lich su|sử học|chiến tranh|kháng chiến|chiến dịch|cách mạng|thế chiến|điện biên phủ|hiệp định|năm 1945|năm 1954|năm 1975|triều đại|nhà lý|nhà trần|nhà lê|nhà nguyễn|phong trào cần vương|xô viết nghệ tĩnh/.test(
+      lower
+    )
+  ) {
+    return 'Lịch sử';
+  }
+
+  // 8. Địa lý
+  if (
+    /địa lý|địa lí|dia ly|dia li|khí hậu|khi hau|địa hình|dia hinh|sông ngòi|thổ nhưỡng|khoáng sản|dân số|đô thị hóa|vùng kinh tế|đồng bằng|tây nguyên|bắc bộ|nam bộ|kinh tế biển/.test(
+      lower
+    )
+  ) {
+    return 'Địa lý';
+  }
+
+  // 9. Kinh tế & Pháp luật (GDCD)
+  if (
+    /gdcd|giáo dục công dân|kinh tế & pháp luật|kinh tế và pháp luật|gdkt&pl|pháp luật|hiến pháp|doanh nghiệp|thuế|thị trường|lạm phát|thất nghiệp|quyền công dân|vi phạm pháp luật|hợp đồng kinh tế/.test(
+      lower
+    )
+  ) {
+    return 'GDCD';
+  }
+
+  // 10. Tin học
+  if (
+    /tin học|tin hoc|lập trình|lap trinh|thuật toán|thuat toan|python|pascal|c\+\+|java|csdl|cơ sở dữ liệu|mạng máy tính|hệ điều hành|excel|word|powerpoint/.test(
+      lower
+    )
+  ) {
+    return 'Tin học';
+  }
+
+  // 11. Công nghệ
+  if (/công nghệ|kỹ thuật|cong nghe|ky thuat|mạch điện tử|cơ khí/.test(lower)) {
+    return 'Công nghệ';
+  }
+
   return 'Kiến thức tổng hợp';
 }
 
 /**
- * Tự động nhận diện Khối lớp từ tiêu đề hoặc nội dung tài liệu
+ * Tự động nhận diện Khối lớp từ tiêu đề, nội dung hoặc phân phối chương trình GDPT
  */
 export function detectGradeFromText(text: string): string {
-  const match = text.match(/(?:khối|lớp|k|grade)\s*(\d{1,2})\b/i);
-  if (match && match[1]) {
-    const g = parseInt(match[1], 10);
+  if (!text) return 'Tự do';
+  const lower = text.toLowerCase();
+
+  // 1. Kiểm tra tiền tố trực tiếp (ví dụ: "Lớp 9", "Khối 9", "Grade 9", "K9", "Lop 9")
+  const directMatch = lower.match(/(?:khối|lớp|lop|grade|khoi)\s*(\d{1,2})\b/);
+  if (directMatch && directMatch[1]) {
+    const g = parseInt(directMatch[1], 10);
     if (g >= 1 && g <= 12) return String(g);
   }
+
+  // 2. Kiểm tra mã môn kèm lớp trong tên file (ví dụ: toan9, toan-9, toan_9, ly10, hoa11, van9, anh8)
+  const codeMatch = lower.match(/(?:toan|toán|ly|lý|hoa|hóa|sinh|van|văn|anh|su|sử|dia|địa|tin|gdcd)[-_ ]?(\d{1,2})\b/);
+  if (codeMatch && codeMatch[1]) {
+    const g = parseInt(codeMatch[1], 10);
+    if (g >= 1 && g <= 12) return String(g);
+  }
+
+  // 3. Kiểm tra ký hiệu K + số (K9, K10, K11, K12...)
+  const kMatch = lower.match(/\bk(\d{1,2})\b/);
+  if (kMatch && kMatch[1]) {
+    const g = parseInt(kMatch[1], 10);
+    if (g >= 1 && g <= 12) return String(g);
+  }
+
+  // 4. Đối chiếu tên bài học đặc trưng theo chương trình GDPT Việt Nam:
+  // --- THCS: LỚP 9 ---
+  if (
+    /bất đẳng thức và tính chất|liên hệ giữa thứ tự và phép cộng|liên hệ giữa thứ tự và phép nhân|căn bậc hai|căn thức bậc hai|khai phương|hệ hai phương trình bậc nhất hai ẩn|phương trình bậc hai một ẩn|hệ thức vi-ét|hệ thức viet|tứ giác nội tiếp|góc với đường tròn|lặng lẽ sa pa|chiếc lược ngà|đồng chí|bếp lửa|ánh trăng/.test(
+      lower
+    )
+  ) {
+    return '9';
+  }
+
+  // --- THCS: LỚP 8 ---
+  if (
+    /hằng đẳng thức đáng nhớ|phân thức đại số|định lý thalès|định lí ta-lét|tam giác đồng dạng|hình chóp tam giác đều|lão hạc|tắt đèn/.test(
+      lower
+    )
+  ) {
+    return '8';
+  }
+
+  // --- THCS: LỚP 7 ---
+  if (/số hữu tỉ|số thực|đại lượng tỉ lệ thuận|đại lượng tỉ lệ nghịch|tam giác bằng nhau/.test(lower)) {
+    return '7';
+  }
+
+  // --- THCS: LỚP 6 ---
+  if (/số tự nhiên|ước chung|bội chung|số nguyên|dế mèn phiêu lưu ký|thánh gióng/.test(lower)) {
+    return '6';
+  }
+
+  // --- THPT: LỚP 10 ---
+  if (
+    /mệnh đề|tập hợp|bất phương trình bậc nhất hai ẩn|hệ bất phương trình bậc nhất hai ẩn|tam thức bậc hai|dấu của tam thức|chuyển động thẳng biến đổi đều/.test(
+      lower
+    )
+  ) {
+    return '10';
+  }
+
+  // --- THPT: LỚP 11 ---
+  if (
+    /hàm số lượng giác|phương trình lượng giác|cấp số cộng|cấp số nhân|dãy số|giới hạn dãy số|chí phèo|hai đứa trẻ/.test(
+      lower
+    )
+  ) {
+    return '11';
+  }
+
+  // --- THPT: LỚP 12 ---
+  if (
+    /tích phân|nguyên hàm|khảo sát hàm số|tọa độ không gian oxyz|số phức|este|lipit|vợ chồng a phủ|vợ nhặt|người lái đò sông đà|ai đã đặt tên cho dòng sông|đất nước nguyễn khoa điềm/.test(
+      lower
+    )
+  ) {
+    return '12';
+  }
+
   return 'Tự do';
 }
 
