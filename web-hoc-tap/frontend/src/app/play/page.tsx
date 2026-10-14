@@ -612,23 +612,20 @@ function BlooketPlayContent() {
                 </div>
               </div>
 
-              {/* HOMEWORK INFO CARD */}
+              {/* THÔNG TIN BÀI TẬP (GỌN GÀNG, TỐI GIẢN) */}
               {homework && (
-                <div className="p-3.5 bg-blue-50/50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900/60 rounded-2xl space-y-1.5 text-xs animate-in fade-in">
-                  <div className="font-bold text-slate-900 dark:text-slate-100 truncate">
+                <div className="p-3.5 bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800 rounded-2xl space-y-1 text-left animate-in fade-in">
+                  <div className="font-bold text-sm text-slate-900 dark:text-slate-100 truncate">
                     {homework.title}
                   </div>
-                  <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400">
-                    <span>Số câu: {homework.quizData?.questions?.length || 0} câu</span>
-                    <span>
-                      {homework.durationMinutes > 0 ? `${homework.durationMinutes} phút` : 'Tự do thời gian'}
-                    </span>
-                    {homework.antiCheating && (
-                      <span className="flex items-center gap-1 text-google-blue font-semibold">
-                        <ShieldCheck size={13} /> Chống gian lận
-                      </span>
-                    )}
-                  </div>
+                  {homework.classId && homework.classId !== 'public' && classCheckStatus === 'allowed' && (
+                    <div className="text-xs text-slate-500 dark:text-slate-400">
+                      Học sinh: <strong className="text-slate-800 dark:text-slate-200">{user?.name || studentName}</strong>
+                      {homework.className && (
+                        <span> &bull; Lớp: <strong className="text-slate-800 dark:text-slate-200">{homework.className}</strong></span>
+                      )}
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -636,23 +633,22 @@ function BlooketPlayContent() {
               {homework && homework.classId && homework.classId !== 'public' ? (
                 /* BÀI TẬP CỦA LỚP HỌC */
                 classCheckStatus === 'checking' ? (
-                  <div className="p-5 text-center space-y-2 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800">
-                    <Loader2 size={24} className="animate-spin text-google-blue mx-auto" />
-                    <p className="text-xs text-slate-500 font-medium">Đang kiểm tra quyền truy cập lớp học...</p>
+                  <div className="p-4 text-center space-y-2 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800">
+                    <Loader2 size={20} className="animate-spin text-google-blue mx-auto" />
+                    <p className="text-xs text-slate-500 font-medium">Đang kiểm tra tài khoản lớp học...</p>
                   </div>
                 ) : classCheckStatus === 'not_logged_in' ? (
                   /* 1. CHƯA ĐĂNG NHẬP */
                   <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200/80 dark:border-amber-900/60 space-y-3 text-center animate-in fade-in">
-                    <div className="w-10 h-10 rounded-full bg-amber-100 dark:bg-amber-900/60 text-amber-700 dark:text-amber-300 flex items-center justify-center mx-auto">
-                      <Lock size={20} />
+                    <div className="w-9 h-9 rounded-full bg-amber-100 dark:bg-amber-900/60 text-amber-700 dark:text-amber-300 flex items-center justify-center mx-auto">
+                      <Lock size={18} />
                     </div>
                     <div className="space-y-1">
-                      <h4 className="text-xs font-bold text-amber-900 dark:text-amber-200 uppercase tracking-wide">
+                      <h4 className="text-xs font-bold text-amber-900 dark:text-amber-200">
                         Yêu cầu đăng nhập tài khoản lớp
                       </h4>
                       <p className="text-[11px] text-amber-800 dark:text-amber-300 leading-relaxed">
-                        Bài tập này được giáo viên giao riêng cho lớp <strong>{homework.className}</strong>.
-                        Bạn cần <strong>đăng nhập đúng tài khoản học sinh ở lớp đó</strong> thì mới vào được.
+                        Bài tập này được giao riêng cho lớp <strong>{homework.className}</strong>. Vui lòng đăng nhập đúng tài khoản học sinh ở lớp đó.
                       </p>
                     </div>
                     <Button
@@ -661,27 +657,24 @@ function BlooketPlayContent() {
                         const currentPath = typeof window !== 'undefined' ? (window.location.pathname + window.location.search) : `/play?pin=${homework.pin}`;
                         router.push(`/login?redirect=${encodeURIComponent(currentPath)}`);
                       }}
-                      className="w-full py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs gap-1.5 justify-center shadow-xs"
+                      className="w-full py-2.5 rounded-xl bg-google-blue hover:bg-[#1557b0] text-white font-bold text-xs gap-1.5 justify-center shadow-xs"
                     >
                       <LogIn size={14} />
-                      Đăng nhập ngay để làm bài
+                      Đăng nhập để vào làm bài
                     </Button>
                   </div>
                 ) : classCheckStatus === 'not_in_class' ? (
                   /* 2. ĐÃ ĐĂNG NHẬP NHƯNG KHÔNG THUỘC LỚP */
                   <div className="p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200/80 dark:border-rose-900/60 space-y-3 text-center animate-in fade-in">
-                    <div className="w-10 h-10 rounded-full bg-rose-100 dark:bg-rose-900/60 text-rose-700 dark:text-rose-300 flex items-center justify-center mx-auto">
-                      <UserX size={20} />
+                    <div className="w-9 h-9 rounded-full bg-rose-100 dark:bg-rose-900/60 text-rose-700 dark:text-rose-300 flex items-center justify-center mx-auto">
+                      <UserX size={18} />
                     </div>
                     <div className="space-y-1">
-                      <h4 className="text-xs font-bold text-rose-900 dark:text-rose-200 uppercase tracking-wide">
-                        Không thuộc danh sách lớp học
+                      <h4 className="text-xs font-bold text-rose-900 dark:text-rose-200">
+                        Tài khoản không thuộc lớp học
                       </h4>
                       <p className="text-[11px] text-rose-800 dark:text-rose-300 leading-relaxed">
-                        Tài khoản hiện tại (<strong>{user?.name || user?.email}</strong>) không có tên trong danh sách lớp <strong>{homework.className}</strong>.
-                      </p>
-                      <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                        Vui lòng đăng nhập đúng tài khoản học sinh ở lớp đó để vào làm bài.
+                        Tài khoản <strong>{user?.name || user?.email}</strong> không nằm trong danh sách lớp <strong>{homework.className}</strong>.
                       </p>
                     </div>
                     <Button
@@ -694,32 +687,19 @@ function BlooketPlayContent() {
                       className="w-full py-2 rounded-xl text-xs gap-1.5 justify-center text-rose-600 dark:text-rose-400 border-rose-200 dark:border-rose-800 hover:bg-rose-50 dark:hover:bg-rose-950/50"
                     >
                       <LogOut size={13} />
-                      Đăng xuất & Đổi tài khoản khác
+                      Đổi tài khoản khác
                     </Button>
                   </div>
                 ) : (
-                  /* 3. ĐÃ XÁC THỰC THÀNH CÔNG VÀO LỚP */
-                  <div className="space-y-3 animate-in fade-in">
-                    <div className="p-3 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900/60 rounded-2xl space-y-1 text-xs">
-                      <div className="flex items-center gap-1.5 text-emerald-700 dark:text-emerald-300 font-bold">
-                        <UserCheck size={15} />
-                        <span>Đã xác thực tài khoản học sinh</span>
-                      </div>
-                      <div className="text-[11px] text-slate-600 dark:text-slate-300 flex justify-between pt-0.5">
-                        <span>Học sinh: <strong>{user?.name || studentName}</strong></span>
-                        <span>Lớp: <strong>{homework.className}</strong></span>
-                      </div>
-                    </div>
-
-                    <Button
-                      variant="primary"
-                      onClick={handleStartExamFlow}
-                      disabled={loadingHw || !studentName.trim()}
-                      className="w-full py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm shadow-sm transition-all"
-                    >
-                      VÀO LÀM BÀI NGAY
-                    </Button>
-                  </div>
+                  /* 3. ĐÃ XÁC THỰC THÀNH CÔNG VÀO LỚP -> CHỈ HIỂN THỊ NÚT BẤM (CÙNG MÀU XANH DƯƠNG, KHÔNG ĐỔI MÀU) */
+                  <Button
+                    variant="primary"
+                    onClick={handleStartExamFlow}
+                    disabled={loadingHw || !studentName.trim()}
+                    className="w-full py-3.5 rounded-2xl bg-google-blue hover:bg-[#1557b0] active:bg-[#174ea6] text-white font-bold text-sm shadow-sm transition-all"
+                  >
+                    VÀO LÀM BÀI NGAY
+                  </Button>
                 )
               ) : (
                 /* BÀI TẬP TỰ DO: BẤT CỨ AI CŨNG VÀO ĐƯỢC */
@@ -741,7 +721,7 @@ function BlooketPlayContent() {
                     variant="primary"
                     onClick={handleStartExamFlow}
                     disabled={loadingHw || !studentName.trim()}
-                    className="w-full py-3.5 rounded-2xl bg-google-blue hover:bg-[#1557b0] text-white font-bold text-sm shadow-sm transition-all"
+                    className="w-full py-3.5 rounded-2xl bg-google-blue hover:bg-[#1557b0] active:bg-[#174ea6] text-white font-bold text-sm shadow-sm transition-all"
                   >
                     VÀO LÀM BÀI NGAY
                   </Button>
