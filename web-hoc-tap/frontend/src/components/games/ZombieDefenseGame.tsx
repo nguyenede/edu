@@ -2,11 +2,12 @@
 
 import React, { useState, useEffect } from 'react';
 import { gameAudio } from '@/lib/gameSound';
-import { Shield, Flame } from 'lucide-react';
+import { Shield, Flame, Sparkles } from 'lucide-react';
 import { GameSettingsConfig, DEFAULT_GAME_CONFIG } from './GameConfigModal';
 import { ClassroomTeacherHeader, ClassroomTeam } from './ClassroomTeacherHeader';
 import { ClassroomQuestionCard } from './ClassroomQuestionCard';
 import { QuestionGridModal } from './QuestionGridModal';
+import { RandomStudentModal } from './RandomStudentModal';
 import { ClassroomVictoryModal } from './ClassroomVictoryModal';
 
 interface Question {
@@ -42,6 +43,7 @@ export const ZombieDefenseGame: React.FC<ZombieDefenseGameProps> = ({
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [fontSize, setFontSize] = useState<'normal' | 'large' | 'xlarge'>(config.fontSize || 'large');
   const [isGridOpen, setIsGridOpen] = useState(false);
+  const [isStudentModalOpen, setIsStudentModalOpen] = useState(false);
   const [questionStatuses, setQuestionStatuses] = useState<Record<number, 'unopened' | 'correct' | 'incorrect'>>({});
   const [winnerTeamId, setWinnerTeamId] = useState<string | null>(null);
   const [isVictoryModalOpen, setIsVictoryModalOpen] = useState(false);
@@ -66,16 +68,12 @@ export const ZombieDefenseGame: React.FC<ZombieDefenseGameProps> = ({
       return;
     }
 
+    if (timerSeconds <= 5 && timerSeconds > 0) {
+      gameAudio.playTick();
+    }
+
     const timer = setInterval(() => {
-      setTimerSeconds((prev) => {
-        if (prev !== null && prev > 0) {
-          if (prev <= 6 && prev > 1) {
-            gameAudio.playTick();
-          }
-          return prev - 1;
-        }
-        return 0;
-      });
+      setTimerSeconds((prev) => (prev !== null && prev > 0 ? prev - 1 : 0));
     }, 1000);
 
     return () => clearInterval(timer);
@@ -102,49 +100,53 @@ export const ZombieDefenseGame: React.FC<ZombieDefenseGameProps> = ({
   };
 
   const handleSelectOption = (idx: number) => {
-    if (isAnswerRevealed || winnerTeamId || !currentQ) return;
-
-    const opt = idx >= 0 ? currentQ.options[idx] : null;
-    const isCorrect = Boolean(opt?.isCorrect);
-
+    if (isAnswerRevealed) return;
     setAnsweredOptionIdx(idx);
     setIsAnswerRevealed(true);
 
+    const isCorrect = idx >= 0 && Boolean(currentQ?.options[idx]?.isCorrect);
     setQuestionStatuses((prev) => ({
       ...prev,
       [currentIndex]: isCorrect ? 'correct' : 'incorrect',
     }));
 
     if (isCorrect) {
-      setIsBlasting(true);
       gameAudio.playCorrect();
-      gameAudio.playHit();
-      if (activeTeamId === 'team1') setTeam1Score((s) => s + 15);
-      else setTeam2Score((s) => s + 15);
-
-      setTimeout(() => setIsBlasting(false), 800);
+      setIsBlasting(true);
+      setTimeout(() => setIsBlasting(false), 900);
+      if (activeTeamId === 'team1') setTeam1Score((s) => s + 1);
+      else setTeam2Score((s) => s + 1);
     } else {
       gameAudio.playIncorrect();
-      setCastleHp((hp) => Math.max(0, hp - 15));
+      setCastleHp((hp) => Math.max(0, hp - 20));
+    }
+  };
+
+  const handleManualReveal = () => {
+    if (isAnswerRevealed) return;
+    setIsAnswerRevealed(true);
+    setAnsweredOptionIdx(null);
+  };
+
+  const handleAwardTeamPoint = (teamId: 'team1' | 'team2') => {
+    handleAdjustScore(teamId, 1);
+    gameAudio.playCorrect();
+    setIsBlasting(true);
+    setTimeout(() => setIsBlasting(false), 900);
+  };
+
+  const handlePrevQuestion = () => {
+    if (currentIndex > 0) {
+      setCurrentIndex((prev) => prev - 1);
+      setAnsweredOptionIdx(null);
+      setIsAnswerRevealed(false);
+      setTimerSeconds(initialTime);
     }
   };
 
   const handleNextQuestion = () => {
-    const nextUnopenedIndex = questions.findIndex(
-      (_, idx) => !questionStatuses[idx] && idx !== currentIndex
-    );
-    const hasUnopened = nextUnopenedIndex !== -1;
-
-    if (hasUnopened) {
-      let targetIndex = (currentIndex + 1) % questions.length;
-      for (let i = 0; i < questions.length; i++) {
-        const candidate = (currentIndex + 1 + i) % questions.length;
-        if (!questionStatuses[candidate]) {
-          targetIndex = candidate;
-          break;
-        }
-      }
-      setCurrentIndex(targetIndex);
+    if (currentIndex < questions.length - 1) {
+      setCurrentIndex((prev) => prev + 1);
       setAnsweredOptionIdx(null);
       setIsAnswerRevealed(false);
       setTimerSeconds(initialTime);
@@ -156,13 +158,6 @@ export const ZombieDefenseGame: React.FC<ZombieDefenseGameProps> = ({
       gameAudio.playVictory();
       setIsVictoryModalOpen(true);
     }
-  };
-
-  const handleSelectQuestionFromGrid = (index: number) => {
-    setCurrentIndex(index);
-    setAnsweredOptionIdx(null);
-    setIsAnswerRevealed(false);
-    setTimerSeconds(initialTime);
   };
 
   const handleRestart = () => {
@@ -185,9 +180,9 @@ export const ZombieDefenseGame: React.FC<ZombieDefenseGameProps> = ({
       id: 'team1',
       name: team1Name,
       score: team1Score,
-      color: 'bg-emerald-600',
-      borderColor: 'border-emerald-400',
-      bgLight: 'bg-emerald-50 dark:bg-emerald-950/40',
+      color: 'bg-blue-600',
+      borderColor: 'border-blue-400',
+      bgLight: 'bg-blue-50 dark:bg-blue-950/40',
     },
     {
       id: 'team2',
@@ -200,11 +195,11 @@ export const ZombieDefenseGame: React.FC<ZombieDefenseGameProps> = ({
   ];
 
   return (
-    <div className="w-full bg-[#f4f7fb] dark:bg-[#151618] rounded-3xl shadow-xl border border-slate-200/90 dark:border-white/10 overflow-hidden flex flex-col transition-all">
+    <div className="w-full bg-[#f8fafc] dark:bg-[#131416] rounded-2xl border border-slate-200/80 dark:border-white/10 overflow-hidden flex flex-col transition-all">
       {/* 1. TEACHER CLASSROOM HEADER */}
       <ClassroomTeacherHeader
         title={examTitle}
-        gameShortName="Chặn Zombie bảo vệ trường"
+        gameShortName="Chặn Zombie bảo vệ thành"
         teams={teams}
         activeTeamId={activeTeamId}
         onSelectActiveTeam={(id) => setActiveTeamId(id as 'team1' | 'team2')}
@@ -212,9 +207,11 @@ export const ZombieDefenseGame: React.FC<ZombieDefenseGameProps> = ({
         timerSeconds={timerSeconds}
         isTimerPaused={isTimerPaused}
         onTogglePauseTimer={() => setIsTimerPaused(!isTimerPaused)}
+        onAddSeconds={(delta) => setTimerSeconds((prev) => (prev !== null ? prev + delta : delta))}
         currentIndex={currentIndex}
         totalQuestions={questions.length}
         onOpenQuestionGrid={() => setIsGridOpen(true)}
+        onOpenStudentPicker={() => setIsStudentModalOpen(true)}
         fontSize={fontSize}
         onChangeFontSize={setFontSize}
         soundEnabled={soundEnabled}
@@ -226,80 +223,97 @@ export const ZombieDefenseGame: React.FC<ZombieDefenseGameProps> = ({
         onOpenSettings={onOpenSettings}
       />
 
-      {/* 2. VISUAL CASTLE DEFENSE STAGE */}
-      <div className="p-3.5 sm:p-6 flex flex-col items-center justify-center space-y-5">
-        <div className="w-full max-w-4xl bg-gradient-to-b from-slate-900 via-zinc-950 to-neutral-950 rounded-3xl p-5 sm:p-7 border border-emerald-500/30 shadow-2xl flex flex-col justify-between min-h-[230px] text-white relative overflow-hidden">
-          {/* Top Status */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Shield className="text-emerald-400" size={18} />
-              <div className="flex flex-col">
-                <span className="text-xs font-bold text-emerald-300">Độ bền cổng trường: {castleHp}%</span>
-                <div className="w-32 h-2.5 bg-black/60 rounded-full overflow-hidden border border-emerald-500/30">
-                  <div
-                    className="h-full bg-emerald-500 transition-all duration-300"
-                    style={{ width: `${castleHp}%` }}
-                  />
+      {/* 2. WIDESCREEN 16:9 GRID LAYOUT */}
+      <div className="p-3 sm:p-5 grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-5 items-stretch">
+        {/* LEFT COLUMN: MINIMALIST CASTLE DEFENSE STAGE (lg:col-span-5) */}
+        <div className="lg:col-span-5 flex flex-col justify-between space-y-3">
+          <div className="bg-white dark:bg-[#1a1b1e] rounded-2xl p-4 sm:p-5 border border-slate-200/80 dark:border-white/10 shadow-xs flex flex-col justify-between space-y-4 flex-1">
+            {/* Header info */}
+            <div className="flex items-center justify-between text-xs font-bold pb-2 border-b border-slate-100 dark:border-white/10">
+              <span className="flex items-center gap-1.5 text-blue-600 dark:text-blue-400">
+                <Shield size={14} />
+                <span>Thành lũy tri thức</span>
+              </span>
+              <span className="text-[11px] font-semibold text-slate-400">
+                Máu cổng thành: {castleHp}%
+              </span>
+            </div>
+
+            {/* Castle HP Progress Bar */}
+            <div className="w-full h-3 bg-slate-100 dark:bg-white/5 rounded-full overflow-hidden border border-slate-200/70 dark:border-white/10">
+              <div
+                className={`h-full transition-all duration-500 ${
+                  castleHp > 50
+                    ? 'bg-emerald-500'
+                    : castleHp > 20
+                    ? 'bg-amber-500'
+                    : 'bg-rose-500 animate-pulse'
+                }`}
+                style={{ width: `${castleHp}%` }}
+              />
+            </div>
+
+            {/* Battle Scene Display */}
+            <div className="py-6 px-3 bg-slate-50 dark:bg-white/5 rounded-xl border border-slate-100 dark:border-white/5 flex items-center justify-between relative overflow-hidden min-h-[140px]">
+              {/* Cannon / Castle Gate */}
+              <div className="flex flex-col items-center z-10">
+                <span className="text-4xl">🏰</span>
+                <span className="text-[10px] font-bold text-slate-600 dark:text-slate-400 mt-1">Cổng thành</span>
+              </div>
+
+              {/* Cannon Blast projectile */}
+              {isBlasting && (
+                <div className="absolute left-16 right-16 flex items-center justify-center animate-in zoom-in-50 duration-200 z-20">
+                  <span className="text-3xl animate-bounce">💥⚡</span>
+                </div>
+              )}
+
+              {/* Zombies oncoming */}
+              <div className="flex items-center gap-1 z-10">
+                <div className="flex flex-col items-center">
+                  <span className={`text-4xl transition-transform duration-300 ${isBlasting ? 'translate-x-3 opacity-40' : ''}`}>
+                    🧟‍♂️
+                  </span>
+                  <span className="text-[10px] font-bold text-rose-600 dark:text-rose-400 mt-1">Quái vật</span>
                 </div>
               </div>
             </div>
 
-            <div className="px-3 py-1 rounded-xl bg-black/60 border border-white/10 text-xs font-bold text-amber-300">
-              Đợt quái {currentIndex + 1} / {questions.length}
+            {/* Status Tips */}
+            <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+              <span>Đang phòng thủ: <b>Câu {currentIndex + 1}</b></span>
+              <span>Trạng thái: <b>{castleHp > 40 ? 'An toàn' : 'Cảnh báo nguy cấp'}</b></span>
             </div>
-          </div>
-
-          {/* Defense Arena Battlefield */}
-          <div className="relative w-full py-8 flex items-center justify-between">
-            {/* Castle Cannon */}
-            <div className="flex items-center gap-2">
-              <span className="text-4xl sm:text-5xl">🏰</span>
-              <div className={`text-3xl transition-transform ${isBlasting ? 'scale-130 rotate-12 text-yellow-400' : ''}`}>
-                {isBlasting ? '💥' : '💣'}
-              </div>
-            </div>
-
-            {/* Energy Blast Beam */}
-            {isBlasting && (
-              <div className="flex-1 mx-4 h-2 bg-gradient-to-r from-yellow-300 via-amber-400 to-rose-500 rounded-full animate-pulse shadow-[0_0_15px_rgba(251,191,36,0.8)]" />
-            )}
-
-            {/* Zombie horde */}
-            <div className="flex items-center gap-2 sm:gap-3">
-              <div className={`text-4xl sm:text-5xl transition-all duration-300 ${isBlasting ? 'opacity-40 translate-x-4 blur-xs' : 'animate-bounce'}`}>
-                🧟‍♂️
-              </div>
-              <span className="text-3xl sm:text-4xl">🧟‍♀️</span>
-              <span className="text-3xl sm:text-4xl">👻</span>
-            </div>
-          </div>
-
-          <div className="text-center text-[11px] text-zinc-400">
-            Trả lời đúng để khai hỏa đại bác đẩy lùi quái vật bảo vệ thành công trường học
           </div>
         </div>
 
-        {/* 3. CLASSROOM QUESTION BOARD */}
-        {currentQ ? (
-          <div className="w-full max-w-4xl">
+        {/* RIGHT COLUMN: CLASSROOM QUESTION & TEACHING BOARD (lg:col-span-7) */}
+        <div className="lg:col-span-7 flex flex-col">
+          {currentQ ? (
             <ClassroomQuestionCard
               question={currentQ}
               questionNumber={currentIndex + 1}
               totalQuestions={questions.length}
               activeTeamName={activeTeamId === 'team1' ? team1Name : team2Name}
-              activeTeamColor={activeTeamId === 'team1' ? 'bg-emerald-600' : 'bg-rose-600'}
+              activeTeamColor={activeTeamId === 'team1' ? 'bg-blue-600' : 'bg-rose-600'}
               answeredOptionIdx={answeredOptionIdx}
               isRevealed={isAnswerRevealed}
               fontSize={fontSize}
               onSelectOption={handleSelectOption}
+              onManualReveal={handleManualReveal}
+              onAwardTeamPoint={handleAwardTeamPoint}
+              team1Name={team1Name}
+              team2Name={team2Name}
+              onPrevQuestion={handlePrevQuestion}
               onNextQuestion={handleNextQuestion}
               onOpenQuestionGrid={() => setIsGridOpen(true)}
-              isLastQuestion={Object.keys(questionStatuses).length >= questions.length || winnerTeamId !== null}
+              isFirstQuestion={currentIndex === 0}
+              isLastQuestion={currentIndex === questions.length - 1}
             />
-          </div>
-        ) : (
-          <div className="p-8 text-center text-slate-500">Chưa có câu hỏi.</div>
-        )}
+          ) : (
+            <div className="p-8 text-center text-slate-500 font-medium">Không có câu hỏi nào.</div>
+          )}
+        </div>
       </div>
 
       {/* QUESTION GRID MODAL */}
@@ -309,7 +323,18 @@ export const ZombieDefenseGame: React.FC<ZombieDefenseGameProps> = ({
         questionsCount={questions.length}
         currentIndex={currentIndex}
         statuses={questionStatuses}
-        onSelectQuestion={handleSelectQuestionFromGrid}
+        onSelectQuestion={(idx) => {
+          setCurrentIndex(idx);
+          setAnsweredOptionIdx(null);
+          setIsAnswerRevealed(false);
+          setTimerSeconds(initialTime);
+        }}
+      />
+
+      {/* RANDOM STUDENT CALLER MODAL */}
+      <RandomStudentModal
+        isOpen={isStudentModalOpen}
+        onClose={() => setIsStudentModalOpen(false)}
       />
 
       {/* VICTORY CELEBRATION MODAL */}

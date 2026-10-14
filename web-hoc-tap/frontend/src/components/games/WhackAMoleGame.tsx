@@ -7,6 +7,7 @@ import { GameSettingsConfig, DEFAULT_GAME_CONFIG } from './GameConfigModal';
 import { ClassroomTeacherHeader, ClassroomTeam } from './ClassroomTeacherHeader';
 import { ClassroomQuestionCard } from './ClassroomQuestionCard';
 import { QuestionGridModal } from './QuestionGridModal';
+import { RandomStudentModal } from './RandomStudentModal';
 import { ClassroomVictoryModal } from './ClassroomVictoryModal';
 
 interface Question {
@@ -28,7 +29,6 @@ interface MoleHole {
   id: number;
   questionIndex: number;
   label: string;
-  points: number;
 }
 
 export const WhackAMoleGame: React.FC<WhackAMoleGameProps> = ({
@@ -48,6 +48,7 @@ export const WhackAMoleGame: React.FC<WhackAMoleGameProps> = ({
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [fontSize, setFontSize] = useState<'normal' | 'large' | 'xlarge'>(config.fontSize || 'large');
   const [isGridOpen, setIsGridOpen] = useState(false);
+  const [isStudentModalOpen, setIsStudentModalOpen] = useState(false);
   const [questionStatuses, setQuestionStatuses] = useState<Record<number, 'unopened' | 'correct' | 'incorrect'>>({});
   const [winnerTeamId, setWinnerTeamId] = useState<string | null>(null);
   const [isVictoryModalOpen, setIsVictoryModalOpen] = useState(false);
@@ -59,7 +60,7 @@ export const WhackAMoleGame: React.FC<WhackAMoleGameProps> = ({
   const [isTimerPaused, setIsTimerPaused] = useState(false);
 
   const team1Name = config.team1Name || 'Đội Sóc Nhanh';
-  const team2Name = config.team2Name || 'Đội Thỏ Thông Thái';
+  const team2Name = config.team2Name || 'Đội Thỏ Khôn';
 
   const currentQ = questions[currentIndex];
 
@@ -67,7 +68,6 @@ export const WhackAMoleGame: React.FC<WhackAMoleGameProps> = ({
     id: idx,
     questionIndex: idx,
     label: `Hang ${idx + 1}`,
-    points: 10 + (idx % 2) * 5,
   }));
 
   // Timer countdown
@@ -79,16 +79,12 @@ export const WhackAMoleGame: React.FC<WhackAMoleGameProps> = ({
       return;
     }
 
+    if (timerSeconds <= 5 && timerSeconds > 0) {
+      gameAudio.playTick();
+    }
+
     const timer = setInterval(() => {
-      setTimerSeconds((prev) => {
-        if (prev !== null && prev > 0) {
-          if (prev <= 6 && prev > 1) {
-            gameAudio.playTick();
-          }
-          return prev - 1;
-        }
-        return 0;
-      });
+      setTimerSeconds((prev) => (prev !== null && prev > 0 ? prev - 1 : 0));
     }, 1000);
 
     return () => clearInterval(timer);
@@ -115,49 +111,52 @@ export const WhackAMoleGame: React.FC<WhackAMoleGameProps> = ({
   };
 
   const handleSelectOption = (idx: number) => {
-    if (isAnswerRevealed || winnerTeamId || !currentQ) return;
-
-    const opt = idx >= 0 ? currentQ.options[idx] : null;
-    const isCorrect = Boolean(opt?.isCorrect);
-
+    if (isAnswerRevealed) return;
     setAnsweredOptionIdx(idx);
     setIsAnswerRevealed(true);
 
+    const isCorrect = idx >= 0 && Boolean(currentQ?.options[idx]?.isCorrect);
     setQuestionStatuses((prev) => ({
       ...prev,
       [currentIndex]: isCorrect ? 'correct' : 'incorrect',
     }));
 
     if (isCorrect) {
-      setIsHit(true);
       gameAudio.playCorrect();
-      gameAudio.playHit();
-      const pts = moleHoles[currentIndex]?.points || 10;
-      if (activeTeamId === 'team1') setTeam1Score((s) => s + pts);
-      else setTeam2Score((s) => s + pts);
-
-      setTimeout(() => setIsHit(false), 800);
+      setIsHit(true);
+      setTimeout(() => setIsHit(false), 900);
+      if (activeTeamId === 'team1') setTeam1Score((s) => s + 1);
+      else setTeam2Score((s) => s + 1);
     } else {
       gameAudio.playIncorrect();
     }
   };
 
-  const handleNextQuestion = () => {
-    const nextUnopenedIndex = questions.findIndex(
-      (_, idx) => !questionStatuses[idx] && idx !== currentIndex
-    );
-    const hasUnopened = nextUnopenedIndex !== -1;
+  const handleManualReveal = () => {
+    if (isAnswerRevealed) return;
+    setIsAnswerRevealed(true);
+    setAnsweredOptionIdx(null);
+  };
 
-    if (hasUnopened) {
-      let targetIndex = (currentIndex + 1) % questions.length;
-      for (let i = 0; i < questions.length; i++) {
-        const candidate = (currentIndex + 1 + i) % questions.length;
-        if (!questionStatuses[candidate]) {
-          targetIndex = candidate;
-          break;
-        }
-      }
-      setCurrentIndex(targetIndex);
+  const handleAwardTeamPoint = (teamId: 'team1' | 'team2') => {
+    handleAdjustScore(teamId, 1);
+    gameAudio.playCorrect();
+    setIsHit(true);
+    setTimeout(() => setIsHit(false), 900);
+  };
+
+  const handlePrevQuestion = () => {
+    if (currentIndex > 0) {
+      setCurrentIndex((prev) => prev - 1);
+      setAnsweredOptionIdx(null);
+      setIsAnswerRevealed(false);
+      setTimerSeconds(initialTime);
+    }
+  };
+
+  const handleNextQuestion = () => {
+    if (currentIndex < questions.length - 1) {
+      setCurrentIndex((prev) => prev + 1);
       setAnsweredOptionIdx(null);
       setIsAnswerRevealed(false);
       setTimerSeconds(initialTime);
@@ -169,13 +168,6 @@ export const WhackAMoleGame: React.FC<WhackAMoleGameProps> = ({
       gameAudio.playVictory();
       setIsVictoryModalOpen(true);
     }
-  };
-
-  const handleSelectQuestionFromGrid = (index: number) => {
-    setCurrentIndex(index);
-    setAnsweredOptionIdx(null);
-    setIsAnswerRevealed(false);
-    setTimerSeconds(initialTime);
   };
 
   const handleRestart = () => {
@@ -197,26 +189,26 @@ export const WhackAMoleGame: React.FC<WhackAMoleGameProps> = ({
       id: 'team1',
       name: team1Name,
       score: team1Score,
-      color: 'bg-emerald-600',
-      borderColor: 'border-emerald-400',
-      bgLight: 'bg-emerald-50 dark:bg-emerald-950/40',
+      color: 'bg-orange-500',
+      borderColor: 'border-orange-400',
+      bgLight: 'bg-orange-50 dark:bg-orange-950/40',
     },
     {
       id: 'team2',
       name: team2Name,
       score: team2Score,
-      color: 'bg-sky-600',
-      borderColor: 'border-sky-400',
-      bgLight: 'bg-sky-50 dark:bg-sky-950/40',
+      color: 'bg-blue-600',
+      borderColor: 'border-blue-400',
+      bgLight: 'bg-blue-50 dark:bg-blue-950/40',
     },
   ];
 
   return (
-    <div className="w-full bg-[#f4f7fb] dark:bg-[#151618] rounded-3xl shadow-xl border border-slate-200/90 dark:border-white/10 overflow-hidden flex flex-col transition-all">
+    <div className="w-full bg-[#f8fafc] dark:bg-[#131416] rounded-2xl border border-slate-200/80 dark:border-white/10 overflow-hidden flex flex-col transition-all">
       {/* 1. TEACHER CLASSROOM HEADER */}
       <ClassroomTeacherHeader
         title={examTitle}
-        gameShortName="Đập chuột chũi tri thức"
+        gameShortName="Đập chuột chũi kiến thức"
         teams={teams}
         activeTeamId={activeTeamId}
         onSelectActiveTeam={(id) => setActiveTeamId(id as 'team1' | 'team2')}
@@ -224,9 +216,11 @@ export const WhackAMoleGame: React.FC<WhackAMoleGameProps> = ({
         timerSeconds={timerSeconds}
         isTimerPaused={isTimerPaused}
         onTogglePauseTimer={() => setIsTimerPaused(!isTimerPaused)}
+        onAddSeconds={(delta) => setTimerSeconds((prev) => (prev !== null ? prev + delta : delta))}
         currentIndex={currentIndex}
         totalQuestions={questions.length}
         onOpenQuestionGrid={() => setIsGridOpen(true)}
+        onOpenStudentPicker={() => setIsStudentModalOpen(true)}
         fontSize={fontSize}
         onChangeFontSize={setFontSize}
         soundEnabled={soundEnabled}
@@ -238,86 +232,101 @@ export const WhackAMoleGame: React.FC<WhackAMoleGameProps> = ({
         onOpenSettings={onOpenSettings}
       />
 
-      {/* 2. VISUAL MOLE BURROW ARENA */}
-      <div className="p-3.5 sm:p-6 flex flex-col items-center justify-center space-y-5">
-        <div className="w-full max-w-4xl bg-gradient-to-b from-amber-100 via-stone-200 to-amber-200 dark:from-stone-900 dark:via-stone-950 dark:to-stone-900 rounded-3xl p-5 sm:p-7 border border-amber-300 dark:border-stone-700 shadow-xl flex flex-col justify-between min-h-[230px] relative overflow-hidden">
-          {/* Top Banner */}
-          <div className="flex items-center justify-between text-xs sm:text-sm font-bold text-stone-800 dark:text-stone-200">
-            <div className="flex items-center gap-2">
-              <span className="text-3xl sm:text-4xl">🐹</span>
-              <div>
-                <span>Đấu trường chuột chũi</span>
-                <p className="text-[10px] text-stone-600 dark:text-stone-400">
-                  Chọn chú chuột nhô lên để mở thử thách
-                </p>
+      {/* 2. WIDESCREEN 16:9 GRID LAYOUT */}
+      <div className="p-3 sm:p-5 grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-5 items-stretch">
+        {/* LEFT COLUMN: MINIMALIST MOLE BURROWS STAGE (lg:col-span-5) */}
+        <div className="lg:col-span-5 flex flex-col justify-between space-y-3">
+          <div className="bg-white dark:bg-[#1a1b1e] rounded-2xl p-4 sm:p-5 border border-slate-200/80 dark:border-white/10 shadow-xs flex flex-col justify-between space-y-4 flex-1">
+            {/* Header info */}
+            <div className="flex items-center justify-between text-xs font-bold pb-2 border-b border-slate-100 dark:border-white/10">
+              <span className="text-orange-700 dark:text-orange-300 font-extrabold flex items-center gap-1.5">
+                <span>🔨 Hang chuột tri thức</span>
+              </span>
+              <span className="text-slate-400 text-[11px] font-semibold">
+                Đang mở: Câu {currentIndex + 1}
+              </span>
+            </div>
+
+            {/* Current Active Mole Display */}
+            <div className="py-4 px-2 bg-slate-50 dark:bg-white/5 rounded-xl border border-slate-100 dark:border-white/5 flex flex-col items-center justify-center min-h-[160px]">
+              <div className={`text-5xl transition-transform duration-300 mb-2 ${isHit ? 'scale-125' : ''}`}>
+                {isHit ? '💥' : '🐹'}
+              </div>
+              <span className="text-xs font-bold text-slate-700 dark:text-zinc-200">
+                Chú chuột số {currentIndex + 1}
+              </span>
+
+              {/* Burrows Grid */}
+              <div className="grid grid-cols-4 sm:grid-cols-6 gap-2 w-full pt-4 mt-2 border-t border-slate-200/60 dark:border-white/10">
+                {moleHoles.map((hole) => {
+                  const status = questionStatuses[hole.questionIndex];
+                  const isCurrent = currentIndex === hole.questionIndex;
+
+                  return (
+                    <button
+                      key={hole.id}
+                      type="button"
+                      onClick={() => {
+                        setCurrentIndex(hole.questionIndex);
+                        setAnsweredOptionIdx(null);
+                        setIsAnswerRevealed(false);
+                        setTimerSeconds(initialTime);
+                      }}
+                      className={`flex flex-col items-center justify-center p-1.5 rounded-lg border text-center transition-all cursor-pointer ${
+                        isCurrent
+                          ? 'bg-orange-100 dark:bg-orange-950/60 border-orange-500 ring-2 ring-orange-500/30 font-bold scale-105'
+                          : status === 'correct'
+                          ? 'bg-emerald-50 dark:bg-emerald-950/30 border-emerald-300 opacity-60'
+                          : status === 'incorrect'
+                          ? 'bg-rose-50 dark:bg-rose-950/30 border-rose-300 opacity-60'
+                          : 'bg-white dark:bg-white/5 border-slate-200/70 dark:border-white/10 hover:border-orange-400'
+                      }`}
+                    >
+                      <span className="text-xl">🕳️</span>
+                      <span className="text-[10px] text-slate-600 dark:text-slate-400 mt-0.5">
+                        {hole.questionIndex + 1}
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/80 dark:bg-black/50 border border-amber-300 dark:border-stone-700 text-xs font-bold text-stone-800 dark:text-stone-300 shadow-xs">
-              <span className={`text-2xl transition-transform ${isHit ? 'scale-125' : ''}`}>
-                {isHit ? '⭐' : '🔨'}
-              </span>
-              <span>Đang giải: Câu {currentIndex + 1}</span>
+            {/* Status Tips */}
+            <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+              <span>Đã hoàn thành: <b>{Object.keys(questionStatuses).length} / {questions.length}</b></span>
+              <span>Dẫn điểm: <b>{team1Score > team2Score ? team1Name : team2Score > team1Score ? team2Name : 'Hòa nhau'}</b></span>
             </div>
-          </div>
-
-          {/* Mole Burrows Grid */}
-          <div className="grid grid-cols-4 sm:grid-cols-6 gap-2.5 sm:gap-3.5 pt-4">
-            {moleHoles.map((hole) => {
-              const status = questionStatuses[hole.questionIndex];
-              const isCurrent = currentIndex === hole.questionIndex;
-
-              return (
-                <button
-                  key={hole.id}
-                  type="button"
-                  onClick={() => handleSelectQuestionFromGrid(hole.questionIndex)}
-                  className={`flex flex-col items-center justify-center p-2.5 rounded-xl border transition-all cursor-pointer ${
-                    isCurrent
-                      ? 'bg-amber-300/40 border-amber-500 ring-2 ring-amber-500 scale-105 shadow-md font-bold'
-                      : status === 'correct'
-                      ? 'bg-emerald-500/20 border-emerald-500 text-emerald-800 dark:text-emerald-300 opacity-60'
-                      : status === 'incorrect'
-                      ? 'bg-rose-500/20 border-rose-500 text-rose-800 dark:text-rose-300 opacity-60'
-                      : 'bg-white/70 dark:bg-white/10 border-amber-300/60 dark:border-white/10 hover:scale-103'
-                  }`}
-                >
-                  <span className="text-2xl sm:text-3xl mb-1">
-                    {isCurrent && isHit ? '💥' : '🐹'}
-                  </span>
-                  <span className="text-[11px] font-bold text-stone-900 dark:text-stone-100">
-                    Câu {hole.questionIndex + 1}
-                  </span>
-                  <span className="text-[10px] text-amber-700 dark:text-amber-400 font-semibold">
-                    +{hole.points}đ
-                  </span>
-                </button>
-              );
-            })}
           </div>
         </div>
 
-        {/* 3. CLASSROOM QUESTION BOARD */}
-        {currentQ ? (
-          <div className="w-full max-w-4xl">
+        {/* RIGHT COLUMN: CLASSROOM QUESTION & TEACHING BOARD (lg:col-span-7) */}
+        <div className="lg:col-span-7 flex flex-col">
+          {currentQ ? (
             <ClassroomQuestionCard
               question={currentQ}
               questionNumber={currentIndex + 1}
               totalQuestions={questions.length}
               activeTeamName={activeTeamId === 'team1' ? team1Name : team2Name}
-              activeTeamColor={activeTeamId === 'team1' ? 'bg-emerald-600' : 'bg-sky-600'}
+              activeTeamColor={activeTeamId === 'team1' ? 'bg-orange-500' : 'bg-blue-600'}
               answeredOptionIdx={answeredOptionIdx}
               isRevealed={isAnswerRevealed}
               fontSize={fontSize}
               onSelectOption={handleSelectOption}
+              onManualReveal={handleManualReveal}
+              onAwardTeamPoint={handleAwardTeamPoint}
+              team1Name={team1Name}
+              team2Name={team2Name}
+              onPrevQuestion={handlePrevQuestion}
               onNextQuestion={handleNextQuestion}
               onOpenQuestionGrid={() => setIsGridOpen(true)}
-              isLastQuestion={Object.keys(questionStatuses).length >= questions.length || winnerTeamId !== null}
+              isFirstQuestion={currentIndex === 0}
+              isLastQuestion={currentIndex === questions.length - 1}
             />
-          </div>
-        ) : (
-          <div className="p-8 text-center text-slate-500">Chưa có câu hỏi.</div>
-        )}
+          ) : (
+            <div className="p-8 text-center text-slate-500 font-medium">Không có câu hỏi nào.</div>
+          )}
+        </div>
       </div>
 
       {/* QUESTION GRID MODAL */}
@@ -327,7 +336,18 @@ export const WhackAMoleGame: React.FC<WhackAMoleGameProps> = ({
         questionsCount={questions.length}
         currentIndex={currentIndex}
         statuses={questionStatuses}
-        onSelectQuestion={handleSelectQuestionFromGrid}
+        onSelectQuestion={(idx) => {
+          setCurrentIndex(idx);
+          setAnsweredOptionIdx(null);
+          setIsAnswerRevealed(false);
+          setTimerSeconds(initialTime);
+        }}
+      />
+
+      {/* RANDOM STUDENT CALLER MODAL */}
+      <RandomStudentModal
+        isOpen={isStudentModalOpen}
+        onClose={() => setIsStudentModalOpen(false)}
       />
 
       {/* VICTORY CELEBRATION MODAL */}

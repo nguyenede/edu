@@ -7,6 +7,7 @@ import { GameSettingsConfig, DEFAULT_GAME_CONFIG } from './GameConfigModal';
 import { ClassroomTeacherHeader, ClassroomTeam } from './ClassroomTeacherHeader';
 import { ClassroomQuestionCard } from './ClassroomQuestionCard';
 import { QuestionGridModal } from './QuestionGridModal';
+import { RandomStudentModal } from './RandomStudentModal';
 import { ClassroomVictoryModal } from './ClassroomVictoryModal';
 
 interface Question {
@@ -29,7 +30,6 @@ interface MineItem {
   questionIndex: number;
   emoji: string;
   label: string;
-  points: number;
 }
 
 export const GoldMinerGame: React.FC<GoldMinerGameProps> = ({
@@ -49,6 +49,7 @@ export const GoldMinerGame: React.FC<GoldMinerGameProps> = ({
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [fontSize, setFontSize] = useState<'normal' | 'large' | 'xlarge'>(config.fontSize || 'large');
   const [isGridOpen, setIsGridOpen] = useState(false);
+  const [isStudentModalOpen, setIsStudentModalOpen] = useState(false);
   const [questionStatuses, setQuestionStatuses] = useState<Record<number, 'unopened' | 'correct' | 'incorrect'>>({});
   const [winnerTeamId, setWinnerTeamId] = useState<string | null>(null);
   const [isVictoryModalOpen, setIsVictoryModalOpen] = useState(false);
@@ -59,12 +60,11 @@ export const GoldMinerGame: React.FC<GoldMinerGameProps> = ({
   const [timerSeconds, setTimerSeconds] = useState<number | null>(initialTime);
   const [isTimerPaused, setIsTimerPaused] = useState(false);
 
-  const team1Name = config.team1Name || 'Đội Xanh';
-  const team2Name = config.team2Name || 'Đội Đỏ';
+  const team1Name = config.team1Name || 'Đội Thợ Mỏ 1';
+  const team2Name = config.team2Name || 'Đội Thợ Mỏ 2';
 
   const currentQ = questions[currentIndex];
 
-  // Mine Items
   const mineItems: MineItem[] = questions.map((_, idx) => {
     const emojis = ['🪙', '💎', '💰', '👑', '⭐', '📦'];
     return {
@@ -72,7 +72,6 @@ export const GoldMinerGame: React.FC<GoldMinerGameProps> = ({
       questionIndex: idx,
       emoji: emojis[idx % emojis.length],
       label: `Câu ${idx + 1}`,
-      points: 10 + (idx % 3) * 5,
     };
   });
 
@@ -117,61 +116,63 @@ export const GoldMinerGame: React.FC<GoldMinerGameProps> = ({
   };
 
   const handleSelectOption = (idx: number) => {
-    if (isAnswerRevealed || winnerTeamId || !currentQ) return;
-
-    const opt = idx >= 0 ? currentQ.options[idx] : null;
-    const isCorrect = Boolean(opt?.isCorrect);
-
+    if (isAnswerRevealed) return;
     setAnsweredOptionIdx(idx);
     setIsAnswerRevealed(true);
 
+    const isCorrect = idx >= 0 && Boolean(currentQ?.options[idx]?.isCorrect);
     setQuestionStatuses((prev) => ({
       ...prev,
       [currentIndex]: isCorrect ? 'correct' : 'incorrect',
     }));
 
     if (isCorrect) {
-      setIsPulling(true);
       gameAudio.playCorrect();
-      gameAudio.playCoin();
-      const pts = mineItems[currentIndex]?.points || 10;
-      if (activeTeamId === 'team1') setTeam1Score((s) => s + pts);
-      else setTeam2Score((s) => s + pts);
-
-      setTimeout(() => setIsPulling(false), 800);
+      setIsPulling(true);
+      setTimeout(() => setIsPulling(false), 900);
+      if (activeTeamId === 'team1') setTeam1Score((s) => s + 1);
+      else setTeam2Score((s) => s + 1);
     } else {
       gameAudio.playIncorrect();
     }
   };
 
-  const handleNextQuestion = () => {
-    const solvedCount = Object.keys(questionStatuses).length;
-    if (solvedCount >= questions.length || winnerTeamId) {
-      setIsVictoryModalOpen(true);
-      return;
-    }
-
-    let nextIdx = (currentIndex + 1) % questions.length;
-    for (let i = 0; i < questions.length; i++) {
-      const checkIdx = (currentIndex + 1 + i) % questions.length;
-      if (!questionStatuses[checkIdx]) {
-        nextIdx = checkIdx;
-        break;
-      }
-    }
-
-    setCurrentIndex(nextIdx);
+  const handleManualReveal = () => {
+    if (isAnswerRevealed) return;
+    setIsAnswerRevealed(true);
     setAnsweredOptionIdx(null);
-    setIsAnswerRevealed(false);
-    setTimerSeconds(initialTime);
-    setActiveTeamId(activeTeamId === 'team1' ? 'team2' : 'team1');
   };
 
-  const handleSelectQuestionFromGrid = (index: number) => {
-    setCurrentIndex(index);
-    setAnsweredOptionIdx(null);
-    setIsAnswerRevealed(false);
-    setTimerSeconds(initialTime);
+  const handleAwardTeamPoint = (teamId: 'team1' | 'team2') => {
+    handleAdjustScore(teamId, 1);
+    gameAudio.playCorrect();
+    setIsPulling(true);
+    setTimeout(() => setIsPulling(false), 900);
+  };
+
+  const handlePrevQuestion = () => {
+    if (currentIndex > 0) {
+      setCurrentIndex((prev) => prev - 1);
+      setAnsweredOptionIdx(null);
+      setIsAnswerRevealed(false);
+      setTimerSeconds(initialTime);
+    }
+  };
+
+  const handleNextQuestion = () => {
+    if (currentIndex < questions.length - 1) {
+      setCurrentIndex((prev) => prev + 1);
+      setAnsweredOptionIdx(null);
+      setIsAnswerRevealed(false);
+      setTimerSeconds(initialTime);
+      setActiveTeamId((curr) => (curr === 'team1' ? 'team2' : 'team1'));
+    } else {
+      const winner =
+        team1Score > team2Score ? 'team1' : team2Score > team1Score ? 'team2' : null;
+      setWinnerTeamId(winner);
+      gameAudio.playVictory();
+      setIsVictoryModalOpen(true);
+    }
   };
 
   const handleRestart = () => {
@@ -193,22 +194,22 @@ export const GoldMinerGame: React.FC<GoldMinerGameProps> = ({
       id: 'team1',
       name: team1Name,
       score: team1Score,
-      color: 'bg-amber-600',
-      borderColor: 'border-amber-400',
-      bgLight: 'bg-amber-50 dark:bg-amber-950/40',
+      color: 'bg-blue-600',
+      borderColor: 'border-blue-400',
+      bgLight: 'bg-blue-50 dark:bg-blue-950/40',
     },
     {
       id: 'team2',
       name: team2Name,
       score: team2Score,
-      color: 'bg-indigo-600',
-      borderColor: 'border-indigo-400',
-      bgLight: 'bg-indigo-50 dark:bg-indigo-950/40',
+      color: 'bg-rose-600',
+      borderColor: 'border-rose-400',
+      bgLight: 'bg-rose-50 dark:bg-rose-950/40',
     },
   ];
 
   return (
-    <div className="w-full bg-[#f4f7fb] dark:bg-[#151618] rounded-3xl shadow-xl border border-slate-200/90 dark:border-white/10 overflow-hidden flex flex-col transition-all">
+    <div className="w-full bg-[#f8fafc] dark:bg-[#131416] rounded-2xl border border-slate-200/80 dark:border-white/10 overflow-hidden flex flex-col transition-all">
       {/* 1. TEACHER CLASSROOM HEADER */}
       <ClassroomTeacherHeader
         title={examTitle}
@@ -220,9 +221,11 @@ export const GoldMinerGame: React.FC<GoldMinerGameProps> = ({
         timerSeconds={timerSeconds}
         isTimerPaused={isTimerPaused}
         onTogglePauseTimer={() => setIsTimerPaused(!isTimerPaused)}
+        onAddSeconds={(delta) => setTimerSeconds((prev) => (prev !== null ? prev + delta : delta))}
         currentIndex={currentIndex}
         totalQuestions={questions.length}
         onOpenQuestionGrid={() => setIsGridOpen(true)}
+        onOpenStudentPicker={() => setIsStudentModalOpen(true)}
         fontSize={fontSize}
         onChangeFontSize={setFontSize}
         soundEnabled={soundEnabled}
@@ -234,85 +237,101 @@ export const GoldMinerGame: React.FC<GoldMinerGameProps> = ({
         onOpenSettings={onOpenSettings}
       />
 
-      {/* 2. VISUAL GOLD MINE STAGE */}
-      <div className="p-3.5 sm:p-6 flex flex-col items-center justify-center space-y-5">
-        <div className="w-full max-w-4xl bg-gradient-to-b from-amber-200 via-amber-100 to-amber-300 dark:from-amber-950/60 dark:via-stone-900 dark:to-stone-950 rounded-3xl p-5 sm:p-7 border border-amber-300 dark:border-amber-800/40 shadow-xl flex flex-col justify-between min-h-[230px] relative overflow-hidden">
-          {/* Top Crane & Miner */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="text-3xl sm:text-4xl">👴🏻</span>
-              <div className="text-xs font-bold text-amber-900 dark:text-amber-200">
-                <span>Bác thợ đào vàng</span>
-                <p className="text-[10px] text-amber-700 dark:text-amber-400">Chọn kho báu để giải đố</p>
+      {/* 2. WIDESCREEN 16:9 GRID LAYOUT */}
+      <div className="p-3 sm:p-5 grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-5 items-stretch">
+        {/* LEFT COLUMN: MINIMALIST MINE STAGE (lg:col-span-5) */}
+        <div className="lg:col-span-5 flex flex-col justify-between space-y-3">
+          <div className="bg-white dark:bg-[#1a1b1e] rounded-2xl p-4 sm:p-5 border border-slate-200/80 dark:border-white/10 shadow-xs flex flex-col justify-between space-y-4 flex-1">
+            {/* Header info */}
+            <div className="flex items-center justify-between text-xs font-bold pb-2 border-b border-slate-100 dark:border-white/10">
+              <span className="text-amber-700 dark:text-amber-300 font-extrabold">Hầm mỏ tri thức</span>
+              <span className="text-slate-400 text-[11px] font-semibold">
+                Đang gắp: Câu {currentIndex + 1}
+              </span>
+            </div>
+
+            {/* Miner crane and items grid */}
+            <div className="py-4 px-2 bg-slate-50 dark:bg-white/5 rounded-xl border border-slate-100 dark:border-white/5 flex flex-col items-center justify-between min-h-[160px] relative">
+              {/* Miner Crane Hook */}
+              <div className="flex flex-col items-center z-10 mb-3">
+                <span className="text-3xl">⛏️</span>
+                <div className={`w-0.5 h-6 bg-amber-800 transition-all duration-300 ${isPulling ? 'h-2' : 'h-6'}`} />
+                <span className={`text-xl transition-transform ${isPulling ? 'scale-125' : ''}`}>
+                  ⚓
+                </span>
+              </div>
+
+              {/* Items in Mine */}
+              <div className="grid grid-cols-4 sm:grid-cols-5 gap-2 w-full pt-2">
+                {mineItems.map((item) => {
+                  const status = questionStatuses[item.questionIndex];
+                  const isCurrent = currentIndex === item.questionIndex;
+
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => {
+                        setCurrentIndex(item.questionIndex);
+                        setAnsweredOptionIdx(null);
+                        setIsAnswerRevealed(false);
+                        setTimerSeconds(initialTime);
+                      }}
+                      className={`flex flex-col items-center justify-center p-1.5 rounded-lg border text-center transition-all cursor-pointer ${
+                        isCurrent
+                          ? 'bg-amber-100 dark:bg-amber-950/60 border-amber-400 ring-2 ring-amber-400/30 font-bold scale-105'
+                          : status === 'correct'
+                          ? 'bg-emerald-50 dark:bg-emerald-950/30 border-emerald-300 opacity-60'
+                          : status === 'incorrect'
+                          ? 'bg-rose-50 dark:bg-rose-950/30 border-rose-300 opacity-60'
+                          : 'bg-white dark:bg-white/5 border-slate-200/70 dark:border-white/10 hover:border-amber-300'
+                      }`}
+                    >
+                      <span className="text-xl">{item.emoji}</span>
+                      <span className="text-[10px] text-slate-600 dark:text-slate-400 mt-0.5">
+                        {item.questionIndex + 1}
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
-            {/* Hook Wire */}
-            <div className="flex flex-col items-center">
-              <div className={`w-1 bg-stone-700 transition-all duration-500 ${isPulling ? 'h-14' : 'h-6'}`} />
-              <span className={`text-xl transition-transform ${isPulling ? 'scale-125' : ''}`}>🪝</span>
+            {/* Status Tips */}
+            <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+              <span>Đang khai thác: <b>Câu {currentIndex + 1}</b></span>
+              <span>Đã đào: <b>{Object.keys(questionStatuses).length} / {questions.length}</b></span>
             </div>
-
-            <div className="px-3 py-1.5 rounded-xl bg-white/80 dark:bg-black/50 border border-amber-300 dark:border-amber-700 text-xs font-bold text-amber-800 dark:text-amber-300 shadow-xs">
-              💰 Kho báu đang mở: Câu {currentIndex + 1} (+{mineItems[currentIndex]?.points || 10}đ)
-            </div>
-          </div>
-
-          {/* Underground Mine Items Grid */}
-          <div className="grid grid-cols-4 sm:grid-cols-6 gap-2.5 sm:gap-3.5 pt-4">
-            {mineItems.map((item) => {
-              const status = questionStatuses[item.questionIndex];
-              const isCurrent = currentIndex === item.questionIndex;
-
-              return (
-                <button
-                  key={item.id}
-                  type="button"
-                  onClick={() => handleSelectQuestionFromGrid(item.questionIndex)}
-                  className={`flex flex-col items-center justify-center p-2.5 rounded-xl border transition-all cursor-pointer ${
-                    isCurrent
-                      ? 'bg-amber-400/30 border-amber-500 ring-2 ring-amber-400 scale-105 shadow-md font-bold'
-                      : status === 'correct'
-                      ? 'bg-emerald-500/20 border-emerald-500 text-emerald-800 dark:text-emerald-300 opacity-60'
-                      : status === 'incorrect'
-                      ? 'bg-rose-500/20 border-rose-500 text-rose-800 dark:text-rose-300 opacity-60'
-                      : 'bg-white/60 dark:bg-white/10 border-amber-300/60 dark:border-white/10 hover:scale-103'
-                  }`}
-                >
-                  <span className="text-2xl sm:text-3xl mb-1">{item.emoji}</span>
-                  <span className="text-[11px] font-bold text-stone-800 dark:text-stone-200">
-                    {item.label}
-                  </span>
-                  <span className="text-[10px] text-amber-700 dark:text-amber-400 font-semibold">
-                    +{item.points}đ
-                  </span>
-                </button>
-              );
-            })}
           </div>
         </div>
 
-        {/* 3. CLASSROOM QUESTION BOARD */}
-        {currentQ ? (
-          <div className="w-full max-w-4xl">
+        {/* RIGHT COLUMN: CLASSROOM QUESTION & TEACHING BOARD (lg:col-span-7) */}
+        <div className="lg:col-span-7 flex flex-col">
+          {currentQ ? (
             <ClassroomQuestionCard
               question={currentQ}
               questionNumber={currentIndex + 1}
               totalQuestions={questions.length}
               activeTeamName={activeTeamId === 'team1' ? team1Name : team2Name}
-              activeTeamColor={activeTeamId === 'team1' ? 'bg-amber-600' : 'bg-indigo-600'}
+              activeTeamColor={activeTeamId === 'team1' ? 'bg-blue-600' : 'bg-rose-600'}
               answeredOptionIdx={answeredOptionIdx}
               isRevealed={isAnswerRevealed}
               fontSize={fontSize}
               onSelectOption={handleSelectOption}
+              onManualReveal={handleManualReveal}
+              onAwardTeamPoint={handleAwardTeamPoint}
+              team1Name={team1Name}
+              team2Name={team2Name}
+              onPrevQuestion={handlePrevQuestion}
               onNextQuestion={handleNextQuestion}
               onOpenQuestionGrid={() => setIsGridOpen(true)}
-              isLastQuestion={Object.keys(questionStatuses).length >= questions.length || winnerTeamId !== null}
+              isFirstQuestion={currentIndex === 0}
+              isLastQuestion={currentIndex === questions.length - 1}
             />
-          </div>
-        ) : (
-          <div className="p-8 text-center text-slate-500">Chưa có câu hỏi.</div>
-        )}
+          ) : (
+            <div className="p-8 text-center text-slate-500 font-medium">Không có câu hỏi nào.</div>
+          )}
+        </div>
       </div>
 
       {/* QUESTION GRID MODAL */}
@@ -322,7 +341,18 @@ export const GoldMinerGame: React.FC<GoldMinerGameProps> = ({
         questionsCount={questions.length}
         currentIndex={currentIndex}
         statuses={questionStatuses}
-        onSelectQuestion={handleSelectQuestionFromGrid}
+        onSelectQuestion={(idx) => {
+          setCurrentIndex(idx);
+          setAnsweredOptionIdx(null);
+          setIsAnswerRevealed(false);
+          setTimerSeconds(initialTime);
+        }}
+      />
+
+      {/* RANDOM STUDENT CALLER MODAL */}
+      <RandomStudentModal
+        isOpen={isStudentModalOpen}
+        onClose={() => setIsStudentModalOpen(false)}
       />
 
       {/* VICTORY CELEBRATION MODAL */}

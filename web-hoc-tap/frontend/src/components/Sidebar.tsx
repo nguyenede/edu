@@ -81,10 +81,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     }
 
     startTopLoading();
-    // Allow 130ms for the smooth closing transition (fade-out & scale-down) to finish before pushing route
-    setTimeout(() => {
-      router.push(href);
-    }, 130);
+    router.push(href);
   };
 
   return (

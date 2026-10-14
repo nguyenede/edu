@@ -272,6 +272,7 @@ function OcrQuizCreateContent() {
             <>
               <BreadcrumbChevron
                 folderId={null}
+                fallbackToStaticChevron={true}
                 onNavigateFolder={(id) => router.push(`/app/documents?folderId=${id}`)}
               />
               <button
@@ -283,12 +284,14 @@ function OcrQuizCreateContent() {
               </button>
               <BreadcrumbChevron
                 folderId={folderId || null}
+                fallbackToStaticChevron={true}
                 onNavigateFolder={(id) => router.push(`/app/documents?folderId=${id}`)}
               />
             </>
           ) : (
             <BreadcrumbChevron
               folderId={null}
+              fallbackToStaticChevron={true}
               onNavigateFolder={(id) => router.push(`/app/documents?folderId=${id}`)}
             />
           )}
@@ -299,7 +302,16 @@ function OcrQuizCreateContent() {
           >
             Tạo đề thi
           </button>
-          <ChevronRight size={14} className="text-slate-400 dark:text-slate-500 shrink-0 stroke-[2]" />
+          <BreadcrumbChevron
+            menuTitle="Phương thức tạo đề"
+            items={[
+              { label: 'Tải lên Word/PDF', href: `/app/documents/create${targetQuery}` },
+              { label: 'Tạo đề bằng SI', href: `/app/documents/create/si${targetQuery}` },
+              { label: 'Nhận diện ảnh (OCR)', href: `/app/documents/create/ocr${targetQuery}` },
+              { label: 'Ngân hàng câu hỏi', href: `/app/documents/create/bank${targetQuery}` },
+              { label: 'Nhập thủ công', href: `/app/documents/create/manual${targetQuery}` },
+            ]}
+          />
           <span className="px-2 py-0.5 rounded-xl text-slate-900 dark:text-white font-normal">
             Nhận diện từ ảnh (SI OCR)
           </span>

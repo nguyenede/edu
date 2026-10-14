@@ -125,6 +125,7 @@ function AiQuizCreateContent() {
             <>
               <BreadcrumbChevron
                 folderId={null}
+                fallbackToStaticChevron={true}
                 onNavigateFolder={(id) => router.push(`/app/documents?folderId=${id}`)}
               />
               <button
@@ -136,12 +137,14 @@ function AiQuizCreateContent() {
               </button>
               <BreadcrumbChevron
                 folderId={folderId || null}
+                fallbackToStaticChevron={true}
                 onNavigateFolder={(id) => router.push(`/app/documents?folderId=${id}`)}
               />
             </>
           ) : (
             <BreadcrumbChevron
               folderId={null}
+              fallbackToStaticChevron={true}
               onNavigateFolder={(id) => router.push(`/app/documents?folderId=${id}`)}
             />
           )}

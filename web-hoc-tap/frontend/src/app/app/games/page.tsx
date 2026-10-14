@@ -330,6 +330,38 @@ export default function GamesHubPage() {
     };
   }, [activeCategory, selectedExam]);
 
+  // Quick 1-click play for teachers on classroom projector
+  const handleQuickPlayTrial = (mode: ActiveGameMode) => {
+    setActiveCategory(mode);
+    const meta = getCategoryMeta(mode);
+    const hasRealExam =
+      selectedExam &&
+      Array.isArray(selectedExam.questions) &&
+      selectedExam.questions.length > 0;
+
+    const examQuestions = hasRealExam
+      ? selectedExam.questions.map((q, idx) => normalizeGameQuestion(q, idx))
+      : DEFAULT_CLASSROOM_TRIAL_QUESTIONS;
+    const examTitle = hasRealExam ? selectedExam.title : 'Bộ câu hỏi khởi động mẫu';
+    const examId = hasRealExam ? selectedExam.id : 'trial_exam_default';
+
+    const lesson: CustomGameLesson = {
+      id: `trial_${mode}`,
+      gameType: mode,
+      title: `${meta.shortName} - Giảng dạy trên lớp`,
+      isTrial: true,
+      examId,
+      examTitle,
+      config: {
+        ...DEFAULT_GAME_CONFIG,
+        title: `${meta.shortName} - Giảng dạy trên lớp`,
+      },
+      questions: examQuestions,
+      createdAt: Date.now(),
+    };
+    setPlayingLesson(lesson);
+  };
+
   // Open creation modal
   const handleOpenCreateModal = () => {
     if (!activeCategory) return;
@@ -606,34 +638,34 @@ export default function GamesHubPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {/* 1. Trial Run Card (Bản chạy thử có sẵn) */}
               {trialLesson && (
-                <div className="p-4 sm:p-5 rounded-2xl bg-slate-50/70 hover:bg-slate-100/80 dark:bg-slate-900/40 dark:hover:bg-slate-800/60 transition-all duration-150 flex flex-col justify-between shadow-2xs border border-slate-200/70 dark:border-slate-800">
+                <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-[#1a1b1e] border border-slate-200/80 dark:border-white/10 hover:border-blue-400 dark:hover:border-blue-500/50 transition-all duration-150 flex flex-col justify-between shadow-2xs hover:shadow-md">
                   <div>
-                    <h3 className="text-sm sm:text-base font-semibold text-slate-800 dark:text-zinc-100 mb-2">
+                    <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-zinc-100 mb-2">
                       {trialLesson.title}
                     </h3>
                     <div className="flex items-center gap-2 mb-2.5">
-                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300">
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300">
                         Bản chạy thử
                       </span>
-                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-950/80 dark:text-blue-300">
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-950/80 dark:text-blue-300">
                         {trialLesson.questions.length} câu hỏi
                       </span>
                     </div>
                     <p className="text-xs text-slate-500 dark:text-zinc-400 leading-relaxed">
-                      Chơi thử để trải nghiệm tính năng trước khi tạo bài của bạn.
+                      Chơi thử trực tiếp cùng học sinh để trải nghiệm câu hỏi và luật chơi ngay trên lớp.
                     </p>
                   </div>
 
-                  <div className="mt-5 pt-3 border-t border-slate-200/60 dark:border-white/5 flex items-center justify-between">
+                  <div className="mt-5 pt-3 border-t border-slate-100 dark:border-white/5 flex items-center justify-between">
                     <span className="text-[11px] text-slate-400 truncate max-w-[150px]">
                       Từ: {trialLesson.examTitle}
                     </span>
                     <button
                       onClick={() => setPlayingLesson(trialLesson)}
-                      className="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer shadow-xs active:scale-95"
+                      className="px-5 py-2 rounded-xl bg-google-blue hover:bg-blue-600 text-white text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs active:scale-95"
                     >
                       <Play size={13} className="fill-white" />
-                      <span>Chơi</span>
+                      <span>Dạy ngay</span>
                     </button>
                   </div>
                 </div>
@@ -645,17 +677,17 @@ export default function GamesHubPage() {
                 return (
                   <div
                     key={lesson.id}
-                    className="p-4 sm:p-5 rounded-2xl bg-slate-50/70 hover:bg-slate-100/80 dark:bg-slate-900/40 dark:hover:bg-slate-800/60 transition-all duration-150 flex flex-col justify-between shadow-2xs border border-slate-200/70 dark:border-slate-800"
+                    className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-[#1a1b1e] border border-slate-200/80 dark:border-white/10 hover:border-blue-400 dark:hover:border-blue-500/50 transition-all duration-150 flex flex-col justify-between shadow-2xs hover:shadow-md"
                   >
                     <div>
-                      <h3 className="text-sm sm:text-base font-semibold text-slate-800 dark:text-zinc-100 mb-2">
+                      <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-zinc-100 mb-2">
                         {lesson.title}
                       </h3>
                       <div className="flex items-center gap-2 mb-2.5">
-                        <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-purple-100 text-purple-800 dark:bg-purple-950/80 dark:text-purple-300">
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-100 text-purple-800 dark:bg-purple-950/80 dark:text-purple-300">
                           Đã lưu
                         </span>
-                        <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-950/80 dark:text-blue-300">
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-950/80 dark:text-blue-300">
                           {count} câu hỏi
                         </span>
                       </div>
@@ -664,18 +696,18 @@ export default function GamesHubPage() {
                       </p>
                     </div>
 
-                    <div className="mt-5 pt-3 border-t border-slate-200/60 dark:border-white/5 flex items-center justify-between gap-2">
+                    <div className="mt-5 pt-3 border-t border-slate-100 dark:border-white/5 flex items-center justify-between gap-2">
                       <div className="flex items-center gap-1">
                         <button
                           onClick={() => handleOpenEditModal(lesson)}
-                          className="p-1.5 rounded-lg bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 hover:text-slate-800 dark:text-zinc-400 transition-colors cursor-pointer border border-slate-200/50 dark:border-slate-700/50"
+                          className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 hover:text-slate-900 dark:text-zinc-300 dark:hover:text-white transition-colors cursor-pointer"
                           title="Sửa cấu hình & câu hỏi"
                         >
                           <Edit3 size={14} />
                         </button>
                         <button
                           onClick={(e) => handleDeleteLesson(lesson.id, e)}
-                          className="p-1.5 rounded-lg bg-white dark:bg-slate-800 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 transition-colors cursor-pointer border border-slate-200/50 dark:border-slate-700/50"
+                          className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 transition-colors cursor-pointer"
                           title="Xóa bài này"
                         >
                           <Trash2 size={14} />
@@ -684,10 +716,10 @@ export default function GamesHubPage() {
 
                       <button
                         onClick={() => setPlayingLesson(lesson)}
-                        className="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer shadow-xs active:scale-95"
+                        className="px-5 py-2 rounded-xl bg-google-blue hover:bg-blue-600 text-white text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs active:scale-95"
                       >
                         <Play size={13} className="fill-white" />
-                        <span>Chơi</span>
+                        <span>Dạy ngay</span>
                       </button>
                     </div>
                   </div>
@@ -713,54 +745,63 @@ export default function GamesHubPage() {
           <div className="space-y-4">
             <div className="flex items-center justify-between text-xs text-slate-500 dark:text-zinc-400 px-1">
               <span>
-                Bấm vào trò chơi để mở trang quản lý và tạo các bài chơi tương tác của bạn.
+                Chọn trò chơi để bắt đầu dạy trực tiếp trên máy chiếu hoặc tạo bài giảng tương tác theo đề thi.
               </span>
-              <span>{GAME_LIST.length} trò chơi</span>
+              <span className="font-semibold text-slate-700 dark:text-zinc-300">{GAME_LIST.length} trò chơi</span>
             </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
-                  {GAME_LIST.map((game) => (
-                    <div
-                      key={game.id}
-                      onClick={() => setActiveCategory(game.id)}
-                      className="group rounded-2xl p-4 sm:p-5 bg-slate-50/70 hover:bg-slate-100/80 dark:bg-slate-900/40 dark:hover:bg-slate-800/60 transition-all duration-150 select-none flex flex-col justify-between shadow-2xs cursor-pointer border border-slate-200/70 dark:border-slate-800/80 hover:border-google-blue/40 dark:hover:border-google-blue/40 active:scale-[0.99]"
-                    >
-                      <div>
-                        {/* Top Icon & Badge */}
-                        <div className="flex items-center justify-between gap-2 mb-3">
-                          <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-xl ${game.iconBg}`}>
-                            {game.iconEmoji}
-                          </div>
-                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${game.badgeColor}`}>
-                            {game.badge}
-                          </span>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {GAME_LIST.map((game) => {
+                const savedCount = savedLessons.filter((l) => l.gameType === game.id).length;
+
+                return (
+                  <div
+                    key={game.id}
+                    onClick={() => handleQuickPlayTrial(game.id)}
+                    className="group rounded-2xl p-4 sm:p-5 bg-white dark:bg-[#1a1b1e] border border-slate-200/80 dark:border-white/10 hover:border-google-blue/50 dark:hover:border-google-blue/50 transition-all duration-150 select-none flex flex-col justify-between shadow-2xs hover:shadow-md cursor-pointer active:scale-[0.99]"
+                  >
+                    <div>
+                      {/* Top Icon & Badge */}
+                      <div className="flex items-center justify-between gap-2 mb-3">
+                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-xl ${game.iconBg}`}>
+                          {game.iconEmoji}
                         </div>
-
-                        {/* Title & Description */}
-                        <h3 className="text-sm sm:text-base font-semibold text-slate-800 dark:text-zinc-100 group-hover:text-google-blue transition-colors">
-                          {game.title}
-                        </h3>
-                        <p className="text-[11px] font-medium text-slate-500 dark:text-zinc-400 mt-0.5">
-                          {game.subtitle}
-                        </p>
-                        <p className="text-xs text-slate-600 dark:text-zinc-300 mt-2 leading-relaxed line-clamp-2">
-                          {game.description}
-                        </p>
-                      </div>
-
-                      {/* Card Bottom Action */}
-                      <div className="mt-4 pt-3 border-t border-slate-200/60 dark:border-white/5 flex items-center justify-between">
-                        <span className="text-[11px] text-slate-400 dark:text-zinc-500 font-medium">
-                          {savedLessons.filter((l) => l.gameType === game.id).length} bài đã lưu
-                        </span>
-                        <span className="text-xs font-semibold text-google-blue dark:text-blue-400 group-hover:translate-x-0.5 transition-transform flex items-center gap-1">
-                          Mở trò chơi ➔
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${game.badgeColor}`}>
+                          {game.badge}
                         </span>
                       </div>
+
+                      {/* Title & Description */}
+                      <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-zinc-100 group-hover:text-google-blue transition-colors">
+                        {game.title}
+                      </h3>
+                      <p className="text-[11px] font-medium text-slate-500 dark:text-zinc-400 mt-0.5">
+                        {game.subtitle}
+                      </p>
+                      <p className="text-xs text-slate-600 dark:text-zinc-300 mt-2 leading-relaxed line-clamp-2">
+                        {game.description}
+                      </p>
                     </div>
-                  ))}
-                </div>
-              </div>
+
+                    {/* Single Full-width Clean Action Button */}
+                    <div className="mt-4 pt-3 border-t border-slate-100 dark:border-white/5">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleQuickPlayTrial(game.id);
+                        }}
+                        className="w-full py-2 px-3 rounded-xl bg-google-blue hover:bg-blue-600 text-white text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs active:scale-95"
+                      >
+                        <Play size={13} className="fill-white" />
+                        <span>Dạy ngay</span>
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         )}
       </div>
 

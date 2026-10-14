@@ -6,6 +6,7 @@ import { GameSettingsConfig, DEFAULT_GAME_CONFIG } from './GameConfigModal';
 import { ClassroomTeacherHeader, ClassroomTeam } from './ClassroomTeacherHeader';
 import { ClassroomQuestionCard } from './ClassroomQuestionCard';
 import { QuestionGridModal } from './QuestionGridModal';
+import { RandomStudentModal } from './RandomStudentModal';
 import { ClassroomVictoryModal } from './ClassroomVictoryModal';
 import { Flag, Waves, Sparkles, Navigation } from 'lucide-react';
 
@@ -43,6 +44,7 @@ export const BoatRaceGame: React.FC<BoatRaceGameProps> = ({
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [fontSize, setFontSize] = useState<'normal' | 'large' | 'xlarge'>(config.fontSize || 'large');
   const [isGridOpen, setIsGridOpen] = useState(false);
+  const [isStudentModalOpen, setIsStudentModalOpen] = useState(false);
   const [questionStatuses, setQuestionStatuses] = useState<Record<number, 'unopened' | 'correct' | 'incorrect'>>({});
   const [winnerTeamId, setWinnerTeamId] = useState<string | null>(null);
   const [isVictoryModalOpen, setIsVictoryModalOpen] = useState(false);
@@ -94,20 +96,21 @@ export const BoatRaceGame: React.FC<BoatRaceGameProps> = ({
   };
 
   const handleAdjustScore = (teamId: string, delta: number) => {
-    if (teamId === 'team1') setTeam1Score((s) => Math.max(0, s + delta));
-    else setTeam2Score((s) => Math.max(0, s + delta));
+    if (teamId === 'team1') {
+      setTeam1Score((s) => Math.max(0, s + delta));
+      setTeam1Progress((p) => Math.min(100, Math.max(0, p + delta * stepPerCorrect)));
+    } else {
+      setTeam2Score((s) => Math.max(0, s + delta));
+      setTeam2Progress((p) => Math.min(100, Math.max(0, p + delta * stepPerCorrect)));
+    }
   };
 
   const handleSelectOption = (idx: number) => {
-    if (isAnswerRevealed || winnerTeamId || !currentQ) return;
-
-    const opt = idx >= 0 ? currentQ.options[idx] : null;
-    const isCorrect = Boolean(opt?.isCorrect);
-
+    if (isAnswerRevealed) return;
     setAnsweredOptionIdx(idx);
     setIsAnswerRevealed(true);
 
-    // Update question status
+    const isCorrect = idx >= 0 && Boolean(currentQ?.options[idx]?.isCorrect);
     setQuestionStatuses((prev) => ({
       ...prev,
       [currentIndex]: isCorrect ? 'correct' : 'incorrect',
@@ -115,22 +118,24 @@ export const BoatRaceGame: React.FC<BoatRaceGameProps> = ({
 
     if (isCorrect) {
       gameAudio.playCorrect();
-      gameAudio.playPull();
-
       if (activeTeamId === 'team1') {
-        const nextProg = Math.min(100, team1Progress + stepPerCorrect);
-        setTeam1Progress(nextProg);
-        setTeam1Score((s) => s + 10);
-        if (nextProg >= 100) {
+        const nextScore = team1Score + 1;
+        const nextProgress = Math.min(100, team1Progress + stepPerCorrect);
+        setTeam1Score(nextScore);
+        setTeam1Progress(nextProgress);
+        if (nextProgress >= 100) {
           setWinnerTeamId('team1');
+          gameAudio.playVictory();
           setIsVictoryModalOpen(true);
         }
       } else {
-        const nextProg = Math.min(100, team2Progress + stepPerCorrect);
-        setTeam2Progress(nextProg);
-        setTeam2Score((s) => s + 10);
-        if (nextProg >= 100) {
+        const nextScore = team2Score + 1;
+        const nextProgress = Math.min(100, team2Progress + stepPerCorrect);
+        setTeam2Score(nextScore);
+        setTeam2Progress(nextProgress);
+        if (nextProgress >= 100) {
           setWinnerTeamId('team2');
+          gameAudio.playVictory();
           setIsVictoryModalOpen(true);
         }
       }
@@ -139,15 +144,34 @@ export const BoatRaceGame: React.FC<BoatRaceGameProps> = ({
     }
   };
 
+  const handleManualReveal = () => {
+    if (isAnswerRevealed) return;
+    setIsAnswerRevealed(true);
+    setAnsweredOptionIdx(null);
+  };
+
+  const handleAwardTeamPoint = (teamId: 'team1' | 'team2') => {
+    handleAdjustScore(teamId, 1);
+    gameAudio.playCorrect();
+  };
+
+  const handlePrevQuestion = () => {
+    if (currentIndex > 0) {
+      setCurrentIndex((prev) => prev - 1);
+      setAnsweredOptionIdx(null);
+      setIsAnswerRevealed(false);
+      setTimerSeconds(initialTime);
+    }
+  };
+
   const handleNextQuestion = () => {
-    if (currentIndex + 1 < questions.length && winnerTeamId === null) {
+    if (currentIndex < questions.length - 1) {
       setCurrentIndex((prev) => prev + 1);
       setAnsweredOptionIdx(null);
       setIsAnswerRevealed(false);
-      setActiveTeamId((prev) => (prev === 'team1' ? 'team2' : 'team1'));
       setTimerSeconds(initialTime);
+      setActiveTeamId((curr) => (curr === 'team1' ? 'team2' : 'team1'));
     } else {
-      // Game ended
       const winner =
         team1Progress > team2Progress
           ? 'team1'
@@ -162,13 +186,6 @@ export const BoatRaceGame: React.FC<BoatRaceGameProps> = ({
       gameAudio.playVictory();
       setIsVictoryModalOpen(true);
     }
-  };
-
-  const handleSelectQuestionFromGrid = (index: number) => {
-    setCurrentIndex(index);
-    setAnsweredOptionIdx(null);
-    setIsAnswerRevealed(false);
-    setTimerSeconds(initialTime);
   };
 
   const handleRestart = () => {
@@ -192,9 +209,9 @@ export const BoatRaceGame: React.FC<BoatRaceGameProps> = ({
       id: 'team1',
       name: team1Name,
       score: team1Score,
-      color: 'bg-cyan-600',
-      borderColor: 'border-cyan-400',
-      bgLight: 'bg-cyan-50 dark:bg-cyan-950/40',
+      color: 'bg-blue-600',
+      borderColor: 'border-blue-400',
+      bgLight: 'bg-blue-50 dark:bg-blue-950/40',
     },
     {
       id: 'team2',
@@ -207,7 +224,7 @@ export const BoatRaceGame: React.FC<BoatRaceGameProps> = ({
   ];
 
   return (
-    <div className="w-full bg-[#f4f7fb] dark:bg-[#151618] rounded-3xl shadow-xl border border-slate-200/90 dark:border-white/10 overflow-hidden flex flex-col transition-all">
+    <div className="w-full bg-[#f8fafc] dark:bg-[#131416] rounded-2xl border border-slate-200/80 dark:border-white/10 overflow-hidden flex flex-col transition-all">
       {/* 1. TEACHER CLASSROOM HEADER */}
       <ClassroomTeacherHeader
         title={examTitle}
@@ -219,9 +236,11 @@ export const BoatRaceGame: React.FC<BoatRaceGameProps> = ({
         timerSeconds={timerSeconds}
         isTimerPaused={isTimerPaused}
         onTogglePauseTimer={() => setIsTimerPaused(!isTimerPaused)}
+        onAddSeconds={(delta) => setTimerSeconds((prev) => (prev !== null ? prev + delta : delta))}
         currentIndex={currentIndex}
         totalQuestions={questions.length}
         onOpenQuestionGrid={() => setIsGridOpen(true)}
+        onOpenStudentPicker={() => setIsStudentModalOpen(true)}
         fontSize={fontSize}
         onChangeFontSize={setFontSize}
         soundEnabled={soundEnabled}
@@ -233,142 +252,110 @@ export const BoatRaceGame: React.FC<BoatRaceGameProps> = ({
         onOpenSettings={onOpenSettings}
       />
 
-      {/* 2. VISUAL RIVER BOAT RACING STAGE */}
-      <div className="p-3.5 sm:p-6 flex flex-col items-center justify-center space-y-5">
-        <div className="w-full max-w-4xl bg-gradient-to-b from-sky-200 via-cyan-100 to-blue-200 dark:from-sky-950/80 dark:via-cyan-950/50 dark:to-blue-950/70 rounded-3xl p-4 sm:p-6 border border-cyan-300 dark:border-cyan-800/60 shadow-lg flex flex-col justify-between space-y-4 relative overflow-hidden">
-          {/* Subtle River Wave Shimmer Background */}
-          <div className="absolute inset-0 opacity-20 pointer-events-none bg-[radial-gradient(#0284c7_1px,transparent_1px)] [background-size:16px_16px]" />
-
-          {/* Top River Meta */}
-          <div className="flex items-center justify-between text-xs sm:text-sm font-extrabold text-slate-800 dark:text-zinc-100 px-2 relative z-10">
-            <span className="flex items-center gap-1.5 bg-white/80 dark:bg-black/40 px-3 py-1 rounded-full border border-sky-300/60 shadow-2xs">
-              <Flag size={14} className="text-emerald-500" />
-              <span>Vạch xuất phát</span>
-            </span>
-
-            <span className="font-black text-cyan-900 dark:text-cyan-200 bg-cyan-400/20 px-3.5 py-1 rounded-full border border-cyan-400/40">
-              Mỗi câu đúng tiến nhanh +{stepPerCorrect}%
-            </span>
-
-            <span className="flex items-center gap-1.5 bg-white/80 dark:bg-black/40 px-3 py-1 rounded-full border border-sky-300/60 shadow-2xs">
-              <span>🏁 Vạch đích 100%</span>
-            </span>
-          </div>
-
-          {/* Lane 1: Thuyền Xanh */}
-          <div className="relative w-full bg-white/70 dark:bg-cyan-950/40 p-3 sm:p-4 rounded-2xl border-2 border-cyan-300/60 dark:border-cyan-700/40 shadow-xs relative z-10">
-            <div className="flex items-center justify-between text-xs sm:text-sm font-black text-cyan-900 dark:text-cyan-200 mb-2">
-              <span className="flex items-center gap-2">
-                <span className="w-3 h-3 rounded-full bg-cyan-600 shadow-xs" />
-                {team1Name}
+      {/* 2. WIDESCREEN 16:9 GRID LAYOUT */}
+      <div className="p-3 sm:p-5 grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-5 items-stretch">
+        {/* LEFT COLUMN: MINIMALIST BOAT RACE STAGE (lg:col-span-5) */}
+        <div className="lg:col-span-5 flex flex-col justify-between space-y-3">
+          <div className="bg-white dark:bg-[#1a1b1e] rounded-2xl p-4 sm:p-5 border border-slate-200/80 dark:border-white/10 shadow-xs flex flex-col justify-between space-y-4 flex-1">
+            {/* Header info */}
+            <div className="flex items-center justify-between text-xs font-bold pb-2 border-b border-slate-100 dark:border-white/10">
+              <span className="flex items-center gap-1.5 text-blue-600 dark:text-blue-400">
+                <Flag size={13} />
+                <span>Vạch xuất phát</span>
               </span>
-              <span className="bg-cyan-600 text-white px-2.5 py-0.5 rounded-full text-xs font-black shadow-xs">
-                {team1Progress}%
+              <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+                Mỗi câu đúng +{stepPerCorrect}%
+              </span>
+              <span className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400">
+                <span>Vạch đích 🏁</span>
               </span>
             </div>
 
-            {/* River water track */}
-            <div className="relative w-full h-11 bg-gradient-to-r from-sky-200 via-cyan-200 to-sky-300 dark:from-sky-950 dark:via-cyan-900 dark:to-sky-950 rounded-xl overflow-hidden border border-cyan-400/50 shadow-inner">
-              {/* Animated water waves texture */}
-              <div
-                className="h-full bg-gradient-to-r from-cyan-500/40 to-cyan-400/60 transition-all duration-700 ease-out"
-                style={{ width: `${team1Progress}%` }}
-              />
-
-              {/* Mile markers */}
-              <div className="absolute top-0 bottom-0 left-1/4 w-px bg-white/30 border-r border-dashed border-cyan-300/50" />
-              <div className="absolute top-0 bottom-0 left-2/4 w-px bg-white/30 border-r border-dashed border-cyan-300/50" />
-              <div className="absolute top-0 bottom-0 left-3/4 w-px bg-white/30 border-r border-dashed border-cyan-300/50" />
-
-              {/* Boat Graphic on water with wake */}
-              <div
-                className="absolute top-1/2 -translate-y-1/2 transition-all duration-700 ease-out flex items-center z-10"
-                style={{ left: `calc(${team1Progress * 0.82}% + 6px)` }}
-              >
-                {/* Boat Wake Splash */}
-                <div className="w-4 h-2 bg-white/60 rounded-full blur-[1px] -mr-1 animate-pulse" />
-                <div className="text-3xl filter drop-shadow-md transition-transform duration-300 hover:scale-110">
-                  🛶
-                </div>
-                <span className="text-[10px] font-black bg-cyan-700 text-white px-2 py-0.5 rounded-full ml-1 shadow-md">
+            {/* Lane 1: Thuyền Xanh */}
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between text-xs font-bold text-slate-700 dark:text-zinc-200">
+                <span className="flex items-center gap-1.5 text-blue-600 dark:text-blue-400">
+                  <span className="w-2.5 h-2.5 rounded-full bg-blue-600" />
                   {team1Name}
                 </span>
+                <span className="font-mono text-xs font-black">{team1Progress}%</span>
               </div>
-
-              {/* Finish Checkered Gate */}
-              <div className="absolute right-0 top-0 bottom-0 w-3 bg-gradient-to-b from-amber-400 to-yellow-500 border-l border-white shadow-md flex items-center justify-center">
-                <span className="text-[9px] font-black text-black">🏁</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Lane 2: Thuyền Đỏ */}
-          <div className="relative w-full bg-white/70 dark:bg-rose-950/40 p-3 sm:p-4 rounded-2xl border-2 border-rose-300/60 dark:border-rose-700/40 shadow-xs relative z-10">
-            <div className="flex items-center justify-between text-xs sm:text-sm font-black text-rose-900 dark:text-rose-200 mb-2">
-              <span className="flex items-center gap-2">
-                <span className="w-3 h-3 rounded-full bg-rose-600 shadow-xs" />
-                {team2Name}
-              </span>
-              <span className="bg-rose-600 text-white px-2.5 py-0.5 rounded-full text-xs font-black shadow-xs">
-                {team2Progress}%
-              </span>
-            </div>
-
-            {/* River water track */}
-            <div className="relative w-full h-11 bg-gradient-to-r from-sky-200 via-rose-100 to-sky-300 dark:from-sky-950 dark:via-rose-950 dark:to-sky-950 rounded-xl overflow-hidden border border-rose-400/50 shadow-inner">
-              <div
-                className="h-full bg-gradient-to-r from-rose-500/40 to-rose-400/60 transition-all duration-700 ease-out"
-                style={{ width: `${team2Progress}%` }}
-              />
-
-              {/* Mile markers */}
-              <div className="absolute top-0 bottom-0 left-1/4 w-px bg-white/30 border-r border-dashed border-rose-300/50" />
-              <div className="absolute top-0 bottom-0 left-2/4 w-px bg-white/30 border-r border-dashed border-rose-300/50" />
-              <div className="absolute top-0 bottom-0 left-3/4 w-px bg-white/30 border-r border-dashed border-rose-300/50" />
-
-              {/* Boat Graphic on water with wake */}
-              <div
-                className="absolute top-1/2 -translate-y-1/2 transition-all duration-700 ease-out flex items-center z-10"
-                style={{ left: `calc(${team2Progress * 0.82}% + 6px)` }}
-              >
-                <div className="w-4 h-2 bg-white/60 rounded-full blur-[1px] -mr-1 animate-pulse" />
-                <div className="text-3xl filter drop-shadow-md transition-transform duration-300 hover:scale-110">
-                  ⛵
+              <div className="relative w-full h-10 bg-slate-100 dark:bg-white/5 rounded-xl overflow-hidden border border-slate-200/70 dark:border-white/10 flex items-center">
+                <div
+                  className="h-full bg-blue-100 dark:bg-blue-950/60 transition-all duration-500 ease-out"
+                  style={{ width: `${team1Progress}%` }}
+                />
+                {/* Boat icon */}
+                <div
+                  className="absolute top-1/2 -translate-y-1/2 transition-all duration-500 ease-out flex items-center z-10"
+                  style={{ left: `calc(${team1Progress * 0.85}% + 4px)` }}
+                >
+                  <span className="text-2xl filter drop-shadow-xs">🛶</span>
                 </div>
-                <span className="text-[10px] font-black bg-rose-700 text-white px-2 py-0.5 rounded-full ml-1 shadow-md">
+                <div className="absolute right-0 top-0 bottom-0 w-2 bg-amber-400" />
+              </div>
+            </div>
+
+            {/* Lane 2: Thuyền Đỏ */}
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between text-xs font-bold text-slate-700 dark:text-zinc-200">
+                <span className="flex items-center gap-1.5 text-rose-600 dark:text-rose-400">
+                  <span className="w-2.5 h-2.5 rounded-full bg-rose-600" />
                   {team2Name}
                 </span>
+                <span className="font-mono text-xs font-black">{team2Progress}%</span>
               </div>
+              <div className="relative w-full h-10 bg-slate-100 dark:bg-white/5 rounded-xl overflow-hidden border border-slate-200/70 dark:border-white/10 flex items-center">
+                <div
+                  className="h-full bg-rose-100 dark:bg-rose-950/60 transition-all duration-500 ease-out"
+                  style={{ width: `${team2Progress}%` }}
+                />
+                {/* Boat icon */}
+                <div
+                  className="absolute top-1/2 -translate-y-1/2 transition-all duration-500 ease-out flex items-center z-10"
+                  style={{ left: `calc(${team2Progress * 0.85}% + 4px)` }}
+                >
+                  <span className="text-2xl filter drop-shadow-xs">⛵</span>
+                </div>
+                <div className="absolute right-0 top-0 bottom-0 w-2 bg-amber-400" />
+              </div>
+            </div>
 
-              {/* Finish Checkered Gate */}
-              <div className="absolute right-0 top-0 bottom-0 w-3 bg-gradient-to-b from-amber-400 to-yellow-500 border-l border-white shadow-md flex items-center justify-center">
-                <span className="text-[9px] font-black text-black">🏁</span>
-              </div>
+            {/* Bottom Status Tips */}
+            <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+              <span>Đang giải: <b>Câu {currentIndex + 1}</b></span>
+              <span>Dẫn đầu: <b>{team1Progress > team2Progress ? team1Name : team2Progress > team1Progress ? team2Name : 'Hòa nhau'}</b></span>
             </div>
           </div>
         </div>
 
-        {/* 3. CLASSROOM QUESTION BOARD */}
-        {currentQ ? (
-          <div className="w-full max-w-4xl">
+        {/* RIGHT COLUMN: CLASSROOM QUESTION & TEACHING BOARD (lg:col-span-7) */}
+        <div className="lg:col-span-7 flex flex-col">
+          {currentQ ? (
             <ClassroomQuestionCard
               question={currentQ}
               questionNumber={currentIndex + 1}
               totalQuestions={questions.length}
               activeTeamName={activeTeamId === 'team1' ? team1Name : team2Name}
-              activeTeamColor={activeTeamId === 'team1' ? 'bg-cyan-600' : 'bg-rose-600'}
+              activeTeamColor={activeTeamId === 'team1' ? 'bg-blue-600' : 'bg-rose-600'}
               answeredOptionIdx={answeredOptionIdx}
               isRevealed={isAnswerRevealed}
               fontSize={fontSize}
               onSelectOption={handleSelectOption}
+              onManualReveal={handleManualReveal}
+              onAwardTeamPoint={handleAwardTeamPoint}
+              team1Name={team1Name}
+              team2Name={team2Name}
+              onPrevQuestion={handlePrevQuestion}
               onNextQuestion={handleNextQuestion}
               onOpenQuestionGrid={() => setIsGridOpen(true)}
-              isLastQuestion={Object.keys(questionStatuses).length >= questions.length || winnerTeamId !== null}
+              isFirstQuestion={currentIndex === 0}
+              isLastQuestion={currentIndex === questions.length - 1}
             />
-          </div>
-        ) : (
-          <div className="p-8 text-center text-slate-500 font-medium">Không có câu hỏi nào.</div>
-        )}
+          ) : (
+            <div className="p-8 text-center text-slate-500 font-medium">Không có câu hỏi nào.</div>
+          )}
+        </div>
       </div>
 
       {/* QUESTION GRID MODAL */}
@@ -378,7 +365,18 @@ export const BoatRaceGame: React.FC<BoatRaceGameProps> = ({
         questionsCount={questions.length}
         currentIndex={currentIndex}
         statuses={questionStatuses}
-        onSelectQuestion={handleSelectQuestionFromGrid}
+        onSelectQuestion={(idx) => {
+          setCurrentIndex(idx);
+          setAnsweredOptionIdx(null);
+          setIsAnswerRevealed(false);
+          setTimerSeconds(initialTime);
+        }}
+      />
+
+      {/* RANDOM STUDENT CALLER MODAL */}
+      <RandomStudentModal
+        isOpen={isStudentModalOpen}
+        onClose={() => setIsStudentModalOpen(false)}
       />
 
       {/* VICTORY CELEBRATION MODAL */}

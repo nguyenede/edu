@@ -261,6 +261,7 @@ function ManualQuizCreateContent() {
             <>
               <BreadcrumbChevron
                 folderId={null}
+                fallbackToStaticChevron={true}
                 onNavigateFolder={(id) => router.push(`/app/documents?folderId=${id}`)}
               />
               <button
@@ -272,12 +273,14 @@ function ManualQuizCreateContent() {
               </button>
               <BreadcrumbChevron
                 folderId={folderId || null}
+                fallbackToStaticChevron={true}
                 onNavigateFolder={(id) => router.push(`/app/documents?folderId=${id}`)}
               />
             </>
           ) : (
             <BreadcrumbChevron
               folderId={null}
+              fallbackToStaticChevron={true}
               onNavigateFolder={(id) => router.push(`/app/documents?folderId=${id}`)}
             />
           )}

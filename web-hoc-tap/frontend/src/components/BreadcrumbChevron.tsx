@@ -51,9 +51,9 @@ interface BreadcrumbChevronProps {
   onNavigateFolder?: (folderId: string) => void;
   /** Custom file navigation callback. If not provided, routes to /app/documents/[fileId]/view */
   onNavigateFile?: (fileId: string) => void;
-  /** If true, returns null when there are no items to drop down */
+  /** If true, returns null when there are no items to drop down. Defaults to false */
   hideWhenEmpty?: boolean;
-  /** If true, renders a static chevron separator when there are no items to drop down */
+  /** If true, renders a static chevron separator when there are no items to drop down. Defaults to true */
   fallbackToStaticChevron?: boolean;
   /** If true, always renders as a static chevron separator without dropdown */
   isStatic?: boolean;
@@ -68,8 +68,8 @@ export function BreadcrumbChevron({
   allFiles,
   onNavigateFolder,
   onNavigateFile,
-  hideWhenEmpty,
-  fallbackToStaticChevron,
+  hideWhenEmpty = false,
+  fallbackToStaticChevron = true,
   isStatic,
   className = '',
 }: BreadcrumbChevronProps) {
@@ -158,9 +158,12 @@ export function BreadcrumbChevron({
   const totalItems = items ? items.length : subfolders.length + subfiles.length;
 
   if (isStatic || totalItems === 0) {
+    if (hideWhenEmpty && !isStatic) {
+      return null;
+    }
     if (isStatic || fallbackToStaticChevron) {
       return (
-        <span className={`inline-flex items-center text-slate-400 dark:text-slate-500 shrink-0 select-none px-0.5 ${className}`}>
+        <span className={`inline-flex items-center justify-center text-slate-400 dark:text-slate-500 shrink-0 select-none px-0.5 ${className}`}>
           <ChevronRight size={14} className="stroke-[2]" />
         </span>
       );

@@ -92,10 +92,8 @@ export default function ClassesPage() {
       loadClasses();
     };
     window.addEventListener('storage', handleRefresh);
-    window.addEventListener('focus', handleRefresh);
     return () => {
       window.removeEventListener('storage', handleRefresh);
-      window.removeEventListener('focus', handleRefresh);
     };
   }, [loadClasses]);
 

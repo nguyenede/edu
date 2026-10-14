@@ -2,11 +2,12 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { gameAudio } from '@/lib/gameSound';
-import { RotateCw, Sparkles } from 'lucide-react';
+import { RotateCw, Sparkles, Play } from 'lucide-react';
 import { GameSettingsConfig, DEFAULT_GAME_CONFIG } from './GameConfigModal';
 import { ClassroomTeacherHeader, ClassroomTeam } from './ClassroomTeacherHeader';
 import { ClassroomQuestionCard } from './ClassroomQuestionCard';
 import { QuestionGridModal } from './QuestionGridModal';
+import { RandomStudentModal } from './RandomStudentModal';
 import { ClassroomVictoryModal } from './ClassroomVictoryModal';
 
 interface Question {
@@ -25,9 +26,9 @@ interface LuckyWheelGameProps {
 }
 
 const WHEEL_COLORS = [
-  '#4285F4', '#EA4335', '#FBBC05', '#34A853',
-  '#8B5CF6', '#EC4899', '#06B6D4', '#F97316',
-  '#10B981', '#6366F1', '#F43F5E', '#14B8A6'
+  '#3b82f6', '#ef4444', '#f59e0b', '#10b981',
+  '#8b5cf6', '#ec4899', '#06b6d4', '#f97316',
+  '#6366f1', '#14b8a6', '#84cc16', '#a855f7'
 ];
 
 export const LuckyWheelGame: React.FC<LuckyWheelGameProps> = ({
@@ -49,8 +50,8 @@ export const LuckyWheelGame: React.FC<LuckyWheelGameProps> = ({
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [fontSize, setFontSize] = useState<'normal' | 'large' | 'xlarge'>(config.fontSize || 'large');
   const [isGridOpen, setIsGridOpen] = useState(false);
+  const [isStudentModalOpen, setIsStudentModalOpen] = useState(false);
   const [questionStatuses, setQuestionStatuses] = useState<Record<number, 'unopened' | 'correct' | 'incorrect'>>({});
-  const [hasSpun, setHasSpun] = useState(false);
   const [winnerTeamId, setWinnerTeamId] = useState<string | null>(null);
   const [isVictoryModalOpen, setIsVictoryModalOpen] = useState(false);
 
@@ -68,7 +69,7 @@ export const LuckyWheelGame: React.FC<LuckyWheelGameProps> = ({
 
   const currentQ = questions[currentIndex];
 
-  // Draw wheel
+  // Draw wheel on canvas
   const drawWheel = (angle: number) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -77,7 +78,7 @@ export const LuckyWheelGame: React.FC<LuckyWheelGameProps> = ({
 
     const size = canvas.width;
     const center = size / 2;
-    const radius = center - 10;
+    const radius = center - 8;
 
     ctx.clearRect(0, 0, size, size);
 
@@ -93,7 +94,7 @@ export const LuckyWheelGame: React.FC<LuckyWheelGameProps> = ({
       ctx.fillStyle = isSolved ? '#94a3b8' : color;
       ctx.fill();
       ctx.strokeStyle = '#ffffff';
-      ctx.lineWidth = 2.5;
+      ctx.lineWidth = 2;
       ctx.stroke();
 
       // Label
@@ -103,35 +104,28 @@ export const LuckyWheelGame: React.FC<LuckyWheelGameProps> = ({
       ctx.textAlign = 'right';
       ctx.fillStyle = '#ffffff';
       ctx.font = 'bold 12px Inter, system-ui, sans-serif';
-      ctx.fillText(`Câu ${i + 1}`, radius - 18, 4);
+      ctx.fillText(`Câu ${i + 1}`, radius - 15, 4);
       ctx.restore();
     }
 
-    // Outer border
-    ctx.beginPath();
-    ctx.arc(center, center, radius, 0, 2 * Math.PI);
-    ctx.strokeStyle = '#ffffff';
-    ctx.lineWidth = 4;
-    ctx.stroke();
-
-    // Center pin
+    // Center circular hub
     ctx.beginPath();
     ctx.arc(center, center, 22, 0, 2 * Math.PI);
     ctx.fillStyle = '#ffffff';
     ctx.fill();
-    ctx.strokeStyle = '#e2e8f0';
+    ctx.strokeStyle = '#cbd5e1';
     ctx.lineWidth = 3;
     ctx.stroke();
 
+    ctx.beginPath();
+    ctx.arc(center, center, 8, 0, 2 * Math.PI);
     ctx.fillStyle = '#1e293b';
-    ctx.font = 'bold 11px Inter, system-ui, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('QUAY', center, center + 4);
+    ctx.fill();
   };
 
   useEffect(() => {
     drawWheel(rotationAngle.current);
-  }, [totalItems, questionStatuses]);
+  }, [questions.length, questionStatuses]);
 
   // Timer countdown
   useEffect(() => {
@@ -140,6 +134,10 @@ export const LuckyWheelGame: React.FC<LuckyWheelGameProps> = ({
     if (timerSeconds <= 0) {
       handleSelectOption(-1);
       return;
+    }
+
+    if (timerSeconds <= 5 && timerSeconds > 0) {
+      gameAudio.playTick();
     }
 
     const timer = setInterval(() => {
@@ -169,63 +167,61 @@ export const LuckyWheelGame: React.FC<LuckyWheelGameProps> = ({
     else setTeam2Score((s) => Math.max(0, s + delta));
   };
 
+  // Spin Wheel function
   const spinWheel = () => {
     if (isSpinning) return;
     setIsSpinning(true);
-    setIsAnswerRevealed(false);
     setAnsweredOptionIdx(null);
-    gameAudio.playWhistle();
+    setIsAnswerRevealed(false);
 
-    // Find unopened indices
-    const unopened = Array.from({ length: totalItems })
-      .map((_, i) => i)
-      .filter((i) => !questionStatuses[i]);
+    // Pick a random question that isn't answered yet, or random if all answered
+    const unsolvedIndices = questions
+      .map((_, idx) => idx)
+      .filter((idx) => questionStatuses[idx] === undefined);
+    const targetIdx =
+      unsolvedIndices.length > 0
+        ? unsolvedIndices[Math.floor(Math.random() * unsolvedIndices.length)]
+        : Math.floor(Math.random() * questions.length);
 
-    const targetIdx = unopened.length > 0
-      ? unopened[Math.floor(Math.random() * unopened.length)]
-      : Math.floor(Math.random() * totalItems);
-
-    const fullRotations = (5 + Math.floor(Math.random() * 3)) * 2 * Math.PI;
+    // Target angle calculation
+    const extraSpins = 4 + Math.random() * 2;
     const targetSliceAngle = (2 * Math.PI) - (targetIdx * arcSize + arcSize / 2);
-    const finalAngle = fullRotations + targetSliceAngle;
+    const totalRotation = extraSpins * 2 * Math.PI + targetSliceAngle;
 
+    const startAngle = rotationAngle.current % (2 * Math.PI);
+    const endAngle = startAngle + totalRotation;
     const duration = 2800;
     const startTime = performance.now();
-    const startAngle = rotationAngle.current % (2 * Math.PI);
 
-    const animate = (currentTime: number) => {
-      const elapsed = currentTime - startTime;
+    const animateSpin = (now: number) => {
+      const elapsed = now - startTime;
       const progress = Math.min(elapsed / duration, 1);
-      // easeOutCubic
+      // Ease out cubic
       const ease = 1 - Math.pow(1 - progress, 3);
-      const currentAngle = startAngle + (finalAngle - startAngle) * ease;
+      const current = startAngle + (endAngle - startAngle) * ease;
 
-      rotationAngle.current = currentAngle;
-      drawWheel(currentAngle);
+      rotationAngle.current = current;
+      drawWheel(current);
 
       if (progress < 1) {
-        requestAnimationFrame(animate);
+        requestAnimationFrame(animateSpin);
       } else {
         setIsSpinning(false);
-        setHasSpun(true);
         setCurrentIndex(targetIdx);
         setTimerSeconds(initialTime);
-        gameAudio.playPop();
+        gameAudio.playVictory();
       }
     };
 
-    requestAnimationFrame(animate);
+    requestAnimationFrame(animateSpin);
   };
 
   const handleSelectOption = (idx: number) => {
-    if (isAnswerRevealed || winnerTeamId || !currentQ) return;
-
-    const opt = idx >= 0 ? currentQ.options[idx] : null;
-    const isCorrect = Boolean(opt?.isCorrect);
-
+    if (isAnswerRevealed) return;
     setAnsweredOptionIdx(idx);
     setIsAnswerRevealed(true);
 
+    const isCorrect = idx >= 0 && Boolean(currentQ?.options[idx]?.isCorrect);
     setQuestionStatuses((prev) => ({
       ...prev,
       [currentIndex]: isCorrect ? 'correct' : 'incorrect',
@@ -233,32 +229,50 @@ export const LuckyWheelGame: React.FC<LuckyWheelGameProps> = ({
 
     if (isCorrect) {
       gameAudio.playCorrect();
-      if (activeTeamId === 'team1') setTeam1Score((s) => s + 10);
-      else setTeam2Score((s) => s + 10);
+      if (activeTeamId === 'team1') {
+        setTeam1Score((s) => s + 1);
+      } else {
+        setTeam2Score((s) => s + 1);
+      }
     } else {
       gameAudio.playIncorrect();
-      setActiveTeamId(activeTeamId === 'team1' ? 'team2' : 'team1');
+    }
+  };
+
+  const handleManualReveal = () => {
+    if (isAnswerRevealed) return;
+    setIsAnswerRevealed(true);
+    setAnsweredOptionIdx(null);
+  };
+
+  const handleAwardTeamPoint = (teamId: 'team1' | 'team2') => {
+    handleAdjustScore(teamId, 1);
+    gameAudio.playCorrect();
+  };
+
+  const handlePrevQuestion = () => {
+    if (currentIndex > 0) {
+      setCurrentIndex((prev) => prev - 1);
+      setAnsweredOptionIdx(null);
+      setIsAnswerRevealed(false);
+      setTimerSeconds(initialTime);
     }
   };
 
   const handleNextQuestion = () => {
-    const solvedCount = Object.keys(questionStatuses).length;
-    if (solvedCount >= questions.length) {
+    if (currentIndex < questions.length - 1) {
+      setCurrentIndex((prev) => prev + 1);
+      setAnsweredOptionIdx(null);
+      setIsAnswerRevealed(false);
+      setTimerSeconds(initialTime);
+      setActiveTeamId((curr) => (curr === 'team1' ? 'team2' : 'team1'));
+    } else {
+      const winner =
+        team1Score > team2Score ? 'team1' : team2Score > team1Score ? 'team2' : null;
+      setWinnerTeamId(winner);
+      gameAudio.playVictory();
       setIsVictoryModalOpen(true);
-      return;
     }
-
-    // Auto spin or move to next
-    spinWheel();
-    setActiveTeamId(activeTeamId === 'team1' ? 'team2' : 'team1');
-  };
-
-  const handleSelectQuestionFromGrid = (index: number) => {
-    setHasSpun(true);
-    setCurrentIndex(index);
-    setAnsweredOptionIdx(null);
-    setIsAnswerRevealed(false);
-    setTimerSeconds(initialTime);
   };
 
   const handleRestart = () => {
@@ -280,22 +294,22 @@ export const LuckyWheelGame: React.FC<LuckyWheelGameProps> = ({
       id: 'team1',
       name: team1Name,
       score: team1Score,
-      color: 'bg-purple-600',
-      borderColor: 'border-purple-400',
-      bgLight: 'bg-purple-50 dark:bg-purple-950/40',
+      color: 'bg-blue-600',
+      borderColor: 'border-blue-400',
+      bgLight: 'bg-blue-50 dark:bg-blue-950/40',
     },
     {
       id: 'team2',
       name: team2Name,
       score: team2Score,
-      color: 'bg-amber-600',
-      borderColor: 'border-amber-400',
-      bgLight: 'bg-amber-50 dark:bg-amber-950/40',
+      color: 'bg-rose-600',
+      borderColor: 'border-rose-400',
+      bgLight: 'bg-rose-50 dark:bg-rose-950/40',
     },
   ];
 
   return (
-    <div className="w-full bg-[#f4f7fb] dark:bg-[#151618] rounded-3xl shadow-xl border border-slate-200/90 dark:border-white/10 overflow-hidden flex flex-col transition-all">
+    <div className="w-full bg-[#f8fafc] dark:bg-[#131416] rounded-2xl border border-slate-200/80 dark:border-white/10 overflow-hidden flex flex-col transition-all">
       {/* 1. TEACHER CLASSROOM HEADER */}
       <ClassroomTeacherHeader
         title={examTitle}
@@ -307,9 +321,11 @@ export const LuckyWheelGame: React.FC<LuckyWheelGameProps> = ({
         timerSeconds={timerSeconds}
         isTimerPaused={isTimerPaused}
         onTogglePauseTimer={() => setIsTimerPaused(!isTimerPaused)}
+        onAddSeconds={(delta) => setTimerSeconds((prev) => (prev !== null ? prev + delta : delta))}
         currentIndex={currentIndex}
         totalQuestions={questions.length}
         onOpenQuestionGrid={() => setIsGridOpen(true)}
+        onOpenStudentPicker={() => setIsStudentModalOpen(true)}
         fontSize={fontSize}
         onChangeFontSize={setFontSize}
         soundEnabled={soundEnabled}
@@ -321,74 +337,74 @@ export const LuckyWheelGame: React.FC<LuckyWheelGameProps> = ({
         onOpenSettings={onOpenSettings}
       />
 
-      {/* 2. VISUAL SPINNING WHEEL STAGE */}
-      <div className="p-3.5 sm:p-6 flex flex-col items-center justify-center space-y-5">
-        <div className="w-full max-w-4xl bg-gradient-to-b from-purple-100 via-indigo-100 to-purple-200 dark:from-purple-950/70 dark:via-indigo-950/50 dark:to-purple-950/70 rounded-3xl p-4 sm:p-6 border border-purple-300 dark:border-purple-800/50 shadow-lg flex flex-col items-center justify-center relative">
-          <div className="relative mb-2">
-            {/* Top pointer arrow with neon drop shadow */}
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-2.5 z-10 w-0 h-0 border-l-[14px] border-l-transparent border-r-[14px] border-r-transparent border-t-[24px] border-t-amber-500 filter drop-shadow-lg" />
+      {/* 2. WIDESCREEN 16:9 GRID LAYOUT */}
+      <div className="p-3 sm:p-5 grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-5 items-stretch">
+        {/* LEFT COLUMN: MINIMALIST WHEEL STAGE (lg:col-span-5) */}
+        <div className="lg:col-span-5 flex flex-col justify-between space-y-3">
+          <div className="bg-white dark:bg-[#1a1b1e] rounded-2xl p-4 sm:p-5 border border-slate-200/80 dark:border-white/10 shadow-xs flex flex-col items-center justify-between space-y-4 flex-1">
+            {/* Header info */}
+            <div className="w-full flex items-center justify-between text-xs font-bold pb-2 border-b border-slate-100 dark:border-white/10">
+              <span className="text-slate-700 dark:text-zinc-200">Vòng quay câu hỏi</span>
+              <span className="text-slate-400 text-[11px] font-semibold">
+                Đã giải: {Object.keys(questionStatuses).length} / {questions.length}
+              </span>
+            </div>
 
-            {/* Canvas Wheel */}
-            <canvas
-              ref={canvasRef}
-              width={320}
-              height={320}
-              className="w-[250px] h-[250px] sm:w-[300px] sm:h-[300px] rounded-full cursor-pointer shadow-2xl active:scale-98 transition-transform border-4 border-white dark:border-zinc-800"
-              onClick={spinWheel}
-            />
-          </div>
+            {/* Wheel Canvas Container with Pointer */}
+            <div className="relative flex items-center justify-center p-2">
+              {/* Triangular Pointer at 3 o'clock */}
+              <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1.5 z-20 pointer-events-none">
+                <div className="w-0 h-0 border-y-[10px] border-y-transparent border-r-[16px] border-r-slate-900 dark:border-r-white drop-shadow-sm" />
+              </div>
 
-          {/* Spin Button */}
-          <button
-            type="button"
-            disabled={isSpinning}
-            onClick={spinWheel}
-            className={`mt-2 px-8 py-3 rounded-2xl text-xs sm:text-sm font-black transition-all flex items-center gap-2.5 cursor-pointer shadow-lg active:scale-95 ${
-              isSpinning
-                ? 'bg-slate-300 dark:bg-zinc-700 text-slate-500 cursor-not-allowed'
-                : 'bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white shadow-purple-500/25 ring-2 ring-purple-400/40'
-            }`}
-          >
-            <RotateCw size={17} className={isSpinning ? 'animate-spin' : ''} />
-            <span>{isSpinning ? 'Đang quay số...' : 'Bắt đầu quay chọn câu 🎡'}</span>
-          </button>
-        </div>
-
-        {/* 3. CLASSROOM QUESTION BOARD */}
-        {hasSpun || Object.keys(questionStatuses).length > 0 ? (
-          currentQ ? (
-            <div className="w-full max-w-4xl">
-              <ClassroomQuestionCard
-                question={currentQ}
-                questionNumber={currentIndex + 1}
-                totalQuestions={questions.length}
-                activeTeamName={activeTeamId === 'team1' ? team1Name : team2Name}
-                activeTeamColor={activeTeamId === 'team1' ? 'bg-purple-600' : 'bg-amber-600'}
-                answeredOptionIdx={answeredOptionIdx}
-                isRevealed={isAnswerRevealed}
-                fontSize={fontSize}
-                onSelectOption={handleSelectOption}
-                onNextQuestion={handleNextQuestion}
-                onOpenQuestionGrid={() => setIsGridOpen(true)}
-                isLastQuestion={Object.keys(questionStatuses).length >= questions.length}
+              <canvas
+                ref={canvasRef}
+                width={260}
+                height={260}
+                className="rounded-full shadow-md max-w-full"
               />
             </div>
-          ) : (
-            <div className="p-8 text-center text-slate-500">Chưa có câu hỏi.</div>
-          )
-        ) : (
-          <div className="w-full max-w-4xl p-6 sm:p-8 bg-white dark:bg-[#1e1f20] rounded-2xl border border-slate-200/80 dark:border-white/10 text-center shadow-xs flex flex-col items-center justify-center space-y-2">
-            <div className="w-12 h-12 rounded-2xl bg-purple-100 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 flex items-center justify-center text-2xl mb-1 shadow-inner">
-              🎡
-            </div>
-            <h4 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">
-              Sẵn sàng cho vòng quay may mắn!
-            </h4>
-            <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md">
-              Bấm nút &quot;Bắt đầu quay chọn câu&quot; ở trên hoặc chọn số câu hỏi từ thanh công cụ để bắt đầu vòng thi đấu cho cả lớp.
-            </p>
+
+            {/* Spin Button */}
+            <button
+              type="button"
+              disabled={isSpinning}
+              onClick={spinWheel}
+              className="w-full py-2.5 px-4 rounded-xl bg-google-blue hover:bg-blue-600 text-white font-bold text-sm shadow-xs transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+            >
+              <RotateCw size={15} className={isSpinning ? 'animate-spin' : ''} />
+              <span>{isSpinning ? 'Đang quay...' : 'Quay ngẫu nhiên 🎡'}</span>
+            </button>
           </div>
-        )}
+        </div>
+
+        {/* RIGHT COLUMN: CLASSROOM QUESTION & TEACHING BOARD (lg:col-span-7) */}
+        <div className="lg:col-span-7 flex flex-col">
+          {currentQ ? (
+            <ClassroomQuestionCard
+              question={currentQ}
+              questionNumber={currentIndex + 1}
+              totalQuestions={questions.length}
+              activeTeamName={activeTeamId === 'team1' ? team1Name : team2Name}
+              activeTeamColor={activeTeamId === 'team1' ? 'bg-blue-600' : 'bg-rose-600'}
+              answeredOptionIdx={answeredOptionIdx}
+              isRevealed={isAnswerRevealed}
+              fontSize={fontSize}
+              onSelectOption={handleSelectOption}
+              onManualReveal={handleManualReveal}
+              onAwardTeamPoint={handleAwardTeamPoint}
+              team1Name={team1Name}
+              team2Name={team2Name}
+              onPrevQuestion={handlePrevQuestion}
+              onNextQuestion={handleNextQuestion}
+              onOpenQuestionGrid={() => setIsGridOpen(true)}
+              isFirstQuestion={currentIndex === 0}
+              isLastQuestion={currentIndex === questions.length - 1}
+            />
+          ) : (
+            <div className="p-8 text-center text-slate-500 font-medium">Không có câu hỏi nào.</div>
+          )}
+        </div>
       </div>
 
       {/* QUESTION GRID MODAL */}
@@ -398,7 +414,18 @@ export const LuckyWheelGame: React.FC<LuckyWheelGameProps> = ({
         questionsCount={questions.length}
         currentIndex={currentIndex}
         statuses={questionStatuses}
-        onSelectQuestion={handleSelectQuestionFromGrid}
+        onSelectQuestion={(idx) => {
+          setCurrentIndex(idx);
+          setAnsweredOptionIdx(null);
+          setIsAnswerRevealed(false);
+          setTimerSeconds(initialTime);
+        }}
+      />
+
+      {/* RANDOM STUDENT CALLER MODAL */}
+      <RandomStudentModal
+        isOpen={isStudentModalOpen}
+        onClose={() => setIsStudentModalOpen(false)}
       />
 
       {/* VICTORY CELEBRATION MODAL */}

@@ -6,11 +6,14 @@ import {
   XCircle,
   HelpCircle,
   ChevronRight,
+  ChevronLeft,
   Sparkles,
   ArrowRight,
   BookOpen,
   Award,
-  Layers,
+  Eye,
+  EyeOff,
+  Plus,
 } from 'lucide-react';
 
 export interface ClassroomOption {
@@ -35,8 +38,14 @@ interface ClassroomQuestionCardProps {
   isRevealed: boolean;
   fontSize: 'normal' | 'large' | 'xlarge';
   onSelectOption: (optionIdx: number) => void;
+  onManualReveal?: () => void;
+  onAwardTeamPoint?: (teamId: 'team1' | 'team2') => void;
+  team1Name?: string;
+  team2Name?: string;
+  onPrevQuestion?: () => void;
   onNextQuestion: () => void;
   onOpenQuestionGrid?: () => void;
+  isFirstQuestion?: boolean;
   isLastQuestion: boolean;
 }
 
@@ -45,32 +54,30 @@ const formatContent = (str?: string) => {
   return str.replace(/^\$+|\$+$/g, '').trim();
 };
 
-const OPTION_SHAPES = [
-  { label: 'A', symbol: '▲', color: 'rose' },
-  { label: 'B', symbol: '◆', color: 'blue' },
-  { label: 'C', symbol: '●', color: 'amber' },
-  { label: 'D', symbol: '■', color: 'emerald' },
-  { label: 'E', symbol: '★', color: 'purple' },
-  { label: 'F', symbol: '✦', color: 'cyan' },
-];
+const OPTION_LABELS = ['A', 'B', 'C', 'D', 'E', 'F'];
 
 export const ClassroomQuestionCard: React.FC<ClassroomQuestionCardProps> = ({
   question,
   questionNumber,
   totalQuestions,
   activeTeamName,
-  activeTeamColor = 'text-google-blue',
+  activeTeamColor = 'bg-blue-600',
   answeredOptionIdx,
   isRevealed,
   fontSize,
   onSelectOption,
+  onManualReveal,
+  onAwardTeamPoint,
+  team1Name = 'Đội 1',
+  team2Name = 'Đội 2',
+  onPrevQuestion,
   onNextQuestion,
   onOpenQuestionGrid,
+  isFirstQuestion = false,
   isLastQuestion,
 }) => {
   const [showExplanation, setShowExplanation] = useState(false);
 
-  // Font size utilities for projector and interactive screens
   const questionTextSize =
     fontSize === 'xlarge'
       ? 'text-xl sm:text-2xl md:text-3xl'
@@ -89,34 +96,39 @@ export const ClassroomQuestionCard: React.FC<ClassroomQuestionCardProps> = ({
     answeredOptionIdx !== null && Boolean(question.options[answeredOptionIdx]?.isCorrect);
 
   return (
-    <div className="w-full bg-white dark:bg-[#1a1b1e] rounded-3xl p-4 sm:p-7 border border-slate-200/90 dark:border-white/10 shadow-lg flex flex-col space-y-5 transition-all">
-      {/* 1. TOP HEADER: QUESTION BADGE, ACTIVE TURN & FEEDBACK */}
-      <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-100 dark:border-white/10">
-        <div className="flex items-center gap-2.5 flex-wrap">
-          <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-black text-xs uppercase tracking-wider shadow-xs">
-            <Sparkles size={13} className="text-amber-300" />
-            <span>Câu {questionNumber} / {totalQuestions}</span>
+    <div className="w-full bg-white dark:bg-[#1a1b1e] rounded-2xl p-4 sm:p-6 border border-slate-200/80 dark:border-white/10 shadow-xs flex flex-col justify-between space-y-4 transition-all h-full">
+      {/* 1. TOP STATUS BAR: QUESTION INDEX, ACTIVE TURN & FEEDBACK */}
+      <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-slate-100 dark:border-white/10">
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-white/10 text-slate-800 dark:text-zinc-200 font-bold text-xs">
+            Câu {questionNumber} / {totalQuestions}
           </span>
 
           {activeTeamName && (
-            <span className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-100/90 dark:bg-white/5 border border-slate-200/80 dark:border-white/10 text-xs font-semibold text-slate-700 dark:text-zinc-200 shadow-2xs">
-              <span className={`w-2.5 h-2.5 rounded-full ${activeTeamColor} animate-pulse`} />
-              <span>Lượt của:</span>
-              <span className="font-extrabold text-slate-900 dark:text-white">{activeTeamName}</span>
+            <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-50/70 dark:bg-blue-950/30 text-xs font-semibold text-blue-700 dark:text-blue-300">
+              <span className={`w-2 h-2 rounded-full ${activeTeamColor} animate-pulse`} />
+              <span>Lượt: <b className="font-bold">{activeTeamName}</b></span>
             </span>
           )}
         </div>
 
         {/* REVEAL STATUS BANNER */}
         {isRevealed && (
-          <div className="flex items-center gap-2 animate-in zoom-in-95 duration-200">
+          <div className="flex items-center gap-1.5 animate-in fade-in-0 duration-150">
             {answeredCorrect ? (
-              <span className="flex items-center gap-1.5 text-xs sm:text-sm font-black text-white bg-gradient-to-r from-emerald-600 to-teal-600 px-3.5 py-1.5 rounded-full shadow-md animate-bounce">
-                <CheckCircle2 size={16} /> Chính xác! (+10đ)
+              <span className="flex items-center gap-1 text-xs font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-1 rounded-lg border border-emerald-200 dark:border-emerald-800">
+                <CheckCircle2 size={14} className="text-emerald-600 dark:text-emerald-400" />
+                <span>Chính xác</span>
+              </span>
+            ) : answeredOptionIdx !== null ? (
+              <span className="flex items-center gap-1 text-xs font-bold text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/40 px-2.5 py-1 rounded-lg border border-rose-200 dark:border-rose-800">
+                <XCircle size={14} className="text-rose-600 dark:text-rose-400" />
+                <span>Chưa đúng</span>
               </span>
             ) : (
-              <span className="flex items-center gap-1.5 text-xs sm:text-sm font-black text-white bg-gradient-to-r from-rose-600 to-red-600 px-3.5 py-1.5 rounded-full shadow-md">
-                <XCircle size={16} /> Chưa chính xác!
+              <span className="flex items-center gap-1 text-xs font-bold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/40 px-2.5 py-1 rounded-lg border border-blue-200 dark:border-blue-800">
+                <Eye size={14} className="text-blue-600 dark:text-blue-400" />
+                <span>Đáp án mở</span>
               </span>
             )}
           </div>
@@ -124,67 +136,40 @@ export const ClassroomQuestionCard: React.FC<ClassroomQuestionCardProps> = ({
       </div>
 
       {/* 2. QUESTION PROMPT */}
-      <div className="py-2 px-1">
+      <div className="py-2 px-0.5">
         <h2
-          className={`font-extrabold text-slate-900 dark:text-white leading-relaxed text-center sm:text-left tracking-tight ${questionTextSize}`}
+          className={`font-bold text-slate-900 dark:text-white leading-relaxed tracking-tight ${questionTextSize}`}
         >
           {formatContent(question.content)}
         </h2>
       </div>
 
-      {/* 3. 4 COLOR-THEMED ARCADE OPTIONS GRID (A, B, C, D) */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 pt-1">
+      {/* 3. MINIMALIST OPTIONS GRID (A, B, C, D) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3 pt-1">
         {(question.options || []).length === 0 ? (
-          <div className="col-span-2 p-6 text-center text-xs text-slate-500 bg-slate-50 dark:bg-white/5 rounded-2xl border border-slate-200/60 dark:border-white/10">
-            Không tìm thấy phương án trắc nghiệm cho câu hỏi này.
+          <div className="col-span-2 p-5 text-center text-xs text-slate-500 bg-slate-50 dark:bg-white/5 rounded-xl border border-slate-200/60 dark:border-white/10">
+            Không tìm thấy phương án trả lời.
           </div>
         ) : (
           (question.options || []).map((opt, idx) => {
-            const shapeInfo = OPTION_SHAPES[idx] || { label: String(idx + 1), symbol: '●', color: 'blue' };
+            const label = OPTION_LABELS[idx] || String(idx + 1);
             const isCorrect = Boolean(opt?.isCorrect);
             const isSelected = answeredOptionIdx === idx;
             const cleanContent = formatContent((opt?.content || '').replace(/^[A-F][\s.:)-]+/i, ''));
 
-            // Default Color Schemes for Options A, B, C, D
-            let cardClasses = '';
-            let badgeClasses = '';
+            let itemClass = 'bg-slate-50/70 hover:bg-slate-100/90 dark:bg-white/5 dark:hover:bg-white/10 border-slate-200/80 dark:border-white/10 text-slate-900 dark:text-zinc-100';
+            let badgeClass = 'bg-white dark:bg-[#25262b] text-slate-700 dark:text-zinc-300 border border-slate-200 dark:border-white/10';
 
-            if (idx === 0) {
-              // A: ROSE / CRIMSON
-              cardClasses =
-                'bg-rose-50/70 hover:bg-rose-100/90 dark:bg-rose-950/20 dark:hover:bg-rose-950/40 border-rose-200/90 dark:border-rose-900/60 border-b-4 border-b-rose-300 dark:border-b-rose-800 text-slate-900 dark:text-zinc-100 hover:border-b-rose-400';
-              badgeClasses = 'bg-rose-500 text-white shadow-xs';
-            } else if (idx === 1) {
-              // B: ROYAL BLUE
-              cardClasses =
-                'bg-blue-50/70 hover:bg-blue-100/90 dark:bg-blue-950/20 dark:hover:bg-blue-950/40 border-blue-200/90 dark:border-blue-900/60 border-b-4 border-b-blue-300 dark:border-b-blue-800 text-slate-900 dark:text-zinc-100 hover:border-b-blue-400';
-              badgeClasses = 'bg-blue-600 text-white shadow-xs';
-            } else if (idx === 2) {
-              // C: WARM AMBER / GOLD
-              cardClasses =
-                'bg-amber-50/70 hover:bg-amber-100/90 dark:bg-amber-950/20 dark:hover:bg-amber-950/40 border-amber-200/90 dark:border-amber-900/60 border-b-4 border-b-amber-300 dark:border-b-amber-800 text-slate-900 dark:text-zinc-100 hover:border-b-amber-400';
-              badgeClasses = 'bg-amber-500 text-white shadow-xs';
-            } else {
-              // D: VIVID EMERALD
-              cardClasses =
-                'bg-emerald-50/70 hover:bg-emerald-100/90 dark:bg-emerald-950/20 dark:hover:bg-emerald-950/40 border-emerald-200/90 dark:border-emerald-900/60 border-b-4 border-b-emerald-300 dark:border-b-emerald-800 text-slate-900 dark:text-zinc-100 hover:border-b-emerald-400';
-              badgeClasses = 'bg-emerald-600 text-white shadow-xs';
-            }
-
-            // Reveal States Override
             if (isRevealed) {
               if (isCorrect) {
-                cardClasses =
-                  'bg-gradient-to-r from-emerald-500 to-teal-500 text-white border-emerald-600 border-b-4 border-b-emerald-700 ring-4 ring-emerald-400/40 shadow-lg scale-[1.01] font-bold';
-                badgeClasses = 'bg-white text-emerald-700 font-black shadow-sm';
+                itemClass = 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-500 text-emerald-900 dark:text-emerald-100 ring-2 ring-emerald-500/30 font-bold';
+                badgeClass = 'bg-emerald-600 text-white font-bold border-transparent';
               } else if (isSelected && !isCorrect) {
-                cardClasses =
-                  'bg-gradient-to-r from-rose-500 to-red-500 text-white border-rose-600 border-b-4 border-b-rose-700 shadow-md opacity-95 font-bold';
-                badgeClasses = 'bg-white text-rose-700 font-black shadow-sm';
+                itemClass = 'bg-rose-50 dark:bg-rose-950/40 border-rose-500 text-rose-900 dark:text-rose-100 ring-1 ring-rose-500/30';
+                badgeClass = 'bg-rose-600 text-white font-bold border-transparent';
               } else {
-                cardClasses =
-                  'opacity-35 bg-slate-50 dark:bg-white/5 border-slate-200/60 dark:border-white/5 border-b-2 text-slate-400';
-                badgeClasses = 'bg-slate-200 dark:bg-zinc-800 text-slate-400';
+                itemClass = 'opacity-40 bg-slate-50/40 dark:bg-white/5 border-slate-200/50 dark:border-white/5 text-slate-400';
+                badgeClass = 'bg-slate-200 dark:bg-zinc-800 text-slate-400 border-transparent';
               }
             }
 
@@ -192,17 +177,14 @@ export const ClassroomQuestionCard: React.FC<ClassroomQuestionCardProps> = ({
               <button
                 key={idx}
                 type="button"
-                disabled={isRevealed}
                 onClick={() => onSelectOption(idx)}
-                className={`group w-full p-4 sm:p-5 rounded-2xl border text-left font-semibold transition-all flex items-center gap-3.5 cursor-pointer shadow-sm active:translate-y-1 active:border-b-0 ${cardClasses}`}
+                className={`w-full p-3 sm:p-4 rounded-xl border text-left font-medium transition-all flex items-center gap-3 cursor-pointer shadow-2xs ${itemClass}`}
               >
-                {/* 3D Shape Badge (A, B, C, D) */}
+                {/* Minimalist Letter Badge */}
                 <div
-                  className={`w-9 h-9 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center font-black shrink-0 transition-transform group-hover:scale-105 ${badgeClasses}`}
+                  className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center font-bold text-xs shrink-0 ${badgeClass}`}
                 >
-                  <span className="text-sm sm:text-base font-extrabold flex items-center gap-0.5">
-                    {shapeInfo.label}
-                  </span>
+                  {label}
                 </div>
 
                 {/* Option Text */}
@@ -212,10 +194,10 @@ export const ClassroomQuestionCard: React.FC<ClassroomQuestionCardProps> = ({
 
                 {/* Status indicator icon on revealed */}
                 {isRevealed && isCorrect && (
-                  <CheckCircle2 size={24} className="text-white shrink-0 animate-in zoom-in-50" />
+                  <CheckCircle2 size={18} className="text-emerald-600 dark:text-emerald-400 shrink-0" />
                 )}
                 {isRevealed && isSelected && !isCorrect && (
-                  <XCircle size={24} className="text-white shrink-0 animate-in zoom-in-50" />
+                  <XCircle size={18} className="text-rose-600 dark:text-rose-400 shrink-0" />
                 )}
               </button>
             );
@@ -223,61 +205,96 @@ export const ClassroomQuestionCard: React.FC<ClassroomQuestionCardProps> = ({
         )}
       </div>
 
-      {/* 4. BOTTOM BAR: PEDAGOGICAL ACTIONS & ADVANCE */}
-      {isRevealed && (
-        <div className="pt-3 border-t border-slate-100 dark:border-white/10 flex flex-wrap items-center justify-between gap-3 animate-in fade-in-0 duration-200">
-          {/* Explanation Toggle */}
-          <div>
-            {question.explanation ? (
-              <button
-                type="button"
-                onClick={() => setShowExplanation(!showExplanation)}
-                className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-300 text-xs sm:text-sm font-bold transition-all cursor-pointer border border-amber-500/20 shadow-2xs active:scale-95"
-              >
-                <BookOpen size={15} />
-                <span>{showExplanation ? 'Ẩn lời giải' : '💡 Xem giải thích / Giảng bài'}</span>
-              </button>
-            ) : (
-              <span className="text-xs text-slate-400 font-medium">
-                Đáp án chính xác đã được hiển thị trên bảng
-              </span>
-            )}
+      {/* 4. EXPANDABLE TEACHER EXPLANATION BOX */}
+      {showExplanation && question.explanation && (
+        <div className="p-3.5 rounded-xl bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200/80 dark:border-amber-800/40 text-xs sm:text-sm text-slate-800 dark:text-amber-100 leading-relaxed animate-in fade-in-0 duration-150">
+          <div className="flex items-center gap-1.5 font-bold text-amber-800 dark:text-amber-300 mb-1">
+            <Sparkles size={14} className="text-amber-500" />
+            <span>Lời giải & Chốt kiến thức:</span>
           </div>
+          <p className="whitespace-pre-line font-medium leading-relaxed">{question.explanation}</p>
+        </div>
+      )}
 
-          {/* Action buttons */}
-          <div className="flex items-center gap-2.5">
-            {onOpenQuestionGrid && (
-              <button
-                type="button"
-                onClick={onOpenQuestionGrid}
-                className="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/15 text-slate-700 dark:text-zinc-200 text-xs sm:text-sm font-bold transition-colors cursor-pointer shadow-2xs"
-              >
-                Chọn câu khác
-              </button>
-            )}
-
+      {/* 5. TEACHER ACTION TOOLBAR (BOTTOM BAR) */}
+      <div className="pt-3 border-t border-slate-100 dark:border-white/10 flex flex-wrap items-center justify-between gap-2.5">
+        {/* Left Actions: Reveal Answer & Explanation */}
+        <div className="flex items-center gap-2">
+          {onManualReveal && (
             <button
               type="button"
-              onClick={onNextQuestion}
-              className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-xs sm:text-sm font-black shadow-md hover:shadow-lg active:scale-95 transition-all cursor-pointer"
+              onClick={onManualReveal}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
+                isRevealed
+                  ? 'bg-slate-100 dark:bg-white/10 border-slate-200 dark:border-white/10 text-slate-700 dark:text-zinc-200'
+                  : 'bg-blue-50 dark:bg-blue-950/40 border-blue-200 dark:border-blue-800 text-google-blue dark:text-blue-300 hover:bg-blue-100'
+              }`}
+              title="Hiện đáp án đúng của câu này"
             >
-              <span>{isLastQuestion ? 'Xem kết quả chung cuộc 🏆' : 'Câu tiếp theo'}</span>
-              <ArrowRight size={16} />
+              {isRevealed ? <EyeOff size={13} /> : <Eye size={13} />}
+              <span>{isRevealed ? 'Đã mở đáp án' : 'Hiện đáp án 👁️'}</span>
             </button>
-          </div>
-        </div>
-      )}
+          )}
 
-      {/* 5. EXPANDABLE TEACHER EXPLANATION CARD */}
-      {isRevealed && showExplanation && question.explanation && (
-        <div className="mt-2 p-4 rounded-2xl bg-amber-50/80 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/50 text-xs sm:text-sm text-slate-800 dark:text-amber-100 leading-relaxed animate-in slide-in-from-top-2 duration-150 shadow-inner">
-          <div className="flex items-center gap-2 font-black text-amber-800 dark:text-amber-300 mb-1.5">
-            <Sparkles size={16} className="text-amber-500" />
-            <span>Lời giải & Chốt kiến thức giáo viên:</span>
-          </div>
-          <p className="whitespace-pre-line leading-relaxed font-medium">{question.explanation}</p>
+          {question.explanation && (
+            <button
+              type="button"
+              onClick={() => setShowExplanation(!showExplanation)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/40 dark:hover:bg-amber-900/40 text-amber-800 dark:text-amber-300 text-xs font-bold transition-all cursor-pointer border border-amber-200 dark:border-amber-800"
+            >
+              <BookOpen size={13} />
+              <span>{showExplanation ? 'Ẩn lời giải' : 'Giải thích 💡'}</span>
+            </button>
+          )}
+
+          {/* Award Points for Teams Directly */}
+          {onAwardTeamPoint && (
+            <div className="hidden sm:flex items-center gap-1 pl-1 border-l border-slate-200 dark:border-white/10">
+              <button
+                type="button"
+                onClick={() => onAwardTeamPoint('team1')}
+                className="px-2.5 py-1 rounded-lg bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 text-xs font-bold transition-all cursor-pointer border border-blue-200/80 dark:border-blue-800/60"
+                title={`Cộng 1 điểm cho ${team1Name}`}
+              >
+                +1 {team1Name}
+              </button>
+              <button
+                type="button"
+                onClick={() => onAwardTeamPoint('team2')}
+                className="px-2.5 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 text-xs font-bold transition-all cursor-pointer border border-rose-200/80 dark:border-rose-800/60"
+                title={`Cộng 1 điểm cho ${team2Name}`}
+              >
+                +1 {team2Name}
+              </button>
+            </div>
+          )}
         </div>
-      )}
+
+        {/* Right Navigation: Prev Question & Next Question */}
+        <div className="flex items-center gap-2">
+          {onPrevQuestion && (
+            <button
+              type="button"
+              disabled={isFirstQuestion}
+              onClick={onPrevQuestion}
+              className="p-2 sm:px-3 sm:py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-700 dark:text-zinc-200 text-xs font-bold transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed flex items-center gap-1"
+              title="Câu hỏi trước"
+            >
+              <ChevronLeft size={14} />
+              <span className="hidden sm:inline">Câu trước</span>
+            </button>
+          )}
+
+          <button
+            type="button"
+            onClick={onNextQuestion}
+            className="flex items-center gap-1.5 px-4 sm:px-5 py-1.5 rounded-xl bg-google-blue hover:bg-blue-600 text-white text-xs sm:text-sm font-bold shadow-xs transition-all cursor-pointer active:scale-95"
+          >
+            <span>{isLastQuestion ? 'Tổng kết 🏆' : 'Câu tiếp theo'}</span>
+            <ArrowRight size={14} />
+          </button>
+        </div>
+      </div>
     </div>
   );
 };

@@ -7,6 +7,7 @@ import { GameSettingsConfig, DEFAULT_GAME_CONFIG } from './GameConfigModal';
 import { ClassroomTeacherHeader, ClassroomTeam } from './ClassroomTeacherHeader';
 import { ClassroomQuestionCard } from './ClassroomQuestionCard';
 import { QuestionGridModal } from './QuestionGridModal';
+import { RandomStudentModal } from './RandomStudentModal';
 import { ClassroomVictoryModal } from './ClassroomVictoryModal';
 
 interface Question {
@@ -29,7 +30,6 @@ interface BubbleItem {
   questionIndex: number;
   emoji: string;
   label: string;
-  points: number;
 }
 
 export const BubblePopGame: React.FC<BubblePopGameProps> = ({
@@ -49,6 +49,7 @@ export const BubblePopGame: React.FC<BubblePopGameProps> = ({
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [fontSize, setFontSize] = useState<'normal' | 'large' | 'xlarge'>(config.fontSize || 'large');
   const [isGridOpen, setIsGridOpen] = useState(false);
+  const [isStudentModalOpen, setIsStudentModalOpen] = useState(false);
   const [questionStatuses, setQuestionStatuses] = useState<Record<number, 'unopened' | 'correct' | 'incorrect'>>({});
   const [winnerTeamId, setWinnerTeamId] = useState<string | null>(null);
   const [isVictoryModalOpen, setIsVictoryModalOpen] = useState(false);
@@ -71,7 +72,6 @@ export const BubblePopGame: React.FC<BubblePopGameProps> = ({
       questionIndex: idx,
       emoji: seaCreatures[idx % seaCreatures.length],
       label: `Bóng ${idx + 1}`,
-      points: 10 + (idx % 2) * 5,
     };
   });
 
@@ -84,16 +84,12 @@ export const BubblePopGame: React.FC<BubblePopGameProps> = ({
       return;
     }
 
+    if (timerSeconds <= 5 && timerSeconds > 0) {
+      gameAudio.playTick();
+    }
+
     const timer = setInterval(() => {
-      setTimerSeconds((prev) => {
-        if (prev !== null && prev > 0) {
-          if (prev <= 6 && prev > 1) {
-            gameAudio.playTick();
-          }
-          return prev - 1;
-        }
-        return 0;
-      });
+      setTimerSeconds((prev) => (prev !== null && prev > 0 ? prev - 1 : 0));
     }, 1000);
 
     return () => clearInterval(timer);
@@ -120,49 +116,52 @@ export const BubblePopGame: React.FC<BubblePopGameProps> = ({
   };
 
   const handleSelectOption = (idx: number) => {
-    if (isAnswerRevealed || winnerTeamId || !currentQ) return;
-
-    const opt = idx >= 0 ? currentQ.options[idx] : null;
-    const isCorrect = Boolean(opt?.isCorrect);
-
+    if (isAnswerRevealed) return;
     setAnsweredOptionIdx(idx);
     setIsAnswerRevealed(true);
 
+    const isCorrect = idx >= 0 && Boolean(currentQ?.options[idx]?.isCorrect);
     setQuestionStatuses((prev) => ({
       ...prev,
       [currentIndex]: isCorrect ? 'correct' : 'incorrect',
     }));
 
     if (isCorrect) {
-      setIsPopped(true);
       gameAudio.playCorrect();
-      gameAudio.playPop();
-      const pts = bubbleItems[currentIndex]?.points || 10;
-      if (activeTeamId === 'team1') setTeam1Score((s) => s + pts);
-      else setTeam2Score((s) => s + pts);
-
-      setTimeout(() => setIsPopped(false), 800);
+      setIsPopped(true);
+      setTimeout(() => setIsPopped(false), 900);
+      if (activeTeamId === 'team1') setTeam1Score((s) => s + 1);
+      else setTeam2Score((s) => s + 1);
     } else {
       gameAudio.playIncorrect();
     }
   };
 
-  const handleNextQuestion = () => {
-    const nextUnopenedIndex = questions.findIndex(
-      (_, idx) => !questionStatuses[idx] && idx !== currentIndex
-    );
-    const hasUnopened = nextUnopenedIndex !== -1;
+  const handleManualReveal = () => {
+    if (isAnswerRevealed) return;
+    setIsAnswerRevealed(true);
+    setAnsweredOptionIdx(null);
+  };
 
-    if (hasUnopened) {
-      let targetIndex = (currentIndex + 1) % questions.length;
-      for (let i = 0; i < questions.length; i++) {
-        const candidate = (currentIndex + 1 + i) % questions.length;
-        if (!questionStatuses[candidate]) {
-          targetIndex = candidate;
-          break;
-        }
-      }
-      setCurrentIndex(targetIndex);
+  const handleAwardTeamPoint = (teamId: 'team1' | 'team2') => {
+    handleAdjustScore(teamId, 1);
+    gameAudio.playCorrect();
+    setIsPopped(true);
+    setTimeout(() => setIsPopped(false), 900);
+  };
+
+  const handlePrevQuestion = () => {
+    if (currentIndex > 0) {
+      setCurrentIndex((prev) => prev - 1);
+      setAnsweredOptionIdx(null);
+      setIsAnswerRevealed(false);
+      setTimerSeconds(initialTime);
+    }
+  };
+
+  const handleNextQuestion = () => {
+    if (currentIndex < questions.length - 1) {
+      setCurrentIndex((prev) => prev + 1);
       setAnsweredOptionIdx(null);
       setIsAnswerRevealed(false);
       setTimerSeconds(initialTime);
@@ -174,13 +173,6 @@ export const BubblePopGame: React.FC<BubblePopGameProps> = ({
       gameAudio.playVictory();
       setIsVictoryModalOpen(true);
     }
-  };
-
-  const handleSelectQuestionFromGrid = (index: number) => {
-    setCurrentIndex(index);
-    setAnsweredOptionIdx(null);
-    setIsAnswerRevealed(false);
-    setTimerSeconds(initialTime);
   };
 
   const handleRestart = () => {
@@ -202,22 +194,22 @@ export const BubblePopGame: React.FC<BubblePopGameProps> = ({
       id: 'team1',
       name: team1Name,
       score: team1Score,
-      color: 'bg-sky-600',
-      borderColor: 'border-sky-400',
-      bgLight: 'bg-sky-50 dark:bg-sky-950/40',
+      color: 'bg-cyan-600',
+      borderColor: 'border-cyan-400',
+      bgLight: 'bg-cyan-50 dark:bg-cyan-950/40',
     },
     {
       id: 'team2',
       name: team2Name,
       score: team2Score,
-      color: 'bg-teal-600',
-      borderColor: 'border-teal-400',
-      bgLight: 'bg-teal-50 dark:bg-teal-950/40',
+      color: 'bg-blue-600',
+      borderColor: 'border-blue-400',
+      bgLight: 'bg-blue-50 dark:bg-blue-950/40',
     },
   ];
 
   return (
-    <div className="w-full bg-[#f4f7fb] dark:bg-[#151618] rounded-3xl shadow-xl border border-slate-200/90 dark:border-white/10 overflow-hidden flex flex-col transition-all">
+    <div className="w-full bg-[#f8fafc] dark:bg-[#131416] rounded-2xl border border-slate-200/80 dark:border-white/10 overflow-hidden flex flex-col transition-all">
       {/* 1. TEACHER CLASSROOM HEADER */}
       <ClassroomTeacherHeader
         title={examTitle}
@@ -229,9 +221,11 @@ export const BubblePopGame: React.FC<BubblePopGameProps> = ({
         timerSeconds={timerSeconds}
         isTimerPaused={isTimerPaused}
         onTogglePauseTimer={() => setIsTimerPaused(!isTimerPaused)}
+        onAddSeconds={(delta) => setTimerSeconds((prev) => (prev !== null ? prev + delta : delta))}
         currentIndex={currentIndex}
         totalQuestions={questions.length}
         onOpenQuestionGrid={() => setIsGridOpen(true)}
+        onOpenStudentPicker={() => setIsStudentModalOpen(true)}
         fontSize={fontSize}
         onChangeFontSize={setFontSize}
         soundEnabled={soundEnabled}
@@ -243,81 +237,101 @@ export const BubblePopGame: React.FC<BubblePopGameProps> = ({
         onOpenSettings={onOpenSettings}
       />
 
-      {/* 2. VISUAL OCEAN REEF BUBBLE ARENA */}
-      <div className="p-3.5 sm:p-6 flex flex-col items-center justify-center space-y-5">
-        <div className="w-full max-w-4xl bg-gradient-to-b from-sky-300 via-teal-200 to-blue-400 dark:from-sky-950/70 dark:via-teal-950/50 dark:to-blue-950/60 rounded-3xl p-5 sm:p-7 border border-sky-300 dark:border-sky-800/40 shadow-xl flex flex-col justify-between min-h-[230px] relative overflow-hidden">
-          {/* Top Banner */}
-          <div className="flex items-center justify-between text-xs sm:text-sm font-bold text-sky-950 dark:text-sky-200">
-            <div className="flex items-center gap-2">
-              <span className="text-3xl sm:text-4xl">🫧</span>
-              <div>
-                <span>Thủy cung tri thức đại dương</span>
-                <p className="text-[10px] text-sky-800 dark:text-sky-400">
-                  Bấm nổ bong bóng để giải cứu sinh vật biển
-                </p>
+      {/* 2. WIDESCREEN 16:9 GRID LAYOUT */}
+      <div className="p-3 sm:p-5 grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-5 items-stretch">
+        {/* LEFT COLUMN: MINIMALIST OCEAN STAGE (lg:col-span-5) */}
+        <div className="lg:col-span-5 flex flex-col justify-between space-y-3">
+          <div className="bg-white dark:bg-[#1a1b1e] rounded-2xl p-4 sm:p-5 border border-slate-200/80 dark:border-white/10 shadow-xs flex flex-col justify-between space-y-4 flex-1">
+            {/* Header info */}
+            <div className="flex items-center justify-between text-xs font-bold pb-2 border-b border-slate-100 dark:border-white/10">
+              <span className="text-cyan-700 dark:text-cyan-300 font-extrabold flex items-center gap-1.5">
+                <span>🫧 Đại dương tri thức</span>
+              </span>
+              <span className="text-slate-400 text-[11px] font-semibold">
+                Đang mở: Câu {currentIndex + 1}
+              </span>
+            </div>
+
+            {/* Current Active Bubble Display */}
+            <div className="py-4 px-2 bg-slate-50 dark:bg-white/5 rounded-xl border border-slate-100 dark:border-white/5 flex flex-col items-center justify-center min-h-[160px]">
+              <div className={`text-5xl transition-transform duration-300 mb-2 ${isPopped ? 'scale-125' : ''}`}>
+                {isPopped ? '✨' : bubbleItems[currentIndex]?.emoji || '🐬'}
+              </div>
+              <span className="text-xs font-bold text-slate-700 dark:text-zinc-200">
+                Bong bóng câu số {currentIndex + 1}
+              </span>
+
+              {/* Bubbles Grid */}
+              <div className="grid grid-cols-4 sm:grid-cols-6 gap-2 w-full pt-4 mt-2 border-t border-slate-200/60 dark:border-white/10">
+                {bubbleItems.map((b) => {
+                  const status = questionStatuses[b.questionIndex];
+                  const isCurrent = currentIndex === b.questionIndex;
+
+                  return (
+                    <button
+                      key={b.id}
+                      type="button"
+                      onClick={() => {
+                        setCurrentIndex(b.questionIndex);
+                        setAnsweredOptionIdx(null);
+                        setIsAnswerRevealed(false);
+                        setTimerSeconds(initialTime);
+                      }}
+                      className={`flex flex-col items-center justify-center p-1.5 rounded-lg border text-center transition-all cursor-pointer ${
+                        isCurrent
+                          ? 'bg-cyan-100 dark:bg-cyan-950/60 border-cyan-500 ring-2 ring-cyan-500/30 font-bold scale-105'
+                          : status === 'correct'
+                          ? 'bg-emerald-50 dark:bg-emerald-950/30 border-emerald-300 opacity-60'
+                          : status === 'incorrect'
+                          ? 'bg-rose-50 dark:bg-rose-950/30 border-rose-300 opacity-60'
+                          : 'bg-white dark:bg-white/5 border-slate-200/70 dark:border-white/10 hover:border-cyan-400'
+                      }`}
+                    >
+                      <span className="text-xl">{b.emoji}</span>
+                      <span className="text-[10px] text-slate-600 dark:text-slate-400 mt-0.5">
+                        {b.questionIndex + 1}
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/80 dark:bg-black/50 border border-sky-300 dark:border-sky-700 text-xs font-bold text-sky-900 dark:text-sky-300 shadow-xs">
-              <span className={`text-2xl transition-transform ${isPopped ? 'scale-125' : ''}`}>
-                {isPopped ? '✨' : bubbleItems[currentIndex]?.emoji || '🐬'}
-              </span>
-              <span>Đang mở: Câu {currentIndex + 1}</span>
+            {/* Status Tips */}
+            <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+              <span>Đã khám phá: <b>{Object.keys(questionStatuses).length} / {questions.length}</b></span>
+              <span>Dẫn điểm: <b>{team1Score > team2Score ? team1Name : team2Score > team1Score ? team2Name : 'Hòa nhau'}</b></span>
             </div>
-          </div>
-
-          {/* Bubbles Floating Grid */}
-          <div className="grid grid-cols-4 sm:grid-cols-6 gap-2.5 sm:gap-3.5 pt-4">
-            {bubbleItems.map((item) => {
-              const status = questionStatuses[item.questionIndex];
-              const isCurrent = currentIndex === item.questionIndex;
-
-              return (
-                <button
-                  key={item.id}
-                  type="button"
-                  onClick={() => handleSelectQuestionFromGrid(item.questionIndex)}
-                  className={`flex flex-col items-center justify-center p-3 rounded-full aspect-square border transition-all cursor-pointer shadow-xs ${
-                    isCurrent
-                      ? 'bg-sky-400/40 border-sky-500 ring-4 ring-sky-300 scale-108 font-bold'
-                      : status === 'correct'
-                      ? 'bg-emerald-500/25 border-emerald-500 text-emerald-800 dark:text-emerald-300 opacity-60'
-                      : status === 'incorrect'
-                      ? 'bg-rose-500/25 border-rose-500 text-rose-800 dark:text-rose-300 opacity-60'
-                      : 'bg-white/60 dark:bg-white/10 border-sky-200/80 dark:border-white/10 hover:scale-105'
-                  }`}
-                >
-                  <span className="text-2xl sm:text-3xl mb-0.5">{item.emoji}</span>
-                  <span className="text-[10px] font-bold text-sky-950 dark:text-sky-100">
-                    Câu {item.questionIndex + 1}
-                  </span>
-                </button>
-              );
-            })}
           </div>
         </div>
 
-        {/* 3. CLASSROOM QUESTION BOARD */}
-        {currentQ ? (
-          <div className="w-full max-w-4xl">
+        {/* RIGHT COLUMN: CLASSROOM QUESTION & TEACHING BOARD (lg:col-span-7) */}
+        <div className="lg:col-span-7 flex flex-col">
+          {currentQ ? (
             <ClassroomQuestionCard
               question={currentQ}
               questionNumber={currentIndex + 1}
               totalQuestions={questions.length}
               activeTeamName={activeTeamId === 'team1' ? team1Name : team2Name}
-              activeTeamColor={activeTeamId === 'team1' ? 'bg-sky-600' : 'bg-teal-600'}
+              activeTeamColor={activeTeamId === 'team1' ? 'bg-cyan-600' : 'bg-blue-600'}
               answeredOptionIdx={answeredOptionIdx}
               isRevealed={isAnswerRevealed}
               fontSize={fontSize}
               onSelectOption={handleSelectOption}
+              onManualReveal={handleManualReveal}
+              onAwardTeamPoint={handleAwardTeamPoint}
+              team1Name={team1Name}
+              team2Name={team2Name}
+              onPrevQuestion={handlePrevQuestion}
               onNextQuestion={handleNextQuestion}
               onOpenQuestionGrid={() => setIsGridOpen(true)}
-              isLastQuestion={Object.keys(questionStatuses).length >= questions.length || winnerTeamId !== null}
+              isFirstQuestion={currentIndex === 0}
+              isLastQuestion={currentIndex === questions.length - 1}
             />
-          </div>
-        ) : (
-          <div className="p-8 text-center text-slate-500">Chưa có câu hỏi.</div>
-        )}
+          ) : (
+            <div className="p-8 text-center text-slate-500 font-medium">Không có câu hỏi nào.</div>
+          )}
+        </div>
       </div>
 
       {/* QUESTION GRID MODAL */}
@@ -327,7 +341,18 @@ export const BubblePopGame: React.FC<BubblePopGameProps> = ({
         questionsCount={questions.length}
         currentIndex={currentIndex}
         statuses={questionStatuses}
-        onSelectQuestion={handleSelectQuestionFromGrid}
+        onSelectQuestion={(idx) => {
+          setCurrentIndex(idx);
+          setAnsweredOptionIdx(null);
+          setIsAnswerRevealed(false);
+          setTimerSeconds(initialTime);
+        }}
+      />
+
+      {/* RANDOM STUDENT CALLER MODAL */}
+      <RandomStudentModal
+        isOpen={isStudentModalOpen}
+        onClose={() => setIsStudentModalOpen(false)}
       />
 
       {/* VICTORY CELEBRATION MODAL */}
