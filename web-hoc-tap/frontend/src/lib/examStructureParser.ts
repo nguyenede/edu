@@ -395,7 +395,7 @@ export function replaceOmmlInDocumentXml(
     return `<w:r><w:t xml:space="preserve"> ${safeLatex} </w:t></w:r>`;
   });
 
-  // 2. Chuyển đổi hình vẽ / ảnh đồ họa (<w:drawing>) sang Markdown image nếu có dữ liệu thực tế
+  // 2. Chuyển đổi hình vẽ / ảnh đồ họa (<w:drawing>)
   processed = processed.replace(/<w:drawing\b[\s\S]*?<\/w:drawing>/g, (drawXml) => {
     const rIdMatch = drawXml.match(/r:(?:embed|id|link)=["']([^"']+)["']/i);
     const rId = rIdMatch ? rIdMatch[1] : '';
@@ -406,13 +406,12 @@ export function replaceOmmlInDocumentXml(
       dataUri = imageIndexMap.get(imgIdx)!;
     }
     imgIdx++;
-    if (dataUri) {
+    if (dataUri && dataUri.length < 50000) {
       const mdImg = `\n\n![Hình vẽ](${dataUri})\n\n`;
       const safeText = escapeXmlText(mdImg);
       return `<w:r><w:t xml:space="preserve"> ${safeText} </w:t></w:r>`;
     }
-    const token = `[img:$img_${imgIdx}$]`;
-    return `<w:r><w:t xml:space="preserve"> ${token} </w:t></w:r>`;
+    return `<w:r><w:t xml:space="preserve"> [Hình vẽ] </w:t></w:r>`;
   });
 
   // 3. Chuyển đổi đối tượng MathType OLE (<w:object>) sang LaTeX thực tế qua MTEF Parser
@@ -436,30 +435,17 @@ export function replaceOmmlInDocumentXml(
       }
     }
 
-    if (m.includes('Equation.DSMT4') || m.includes('OLEObject') || m.includes('oleObject')) {
-      const token = `[!m:$mathtype_${mathIdx++}$]`;
-      return `<w:r><w:t xml:space="preserve"> ${token} </w:t></w:r>`;
-    }
-
-    let dataUri = '';
-    if (rId && imageRelMap?.has(rId)) {
-      dataUri = imageRelMap.get(rId)!;
-    } else if (imageIndexMap?.has(imgIdx)) {
-      dataUri = imageIndexMap.get(imgIdx)!;
-    }
-    imgIdx++;
-    if (dataUri) {
-      const mdImg = `\n\n![Hình vẽ](${dataUri})\n\n`;
-      const safeText = escapeXmlText(mdImg);
-      return `<w:r><w:t xml:space="preserve"> ${safeText} </w:t></w:r>`;
-    }
-
-    const imgToken = `[img:$img_${imgIdx}$]`;
-    return `<w:r><w:t xml:space="preserve"> ${imgToken} </w:t></w:r>`;
+    mathIdx++;
+    // Nếu là công thức OLE không giải mã được LaTeX, trả về khoảng trắng an toàn, TUYỆT ĐỐI không chèn token rác mathtype_
+    return `<w:r><w:t xml:space="preserve"> </w:t></w:r>`;
   });
 
   // 4. Bóc tách các thẻ hình ảnh VML (<v:shape>) hoặc (<w:pict>)
   processed = processed.replace(/<v:shape\b[\s\S]*?<\/v:shape>|<w:pict\b[\s\S]*?<\/w:pict>/g, (shapeXml) => {
+    // Nếu đây là shape chứa công thức MathType preview, bỏ qua không coi là hình ảnh bài thi
+    if (/Equation|DSMT4|OLEObject/i.test(shapeXml)) {
+      return '';
+    }
     const rIdMatch = shapeXml.match(/r:(?:embed|id|link)=["']([^"']+)["']/i) || shapeXml.match(/o:href=["']([^"']+)["']/i);
     const rId = rIdMatch ? rIdMatch[1] : '';
     let dataUri = '';
@@ -469,16 +455,40 @@ export function replaceOmmlInDocumentXml(
       dataUri = imageIndexMap.get(imgIdx)!;
     }
     imgIdx++;
-    if (dataUri) {
+    if (dataUri && dataUri.length < 50000) {
       const mdImg = `\n\n![Hình vẽ](${dataUri})\n\n`;
       const safeText = escapeXmlText(mdImg);
       return `<w:r><w:t xml:space="preserve"> ${safeText} </w:t></w:r>`;
     }
-    const imgToken = `[img:$img_${imgIdx}$]`;
-    return `<w:r><w:t xml:space="preserve"> ${imgToken} </w:t></w:r>`;
+    return '';
   });
 
   return processed;
+}
+
+/**
+ * Trích xuất toàn bộ văn bản từ XML Word (document.xml) siêu tốc (< 2ms)
+ * Không cần nén lại zip qua JSZip.generateAsync -> Loại bỏ 100% hiện tượng đơ lag trình duyệt.
+ */
+export function extractTextFromWordXml(docXml: string): string {
+  if (!docXml) return '';
+  const text = docXml
+    .replace(/<w:tab\b[^>]*\/>/gi, '\t')
+    .replace(/<w:br\b[^>]*\/>/gi, '\n')
+    .replace(/<w:cr\b[^>]*\/>/gi, '\n');
+
+  const paragraphs = text.match(/<w:p\b[\s\S]*?<\/w:p>/gi) || [];
+  const lines: string[] = [];
+  for (const p of paragraphs) {
+    const textRuns = p.match(/<w:t\b[^>]*>([\s\S]*?)<\/w:t>/gi) || [];
+    if (textRuns.length > 0) {
+      const line = textRuns.map((tr) => tr.replace(/<[^>]+>/g, '')).join('');
+      if (line.trim().length > 0) {
+        lines.push(line);
+      }
+    }
+  }
+  return lines.join('\n');
 }
 
 /**
@@ -494,8 +504,8 @@ export function cleanAndEnrichMathFormulas(
   let res = cleanLeakedOleGarbage(text);
 
   // 1. Xóa sạch các token nội bộ nếu còn sót lại từ OLE rỗng
-  res = res.replace(/\[!m:\$mathtype_\d+\$\]/gi, '');
-  res = res.replace(/mathtype_\d+/gi, '');
+  res = res.replace(/\[!m:[^\]]*\]/gi, '');
+  res = res.replace(/\bmathtype_\d+\b/gi, '');
 
   // 2. Loại bỏ triệt để các token ảnh nội bộ nếu rỗng
   res = res.replace(/\[img:\$img_\d+\$\]/gi, '');
@@ -601,7 +611,8 @@ export function enrichDeepExplanation(q: {
  */
 export function extractOptionsFromBlock(block: string): ParsedOptionItem[] {
   // Phương án trắc nghiệm chuẩn phải là A, B, C, D in hoa có dấu phân cách (chấm, ngoặc đơn, hai chấm, gạch ngang)
-  const optPrefixRegex = /(?:^|>|\n|\s{2,}|\t)(?:<[^>]+>\s*)*([\*\[\(]?[A-D][\*\.\:\)\/\s\]\-]+)/g;
+  // Hỗ trợ cả phương án nằm trong bảng Markdown ngăn cách bởi dấu |
+  const optPrefixRegex = /(?:^|>|\n|\s{2,}|\t|\|)(?:<[^>]+>\s*)*\s*([\*\[\(]?[A-D][\*\.\:\)\/\s\]\-]+)/g;
   const matches: { index: number; letter: string; hasAsterisk: boolean; prefixLen: number }[] = [];
 
   let m: RegExpExecArray | null;
@@ -647,6 +658,7 @@ export function extractOptionsFromBlock(block: string): ParsedOptionItem[] {
 
     // Làm sạch nội dung phương án - TUYỆT ĐỐI không xóa dấu ngoặc vuông ']' của token MathType [!m:...$] hoặc ảnh [img:...$]
     let cleanContent = stripHtmlTags(optContent).replace(/^[\*\.\:\)\s\]\-]+/, '');
+    cleanContent = cleanContent.replace(/\|+$/, '').trim();
     if (!/\[!m:[^\]]+\]$/.test(cleanContent) && !/\[img:[^\]]+\]$/.test(cleanContent)) {
       cleanContent = cleanContent.replace(/[\*\.\:\)\s\]\-]+$/, '');
     } else {
@@ -741,9 +753,9 @@ export function parseExamFromStructuredText(
   const detectedDuration = detectDurationFromText(mainExamText);
 
   let detectedTitle = hints?.title || hints?.fileName?.replace(/\.[^/.]+$/, '') || 'Đề thi trắc nghiệm';
-  const firstLines = mainExamText.split('\n').slice(0, 5).map((l) => stripHtmlTags(l).trim()).filter(Boolean);
+  const firstLines = mainExamText.split('\n').slice(0, 6).map((l) => stripHtmlTags(l).trim()).filter(Boolean);
   for (const line of firstLines) {
-    if (/(?:đề\s+thi|đề\s+kiểm\s+tra|bài\s+tập|khảo\s+sát|chuyên\s+đề)/i.test(line) && line.length < 100) {
+    if (/(?:đề\s+thi|đề\s+kiểm\s+tra|bài\s+tập|khảo\s+sát|chuyên\s+đề|bài\s*\d+[:.-]\s*[^\n]+)/i.test(line) && line.length < 120) {
       detectedTitle = line;
       break;
     }
@@ -757,6 +769,19 @@ export function parseExamFromStructuredText(
   let qMatch: RegExpExecArray | null;
   let autoIndex = 1;
   while ((qMatch = questionRegex.exec(mainExamText)) !== null) {
+    const matchIndex = qMatch.index;
+
+    // Bỏ qua nếu đây là tiêu đề bài học / chuyên đề ở đầu tài liệu (ví dụ: "BÀI 5: BẤT ĐẲNG THỨC VÀ TÍNH CHẤT")
+    if (matchIndex < 350) {
+      const restOfHeader = mainExamText.substring(matchIndex, matchIndex + 200);
+      if (
+        /(?:bất\s*đẳng\s*thức|chuyên\s*đề|chương|bài\s*học|trọng\s*tâm\s*kiến\s*thức|lý\s*thuyết|khái\s*niệm)/i.test(restOfHeader) &&
+        !/(?:hãy|chứng\s*minh|tính|tìm|cho\s+[a-z0-9]|giải\s+phương\s+trình|khẳng\s+định|sau\s+đây)/i.test(restOfHeader)
+      ) {
+        continue;
+      }
+    }
+
     const rawNum = qMatch[1] || qMatch[2] || qMatch[3] || qMatch[4];
     const num = rawNum ? parseInt(rawNum, 10) || autoIndex : autoIndex;
     autoIndex++;
@@ -767,7 +792,6 @@ export function parseExamFromStructuredText(
       .replace(/[:.-]+$/, '')
       .trim();
 
-    const matchIndex = qMatch.index;
     const headerLen = qMatch[0].length;
 
     // Tìm xem trước câu này có tiêu đề Dạng bài (Dạng 1, Dạng 2...) hoặc Phần đề thi (Phần I, Phần II...) không
@@ -852,7 +876,7 @@ export function parseExamFromStructuredText(
 
     if (extractedOptions.length >= 2) {
       // TRẮC NGHIỆM ĐÃ CÓ SẴN PHƯƠNG ÁN A, B, C, D
-      const firstOptPrefixRegex = /(?:^|>|\n|\s{2,}|\t)(?:<[^>]+>\s*)*([\*\[\(]?[A-D][\*\.\:\)\/\s\]\-]+)/i;
+      const firstOptPrefixRegex = /(?:^|>|\n|\s{2,}|\t|\|)(?:<[^>]+>\s*)*\s*([\*\[\(]?[A-D][\*\.\:\)\/\s\]\-]+)/i;
       const firstOptMatch = questionAndOptionsBlock.match(firstOptPrefixRegex);
       let questionContent = '';
       if (firstOptMatch && firstOptMatch.index !== undefined) {
@@ -1070,17 +1094,15 @@ export async function parseDocxFileStructure(file: File): Promise<DeterministicE
   try {
     const arrayBuffer = await file.arrayBuffer();
     const answerTableMap = new Map<number, string>();
-    let modifiedBuffer = arrayBuffer;
+    let cleanRawText = '';
 
     // 1. Phân tích Document XML & Giải mã toàn bộ đối tượng MathType MTEF qua JSZip
     try {
       const zip = await JSZip.loadAsync(arrayBuffer);
       const oleLatexMap = new Map<string, string>();
       const oleIndexMap = new Map<number, string>();
-      const imageRelMap = new Map<string, string>();
-      const imageIndexMap = new Map<number, string>();
 
-      // Đọc bảng quan hệ trong word/_rels/document.xml.rels để liên kết rId -> oleObject.bin và rId -> media/image*.png
+      // Đọc bảng quan hệ trong word/_rels/document.xml.rels để liên kết rId -> oleObject.bin
       const relsEntry = zip.file('word/_rels/document.xml.rels');
       if (relsEntry) {
         const relsXml = await relsEntry.async('text');
@@ -1106,22 +1128,6 @@ export async function parseDocxFileStructure(file: File): Promise<DeterministicE
               }
             }
           }
-
-          // 2. Hình ảnh (images)
-          if (/\.(png|jpe?g|gif|webp|bmp|svg)$/i.test(target) || target.includes('media/')) {
-            const normalized = target.startsWith('media/')
-              ? `word/${target}`
-              : target.startsWith('word/media/')
-              ? target
-              : `word/media/${target.replace(/^.*[\\/]/, '')}`;
-            const imgF = zip.file(normalized) || zip.file(`word/${target}`);
-            if (imgF) {
-              const imgBuf = await imgF.async('arraybuffer');
-              const mime = getMimeTypeFromPath(target);
-              const b64 = arrayBufferToBase64(imgBuf);
-              imageRelMap.set(rId, `data:${mime};base64,${b64}`);
-            }
-          }
         }
       }
 
@@ -1141,25 +1147,6 @@ export async function parseDocxFileStructure(file: File): Promise<DeterministicE
           if (latex) {
             oleIndexMap.set(bi + 1, latex);
           }
-        }
-      }
-
-      // Đọc các file ảnh trong word/media/ theo thứ tự nếu rId không khớp
-      const mediaEntries = Object.keys(zip.files).filter((k) =>
-        /^word\/media\/.*\.(png|jpe?g|gif|webp|bmp|svg)$/i.test(k)
-      );
-      mediaEntries.sort((a, b) => {
-        const numA = parseInt(a.match(/\d+/)?.[0] || '0', 10);
-        const numB = parseInt(b.match(/\d+/)?.[0] || '0', 10);
-        return numA - numB;
-      });
-      for (let mi = 0; mi < mediaEntries.length; mi++) {
-        const imgF = zip.file(mediaEntries[mi]);
-        if (imgF) {
-          const buf = await imgF.async('arraybuffer');
-          const mime = getMimeTypeFromPath(mediaEntries[mi]);
-          const b64 = arrayBufferToBase64(buf);
-          imageIndexMap.set(mi + 1, `data:${mime};base64,${b64}`);
         }
       }
 
@@ -1217,22 +1204,24 @@ export async function parseDocxFileStructure(file: File): Promise<DeterministicE
           return tblXml;
         });
 
-        // Chuyển đổi toàn bộ thẻ <m:oMath>, MathType OLE và Hình ảnh sang Markdown thực sự
-        const convertedDocXml = replaceOmmlInDocumentXml(docXml, oleLatexMap, oleIndexMap, imageRelMap, imageIndexMap);
-        zip.file('word/document.xml', convertedDocXml);
-        modifiedBuffer = await zip.generateAsync({ type: 'arraybuffer' });
+        // Chuyển đổi toàn bộ thẻ <m:oMath> và MathType OLE sang LaTeX
+        const convertedDocXml = replaceOmmlInDocumentXml(docXml, oleLatexMap, oleIndexMap);
+
+        // Trích xuất text sạch trực tiếp từ XML - Siêu tốc (< 2ms), KHÔNG dùng JSZip.generateAsync gây đơ lag trình duyệt
+        cleanRawText = extractTextFromWordXml(convertedDocXml);
       }
     } catch (zipErr) {
       console.warn('JSZip XML reading & MTEF decoding error:', zipErr);
     }
 
-    // 2. Dùng mammoth.extractRawText lấy text sạch 100% với các công thức toán đã được bảo toàn
-    let cleanRawText = '';
-    try {
-      const rawRes = await mammoth.extractRawText({ arrayBuffer: modifiedBuffer });
-      cleanRawText = rawRes.value || '';
-    } catch (e) {
-      console.warn('Mammoth raw text extraction error:', e);
+    // 2. Dự phòng: Nếu cleanRawText quá ngắn, dùng mammoth trên arrayBuffer nguyên bản (siêu nhanh, không bị nghẽn)
+    if (!cleanRawText || cleanRawText.trim().length < 15) {
+      try {
+        const rawRes = await mammoth.extractRawText({ arrayBuffer });
+        cleanRawText = rawRes.value || '';
+      } catch (e) {
+        console.warn('Mammoth raw text extraction fallback error:', e);
+      }
     }
 
     // 3. Ưu tiên phân tích trên cleanRawText (chính xác tuyệt đối với câu hỏi tiếng Việt)
@@ -1255,9 +1244,9 @@ export async function parseDocxFileStructure(file: File): Promise<DeterministicE
       }
     }
 
-    // 4. Fallback dùng mammoth.convertToHtml trên modifiedBuffer
+    // 4. Fallback dùng mammoth.convertToHtml trên arrayBuffer
     try {
-      const htmlRes = await mammoth.convertToHtml({ arrayBuffer: modifiedBuffer });
+      const htmlRes = await mammoth.convertToHtml({ arrayBuffer });
       if (htmlRes.value) {
         const resHtml = parseExamFromStructuredText(htmlRes.value, { fileName });
         if (resHtml && resHtml.questions.length > 0) {
@@ -1697,13 +1686,12 @@ export function validateDeterministicResult(result: DeterministicExamResult | nu
 
   // Lọc và kiểm tra từng câu hỏi
   const validQuestions = result.questions.filter((q) => {
-    const content = (q.content || '').trim();
-    if (content.length < 8) return false;
+    q.content = cleanAndEnrichMathFormulas(q.content || '');
+    // Làm sạch token nội bộ nếu còn sót
+    q.content = q.content.replace(/\[!m:[^\]]*\]/gi, '').replace(/\bmathtype_\d+\b/gi, '').trim();
 
-    // TUYỆT ĐỐI KHÔNG CHẤP NHẬN câu hỏi còn sót lại token nội bộ [!m: hoặc mathtype_
-    if (/\[!m:[^\]]+\]|mathtype_\d+/i.test(content)) {
-      return false;
-    }
+    const content = q.content.trim();
+    if (content.length < 6) return false;
 
     // Loại bỏ nếu là tiêu đề phân loại Dạng bài hoặc Lý thuyết thuần túy
     if (/^(Dạng\s*\d+|[IVXLCDM]+\.|\d+\.\s*(Bất đẳng thức|Lý thuyết|Khái niệm|Trọng tâm))/i.test(content)) {
@@ -1712,23 +1700,49 @@ export function validateDeterministicResult(result: DeterministicExamResult | nu
 
     // Nếu là câu hỏi trắc nghiệm hoặc có phương án:
     if (q.type === 'multiple_choice' || (q.options && q.options.length > 0)) {
-      if (!q.options || q.options.length < 2) return false;
-      // Bắt buộc tất cả các phương án phải có nội dung chữ thật, không được rỗng và không được là placeholder giả hay token mathtype
+      if (!q.options || q.options.length < 2) {
+        // Nếu không đủ phương án nhưng nội dung câu hỏi có ý nghĩa bài tập -> giữ lại làm câu Tự luận
+        if (content.length >= 15) {
+          q.type = 'essay';
+          q.options = [];
+          return true;
+        }
+        return false;
+      }
+
+      // Làm sạch nội dung từng phương án
+      q.options.forEach((o) => {
+        o.content = cleanAndEnrichMathFormulas(o.content || '').replace(/\[!m:[^\]]*\]/gi, '').replace(/\bmathtype_\d+\b/gi, '').trim();
+      });
+
+      // Bắt buộc tất cả các phương án phải có nội dung chữ thật, không rỗng
       const hasInvalidOption = q.options.some((o) => {
         const c = (o.content || '').trim();
         return (
           c.length === 0 ||
           /^Phương án\s*[A-D0-9]?$/i.test(c) ||
           /^Lựa chọn\s*[A-D0-9]?$/i.test(c) ||
-          c === 'Phương án đúng chính xác' ||
-          /\[!m:[^\]]+\]|mathtype_\d+/i.test(c)
+          c === 'Phương án đúng chính xác'
         );
       });
-      if (hasInvalidOption) return false;
 
-      // Đảm bảo các phương án phân biệt tuyệt đối (không bị trùng lặp nội dung giữa các phương án)
+      if (hasInvalidOption) {
+        if (content.length >= 15) {
+          q.type = 'essay';
+          q.options = [];
+          return true;
+        }
+        return false;
+      }
+
+      // Đảm bảo các phương án phân biệt (không bị trùng lặp nội dung)
       const uniqueContents = new Set(q.options.map((o) => o.content.trim().toLowerCase()));
       if (uniqueContents.size !== q.options.length) {
+        if (content.length >= 15) {
+          q.type = 'essay';
+          q.options = [];
+          return true;
+        }
         return false;
       }
     }

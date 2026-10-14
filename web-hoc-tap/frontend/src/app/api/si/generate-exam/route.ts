@@ -639,7 +639,7 @@ Hãy đọc kỹ mô tả trên và tạo CHÍNH XÁC ĐỦ ${targetCount} câu 
         const nativeUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${geminiKey}`;
 
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 18000);
+        const timeoutId = setTimeout(() => controller.abort(), 65000);
 
         const parts: any[] = [];
 
@@ -710,7 +710,7 @@ Hãy đọc kỹ mô tả trên và tạo CHÍNH XÁC ĐỦ ${targetCount} câu 
       let auth = authHeader || (geminiKey ? `Bearer ${geminiKey}` : '');
 
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 18000);
+      const timeoutId = setTimeout(() => controller.abort(), 65000);
 
       const response = await fetch(ep, {
         method: 'POST',

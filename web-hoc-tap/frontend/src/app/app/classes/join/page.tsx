@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -7,7 +7,7 @@ import { BreadcrumbChevron } from '@/components/BreadcrumbChevron';
 import { useAuthStore } from '@/store/useAuthStore';
 import { Button } from '@/components/Button';
 import { Input } from '@/components/Input';
-import { ArrowLeft, Users, Check, ChevronRight } from 'lucide-react';
+import { ArrowLeft, Users, Check, ChevronRight, PlusCircle, LogIn } from 'lucide-react';
 import { joinClass } from '@/lib/classesApi';
 
 export default function JoinClassPage() {
@@ -50,9 +50,9 @@ export default function JoinClassPage() {
           <BreadcrumbChevron
             menuTitle="Lớp học của tôi"
             items={[
-              { label: 'Danh sách lớp học', href: '/app/classes' },
-              { label: 'Tạo lớp học mới', href: '/app/classes/create' },
-              { label: 'Tham gia lớp học', href: '/app/classes/join' },
+              { label: 'Danh sách lớp học', href: '/app/classes', icon: <Users size={14} className="text-blue-500 shrink-0" /> },
+              { label: 'Tạo lớp học mới', href: '/app/classes/create', icon: <PlusCircle size={14} className="text-emerald-500 shrink-0" /> },
+              { label: 'Tham gia lớp học', href: '/app/classes/join', icon: <LogIn size={14} className="text-purple-500 shrink-0" /> },
             ]}
           />
           <span className="px-2 py-0.5 rounded-xl text-slate-900 dark:text-white font-normal">

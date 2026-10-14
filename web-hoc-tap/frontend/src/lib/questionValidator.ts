@@ -252,7 +252,7 @@ export interface ValidatedQuestion {
   options: ValidatedOption[];
   explanation?: string;
   points?: number;
-  type?: 'multiple_choice' | 'essay';
+  type?: 'multiple_choice' | 'essay' | 'fill_blank' | 'true_false';
   imageUrl?: string;
   answer?: string;
 }
@@ -320,11 +320,11 @@ export function validateAndSanitizeQuestion(q: any, index: number = 0): {
     };
   }
 
-  // Yêu cầu bắt buộc trắc nghiệm: Đủ 4 phương án A, B, C, D
-  if (rawOptions.length !== 4) {
+  // Hỗ trợ câu hỏi Trắc nghiệm nhiều lựa chọn (2 đến 5 phương án) hoặc Trắc nghiệm Đúng/Sai
+  if (rawOptions.length < 2 || rawOptions.length > 5) {
     return {
       isValid: false,
-      error: `Số lượng phương án trắc nghiệm phải đúng bằng 4 (hiện có ${rawOptions.length})`,
+      error: `Số lượng phương án trắc nghiệm phải từ 2 đến 5 phương án (hiện có ${rawOptions.length})`,
     };
   }
 
@@ -340,6 +340,10 @@ export function validateAndSanitizeQuestion(q: any, index: number = 0): {
 
   const validatedOptions: ValidatedOption[] = [];
   const canonicalSet = new Set<string>();
+  const isTrueFalse = q.type === 'true_false' || (rawOptions.length === 2 && rawOptions.some((o: any) => {
+    const txt = String(typeof o === 'string' ? o : o?.content || '').toLowerCase();
+    return txt.includes('đúng') || txt.includes('sai');
+  }));
 
   for (let idx = 0; idx < rawOptions.length; idx++) {
     const o = rawOptions[idx];
@@ -353,8 +357,10 @@ export function validateAndSanitizeQuestion(q: any, index: number = 0): {
       isCorrect = Boolean(o.isCorrect || o.correct);
     }
 
-    // Loại bỏ tiền tố A., B., C., D. nếu có để chuẩn hóa
-    optContent = optContent.replace(/^[A-D][\s.:)-]+/i, '').trim();
+    // Loại bỏ tiền tố A., B., C., D. nếu có để chuẩn hóa (chỉ áp dụng khi không phải câu Đúng/Sai)
+    if (!isTrueFalse) {
+      optContent = optContent.replace(/^[A-D][\s.:)-]+/i, '').trim();
+    }
 
     // Chuẩn hóa toán học & Unicode cho nội dung phương án
     optContent = normalizeMathFormulas(cleanVietnameseEncoding(optContent));
@@ -384,7 +390,7 @@ export function validateAndSanitizeQuestion(q: any, index: number = 0): {
     }
 
     validatedOptions.push({
-      content: `${letter}. ${optContent}`,
+      content: isTrueFalse ? optContent : `${letter}. ${optContent}`,
       isCorrect,
     });
   }
@@ -443,7 +449,7 @@ export function validateAndSanitizeQuestion(q: any, index: number = 0): {
       options: validatedOptions,
       explanation: cleanExplanation,
       points: q.points || 1,
-      type: 'multiple_choice',
+      type: isTrueFalse ? 'true_false' : 'multiple_choice',
       answer: validatedOptions.find((o) => o.isCorrect)?.content,
     },
   };

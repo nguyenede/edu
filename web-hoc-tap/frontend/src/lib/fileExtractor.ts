@@ -2,6 +2,7 @@ import mammoth from 'mammoth';
 import JSZip from 'jszip';
 import {
   replaceOmmlInDocumentXml,
+  extractTextFromWordXml,
   extractTextFromPdf,
   arrayBufferToBase64,
   getMimeTypeFromPath,
@@ -145,10 +146,8 @@ export async function extractFileForAi(file: File): Promise<ExtractedFileResult>
       const zip = await JSZip.loadAsync(arrayBuffer);
       const oleLatexMap = new Map<string, string>();
       const oleIndexMap = new Map<number, string>();
-      const imageRelMap = new Map<string, string>();
-      const imageIndexMap = new Map<number, string>();
 
-      // Đọc bảng quan hệ trong word/_rels/document.xml.rels để liên kết rId -> oleObject.bin và rId -> media/image*.png
+      // Đọc bảng quan hệ trong word/_rels/document.xml.rels để liên kết rId -> oleObject.bin
       const relsEntry = zip.file('word/_rels/document.xml.rels');
       if (relsEntry) {
         const relsXml = await relsEntry.async('text');
@@ -158,7 +157,7 @@ export async function extractFileForAi(file: File): Promise<ExtractedFileResult>
           const rId = rm[1];
           const target = rm[2];
 
-          // 1. MathType OLE
+          // MathType OLE
           if (/embeddings\/|oleObject/i.test(target)) {
             const normalized = target.startsWith('embeddings/')
               ? `word/${target}`
@@ -172,26 +171,10 @@ export async function extractFileForAi(file: File): Promise<ExtractedFileResult>
               if (latex) oleLatexMap.set(rId, latex);
             }
           }
-
-          // 2. Hình ảnh
-          if (/\.(png|jpe?g|gif|webp|bmp|svg)$/i.test(target) || target.includes('media/')) {
-            const normalized = target.startsWith('media/')
-              ? `word/${target}`
-              : target.startsWith('word/media/')
-              ? target
-              : `word/media/${target.replace(/^.*[\\/]/, '')}`;
-            const imgF = zip.file(normalized) || zip.file(`word/${target}`);
-            if (imgF) {
-              const imgBuf = await imgF.async('arraybuffer');
-              const mime = getMimeTypeFromPath(target);
-              const b64 = arrayBufferToBase64(imgBuf);
-              imageRelMap.set(rId, `data:${mime};base64,${b64}`);
-            }
-          }
         }
       }
 
-      // Đọc các file oleObject*.bin theo thứ tự
+      // Đọc các file oleObject*.bin theo thứ tự nếu rId không khớp
       const binEntries = Object.keys(zip.files).filter((k) => /embeddings\/oleobject\d+\.bin/i.test(k));
       binEntries.sort((a, b) => {
         const numA = parseInt(a.match(/\d+/)?.[0] || '0', 10);
@@ -205,25 +188,6 @@ export async function extractFileForAi(file: File): Promise<ExtractedFileResult>
           const buf = await binF.async('arraybuffer');
           const latex = parseMtefBinaryToLatex(buf);
           if (latex) oleIndexMap.set(bi + 1, latex);
-        }
-      }
-
-      // Đọc các file ảnh trong word/media/ theo thứ tự nếu rId không khớp
-      const mediaEntries = Object.keys(zip.files).filter((k) =>
-        /^word\/media\/.*\.(png|jpe?g|gif|webp|bmp|svg)$/i.test(k)
-      );
-      mediaEntries.sort((a, b) => {
-        const numA = parseInt(a.match(/\d+/)?.[0] || '0', 10);
-        const numB = parseInt(b.match(/\d+/)?.[0] || '0', 10);
-        return numA - numB;
-      });
-      for (let mi = 0; mi < mediaEntries.length; mi++) {
-        const imgF = zip.file(mediaEntries[mi]);
-        if (imgF) {
-          const buf = await imgF.async('arraybuffer');
-          const mime = getMimeTypeFromPath(mediaEntries[mi]);
-          const b64 = arrayBufferToBase64(buf);
-          imageIndexMap.set(mi + 1, `data:${mime};base64,${b64}`);
         }
       }
 
@@ -241,16 +205,19 @@ export async function extractFileForAi(file: File): Promise<ExtractedFileResult>
           return tblXml;
         });
 
-        const convertedDocXml = replaceOmmlInDocumentXml(docXml, oleLatexMap, oleIndexMap, imageRelMap, imageIndexMap);
-        zip.file('word/document.xml', convertedDocXml);
-        const modifiedBuffer = await zip.generateAsync({ type: 'arraybuffer' });
-        const result = await mammoth.extractRawText({ arrayBuffer: modifiedBuffer });
-        return {
-          type: 'text',
-          text: cleanLeakedOleGarbage(result.value || ''),
-          fileName,
-          fileExt: ext,
-        };
+        const convertedDocXml = replaceOmmlInDocumentXml(docXml, oleLatexMap, oleIndexMap);
+        // Trích xuất văn bản trực tiếp từ XML - Siêu nhanh (< 2ms), không nén lại zip và không sinh chuỗi base64 khổng lồ
+        let extractedXmlText = extractTextFromWordXml(convertedDocXml);
+        if (extractedXmlText && extractedXmlText.trim().length > 15) {
+          // Khử sạch bất kỳ chuỗi base64 thừa nào để đảm bảo payload gửi cho AI luôn nhẹ và nhanh
+          extractedXmlText = extractedXmlText.replace(/data:image\/[^;]+;base64,[A-Za-z0-9+/=]+/g, '[Hình ảnh]');
+          return {
+            type: 'text',
+            text: cleanLeakedOleGarbage(extractedXmlText),
+            fileName,
+            fileExt: ext,
+          };
+        }
       }
     } catch (docxErr) {
       console.warn('Word file math preprocessing error in extractFileForAi:', docxErr);

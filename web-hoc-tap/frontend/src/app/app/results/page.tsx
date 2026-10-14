@@ -418,6 +418,7 @@ export default function ResultsPage() {
                 menuTitle="Danh sách lớp học"
                 items={classes.map((c) => ({
                   label: c.name,
+                  icon: <Users size={14} className="text-blue-500 shrink-0" />,
                   onClick: () => setSelectedClassId(c.id),
                 }))}
               />

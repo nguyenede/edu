@@ -7,7 +7,7 @@ import { BreadcrumbChevron } from '@/components/BreadcrumbChevron';
 import { useAuthStore } from '@/store/useAuthStore';
 import { Button } from '@/components/Button';
 import { Input } from '@/components/Input';
-import { ArrowLeft, BookOpen, Check, Plus, Trash2, Sparkles, Loader2, ChevronRight } from 'lucide-react';
+import { ArrowLeft, BookOpen, Check, Plus, Trash2, Sparkles, Loader2, ChevronRight, PlusCircle, FileUp } from 'lucide-react';
 
 export default function CreateQuestionPage() {
   const router = useRouter();
@@ -151,9 +151,9 @@ export default function CreateQuestionPage() {
           <BreadcrumbChevron
             menuTitle="Ngân hàng câu hỏi"
             items={[
-              { label: 'Danh sách câu hỏi', href: '/app/question-bank' },
-              { label: 'Tạo câu hỏi mới', href: '/app/question-bank/create' },
-              { label: 'Nhập câu hỏi từ file', href: '/app/question-bank/import' },
+              { label: 'Danh sách câu hỏi', href: '/app/question-bank', icon: <BookOpen size={14} className="text-blue-500 shrink-0" /> },
+              { label: 'Tạo câu hỏi mới', href: '/app/question-bank/create', icon: <PlusCircle size={14} className="text-emerald-500 shrink-0" /> },
+              { label: 'Nhập câu hỏi từ file', href: '/app/question-bank/import', icon: <FileUp size={14} className="text-purple-500 shrink-0" /> },
             ]}
           />
           <span className="px-2 py-0.5 rounded-xl text-slate-900 dark:text-white font-normal">

@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { AppShell } from '@/components/AppShell';
 import { BreadcrumbChevron } from '@/components/BreadcrumbChevron';
 import { Button } from '@/components/Button';
-import { Sparkles, Check, Wand2, ChevronRight, AlertCircle } from 'lucide-react';
+import { Sparkles, Check, Wand2, ChevronRight, AlertCircle, FileUp, Camera, BookOpen, PenTool } from 'lucide-react';
 import { AiToolRegistry } from '@/lib/ai/aiToolRegistry';
 import { useAuthStore } from '@/store/useAuthStore';
 import { syncExamActionToDocument } from '@/lib/examDocumentSync';
@@ -158,11 +158,11 @@ function AiQuizCreateContent() {
           <BreadcrumbChevron
             menuTitle="Phương thức tạo đề"
             items={[
-              { label: 'Tải lên Word/PDF', href: `/app/documents/create${targetQuery}` },
-              { label: 'Tạo đề bằng SI', href: `/app/documents/create/si${targetQuery}` },
-              { label: 'Nhận diện ảnh (OCR)', href: `/app/documents/create/ocr${targetQuery}` },
-              { label: 'Ngân hàng câu hỏi', href: `/app/documents/create/bank${targetQuery}` },
-              { label: 'Nhập thủ công', href: `/app/documents/create/manual${targetQuery}` },
+              { label: 'Tải lên Word/PDF', href: `/app/documents/create${targetQuery}`, icon: <FileUp size={14} className="text-blue-500 shrink-0" /> },
+              { label: 'Tạo đề bằng SI', href: `/app/documents/create/si${targetQuery}`, icon: <Sparkles size={14} className="text-amber-500 shrink-0" /> },
+              { label: 'Nhận diện ảnh (OCR)', href: `/app/documents/create/ocr${targetQuery}`, icon: <Camera size={14} className="text-purple-500 shrink-0" /> },
+              { label: 'Ngân hàng câu hỏi', href: `/app/documents/create/bank${targetQuery}`, icon: <BookOpen size={14} className="text-emerald-500 shrink-0" /> },
+              { label: 'Nhập thủ công', href: `/app/documents/create/manual${targetQuery}`, icon: <PenTool size={14} className="text-rose-500 shrink-0" /> },
             ]}
           />
           <span className="px-2 py-0.5 rounded-xl text-slate-900 dark:text-white font-normal">

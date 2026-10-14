@@ -484,6 +484,11 @@ export default function GamesHubPage() {
               menuTitle="Danh sách trò chơi"
               items={GAME_LIST.map((g) => ({
                 label: g.title,
+                icon: (
+                  <span className={`w-5 h-5 rounded-md flex items-center justify-center text-xs shrink-0 ${g.iconBg}`}>
+                    {g.iconEmoji}
+                  </span>
+                ),
                 onClick: () => {
                   setPlayingLesson(null);
                   setActiveCategory(g.id);
@@ -515,6 +520,11 @@ export default function GamesHubPage() {
               menuTitle="Danh sách trò chơi"
               items={GAME_LIST.map((g) => ({
                 label: g.title,
+                icon: (
+                  <span className={`w-5 h-5 rounded-md flex items-center justify-center text-xs shrink-0 ${g.iconBg}`}>
+                    {g.iconEmoji}
+                  </span>
+                ),
                 onClick: () => setActiveCategory(g.id),
               }))}
             />

@@ -162,7 +162,7 @@ function DocumentCreateContent() {
     const watchdogTimer = setTimeout(() => {
       setIsParsing(false);
       setToastMessage('Hệ thống mất nhiều thời gian để xử lý file. Vui lòng kiểm tra lại file của bạn.');
-    }, 25000);
+    }, 90000);
 
     try {
       // 1. CHẠY THUẬT TOÁN NHẬN DIỆN CẤU TRÚC FILE TRƯỚC (100% dữ liệu thật từ file)
@@ -221,7 +221,9 @@ function DocumentCreateContent() {
       const extracted = await extractFileForAi(file);
 
       const aiController = new AbortController();
-      const aiTimeoutId = setTimeout(() => aiController.abort(), 20000);
+      const aiTimeoutId = setTimeout(() => aiController.abort(), 75000);
+
+      const cleanDocText = (extracted.text || '').replace(/data:image\/[^;]+;base64,[A-Za-z0-9+/=]+/g, '[Hình ảnh]').slice(0, 35000);
 
       const res = await fetch('/api/si/generate-exam', {
         method: 'POST',
@@ -229,7 +231,7 @@ function DocumentCreateContent() {
         signal: aiController.signal,
         body: JSON.stringify({
           mode: extracted.type === 'image' ? 'ocr' : 'document',
-          documentText: extracted.text || '',
+          documentText: cleanDocText,
           imageBase64: extracted.imageBase64 || null,
           fileName: file.name,
           numQuestions: 15,

@@ -6,7 +6,7 @@ import { AppShell } from '@/components/AppShell';
 import { BreadcrumbChevron } from '@/components/BreadcrumbChevron';
 import { Button } from '@/components/Button';
 import { Badge } from '@/components/Badge';
-import { ArrowLeft, Laptop, Smartphone, Globe, Check, ChevronRight } from 'lucide-react';
+import { ArrowLeft, Laptop, Smartphone, Globe, Check, ChevronRight, Settings, User, Lock, Crown, Shield } from 'lucide-react';
 
 export default function DevicesPage() {
   const router = useRouter();
@@ -31,11 +31,11 @@ export default function DevicesPage() {
           <BreadcrumbChevron
             menuTitle="Cài đặt"
             items={[
-              { label: 'Cài đặt chung', href: '/app/settings' },
-              { label: 'Hồ sơ cá nhân', href: '/app/settings/edit-name' },
-              { label: 'Bảo mật', href: '/app/settings' },
-              { label: 'Quản lý thiết bị', href: '/app/settings/devices' },
-              { label: 'Gói dịch vụ', href: '/app/settings/plans' },
+              { label: 'Cài đặt chung', href: '/app/settings', icon: <Settings size={14} className="text-slate-500 shrink-0" /> },
+              { label: 'Hồ sơ cá nhân', href: '/app/settings/edit-name', icon: <User size={14} className="text-blue-500 shrink-0" /> },
+              { label: 'Bảo mật', href: '/app/settings', icon: <Shield size={14} className="text-rose-500 shrink-0" /> },
+              { label: 'Quản lý thiết bị', href: '/app/settings/devices', icon: <Laptop size={14} className="text-purple-500 shrink-0" /> },
+              { label: 'Gói dịch vụ', href: '/app/settings/plans', icon: <Crown size={14} className="text-amber-500 shrink-0" /> },
             ]}
           />
           <button
@@ -48,8 +48,8 @@ export default function DevicesPage() {
           <BreadcrumbChevron
             menuTitle="Bảo mật"
             items={[
-              { label: 'Đổi mật khẩu', href: '/app/settings/edit-password' },
-              { label: 'Quản lý thiết bị', href: '/app/settings/devices' },
+              { label: 'Đổi mật khẩu', href: '/app/settings/edit-password', icon: <Lock size={14} className="text-rose-500 shrink-0" /> },
+              { label: 'Quản lý thiết bị', href: '/app/settings/devices', icon: <Laptop size={14} className="text-purple-500 shrink-0" /> },
             ]}
           />
           <span className="px-2 py-0.5 rounded-xl text-slate-900 dark:text-white font-normal">

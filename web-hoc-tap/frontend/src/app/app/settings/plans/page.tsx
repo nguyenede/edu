@@ -18,6 +18,10 @@ import {
   Copy,
   CheckCircle2,
   ChevronRight,
+  Settings,
+  User,
+  Lock,
+  Laptop,
 } from 'lucide-react';
 
 export default function PlansPage() {
@@ -97,11 +101,11 @@ export default function PlansPage() {
           <BreadcrumbChevron
             menuTitle="Cài đặt"
             items={[
-              { label: 'Cài đặt chung', href: '/app/settings' },
-              { label: 'Hồ sơ cá nhân', href: '/app/settings/edit-name' },
-              { label: 'Đổi mật khẩu', href: '/app/settings/edit-password' },
-              { label: 'Thiết bị đăng nhập', href: '/app/settings/devices' },
-              { label: 'Gói dịch vụ & Nâng cấp', href: '/app/settings/plans' },
+              { label: 'Cài đặt chung', href: '/app/settings', icon: <Settings size={14} className="text-slate-500 shrink-0" /> },
+              { label: 'Hồ sơ cá nhân', href: '/app/settings/edit-name', icon: <User size={14} className="text-blue-500 shrink-0" /> },
+              { label: 'Đổi mật khẩu', href: '/app/settings/edit-password', icon: <Lock size={14} className="text-rose-500 shrink-0" /> },
+              { label: 'Thiết bị đăng nhập', href: '/app/settings/devices', icon: <Laptop size={14} className="text-purple-500 shrink-0" /> },
+              { label: 'Gói dịch vụ & Nâng cấp', href: '/app/settings/plans', icon: <Crown size={14} className="text-amber-500 shrink-0" /> },
             ]}
           />
           <span className="px-2 py-0.5 rounded-xl text-slate-900 dark:text-white font-normal">
