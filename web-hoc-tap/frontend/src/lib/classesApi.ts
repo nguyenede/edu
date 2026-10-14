@@ -1533,3 +1533,61 @@ export function addClassCourse(classId: string, title: string, description: stri
   return newCourse;
 }
 
+/**
+ * Kiểm tra xem tài khoản người dùng có quyền làm bài tập được giao cho một lớp học hay không.
+ * - Giáo viên / Admin luôn được phép (để xem trước hoặc kiểm tra)
+ * - Người tạo lớp (teacherId) luôn được phép
+ * - Học sinh phải có ID hoặc Email trong danh sách thành viên của lớp
+ */
+export async function checkUserInClass(
+  user: { id?: string; email?: string; role?: string; name?: string } | null,
+  classId: string,
+  token?: string | null
+): Promise<{ allowed: boolean; reason?: 'not_logged_in' | 'not_in_class' | 'ok' }> {
+  if (!user) {
+    return { allowed: false, reason: 'not_logged_in' };
+  }
+
+  // Giáo viên hoặc Quản trị viên luôn có quyền truy cập
+  if (user.role === 'TEACHER' || user.role === 'ADMIN') {
+    return { allowed: true, reason: 'ok' };
+  }
+
+  const cleanClassId = classId.replace(/_/g, '');
+  const localClasses = getLocalClasses();
+  const foundClass = localClasses.find(
+    (c) => c.id === classId || c.id === cleanClassId || c.id.replace(/_/g, '') === cleanClassId
+  );
+
+  // Nếu là giáo viên phụ trách lớp
+  if (foundClass && foundClass.teacherId && foundClass.teacherId === user.id) {
+    return { allowed: true, reason: 'ok' };
+  }
+
+  try {
+    const members = await fetchClassMembers(token || null, classId);
+    const userEmail = (user.email || '').trim().toLowerCase();
+    const userId = user.id ? String(user.id) : '';
+    const userName = (user.name || '').trim().toLowerCase();
+
+    const isMember = members.some((m: any) => {
+      const mId = m.studentId || m.student?.id || m.id ? String(m.studentId || m.student?.id || m.id) : '';
+      const mEmail = (m.student?.email || m.email || '').trim().toLowerCase();
+      const mName = (m.student?.profile?.name || m.name || '').trim().toLowerCase();
+
+      if (userId && mId && mId === userId) return true;
+      if (userEmail && mEmail && mEmail === userEmail) return true;
+      if (userName && mName && mName === userName) return true;
+      return false;
+    });
+
+    if (isMember) {
+      return { allowed: true, reason: 'ok' };
+    }
+  } catch (err) {
+    console.error('Error checking class membership:', err);
+  }
+
+  return { allowed: false, reason: 'not_in_class' };
+}
+

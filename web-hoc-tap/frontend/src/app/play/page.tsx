@@ -25,7 +25,15 @@ import {
   ArrowLeft,
   Check,
   Sparkles,
+  Lock,
+  LogIn,
+  UserCheck,
+  UserX,
+  LogOut,
+  GraduationCap,
 } from 'lucide-react';
+import { useAuthStore } from '@/store/useAuthStore';
+import { checkUserInClass } from '@/lib/classesApi';
 import {
   getHomeworkByPin,
   submitHomework,
@@ -68,6 +76,10 @@ function BlooketPlayContent() {
   // Phases: 'lobby' | 'anti_cheat_prompt' | 'playing' | 'completed'
   const [phase, setPhase] = useState<'lobby' | 'anti_cheat_prompt' | 'playing' | 'completed'>('lobby');
 
+  // Auth & Class Security
+  const { user, token, isAuthenticated, logout } = useAuthStore();
+  const [classCheckStatus, setClassCheckStatus] = useState<'idle' | 'checking' | 'allowed' | 'not_logged_in' | 'not_in_class'>('idle');
+
   // Lobby States
   const [pinInput, setPinInput] = useState(initialPin);
   const [studentName, setStudentName] = useState('');
@@ -106,6 +118,46 @@ function BlooketPlayContent() {
     }
   }, [initialPin]);
 
+  // Kiểm tra quyền truy cập lớp học khi bài tập được tải
+  useEffect(() => {
+    if (!homework) {
+      setClassCheckStatus('idle');
+      return;
+    }
+
+    // 1. Nếu là bài tập công khai: Bất cứ ai cũng vào được
+    if (!homework.classId || homework.classId === 'public') {
+      setClassCheckStatus('allowed');
+      if (user?.name && !studentName) {
+        setStudentName(user.name);
+      }
+      return;
+    }
+
+    // 2. Nếu là bài tập giao cho lớp: Bắt buộc đăng nhập đúng tài khoản lớp
+    if (!isAuthenticated || !user) {
+      setClassCheckStatus('not_logged_in');
+      return;
+    }
+
+    let isMounted = true;
+    setClassCheckStatus('checking');
+
+    checkUserInClass(user, homework.classId, token).then((res) => {
+      if (!isMounted) return;
+      if (res.allowed) {
+        setClassCheckStatus('allowed');
+        setStudentName(user.name || user.email);
+      } else {
+        setClassCheckStatus('not_in_class');
+      }
+    });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [homework, user, isAuthenticated, token]);
+
   const handleLookupPin = async (pinToLookup: string) => {
     setLoadingHw(true);
     setLobbyError('');
@@ -132,6 +184,22 @@ function BlooketPlayContent() {
       }
       handleLookupPin(pinInput.trim());
       return;
+    }
+
+    // Kiểm tra quyền vào lớp nếu bài tập có chỉ định lớp học
+    if (homework.classId && homework.classId !== 'public') {
+      if (classCheckStatus === 'not_logged_in') {
+        setLobbyError(`Bài tập này yêu cầu đăng nhập tài khoản học sinh lớp ${homework.className}`);
+        return;
+      }
+      if (classCheckStatus === 'not_in_class') {
+        setLobbyError(`Tài khoản hiện tại không thuộc danh sách lớp ${homework.className}`);
+        return;
+      }
+      if (classCheckStatus !== 'allowed') {
+        setLobbyError('Đang kiểm tra quyền truy cập lớp học, vui lòng đợi trong giây lát...');
+        return;
+      }
     }
 
     if (!studentName.trim()) {
@@ -394,6 +462,7 @@ function BlooketPlayContent() {
           homeworkId: homework.id,
           pin: homework.pin,
           studentName: studentName.trim(),
+          studentId: user?.id || undefined,
           score,
           correctCount: correct,
           totalQuestions: total,
@@ -516,28 +585,121 @@ function BlooketPlayContent() {
                 </div>
               )}
 
-              {/* NAME INPUT */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                  Họ và tên của bạn
-                </label>
-                <Input
-                  type="text"
-                  value={studentName}
-                  onChange={(e) => setStudentName(e.target.value)}
-                  placeholder="Nhập họ và tên..."
-                  className="rounded-2xl text-sm"
-                />
-              </div>
+              {/* CHECK QUYỀN TRUY CẬP: TỰ DO vs BẮT BUỘC ĐÚNG TÀI KHOẢN LỚP */}
+              {homework && homework.classId && homework.classId !== 'public' ? (
+                /* BÀI TẬP CỦA LỚP HỌC */
+                classCheckStatus === 'checking' ? (
+                  <div className="p-5 text-center space-y-2 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800">
+                    <Loader2 size={24} className="animate-spin text-google-blue mx-auto" />
+                    <p className="text-xs text-slate-500 font-medium">Đang kiểm tra quyền truy cập lớp học...</p>
+                  </div>
+                ) : classCheckStatus === 'not_logged_in' ? (
+                  /* 1. CHƯA ĐĂNG NHẬP */
+                  <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200/80 dark:border-amber-900/60 space-y-3 text-center animate-in fade-in">
+                    <div className="w-10 h-10 rounded-full bg-amber-100 dark:bg-amber-900/60 text-amber-700 dark:text-amber-300 flex items-center justify-center mx-auto">
+                      <Lock size={20} />
+                    </div>
+                    <div className="space-y-1">
+                      <h4 className="text-xs font-bold text-amber-900 dark:text-amber-200 uppercase tracking-wide">
+                        Yêu cầu đăng nhập tài khoản lớp
+                      </h4>
+                      <p className="text-[11px] text-amber-800 dark:text-amber-300 leading-relaxed">
+                        Bài tập này được giáo viên giao riêng cho lớp <strong>{homework.className}</strong>.
+                        Bạn cần <strong>đăng nhập đúng tài khoản học sinh ở lớp đó</strong> thì mới vào được.
+                      </p>
+                    </div>
+                    <Button
+                      variant="primary"
+                      onClick={() => {
+                        const currentPath = typeof window !== 'undefined' ? (window.location.pathname + window.location.search) : `/play?pin=${homework.pin}`;
+                        router.push(`/login?redirect=${encodeURIComponent(currentPath)}`);
+                      }}
+                      className="w-full py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs gap-1.5 justify-center shadow-xs"
+                    >
+                      <LogIn size={14} />
+                      Đăng nhập ngay để làm bài
+                    </Button>
+                  </div>
+                ) : classCheckStatus === 'not_in_class' ? (
+                  /* 2. ĐÃ ĐĂNG NHẬP NHƯNG KHÔNG THUỘC LỚP */
+                  <div className="p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200/80 dark:border-rose-900/60 space-y-3 text-center animate-in fade-in">
+                    <div className="w-10 h-10 rounded-full bg-rose-100 dark:bg-rose-900/60 text-rose-700 dark:text-rose-300 flex items-center justify-center mx-auto">
+                      <UserX size={20} />
+                    </div>
+                    <div className="space-y-1">
+                      <h4 className="text-xs font-bold text-rose-900 dark:text-rose-200 uppercase tracking-wide">
+                        Không thuộc danh sách lớp học
+                      </h4>
+                      <p className="text-[11px] text-rose-800 dark:text-rose-300 leading-relaxed">
+                        Tài khoản hiện tại (<strong>{user?.name || user?.email}</strong>) không có tên trong danh sách lớp <strong>{homework.className}</strong>.
+                      </p>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                        Vui lòng đăng nhập đúng tài khoản học sinh ở lớp đó để vào làm bài.
+                      </p>
+                    </div>
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        logout();
+                        const currentPath = typeof window !== 'undefined' ? (window.location.pathname + window.location.search) : `/play?pin=${homework.pin}`;
+                        router.push(`/login?redirect=${encodeURIComponent(currentPath)}`);
+                      }}
+                      className="w-full py-2 rounded-xl text-xs gap-1.5 justify-center text-rose-600 dark:text-rose-400 border-rose-200 dark:border-rose-800 hover:bg-rose-50 dark:hover:bg-rose-950/50"
+                    >
+                      <LogOut size={13} />
+                      Đăng xuất & Đổi tài khoản khác
+                    </Button>
+                  </div>
+                ) : (
+                  /* 3. ĐÃ XÁC THỰC THÀNH CÔNG VÀO LỚP */
+                  <div className="space-y-3 animate-in fade-in">
+                    <div className="p-3 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900/60 rounded-2xl space-y-1 text-xs">
+                      <div className="flex items-center gap-1.5 text-emerald-700 dark:text-emerald-300 font-bold">
+                        <UserCheck size={15} />
+                        <span>Đã xác thực tài khoản học sinh</span>
+                      </div>
+                      <div className="text-[11px] text-slate-600 dark:text-slate-300 flex justify-between pt-0.5">
+                        <span>Học sinh: <strong>{user?.name || studentName}</strong></span>
+                        <span>Lớp: <strong>{homework.className}</strong></span>
+                      </div>
+                    </div>
 
-              <Button
-                variant="primary"
-                onClick={handleStartExamFlow}
-                disabled={loadingHw || !studentName.trim()}
-                className="w-full py-3.5 rounded-2xl bg-google-blue hover:bg-[#1557b0] text-white font-bold text-sm shadow-sm transition-all"
-              >
-                VÀO LÀM BÀI NGAY
-              </Button>
+                    <Button
+                      variant="primary"
+                      onClick={handleStartExamFlow}
+                      disabled={loadingHw || !studentName.trim()}
+                      className="w-full py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm shadow-sm transition-all"
+                    >
+                      VÀO LÀM BÀI NGAY
+                    </Button>
+                  </div>
+                )
+              ) : (
+                /* BÀI TẬP TỰ DO: BẤT CỨ AI CŨNG VÀO ĐƯỢC */
+                <>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                      Họ và tên của bạn
+                    </label>
+                    <Input
+                      type="text"
+                      value={studentName}
+                      onChange={(e) => setStudentName(e.target.value)}
+                      placeholder="Nhập họ và tên..."
+                      className="rounded-2xl text-sm"
+                    />
+                  </div>
+
+                  <Button
+                    variant="primary"
+                    onClick={handleStartExamFlow}
+                    disabled={loadingHw || !studentName.trim()}
+                    className="w-full py-3.5 rounded-2xl bg-google-blue hover:bg-[#1557b0] text-white font-bold text-sm shadow-sm transition-all"
+                  >
+                    VÀO LÀM BÀI NGAY
+                  </Button>
+                </>
+              )}
             </div>
           </div>
         </main>
