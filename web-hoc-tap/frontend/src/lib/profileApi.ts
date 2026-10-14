@@ -72,11 +72,7 @@ export async function changePasswordApi(
 
     return { success: true };
   } catch (err: any) {
-    if (err.message && !err.message.includes('fetch')) {
-      throw err;
-    }
-    // If backend is offline, simulate success for demo/offline resilience
-    return { success: true };
+    throw new Error(err.message || 'Không thể đổi mật khẩu. Vui lòng kiểm tra lại kết nối mạng.');
   }
 }
 

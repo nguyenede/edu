@@ -398,46 +398,10 @@ export const GameConfigModal: React.FC<GameConfigModalProps> = ({
                       Chưa tìm thấy đề thi trắc nghiệm nào trong thư viện tài liệu.
                     </p>
                     <p className="text-xs text-slate-500 dark:text-zinc-400">
-                      Đừng lo! Bạn có thể sử dụng ngay bộ câu hỏi khởi động mẫu bên dưới hoặc tự thêm câu hỏi mới ở bước tiếp theo.
+                      Vui lòng tải lên hoặc tạo đề thi trắc nghiệm trong mục &quot;Kho tài liệu&quot; trước khi tổ chức trò chơi.
                     </p>
                   </div>
                 )}
-
-                {/* Option 2: Bộ câu hỏi khởi động mẫu */}
-                <div
-                  onClick={() => onSelectExam('trial_exam_default')}
-                  className={`p-3.5 rounded-2xl border-2 transition-all cursor-pointer flex items-center justify-between gap-3 ${
-                    selectedExamId === 'trial_exam_default' || !selectedExamId
-                      ? 'border-purple-500 bg-purple-500/5 dark:bg-purple-950/40 shadow-xs'
-                      : 'border-slate-200/80 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20 bg-white dark:bg-[#18191a]'
-                  }`}
-                >
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-9 h-9 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0">
-                      <Sparkles size={18} />
-                    </div>
-                    <div>
-                      <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-zinc-100">
-                        Bộ câu hỏi khởi động lớp học mẫu (10 câu hỏi đa dạng)
-                      </h4>
-                      <p className="text-[11px] text-slate-500 dark:text-zinc-400">
-                        Tích hợp sẵn câu hỏi đố vui kiến thức khoa học, tự nhiên & xã hội
-                      </p>
-                    </div>
-                  </div>
-
-                  <div
-                    className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 ${
-                      selectedExamId === 'trial_exam_default' || !selectedExamId
-                        ? 'bg-purple-600 text-white'
-                        : 'border border-slate-300 dark:border-slate-600'
-                    }`}
-                  >
-                    {(selectedExamId === 'trial_exam_default' || !selectedExamId) && (
-                      <Check size={12} strokeWidth={3} />
-                    )}
-                  </div>
-                </div>
               </div>
             </div>
           )}

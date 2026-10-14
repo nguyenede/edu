@@ -6,7 +6,6 @@ import {
   detectGradeFromText,
 } from '@/lib/examStructureParser';
 import { validateAndSanitizeQuestions, cleanVietnameseEncoding } from '@/lib/questionValidator';
-import { generateCurriculumFallbackExam } from './curriculumFallback';
 
 interface QuestionOption {
   content: string;
@@ -807,40 +806,6 @@ Hãy đọc kỹ mô tả trên và tạo CHÍNH XÁC ĐỦ ${targetCount} câu 
     }
 
     if (lastError || !rawAiText) {
-      console.warn('Toàn bộ mô hình AI Google gặp sự cố quá tải. Kích hoạt bộ sinh đề thi chuẩn kiến thức dự phòng...');
-      if (mode === 'topic' || mode === 'suggest' || mode === 'manual' || mode === 'bank') {
-        try {
-          const fallbackExam = generateCurriculumFallbackExam({
-            subject: resolvedSubject || 'Toán học',
-            grade: resolvedGrade || '10',
-            topic: effectiveMergedTopic || topic || 'Kiến thức trọng tâm',
-            targetCount,
-          });
-
-          const sanitizedFallback = validateAndSanitizeQuestions(fallbackExam.questions);
-          if (sanitizedFallback.length > 0) {
-            const fallbackResponse: GeneratedExamResponse = {
-              title: cleanVietnameseEncoding(fallbackExam.title),
-              subject: cleanVietnameseEncoding(fallbackExam.subject),
-              grade: cleanVietnameseEncoding(fallbackExam.grade),
-              durationMinutes: sanitizedFallback.length <= 15 ? 45 : 90,
-              questions: sanitizedFallback,
-              modelUsed: 'kiyo-curriculum-standard-fallback',
-            };
-
-            return NextResponse.json({
-              success: true,
-              exam: fallbackResponse,
-              question: sanitizedFallback[0],
-              source: 'curriculum_fallback',
-              fallbackNotice: 'Đề thi đã được khởi tạo chuẩn kiến thức (do Google AI đang quá tải). Giáo viên có thể tùy chỉnh hoặc thêm câu hỏi ngay.',
-            });
-          }
-        } catch (fbErr) {
-          console.error('Error generating fallback curriculum exam:', fbErr);
-        }
-      }
-
       console.error('All AI model attempts failed:', lastError);
       const isTimeout = lastError?.name === 'AbortError';
       const isHighDemand = lastError?.message?.includes('503') || lastError?.message?.includes('high demand');

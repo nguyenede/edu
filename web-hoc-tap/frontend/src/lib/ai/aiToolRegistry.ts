@@ -200,17 +200,19 @@ export class AiToolRegistry {
       const newClass = {
         id: classId,
         name,
-        grade,
-        subject,
         code,
-        studentsCount: studentList.length,
-        students: studentList,
+        schoolYear: '2026 - 2027',
+        group: 'Khác',
         createdAt: new Date().toISOString(),
+        _count: { members: studentList.length },
       };
 
       if (typeof window !== 'undefined') {
-        const existingClasses = JSON.parse(localStorage.getItem('app_mock_classes') || '[]');
-        localStorage.setItem('app_mock_classes', JSON.stringify([newClass, ...existingClasses]));
+        const existingClasses = JSON.parse(localStorage.getItem('app_classes_data') || '[]');
+        localStorage.setItem('app_classes_data', JSON.stringify([newClass, ...existingClasses]));
+        if (studentList.length > 0) {
+          localStorage.setItem(`app_class_members_${classId}`, JSON.stringify(studentList));
+        }
       }
 
       return {

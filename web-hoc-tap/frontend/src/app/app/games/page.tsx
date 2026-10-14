@@ -300,7 +300,7 @@ export default function GamesHubPage() {
     return savedLessons.filter((l) => l.gameType === activeCategory);
   }, [savedLessons, activeCategory]);
 
-  // Generate trial run card (always available)
+  // Generate trial run card (only when real exam is available)
   const trialLesson: CustomGameLesson | null = React.useMemo(() => {
     if (!activeCategory) return null;
     const meta = getCategoryMeta(activeCategory);
@@ -309,22 +309,22 @@ export default function GamesHubPage() {
       Array.isArray(selectedExam.questions) &&
       selectedExam.questions.length > 0;
 
-    const examQuestions = hasRealExam
-      ? selectedExam.questions.map((q, idx) => normalizeGameQuestion(q, idx))
-      : DEFAULT_CLASSROOM_TRIAL_QUESTIONS;
-    const examTitle = hasRealExam ? selectedExam.title : 'Bộ câu hỏi khởi động mẫu';
-    const examId = hasRealExam ? selectedExam.id : 'trial_exam_default';
+    if (!hasRealExam) return null;
+
+    const examQuestions = selectedExam.questions.map((q, idx) => normalizeGameQuestion(q, idx));
+    const examTitle = selectedExam.title;
+    const examId = selectedExam.id;
 
     return {
-      id: `trial_${activeCategory}`,
+      id: `lesson_${activeCategory}_live`,
       gameType: activeCategory,
-      title: `${meta.shortName} - Bản Chạy Thử`,
-      isTrial: true,
+      title: `${meta.shortName} - Giảng dạy trên lớp`,
+      isTrial: false,
       examId,
       examTitle,
       config: {
         ...DEFAULT_GAME_CONFIG,
-        title: `${meta.shortName} - Bản Chạy Thử`,
+        title: `${meta.shortName} - Giảng dạy trên lớp`,
       },
       questions: examQuestions,
       createdAt: Date.now(),
@@ -340,17 +340,21 @@ export default function GamesHubPage() {
       Array.isArray(selectedExam.questions) &&
       selectedExam.questions.length > 0;
 
-    const examQuestions = hasRealExam
-      ? selectedExam.questions.map((q, idx) => normalizeGameQuestion(q, idx))
-      : DEFAULT_CLASSROOM_TRIAL_QUESTIONS;
-    const examTitle = hasRealExam ? selectedExam.title : 'Bộ câu hỏi khởi động mẫu';
-    const examId = hasRealExam ? selectedExam.id : 'trial_exam_default';
+    if (!hasRealExam) {
+      alert('Vui lòng tạo hoặc tải lên đề thi trong mục "Kho tài liệu" trước khi bắt đầu trò chơi!');
+      router.push('/app/documents');
+      return;
+    }
+
+    const examQuestions = selectedExam.questions.map((q, idx) => normalizeGameQuestion(q, idx));
+    const examTitle = selectedExam.title;
+    const examId = selectedExam.id;
 
     const lesson: CustomGameLesson = {
-      id: `trial_${mode}`,
+      id: `lesson_${mode}_quick`,
       gameType: mode,
       title: `${meta.shortName} - Giảng dạy trên lớp`,
-      isTrial: true,
+      isTrial: false,
       examId,
       examTitle,
       config: {
@@ -370,19 +374,20 @@ export default function GamesHubPage() {
     const meta = getCategoryMeta(mode);
     setEditingLessonId(null);
     const defaultExam = exams.length > 0 ? exams[0] : null;
-    const examId = defaultExam ? defaultExam.id : '';
+    if (!defaultExam || !Array.isArray(defaultExam.questions) || defaultExam.questions.length === 0) {
+      alert('Vui lòng tải lên hoặc tạo đề thi trong mục "Kho tài liệu" để thiết lập bài tập trò chơi!');
+      router.push('/app/documents');
+      return;
+    }
+    const examId = defaultExam.id;
     setSelectedExamId(examId);
     setGameConfig({
       ...DEFAULT_GAME_CONFIG,
-      title: `${meta.shortName} - ${defaultExam?.title || 'Bài tập mới'}`,
+      title: `${meta.shortName} - ${defaultExam.title || 'Bài tập mới'}`,
     });
-    if (defaultExam && Array.isArray(defaultExam.questions) && defaultExam.questions.length > 0) {
-      setCustomQuestions(
-        defaultExam.questions.map((q, idx) => normalizeGameQuestion(q, idx))
-      );
-    } else {
-      setCustomQuestions(DEFAULT_CLASSROOM_TRIAL_QUESTIONS);
-    }
+    setCustomQuestions(
+      defaultExam.questions.map((q, idx) => normalizeGameQuestion(q, idx))
+    );
     setIsConfigModalOpen(true);
   };
 
