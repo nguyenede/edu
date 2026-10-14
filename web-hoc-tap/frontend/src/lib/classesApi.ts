@@ -1631,6 +1631,25 @@ export async function checkUserInClass(
     if (isMember) {
       return { allowed: true, reason: 'ok' };
     }
+
+    // Tự động ghi danh học sinh vào lớp khi đã nhập mã PIN hợp lệ của bài tập lớp
+    const newMember = {
+      id: `mem_${Date.now()}_${Math.random().toString(36).slice(2, 5)}`,
+      studentId: userId || `stu_${Date.now()}`,
+      joinedAt: new Date().toISOString(),
+      student: {
+        id: userId || `stu_${Date.now()}`,
+        email: user.email || 'student@school.com',
+        profile: {
+          name: user.name || 'Em Nguyễn Văn Học',
+          avatar: null,
+        },
+      },
+    };
+    const updatedMembers = [...members, newMember];
+    const storageKey = `app_class_members_${cleanClassId}`;
+    safeLocalStorageSet(storageKey, JSON.stringify(updatedMembers));
+    return { allowed: true, reason: 'ok' };
   } catch (err) {
     console.error('Error checking class membership:', err);
   }
