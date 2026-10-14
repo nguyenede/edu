@@ -301,6 +301,87 @@ export async function getHomeworkByPin(pin: string): Promise<HomeworkItem | null
         }
       }
     } catch (_) {}
+
+    // Fallback: Tìm trên máy chủ backend nếu người dùng đã đăng nhập
+    if (!found) {
+      const token = localStorage.getItem('token');
+      if (token) {
+        try {
+          // 1. Thử gọi trực tiếp /api/assignments/:pin nếu cleanPin là ID
+          try {
+            const directRes = await fetch(`/api/assignments/${cleanPin}`, {
+              headers: { Authorization: `Bearer ${token}` },
+            });
+            if (directRes.ok) {
+              const data = await directRes.json();
+              if (data && data.id) {
+                found = formatServerAssignmentToHomework(data, cleanPin);
+              }
+            }
+          } catch (_) {}
+
+          // 2. Tìm trong các lớp học của học sinh hoặc giáo viên
+          if (!found) {
+            let classesList: any[] = [];
+            try {
+              const classRes = await fetch('/api/classes/student', {
+                headers: { Authorization: `Bearer ${token}` },
+              });
+              if (classRes.ok) {
+                const cData = await classRes.json();
+                if (Array.isArray(cData)) {
+                  classesList = cData.map((m: any) => m.class || m);
+                }
+              }
+            } catch (_) {}
+
+            if (classesList.length === 0) {
+              try {
+                const teacherRes = await fetch('/api/classes/teacher', {
+                  headers: { Authorization: `Bearer ${token}` },
+                });
+                if (teacherRes.ok) {
+                  const tData = await teacherRes.json();
+                  if (Array.isArray(tData)) classesList = tData;
+                }
+              } catch (_) {}
+            }
+
+            for (const cls of classesList) {
+              if (found) break;
+              if (!cls?.id) continue;
+              try {
+                const asgRes = await fetch(`/api/assignments/class/${cls.id}`, {
+                  headers: { Authorization: `Bearer ${token}` },
+                });
+                if (asgRes.ok) {
+                  const asgList = await asgRes.json();
+                  if (Array.isArray(asgList)) {
+                    const matchedAsg = asgList.find((item: any) => {
+                      if (item.pin === cleanPin || item.id === cleanPin) return true;
+                      if (String(item.id).replace(/\D/g, '').slice(-6) === cleanPin) return true;
+                      if (item.description && typeof item.description === 'string') {
+                        const m = item.description.match(/"pin":\s*"(\d+)"/);
+                        if (m && m[1] === cleanPin) return true;
+                      }
+                      return false;
+                    });
+                    if (matchedAsg) {
+                      const detailRes = await fetch(`/api/assignments/${matchedAsg.id}`, {
+                        headers: { Authorization: `Bearer ${token}` },
+                      });
+                      const fullData = detailRes.ok ? await detailRes.json() : matchedAsg;
+                      found = formatServerAssignmentToHomework(fullData, cleanPin);
+                      break;
+                    }
+                  }
+                }
+              } catch (_) {}
+            }
+          }
+        } catch (_) {}
+      }
+    }
   }
 
   if (found) {
@@ -313,6 +394,77 @@ export async function getHomeworkByPin(pin: string): Promise<HomeworkItem | null
   }
 
   return null;
+}
+
+/**
+ * Chuyển đổi dữ liệu bài tập từ máy chủ thành HomeworkItem
+ */
+function formatServerAssignmentToHomework(asg: any, pin: string): HomeworkItem {
+  let parsedAntiCheat: boolean = true;
+  let parsedAntiCheatConfig: any = null;
+  let parsedDuration = asg.durationMinutes || 45;
+
+  if (asg.description && typeof asg.description === 'string') {
+    const cfgMatch = asg.description.match(/<!--CONFIG:([\s\S]*?)-->/);
+    if (cfgMatch) {
+      try {
+        const cfg = JSON.parse(cfgMatch[1]);
+        if (cfg.antiCheat !== undefined && cfg.antiCheat !== null) {
+          parsedAntiCheat = Boolean(cfg.antiCheat);
+        }
+        if (cfg.antiCheatConfig) {
+          parsedAntiCheatConfig = cfg.antiCheatConfig;
+        }
+        if (cfg.durationMinutes) {
+          parsedDuration = cfg.durationMinutes;
+        }
+      } catch (_) {}
+    }
+  }
+
+  const questions =
+    asg.quiz?.questions?.map((qq: any) => qq.question || qq) ||
+    asg.documentFile?.parsedQuiz?.questions ||
+    [];
+
+  const hw: HomeworkItem = {
+    id: asg.id,
+    pin: pin || asg.pin || '000000',
+    title: asg.title,
+    description: (asg.description || '').replace(/<!--CONFIG:[\s\S]*?-->/, '').trim(),
+    classId: asg.classId || asg.class?.id || 'public',
+    className: asg.className || asg.class?.name || 'Lớp học',
+    deadline: asg.deadline,
+    durationMinutes: parsedDuration,
+    shuffleQuestions: true,
+    shuffleOptions: false,
+    showAnswersAfterSubmit: true,
+    antiCheating: parsedAntiCheat,
+    antiCheatConfig: parsedAntiCheatConfig || {
+      forceFullscreen: true,
+      detectTabSwitch: true,
+      maxViolations: 3,
+      preventCopyPaste: true,
+    },
+    quizData: {
+      title: asg.title,
+      durationMinutes: parsedDuration,
+      questions,
+    },
+    status: 'active',
+    createdAt: asg.createdAt || new Date().toISOString(),
+    _count: { submissions: asg._count?.submissions || 0 },
+  };
+
+  try {
+    const all = getAllHomeworksSync();
+    if (!all.some((h) => h.id === hw.id || h.pin === hw.pin)) {
+      all.unshift(hw);
+      saveHomeworksSync(all);
+    }
+  } catch (_) {}
+
+  return hw;
 }
 
 /**

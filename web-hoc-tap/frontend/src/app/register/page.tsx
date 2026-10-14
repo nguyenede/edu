@@ -1,16 +1,16 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, Suspense } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuthStore } from '../../store/useAuthStore';
 import { Input } from '../../components/Input';
 import { Button } from '../../components/Button';
 import { ThemeToggle } from '../../components/ThemeToggle';
-import { UserPlus } from 'lucide-react';
+import { UserPlus, Loader2 } from 'lucide-react';
 
 const registerSchema = z.object({
   name: z.string().min(2, 'Họ tên phải dài ít nhất 2 ký tự'),
@@ -21,8 +21,10 @@ const registerSchema = z.object({
 
 type RegisterForm = z.infer<typeof registerSchema>;
 
-export default function RegisterPage() {
+function RegisterFormContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectUrl = searchParams?.get('redirect') || searchParams?.get('next') || '/dashboard';
   const loginUser = useAuthStore((state) => state.login);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -58,7 +60,7 @@ export default function RegisterPage() {
       }
 
       loginUser(result.user, result.access_token);
-      window.location.href = '/dashboard';
+      router.push(redirectUrl);
     } catch (err: any) {
       setErrorMsg(err.message || 'Không kết nối được máy chủ đăng ký');
     } finally {
@@ -180,7 +182,7 @@ export default function RegisterPage() {
           <div className="text-center text-xs text-slate-500 pt-3 border-t border-slate-100 dark:border-slate-800">
             Đã có tài khoản?{' '}
             <Link
-              href="/login"
+              href={redirectUrl !== '/dashboard' ? `/login?redirect=${encodeURIComponent(redirectUrl)}` : '/login'}
               className="font-bold text-google-blue hover:underline"
             >
               Đăng nhập ngay
@@ -189,5 +191,19 @@ export default function RegisterPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-google-bg dark:bg-google-bg-dark">
+          <Loader2 className="animate-spin text-google-blue" size={32} />
+        </div>
+      }
+    >
+      <RegisterFormContent />
+    </Suspense>
   );
 }

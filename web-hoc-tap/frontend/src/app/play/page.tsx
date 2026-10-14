@@ -79,6 +79,28 @@ function BlooketPlayContent() {
   // Auth & Class Security
   const { user, token, isAuthenticated, logout } = useAuthStore();
   const [classCheckStatus, setClassCheckStatus] = useState<'idle' | 'checking' | 'allowed' | 'not_logged_in' | 'not_in_class'>('idle');
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+
+  // Top-level Auth Protection: Bắt buộc đăng nhập trước khi vào phòng thi/bài tập
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const storedToken = localStorage.getItem('token');
+      const storedUser = localStorage.getItem('user');
+      const hasAuth = Boolean(token || storedToken);
+
+      if (!hasAuth) {
+        const currentPath = window.location.pathname + window.location.search;
+        router.replace(`/login?redirect=${encodeURIComponent(currentPath)}`);
+        return;
+      }
+
+      if (!isAuthenticated && storedToken && storedUser) {
+        useAuthStore.getState().initialize();
+      }
+
+      setIsCheckingAuth(false);
+    }
+  }, [token, isAuthenticated, router]);
 
   // Lobby States
   const [pinInput, setPinInput] = useState(initialPin);
@@ -86,6 +108,13 @@ function BlooketPlayContent() {
   const [homework, setHomework] = useState<HomeworkItem | null>(null);
   const [loadingHw, setLoadingHw] = useState(false);
   const [lobbyError, setLobbyError] = useState('');
+
+  // Tự động điền họ tên học sinh từ tài khoản đăng nhập
+  useEffect(() => {
+    if (user?.name && !studentName) {
+      setStudentName(user.name);
+    }
+  }, [user, studentName]);
 
   // Playing States
   const [questions, setQuestions] = useState<any[]>([]);
@@ -484,6 +513,24 @@ function BlooketPlayContent() {
     const s = secs % 60;
     return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   };
+
+  // -------------------------------------------------------------
+  // RENDER: ĐANG KIỂM TRA ĐĂNG NHẬP
+  // -------------------------------------------------------------
+  if (isCheckingAuth) {
+    return (
+      <div className="min-h-screen bg-google-bg dark:bg-[#131314] flex items-center justify-center p-4">
+        <div className="max-w-md w-full bg-white dark:bg-[#1e1f20] rounded-3xl p-8 space-y-4 text-center border border-slate-200/80 dark:border-slate-800 shadow-xl animate-in fade-in">
+          <div className="w-14 h-14 rounded-2xl bg-blue-50 dark:bg-blue-950/60 text-google-blue flex items-center justify-center mx-auto">
+            <Lock size={28} />
+          </div>
+          <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">Yêu cầu đăng nhập</h2>
+          <p className="text-xs text-slate-500">Đang chuyển hướng sang trang đăng nhập...</p>
+          <Loader2 size={24} className="animate-spin text-google-blue mx-auto" />
+        </div>
+      </div>
+    );
+  }
 
   // -------------------------------------------------------------
   // RENDER PHASE: LOBBY (SYNCHRONIZED WITH WEB DESIGN SYSTEM)

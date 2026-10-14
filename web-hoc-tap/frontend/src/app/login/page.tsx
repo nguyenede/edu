@@ -1,16 +1,16 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, Suspense } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuthStore } from '../../store/useAuthStore';
 import { Input } from '../../components/Input';
 import { Button } from '../../components/Button';
 import { ThemeToggle } from '../../components/ThemeToggle';
-import { LogIn } from 'lucide-react';
+import { LogIn, Loader2 } from 'lucide-react';
 
 const loginSchema = z.object({
   email: z.string().email('Địa chỉ email không hợp lệ'),
@@ -19,8 +19,10 @@ const loginSchema = z.object({
 
 type LoginForm = z.infer<typeof loginSchema>;
 
-export default function LoginPage() {
+function LoginFormContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectUrl = searchParams?.get('redirect') || searchParams?.get('next') || '/dashboard';
   const loginUser = useAuthStore((state) => state.login);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -44,7 +46,7 @@ export default function LoginPage() {
       },
       'demo-token-session',
     );
-    router.push('/dashboard');
+    router.push(redirectUrl);
   };
 
   const onSubmit = async (data: LoginForm) => {
@@ -63,7 +65,7 @@ export default function LoginPage() {
       }
 
       loginUser(result.user, result.access_token);
-      router.push('/dashboard');
+      router.push(redirectUrl);
     } catch (err: any) {
       // Backend offline fallback: auto-login demo mode
       if (err.message?.includes('fetch') || err.message?.includes('Failed') || err.message?.includes('NetworkError')) {
@@ -190,7 +192,7 @@ export default function LoginPage() {
           <div className="text-center text-xs text-slate-500 pt-3 border-t border-slate-100 dark:border-slate-800">
             Chưa có tài khoản?{' '}
             <Link
-              href="/register"
+              href={redirectUrl !== '/dashboard' ? `/register?redirect=${encodeURIComponent(redirectUrl)}` : '/register'}
               className="font-bold text-google-blue hover:underline"
             >
               Đăng ký tài khoản mới
@@ -199,5 +201,19 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-google-bg dark:bg-google-bg-dark">
+          <Loader2 className="animate-spin text-google-blue" size={32} />
+        </div>
+      }
+    >
+      <LoginFormContent />
+    </Suspense>
   );
 }

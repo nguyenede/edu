@@ -1190,11 +1190,14 @@ export async function createClassAssignment(
 ): Promise<any> {
   let created: any = null;
 
-  // Encode antiCheat & durationMinutes into description comment for backend DTO compliance
+  const generatedPin = Math.floor(100000 + Math.random() * 900000).toString();
+
+  // Encode antiCheat, durationMinutes & pin into description comment for backend DTO compliance
   const metaConfig = {
     durationMinutes: payload.durationMinutes || null,
     antiCheat: Boolean(payload.antiCheat),
     antiCheatConfig: payload.antiCheatConfig || null,
+    pin: generatedPin,
   };
   const configComment = `<!--CONFIG:${JSON.stringify(metaConfig)}-->`;
   const rawDesc = payload.description ? payload.description.trim() : '';
@@ -1241,7 +1244,6 @@ export async function createClassAssignment(
       } catch (_) {}
     }
 
-    const generatedPin = Math.floor(100000 + Math.random() * 900000).toString();
     created = {
       id: `asg${Date.now()}${Math.random().toString(36).slice(2, 6)}`,
       pin: generatedPin,
@@ -1267,6 +1269,7 @@ export async function createClassAssignment(
       _count: { submissions: 0 },
     };
   } else {
+    created.pin = generatedPin;
     created.durationMinutes = payload.durationMinutes || null;
     created.antiCheat = Boolean(payload.antiCheat);
     created.antiCheatConfig = payload.antiCheatConfig || null;
@@ -1295,6 +1298,44 @@ export async function createClassAssignment(
       if (!Array.isArray(customList)) customList = [];
       customList = [created, ...customList.filter((item: any) => item.id !== created.id)];
       safeLocalStorageSet(customKey, JSON.stringify(customList));
+    } catch (_) {}
+
+    try {
+      const hwKey = 'app_blooket_homeworks';
+      const rawHw = safeLocalStorageGet(hwKey);
+      let hwList = rawHw ? JSON.parse(rawHw) : [];
+      if (!Array.isArray(hwList)) hwList = [];
+      if (!hwList.some((h: any) => h.id === created.id || h.pin === created.pin)) {
+        hwList.unshift({
+          id: created.id,
+          pin: created.pin,
+          title: created.title,
+          description: created.description || '',
+          classId: created.classId,
+          className: created.class?.name || 'Lớp học',
+          deadline: created.deadline,
+          durationMinutes: created.durationMinutes || 45,
+          shuffleQuestions: true,
+          shuffleOptions: false,
+          showAnswersAfterSubmit: true,
+          antiCheating: Boolean(created.antiCheat),
+          antiCheatConfig: created.antiCheatConfig || {
+            forceFullscreen: true,
+            detectTabSwitch: true,
+            maxViolations: 3,
+            preventCopyPaste: true,
+          },
+          quizData: {
+            title: created.title,
+            durationMinutes: created.durationMinutes || 45,
+            questions: created.documentFile?.parsedQuiz?.questions || [],
+          },
+          status: 'active',
+          createdAt: created.createdAt || new Date().toISOString(),
+          _count: { submissions: 0 },
+        });
+        safeLocalStorageSet(hwKey, JSON.stringify(hwList));
+      }
     } catch (_) {}
   }
 
