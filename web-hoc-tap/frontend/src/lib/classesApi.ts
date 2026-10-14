@@ -1165,12 +1165,16 @@ export async function removeStudentFromClass(token: string | null, classId: stri
 }
 
 export interface AntiCheatConfig {
-  enabled: boolean;
+  enabled?: boolean;
   preventTabSwitch?: boolean;
+  detectTabSwitch?: boolean;
   fullscreen?: boolean;
+  forceFullscreen?: boolean;
   disableCopy?: boolean;
+  preventCopyPaste?: boolean;
   shuffleQuestions?: boolean;
   maxViolations?: number;
+  autoSubmitOnLimit?: boolean;
 }
 
 export async function createClassAssignment(
@@ -1192,7 +1196,7 @@ export async function createClassAssignment(
 
   const generatedPin = Math.floor(100000 + Math.random() * 900000).toString();
 
-  // Encode antiCheat, durationMinutes & pin into description comment for backend DTO compliance
+  // Encode antiCheat & durationMinutes into description comment for backend DTO compliance
   const metaConfig = {
     durationMinutes: payload.durationMinutes || null,
     antiCheat: Boolean(payload.antiCheat),
@@ -1244,6 +1248,7 @@ export async function createClassAssignment(
       } catch (_) {}
     }
 
+    const generatedPin = Math.floor(100000 + Math.random() * 900000).toString();
     created = {
       id: `asg${Date.now()}${Math.random().toString(36).slice(2, 6)}`,
       pin: generatedPin,
@@ -1308,7 +1313,7 @@ export async function createClassAssignment(
       if (!hwList.some((h: any) => h.id === created.id || h.pin === created.pin)) {
         hwList.unshift({
           id: created.id,
-          pin: created.pin,
+          pin: created.pin || generatedPin,
           title: created.title,
           description: created.description || '',
           classId: created.classId,
@@ -1324,6 +1329,7 @@ export async function createClassAssignment(
             detectTabSwitch: true,
             maxViolations: 3,
             preventCopyPaste: true,
+            autoSubmitOnLimit: true,
           },
           quizData: {
             title: created.title,

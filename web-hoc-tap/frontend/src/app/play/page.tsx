@@ -79,28 +79,6 @@ function BlooketPlayContent() {
   // Auth & Class Security
   const { user, token, isAuthenticated, logout } = useAuthStore();
   const [classCheckStatus, setClassCheckStatus] = useState<'idle' | 'checking' | 'allowed' | 'not_logged_in' | 'not_in_class'>('idle');
-  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
-
-  // Top-level Auth Protection: Bắt buộc đăng nhập trước khi vào phòng thi/bài tập
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const storedToken = localStorage.getItem('token');
-      const storedUser = localStorage.getItem('user');
-      const hasAuth = Boolean(token || storedToken);
-
-      if (!hasAuth) {
-        const currentPath = window.location.pathname + window.location.search;
-        router.replace(`/login?redirect=${encodeURIComponent(currentPath)}`);
-        return;
-      }
-
-      if (!isAuthenticated && storedToken && storedUser) {
-        useAuthStore.getState().initialize();
-      }
-
-      setIsCheckingAuth(false);
-    }
-  }, [token, isAuthenticated, router]);
 
   // Lobby States
   const [pinInput, setPinInput] = useState(initialPin);
@@ -108,13 +86,6 @@ function BlooketPlayContent() {
   const [homework, setHomework] = useState<HomeworkItem | null>(null);
   const [loadingHw, setLoadingHw] = useState(false);
   const [lobbyError, setLobbyError] = useState('');
-
-  // Tự động điền họ tên học sinh từ tài khoản đăng nhập
-  useEffect(() => {
-    if (user?.name && !studentName) {
-      setStudentName(user.name);
-    }
-  }, [user, studentName]);
 
   // Playing States
   const [questions, setQuestions] = useState<any[]>([]);
@@ -132,6 +103,17 @@ function BlooketPlayContent() {
   const warningModalOpenRef = useRef(false);
   const modalCooldownUntilRef = useRef(0);
   const hasEnteredFullscreenRef = useRef(false);
+  const blurTimeoutRef = useRef<any>(null);
+  const [floatingToast, setFloatingToast] = useState<string | null>(null);
+  const toastTimeoutRef = useRef<any>(null);
+
+  const showToast = (msg: string) => {
+    if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
+    setFloatingToast(msg);
+    toastTimeoutRef.current = setTimeout(() => {
+      setFloatingToast(null);
+    }, 2500);
+  };
 
   // Result States
   const [resultScore, setResultScore] = useState<number>(0);
@@ -297,6 +279,10 @@ function BlooketPlayContent() {
     if (phase !== 'playing' || !homework?.antiCheating) return;
 
     const maxAllowed = homework.antiCheatConfig?.maxViolations || 3;
+    const autoSubmit = homework.antiCheatConfig?.autoSubmitOnLimit !== false;
+    const forceFullscreen = homework.antiCheatConfig?.forceFullscreen !== false;
+    const detectTabSwitch = homework.antiCheatConfig?.detectTabSwitch !== false;
+    const preventCopyPaste = homework.antiCheatConfig?.preventCopyPaste !== false;
 
     const recordViolation = (type: HomeworkViolationLog['type'], message: string) => {
       if (warningModalOpenRef.current) return;
@@ -314,12 +300,16 @@ function BlooketPlayContent() {
         };
         setViolationLogs((prevLogs) => [...prevLogs, newLog]);
 
-        setLatestWarningMessage(newLog.message);
+        setLatestWarningMessage(
+          nextCount >= maxAllowed && !autoSubmit
+            ? `${message}. Bạn đã vi phạm ${nextCount} lần (vượt mức cho phép ${maxAllowed} lần). Hệ thống đã ghi nhận đầy đủ vi phạm để báo cáo cho giáo viên!`
+            : newLog.message
+        );
         warningModalOpenRef.current = true;
         setWarningModalOpen(true);
 
-        // Nếu vượt quá số lần vi phạm -> TỰ ĐỘNG KHÓA VÀ NỘP BÀI
-        if (nextCount >= maxAllowed) {
+        // Nếu vượt quá số lần vi phạm & bật tự động nộp bài -> TỰ ĐỘNG KHÓA VÀ NỘP BÀI
+        if (nextCount >= maxAllowed && autoSubmit) {
           setTimeout(() => {
             handleFinalSubmit(
               `Bài thi đã tự động nộp do vi phạm quy chế chống gian lận (${nextCount}/${maxAllowed} lần)!`
@@ -333,46 +323,68 @@ function BlooketPlayContent() {
 
     // 1. Phát hiện chuyển tab (visibility change)
     const handleVisibilityChange = () => {
+      if (!detectTabSwitch) return;
       if (document.visibilityState === 'hidden') {
+        if (blurTimeoutRef.current) {
+          clearTimeout(blurTimeoutRef.current);
+          blurTimeoutRef.current = null;
+        }
         recordViolation('tab_switch', 'Phát hiện rời khỏi tab làm bài thi');
       }
     };
 
-    // 2. Phát hiện mất focus cửa sổ (window blur)
+    // 2. Phát hiện mất focus cửa sổ (window blur) với 1.5s grace period để chống báo động nhầm
     const handleWindowBlur = () => {
+      if (!detectTabSwitch) return;
       if (warningModalOpenRef.current) return;
-      recordViolation('window_blur', 'Phát hiện chuyển sang cửa sổ hoặc ứng dụng khác');
+      if (blurTimeoutRef.current) clearTimeout(blurTimeoutRef.current);
+      blurTimeoutRef.current = setTimeout(() => {
+        if (typeof document !== 'undefined' && document.hasFocus && !document.hasFocus() && !warningModalOpenRef.current) {
+          recordViolation('window_blur', 'Phát hiện chuyển sang cửa sổ hoặc ứng dụng khác');
+        }
+      }, 1500);
+    };
+
+    const handleWindowFocus = () => {
+      if (blurTimeoutRef.current) {
+        clearTimeout(blurTimeoutRef.current);
+        blurTimeoutRef.current = null;
+      }
     };
 
     // 3. Phát hiện thoát toàn màn hình (fullscreen exit)
     const handleFullscreenChange = () => {
+      if (!forceFullscreen) return;
       if (document.fullscreenElement) {
         hasEnteredFullscreenRef.current = true;
-      } else if (hasEnteredFullscreenRef.current && homework.antiCheatConfig?.forceFullscreen) {
+      } else if (hasEnteredFullscreenRef.current) {
         recordViolation('exit_fullscreen', 'Phát hiện thoát khỏi chế độ Toàn màn hình');
       }
     };
 
-    // 4. Chống sao chép văn bản, chuột phải, phím tắt
+    // 4. Chống chuột phải, sao chép văn bản, phím tắt & DevTools
     const handleContextMenu = (e: MouseEvent) => {
+      if (!preventCopyPaste) return;
       const target = e.target as HTMLElement;
       const isInput = target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA');
       if (!isInput) {
         e.preventDefault();
-        recordViolation('copy_attempt', 'Nhấp chuột phải bị cấm trong phòng thi');
+        showToast('Chuột phải đã bị vô hiệu hóa trong phòng thi');
       }
     };
 
     const handleCopyCut = (e: ClipboardEvent) => {
+      if (!preventCopyPaste) return;
       const target = e.target as HTMLElement;
       const isInput = target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA');
       if (!isInput) {
         e.preventDefault();
-        recordViolation('copy_attempt', 'Cố gắng sao chép nội dung câu hỏi');
+        showToast('Không được phép sao chép nội dung bài thi!');
       }
     };
 
     const handleKeyDown = (e: KeyboardEvent) => {
+      if (!preventCopyPaste) return;
       const target = e.target as HTMLElement;
       const isInput = target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA');
 
@@ -385,13 +397,14 @@ function BlooketPlayContent() {
       if (e.ctrlKey && ['c', 'u'].includes(e.key.toLowerCase())) {
         if (!isInput) {
           e.preventDefault();
-          recordViolation('copy_attempt', 'Cố gắng sao chép nội dung câu hỏi');
+          showToast('Thao tác sao chép phím tắt bị cấm trong phòng thi!');
         }
       }
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
     window.addEventListener('blur', handleWindowBlur);
+    window.addEventListener('focus', handleWindowFocus);
     document.addEventListener('fullscreenchange', handleFullscreenChange);
     window.addEventListener('contextmenu', handleContextMenu);
     window.addEventListener('copy', handleCopyCut);
@@ -399,8 +412,13 @@ function BlooketPlayContent() {
     window.addEventListener('keydown', handleKeyDown);
 
     return () => {
+      if (blurTimeoutRef.current) {
+        clearTimeout(blurTimeoutRef.current);
+        blurTimeoutRef.current = null;
+      }
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('blur', handleWindowBlur);
+      window.removeEventListener('focus', handleWindowFocus);
       document.removeEventListener('fullscreenchange', handleFullscreenChange);
       window.removeEventListener('contextmenu', handleContextMenu);
       window.removeEventListener('copy', handleCopyCut);
@@ -515,24 +533,6 @@ function BlooketPlayContent() {
   };
 
   // -------------------------------------------------------------
-  // RENDER: ĐANG KIỂM TRA ĐĂNG NHẬP
-  // -------------------------------------------------------------
-  if (isCheckingAuth) {
-    return (
-      <div className="min-h-screen bg-google-bg dark:bg-[#131314] flex items-center justify-center p-4">
-        <div className="max-w-md w-full bg-white dark:bg-[#1e1f20] rounded-3xl p-8 space-y-4 text-center border border-slate-200/80 dark:border-slate-800 shadow-xl animate-in fade-in">
-          <div className="w-14 h-14 rounded-2xl bg-blue-50 dark:bg-blue-950/60 text-google-blue flex items-center justify-center mx-auto">
-            <Lock size={28} />
-          </div>
-          <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">Yêu cầu đăng nhập</h2>
-          <p className="text-xs text-slate-500">Đang chuyển hướng sang trang đăng nhập...</p>
-          <Loader2 size={24} className="animate-spin text-google-blue mx-auto" />
-        </div>
-      </div>
-    );
-  }
-
-  // -------------------------------------------------------------
   // RENDER PHASE: LOBBY (SYNCHRONIZED WITH WEB DESIGN SYSTEM)
   // -------------------------------------------------------------
   if (phase === 'lobby') {
@@ -553,7 +553,7 @@ function BlooketPlayContent() {
                 E
               </div>
               <span className="font-bold text-base tracking-tight text-slate-900 dark:text-slate-100">
-                KiyoEdu
+                HocRealtime
               </span>
             </div>
           </div>
@@ -753,7 +753,7 @@ function BlooketPlayContent() {
 
         {/* Footer */}
         <footer className="text-center text-xs text-slate-400 py-3">
-          KiyoEdu &bull; Hệ thống làm bài trực tuyến chuẩn GDPT
+          HocRealtime &bull; Hệ thống làm bài trực tuyến chuẩn GDPT
         </footer>
       </div>
     );
@@ -780,22 +780,35 @@ function BlooketPlayContent() {
           </div>
 
           <div className="p-4 bg-slate-50 dark:bg-slate-900/60 rounded-2xl text-left space-y-2.5 text-xs text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-slate-800">
+            {homework?.antiCheatConfig?.forceFullscreen !== false && (
+              <div className="flex items-start gap-2">
+                <span className="text-google-blue font-bold shrink-0">•</span>
+                <span><strong>Toàn màn hình bắt buộc:</strong> Bạn phải làm bài ở chế độ Fullscreen, không thoát ra ngoài.</span>
+              </div>
+            )}
+            {homework?.antiCheatConfig?.detectTabSwitch !== false && (
+              <div className="flex items-start gap-2">
+                <span className="text-google-blue font-bold shrink-0">•</span>
+                <span><strong>Giám sát chuyển tab & cửa sổ:</strong> Hệ thống tự động ghi nhận khi bạn chuyển tab hoặc mở ứng dụng khác.</span>
+              </div>
+            )}
             <div className="flex items-start gap-2">
-              <span className="text-google-blue font-bold shrink-0">1.</span>
-              <span><strong>Toàn màn hình bắt buộc:</strong> Bạn phải làm bài ở chế độ Fullscreen.</span>
+              <span className="text-google-blue font-bold shrink-0">•</span>
+              <span>
+                <strong>Giới hạn {homework?.antiCheatConfig?.maxViolations || 3} lần vi phạm:</strong>{' '}
+                {homework?.antiCheatConfig?.autoSubmitOnLimit !== false ? (
+                  <>Nếu vi phạm quá {homework?.antiCheatConfig?.maxViolations || 3} lần, bài thi sẽ <strong>tự động khóa và nộp ngay lập tức</strong>.</>
+                ) : (
+                  <>Nếu vượt quá số lần cho phép, toàn bộ lịch sử vi phạm sẽ được <strong>gửi trực tiếp về giáo viên</strong>.</>
+                )}
+              </span>
             </div>
-            <div className="flex items-start gap-2">
-              <span className="text-google-blue font-bold shrink-0">2.</span>
-              <span><strong>Không rời khỏi màn hình:</strong> Hệ thống sẽ phát hiện và ghi nhận số lần chuyển tab hoặc mở ứng dụng khác.</span>
-            </div>
-            <div className="flex items-start gap-2">
-              <span className="text-google-blue font-bold shrink-0">3.</span>
-              <span><strong>Giới hạn 3 lần:</strong> Nếu vi phạm quá 3 lần, bài thi sẽ <strong>tự động khóa và nộp ngay lập tức</strong>.</span>
-            </div>
-            <div className="flex items-start gap-2">
-              <span className="text-google-blue font-bold shrink-0">4.</span>
-              <span><strong>Không sao chép:</strong> Vô hiệu hóa chuột phải và các thao tác copy câu hỏi.</span>
-            </div>
+            {homework?.antiCheatConfig?.preventCopyPaste !== false && (
+              <div className="flex items-start gap-2">
+                <span className="text-google-blue font-bold shrink-0">•</span>
+                <span><strong>Chống sao chép:</strong> Vô hiệu hóa chuột phải, sao chép câu hỏi và phím tắt DevTools (F12).</span>
+              </div>
+            )}
           </div>
 
           <Button
@@ -955,7 +968,7 @@ function BlooketPlayContent() {
         </main>
 
         <footer className="text-center text-xs text-slate-400 py-3">
-          KiyoEdu &bull; Đã lưu kết quả bài nộp an toàn
+          HocRealtime &bull; Đã lưu kết quả bài nộp an toàn
         </footer>
       </div>
     );
@@ -992,8 +1005,12 @@ function BlooketPlayContent() {
               onClick={() => {
                 setWarningModalOpen(false);
                 warningModalOpenRef.current = false;
-                modalCooldownUntilRef.current = Date.now() + 2000;
-                if (document.documentElement.requestFullscreen && !document.fullscreenElement) {
+                modalCooldownUntilRef.current = Date.now() + 3000;
+                if (
+                  homework?.antiCheatConfig?.forceFullscreen !== false &&
+                  document.documentElement.requestFullscreen &&
+                  !document.fullscreenElement
+                ) {
                   document.documentElement.requestFullscreen().then(() => {
                     hasEnteredFullscreenRef.current = true;
                   }).catch(() => {});
@@ -1004,6 +1021,13 @@ function BlooketPlayContent() {
               Tôi hiểu và quay lại làm bài
             </Button>
           </div>
+        </div>
+      )}
+
+      {/* 🍞 FLOATING TOAST THÔNG BÁO NHẸ (KHÔNG PHẠT THẺ ĐỎ) */}
+      {floatingToast && (
+        <div className="fixed top-16 left-1/2 -translate-x-1/2 z-50 px-4 py-2 bg-slate-900/90 dark:bg-slate-100/90 text-white dark:text-slate-900 rounded-full text-xs font-semibold shadow-lg backdrop-blur-sm animate-in fade-in slide-in-from-top-2 pointer-events-none">
+          {floatingToast}
         </div>
       )}
 
@@ -1019,7 +1043,7 @@ function BlooketPlayContent() {
               <span>Học sinh: <strong className="text-slate-700 dark:text-slate-300">{studentName}</strong></span>
               {homework?.antiCheating && (
                 <span className="flex items-center gap-1 text-google-blue font-semibold">
-                  <ShieldCheck size={12} /> Chống gian lận (Lỗi: {violationCount}/3)
+                  <ShieldCheck size={12} /> Chống gian lận (Lỗi: {violationCount}/{homework.antiCheatConfig?.maxViolations || 3})
                 </span>
               )}
             </div>
@@ -1184,7 +1208,7 @@ function BlooketPlayContent() {
 
       {/* Footer info */}
       <footer className="text-center text-xs text-slate-400 py-3 border-t border-slate-200/50 dark:border-slate-800/50">
-        KiyoEdu Play &bull; Đã hoàn thành {Object.keys(selectedAnswers).length} / {totalQ} câu
+        HocRealtime Play &bull; Đã hoàn thành {Object.keys(selectedAnswers).length} / {totalQ} câu
       </footer>
     </div>
   );

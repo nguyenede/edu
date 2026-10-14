@@ -190,9 +190,13 @@ function AssignPageContent() {
   const [shuffleOptions, setShuffleOptions] = useState(false);
   const [showAnswersAfterSubmit, setShowAnswersAfterSubmit] = useState(true);
 
-  // Anti-cheating State (NÚT BẬT / TẮT)
+  // Anti-cheating State (NÚT BẬT / TẮT & CẤU HÌNH CHI TIẾT)
   const [antiCheating, setAntiCheating] = useState(true);
-  const [maxViolations, setMaxViolations] = useState(3);
+  const [maxViolations, setMaxViolations] = useState<number>(3);
+  const [forceFullscreen, setForceFullscreen] = useState(true);
+  const [detectTabSwitch, setDetectTabSwitch] = useState(true);
+  const [preventCopyPaste, setPreventCopyPaste] = useState(true);
+  const [autoSubmitOnLimit, setAutoSubmitOnLimit] = useState(true);
 
   // Loading & Created State
   const [creating, setCreating] = useState(false);
@@ -359,10 +363,11 @@ function AssignPageContent() {
         showAnswersAfterSubmit,
         antiCheating,
         antiCheatConfig: {
-          forceFullscreen: true,
-          detectTabSwitch: true,
+          forceFullscreen,
+          detectTabSwitch,
           maxViolations: Number(maxViolations) || 3,
-          preventCopyPaste: true,
+          preventCopyPaste,
+          autoSubmitOnLimit,
         },
         quizData: {
           title: fileItem.parsedQuiz?.title || title,
@@ -383,10 +388,14 @@ function AssignPageContent() {
           antiCheat: antiCheating,
           antiCheatConfig: {
             enabled: antiCheating,
-            fullscreen: true,
-            preventTabSwitch: true,
+            fullscreen: forceFullscreen,
+            forceFullscreen,
+            preventTabSwitch: detectTabSwitch,
+            detectTabSwitch,
             maxViolations: Number(maxViolations) || 3,
-            disableCopy: true,
+            disableCopy: preventCopyPaste,
+            preventCopyPaste,
+            autoSubmitOnLimit,
           },
         });
       }
@@ -1059,22 +1068,116 @@ function AssignPageContent() {
 
                 {/* Chi tiết cơ chế bảo vệ khi BẬT */}
                 {antiCheating && (
-                  <div className="p-4 sm:p-5 rounded-2xl bg-blue-50/50 dark:bg-blue-950/20 grid grid-cols-1 sm:grid-cols-2 gap-3.5 text-xs text-slate-700 dark:text-slate-300">
-                    <div className="flex items-start gap-2">
-                      <span className="text-google-blue font-bold shrink-0">•</span>
-                      <span><strong>Toàn màn hình bắt buộc:</strong> Học sinh phải làm bài ở chế độ Fullscreen.</span>
+                  <div className="p-5 rounded-2xl bg-slate-50/80 dark:bg-slate-900/40 border border-slate-200/80 dark:border-slate-800 space-y-5 animate-in fade-in">
+                    {/* Hàng 1: Giới hạn số lần vi phạm */}
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                          Số lần vi phạm tối đa cho phép
+                        </label>
+                        <span className="text-[11px] text-slate-400 font-medium">
+                          {maxViolations === 1 ? 'Cực kỳ nghiêm ngặt' : maxViolations === 3 ? 'Khuyên dùng' : 'Linh hoạt'}
+                        </span>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {[1, 2, 3, 5, 10].map((num) => (
+                          <button
+                            key={num}
+                            type="button"
+                            onClick={() => setMaxViolations(num)}
+                            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                              maxViolations === num
+                                ? 'bg-google-blue text-white shadow-xs'
+                                : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:border-google-blue'
+                            }`}
+                          >
+                            {num} lần {num === 3 && '⭐'}
+                          </button>
+                        ))}
+                      </div>
                     </div>
-                    <div className="flex items-start gap-2">
-                      <span className="text-google-blue font-bold shrink-0">•</span>
-                      <span><strong>Giám sát chuyển tab:</strong> Cảnh báo khi học sinh rời màn hình hoặc mở ứng dụng khác.</span>
+
+                    {/* Hàng 2: Tùy chọn xử lý khi vượt quá số lần vi phạm */}
+                    <div className="pt-2 border-t border-slate-200/60 dark:border-slate-800">
+                      <label className="flex items-start gap-3 cursor-pointer group">
+                        <input
+                          type="checkbox"
+                          checked={autoSubmitOnLimit}
+                          onChange={(e) => setAutoSubmitOnLimit(e.target.checked)}
+                          className="mt-0.5 w-4 h-4 rounded text-google-blue border-slate-300 dark:border-slate-600 focus:ring-google-blue"
+                        />
+                        <div className="space-y-0.5">
+                          <span className="text-xs font-semibold text-slate-800 dark:text-slate-200 group-hover:text-google-blue transition-colors">
+                            Tự động khóa và thu bài khi chạm mức vi phạm tối đa
+                          </span>
+                          <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                            Nếu bỏ chọn, học sinh vẫn được tiếp tục làm nhưng toàn bộ số lần và chi tiết vi phạm sẽ được gửi về cho giáo viên.
+                          </p>
+                        </div>
+                      </label>
                     </div>
-                    <div className="flex items-start gap-2">
-                      <span className="text-google-blue font-bold shrink-0">•</span>
-                      <span><strong>Tự động nộp bài:</strong> Khóa và nộp bài ngay lập tức nếu vi phạm quá <strong>{maxViolations} lần</strong>.</span>
-                    </div>
-                    <div className="flex items-start gap-2">
-                      <span className="text-google-blue font-bold shrink-0">•</span>
-                      <span><strong>Chống copy & chuột phải:</strong> Vô hiệu hóa sao chép văn bản câu hỏi để tìm kiếm đáp án.</span>
+
+                    {/* Hàng 3: Các quy tắc giám sát chi tiết */}
+                    <div className="pt-2 border-t border-slate-200/60 dark:border-slate-800 space-y-3">
+                      <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
+                        Các biện pháp giám sát được áp dụng
+                      </span>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        {/* 1. Fullscreen */}
+                        <label className="flex items-start gap-2.5 p-3 rounded-xl bg-white dark:bg-slate-800/60 border border-slate-200/70 dark:border-slate-800 cursor-pointer hover:border-google-blue/40 transition-colors">
+                          <input
+                            type="checkbox"
+                            checked={forceFullscreen}
+                            onChange={(e) => setForceFullscreen(e.target.checked)}
+                            className="mt-0.5 w-4 h-4 rounded text-google-blue border-slate-300 dark:border-slate-600 focus:ring-google-blue"
+                          />
+                          <div className="space-y-0.5">
+                            <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block">
+                              Toàn màn hình bắt buộc
+                            </span>
+                            <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-tight">
+                              Yêu cầu chế độ Fullscreen, cảnh báo nếu học sinh thoát ra.
+                            </p>
+                          </div>
+                        </label>
+
+                        {/* 2. Chuyển tab */}
+                        <label className="flex items-start gap-2.5 p-3 rounded-xl bg-white dark:bg-slate-800/60 border border-slate-200/70 dark:border-slate-800 cursor-pointer hover:border-google-blue/40 transition-colors">
+                          <input
+                            type="checkbox"
+                            checked={detectTabSwitch}
+                            onChange={(e) => setDetectTabSwitch(e.target.checked)}
+                            className="mt-0.5 w-4 h-4 rounded text-google-blue border-slate-300 dark:border-slate-600 focus:ring-google-blue"
+                          />
+                          <div className="space-y-0.5">
+                            <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block">
+                              Giám sát chuyển tab & cửa sổ
+                            </span>
+                            <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-tight">
+                              Phát hiện khi rời khỏi trang thi hoặc chuyển sang phần mềm khác.
+                            </p>
+                          </div>
+                        </label>
+
+                        {/* 3. Chống copy & chuột phải */}
+                        <label className="flex items-start gap-2.5 p-3 rounded-xl bg-white dark:bg-slate-800/60 border border-slate-200/70 dark:border-slate-800 cursor-pointer hover:border-google-blue/40 transition-colors sm:col-span-2">
+                          <input
+                            type="checkbox"
+                            checked={preventCopyPaste}
+                            onChange={(e) => setPreventCopyPaste(e.target.checked)}
+                            className="mt-0.5 w-4 h-4 rounded text-google-blue border-slate-300 dark:border-slate-600 focus:ring-google-blue"
+                          />
+                          <div className="space-y-0.5">
+                            <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block">
+                              Chống sao chép & Vô hiệu chuột phải, DevTools
+                            </span>
+                            <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-tight">
+                              Ngăn bôi đen văn bản, chặn copy câu hỏi tìm kiếm trên Google/ChatGPT và chặn phím tắt F12.
+                            </p>
+                          </div>
+                        </label>
+                      </div>
                     </div>
                   </div>
                 )}

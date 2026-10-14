@@ -108,7 +108,7 @@ function LoginFormContent() {
             </svg>
           </div>
           <span className="text-2xl font-extrabold tracking-tight text-slate-800 dark:text-slate-200">
-            KiyoEdu
+            HocRealtime
           </span>
         </div>
         <h2 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100">

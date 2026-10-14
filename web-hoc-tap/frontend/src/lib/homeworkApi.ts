@@ -5,6 +5,7 @@ export interface AntiCheatConfig {
   detectTabSwitch: boolean;
   maxViolations: number;
   preventCopyPaste: boolean;
+  autoSubmitOnLimit?: boolean;
 }
 
 export interface HomeworkItem {
@@ -445,6 +446,7 @@ function formatServerAssignmentToHomework(asg: any, pin: string): HomeworkItem {
       detectTabSwitch: true,
       maxViolations: 3,
       preventCopyPaste: true,
+      autoSubmitOnLimit: true,
     },
     quizData: {
       title: asg.title,
