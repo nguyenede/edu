@@ -792,23 +792,24 @@ export default function AssignmentDetailPage() {
                 </div>
               ) : (
                 <div className="divide-y divide-slate-100 dark:divide-slate-800/60">
-                  {normalizedQuestions.map((q, qIdx) => (
-                    <div
-                      key={q.id || qIdx}
-                      className="py-4 first:pt-1 space-y-2.5"
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wide">
-                          Câu {qIdx + 1}
-                        </span>
-                        <span className="text-[11px] text-slate-400">
-                          Trắc nghiệm đơn
-                        </span>
-                      </div>
-
-                      <div className="text-xs font-medium text-slate-900 dark:text-slate-100 leading-relaxed">
-                        <MathRenderer text={q.content} />
-                      </div>
+                  {normalizedQuestions.map((q, qIdx) => {
+                    const cleanContent = (q.content || '').replace(/^Câu\s*\d+\s*[:.]\s*/i, '');
+                    return (
+                      <div
+                        key={q.id || qIdx}
+                        className="py-4 first:pt-1 space-y-2.5"
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="text-xs font-medium text-slate-900 dark:text-slate-100 leading-relaxed flex-1">
+                            <span className="font-bold text-blue-600 dark:text-blue-400 mr-1.5 whitespace-nowrap">
+                              Câu {qIdx + 1}:
+                            </span>
+                            <MathRenderer text={cleanContent} />
+                          </div>
+                          <span className="text-[11px] text-slate-400 shrink-0 select-none">
+                            Trắc nghiệm đơn
+                          </span>
+                        </div>
 
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
                         {q.options.map((opt, optIdx) => {
@@ -852,7 +853,8 @@ export default function AssignmentDetailPage() {
                         </div>
                       )}
                     </div>
-                  ))}
+                  );
+                })}
                 </div>
               )}
             </div>
@@ -1051,17 +1053,19 @@ export default function AssignmentDetailPage() {
 
                   {normalizedQuestions.length > 0 ? (
                     <div className="divide-y divide-slate-100 dark:divide-slate-800/60">
-                      {normalizedQuestions.map((q, idx) => (
-                        <div
-                          key={q.id}
-                          className="py-4 first:pt-1 space-y-2.5"
-                        >
-                          <span className="text-xs font-semibold text-blue-600 dark:text-blue-400 block uppercase">
-                            Câu {idx + 1}
-                          </span>
-                          <div className="text-xs font-medium text-slate-900 dark:text-slate-100 leading-relaxed">
-                            <MathRenderer text={q.content} />
-                          </div>
+                      {normalizedQuestions.map((q, idx) => {
+                        const cleanContent = (q.content || '').replace(/^Câu\s*\d+\s*[:.]\s*/i, '');
+                        return (
+                          <div
+                            key={q.id}
+                            className="py-4 first:pt-1 space-y-2.5"
+                          >
+                            <div className="text-xs font-medium text-slate-900 dark:text-slate-100 leading-relaxed">
+                              <span className="font-bold text-blue-600 dark:text-blue-400 mr-1.5 whitespace-nowrap">
+                                Câu {idx + 1}:
+                              </span>
+                              <MathRenderer text={cleanContent} />
+                            </div>
 
                           <div className="space-y-2 pt-1">
                             {q.options.map((opt, optIdx) => {
@@ -1096,7 +1100,8 @@ export default function AssignmentDetailPage() {
                             })}
                           </div>
                         </div>
-                      ))}
+                      );
+                    })}
                     </div>
                   ) : (
                     /* Essay Mode */
