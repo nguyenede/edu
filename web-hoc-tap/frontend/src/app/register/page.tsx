@@ -24,19 +24,35 @@ type RegisterForm = z.infer<typeof registerSchema>;
 function RegisterFormContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const rawRedirect = searchParams?.get('redirect') || searchParams?.get('next');
-  const redirectUrl = rawRedirect && rawRedirect !== '/dashboard' && rawRedirect !== '/app/dashboard'
-    ? rawRedirect
-    : '/settings/plans';
-  const { isAuthenticated, login: loginUser } = useAuthStore();
+  const { user, isAuthenticated, login: loginUser } = useAuthStore();
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
+  const getDestinationUrl = (targetEmail?: string | null): string => {
+    const explicitRedirect = searchParams?.get('redirect') || searchParams?.get('next');
+    if (explicitRedirect && explicitRedirect !== '/dashboard' && explicitRedirect !== '/app/dashboard') {
+      return explicitRedirect;
+    }
+
+    if (typeof window !== 'undefined') {
+      const emailKey = (targetEmail || user?.email || (user?.id ? String(user.id) : '')).toLowerCase().trim();
+      if (emailKey) {
+        const hasSeenPlans = localStorage.getItem(`app_first_login_seen_${emailKey}`);
+        if (!hasSeenPlans) {
+          localStorage.setItem(`app_first_login_seen_${emailKey}`, 'true');
+          return '/settings/plans';
+        }
+      }
+    }
+
+    return '/dashboard';
+  };
+
   React.useEffect(() => {
     if (isAuthenticated) {
-      router.replace(redirectUrl);
+      router.replace(getDestinationUrl(user?.email));
     }
-  }, [isAuthenticated, redirectUrl, router]);
+  }, [isAuthenticated, user?.email, router]);
 
   const {
     register,
@@ -73,7 +89,7 @@ function RegisterFormContent() {
           role: data.role,
         };
         loginUser(userObj, token);
-        router.push(redirectUrl);
+        router.push(getDestinationUrl(data.email));
         return;
       }
       throw new Error(result?.message || 'Server register failed');
@@ -97,7 +113,7 @@ function RegisterFormContent() {
           { id: localUser.id, email: localUser.email, name: localUser.name, role: localUser.role },
           'local-session-token'
         );
-        router.push(redirectUrl);
+        router.push(getDestinationUrl(localUser.email));
       } catch (saveErr) {
         setErrorMsg('Không thể lưu thông tin tài khoản');
       }
@@ -220,7 +236,7 @@ function RegisterFormContent() {
           <div className="text-center text-xs text-slate-500 pt-3 border-t border-slate-100 dark:border-slate-800">
             Đã có tài khoản?{' '}
             <Link
-              href={redirectUrl !== '/settings/plans' ? `/login?redirect=${encodeURIComponent(redirectUrl)}` : '/login'}
+              href={searchParams?.get('redirect') ? `/login?redirect=${encodeURIComponent(searchParams.get('redirect')!)}` : '/login'}
               className="font-bold text-google-blue hover:underline"
             >
               Đăng nhập ngay

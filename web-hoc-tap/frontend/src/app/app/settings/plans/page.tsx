@@ -42,12 +42,20 @@ export default function PlansPage() {
   const [copyToast, setCopyToast] = useState<string | null>(null);
 
   React.useEffect(() => {
+    // Đánh dấu tài khoản hiện tại đã xem trang bảng giá (để các lần đăng nhập sau không hiện lại)
+    if (typeof window !== 'undefined') {
+      const email = user?.email || (user?.id ? String(user.id) : null);
+      if (email) {
+        localStorage.setItem(`app_first_login_seen_${email.toLowerCase().trim()}`, 'true');
+      }
+    }
+
     // Giữ trang hiển thị tự nhiên từ trên cùng, không tự động cuộn xuống
     const viewport = document.getElementById('app-main-viewport');
     if (viewport) {
       viewport.scrollTo({ top: 0, behavior: 'instant' });
     }
-  }, []);
+  }, [user]);
 
   const handleCopy = (text: string, label: string) => {
     navigator.clipboard.writeText(text);

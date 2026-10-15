@@ -22,19 +22,38 @@ type LoginForm = z.infer<typeof loginSchema>;
 function LoginFormContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const rawRedirect = searchParams?.get('redirect') || searchParams?.get('next');
-  const redirectUrl = rawRedirect && rawRedirect !== '/dashboard' && rawRedirect !== '/app/dashboard'
-    ? rawRedirect
-    : '/settings/plans';
-  const { isAuthenticated, login: loginUser } = useAuthStore();
+  const { user, isAuthenticated, login: loginUser } = useAuthStore();
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
+  const getDestinationUrl = (targetEmail?: string | null): string => {
+    // 1. Nếu có tham số redirect/next được chỉ định rõ (khác dashboard), ưu tiên trang đó
+    const explicitRedirect = searchParams?.get('redirect') || searchParams?.get('next');
+    if (explicitRedirect && explicitRedirect !== '/dashboard' && explicitRedirect !== '/app/dashboard') {
+      return explicitRedirect;
+    }
+
+    // 2. Chỉ hiển thị /settings/plans ở LẦN ĐẦU TIÊN đăng nhập của tài khoản
+    if (typeof window !== 'undefined') {
+      const emailKey = (targetEmail || user?.email || (user?.id ? String(user.id) : '')).toLowerCase().trim();
+      if (emailKey) {
+        const hasSeenPlans = localStorage.getItem(`app_first_login_seen_${emailKey}`);
+        if (!hasSeenPlans) {
+          localStorage.setItem(`app_first_login_seen_${emailKey}`, 'true');
+          return '/settings/plans';
+        }
+      }
+    }
+
+    // 3. Mấy lần sau: Không hiện nữa, vào thẳng trang chính /dashboard
+    return '/dashboard';
+  };
+
   React.useEffect(() => {
     if (isAuthenticated) {
-      router.replace(redirectUrl);
+      router.replace(getDestinationUrl(user?.email));
     }
-  }, [isAuthenticated, redirectUrl, router]);
+  }, [isAuthenticated, user?.email, router]);
 
   const {
     register,
@@ -55,7 +74,7 @@ function LoginFormContent() {
       },
       'demo-token-session',
     );
-    router.push(redirectUrl);
+    router.push(getDestinationUrl(email));
   };
 
   const onSubmit = async (data: LoginForm) => {
@@ -78,7 +97,7 @@ function LoginFormContent() {
           role: 'STUDENT',
         };
         loginUser(userObj, token);
-        router.push(redirectUrl);
+        router.push(getDestinationUrl(data.email));
         return;
       }
       throw new Error(result?.message || 'Server login failed');
@@ -97,7 +116,7 @@ function LoginFormContent() {
                 { id: matched.id, email: matched.email, role: matched.role || 'STUDENT', name: matched.name },
                 'local-session-token'
               );
-              router.push(redirectUrl);
+              router.push(getDestinationUrl(matched.email));
               return;
             }
           }
@@ -130,7 +149,7 @@ function LoginFormContent() {
         },
         'demo-session-token'
       );
-      router.push(redirectUrl);
+      router.push(getDestinationUrl(data.email));
     } finally {
       setLoading(false);
     }
@@ -240,7 +259,7 @@ function LoginFormContent() {
           <div className="text-center text-xs text-slate-500 pt-3 border-t border-slate-100 dark:border-slate-800">
             Chưa có tài khoản?{' '}
             <Link
-              href={redirectUrl !== '/settings/plans' ? `/register?redirect=${encodeURIComponent(redirectUrl)}` : '/register'}
+              href={searchParams?.get('redirect') ? `/register?redirect=${encodeURIComponent(searchParams.get('redirect')!)}` : '/register'}
               className="font-bold text-google-blue hover:underline"
             >
               Đăng ký tài khoản mới
