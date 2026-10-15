@@ -583,12 +583,47 @@ export default function GamesHubPage() {
   return (
     <AppShell
       title={
-        activeCategory ? (
-          <div className="flex items-center gap-1 text-2xl font-[450] tracking-tight text-slate-900 dark:text-slate-100 flex-wrap -ml-2">
+        isConfigModalOpen && activeCategory ? (
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <button
+              type="button"
+              onClick={() => {
+                setIsConfigModalOpen(false);
+                setActiveCategory(null);
+              }}
+              className="text-sm font-medium text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 transition-colors cursor-pointer"
+            >
+              Trò chơi lớp học
+            </button>
+            <BreadcrumbChevron
+              menuTitle="Danh sách trò chơi"
+              items={GAME_LIST.map((g) => ({
+                label: g.title,
+                icon: getGameCustomIcon(g.id, 18),
+                onClick: () => {
+                  setIsConfigModalOpen(false);
+                  setActiveCategory(g.id);
+                },
+              }))}
+            />
+            <button
+              type="button"
+              onClick={() => setIsConfigModalOpen(false)}
+              className="text-sm font-medium text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 transition-colors cursor-pointer truncate max-w-xs md:max-w-md"
+            >
+              {getCategoryMeta(activeCategory).title}
+            </button>
+            <BreadcrumbChevron isStatic={true} />
+            <span className="text-xl sm:text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
+              {editingLessonId ? 'Chỉnh sửa bài chơi' : 'Tạo bài chơi mới'}
+            </span>
+          </div>
+        ) : activeCategory ? (
+          <div className="flex items-center gap-1.5 flex-wrap">
             <button
               type="button"
               onClick={() => setActiveCategory(null)}
-              className="transition-colors cursor-pointer px-2 py-0.5 rounded-xl hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-900 dark:text-white font-normal"
+              className="text-sm font-medium text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 transition-colors cursor-pointer"
             >
               Trò chơi lớp học
             </button>
@@ -600,46 +635,71 @@ export default function GamesHubPage() {
                 onClick: () => setActiveCategory(g.id),
               }))}
             />
-            <span className="px-2 py-0.5 rounded-xl text-slate-900 dark:text-white font-normal">
+            <span className="text-xl sm:text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
               {getCategoryMeta(activeCategory).title}
             </span>
           </div>
         ) : (
-          <div className="flex items-center gap-1 text-2xl font-[450] tracking-tight text-slate-900 dark:text-slate-100 flex-wrap -ml-2">
-            <span className="px-2 py-0.5 rounded-xl text-slate-900 dark:text-white font-normal">
-              Trò chơi lớp học
-            </span>
-          </div>
+          'Trò chơi lớp học'
         )
       }
       action={
-        activeCategory ? (
+        activeCategory && !isConfigModalOpen ? (
           <Button
             size="sm"
             onClick={handleOpenCreateModal}
             className="rounded-xl text-xs gap-1.5"
           >
             <Plus size={15} />
-            <span>Tạo Trò chơi mới</span>
+            <span>Tạo bài chơi mới</span>
           </Button>
         ) : undefined
       }
     >
       <div className="space-y-4">
-        {activeCategory ? (
+        {isConfigModalOpen && activeCategory ? (
+          /* LEVEL 3: FULL PAGE GAME CREATOR / EDITOR (Chuyển sang trang riêng không dùng popup dialog) */
+          <GameConfigModal
+            isFullPage={true}
+            isOpen={true}
+            onClose={() => setIsConfigModalOpen(false)}
+            gameTitle={getCategoryMeta(activeCategory).title}
+            gameId={activeCategory}
+            config={gameConfig}
+            onChangeConfig={setGameConfig}
+            questions={customQuestions}
+            onChangeQuestions={setCustomQuestions}
+            availableExams={exams}
+            selectedExamId={selectedExamId}
+            onSelectExam={handleSelectExamInModal}
+            onSaveGame={() => {
+              handleSaveLesson();
+              setIsConfigModalOpen(false);
+            }}
+            initialStep={editingLessonId ? 3 : 1}
+            onStartGame={() => {
+              const meta = getCategoryMeta(activeCategory);
+              const newLesson: CustomGameLesson = {
+                id: editingLessonId || `lesson_${Date.now()}`,
+                gameType: activeCategory,
+                title: gameConfig.title || meta.shortName,
+                examId: selectedExamId,
+                examTitle: selectedExam?.title || 'Đề thi',
+                config: gameConfig,
+                questions: customQuestions,
+                createdAt: Date.now(),
+              };
+              const updated = editingLessonId
+                ? savedLessons.map((l) => (l.id === editingLessonId ? newLesson : l))
+                : [newLesson, ...savedLessons];
+              persistLessons(updated);
+              setIsConfigModalOpen(false);
+              setPlayingLesson(newLesson);
+            }}
+          />
+        ) : activeCategory ? (
           /* LEVEL 2: "[TÊN GAME] CỦA TÔI ({N})" WORKSPACE VIEW (Đồng bộ chuẩn giao diện KiyoEdu) */
           <div className="space-y-4">
-            {/* Header info bar */}
-            <div className="flex items-center justify-between text-xs text-slate-500 dark:text-zinc-400 px-1">
-              <div className="flex items-center gap-2">
-                <span>
-                  Danh sách bài chơi cho <b>{getCategoryMeta(activeCategory).title}</b>
-                </span>
-                <span>•</span>
-                <span>{currentCategoryLessons.length} bài đã lưu</span>
-              </div>
-            </div>
-
             {/* Cards Grid: Trial Run + Saved Custom Lessons */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {/* 1. Trial Run Card (Bản chạy thử có sẵn) */}
@@ -657,12 +717,9 @@ export default function GamesHubPage() {
                         {trialLesson.questions.length} câu hỏi
                       </span>
                     </div>
-                    <p className="text-xs text-slate-500 dark:text-zinc-400 leading-relaxed">
-                      Chơi thử trực tiếp cùng học sinh để trải nghiệm câu hỏi và luật chơi ngay trên lớp.
-                    </p>
                   </div>
 
-                  <div className="mt-5 pt-3 border-t border-slate-100 dark:border-white/5 flex items-center justify-between">
+                  <div className="mt-4 flex items-center justify-between">
                     <span className="text-[11px] text-slate-400 truncate max-w-[150px]">
                       Từ: {trialLesson.examTitle}
                     </span>
@@ -702,7 +759,7 @@ export default function GamesHubPage() {
                       </p>
                     </div>
 
-                    <div className="mt-5 pt-3 border-t border-slate-100 dark:border-white/5 flex items-center justify-between gap-2">
+                    <div className="mt-4 flex items-center justify-between gap-2">
                       <div className="flex items-center gap-1">
                         <button
                           onClick={() => handleOpenEditModal(lesson)}
@@ -773,7 +830,7 @@ export default function GamesHubPage() {
                     </div>
 
                     {/* Single Full-width Clean Action Button */}
-                    <div className="mt-4 pt-3 border-t border-slate-100 dark:border-white/5">
+                    <div className="mt-4">
                       <button
                         type="button"
                         onClick={(e) => {
@@ -794,9 +851,10 @@ export default function GamesHubPage() {
         )}
       </div>
 
-      {/* Game Settings & Questions Modal */}
-      {activeCategory && (
+      {/* Game Settings Modal inside running game */}
+      {playingLesson && activeCategory && (
         <GameConfigModal
+          isFullPage={false}
           isOpen={isConfigModalOpen}
           onClose={() => setIsConfigModalOpen(false)}
           gameTitle={getCategoryMeta(activeCategory).title}
@@ -826,6 +884,7 @@ export default function GamesHubPage() {
               ? savedLessons.map((l) => (l.id === editingLessonId ? newLesson : l))
               : [newLesson, ...savedLessons];
             persistLessons(updated);
+            setIsConfigModalOpen(false);
             setPlayingLesson(newLesson);
           }}
         />

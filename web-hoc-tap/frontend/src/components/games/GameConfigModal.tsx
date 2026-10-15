@@ -12,9 +12,6 @@ import {
   Clock,
   Sparkles,
   ShieldAlert,
-  Users,
-  Play,
-  Type,
   FileText,
   CheckCircle2,
   ArrowRight,
@@ -60,7 +57,7 @@ export const DEFAULT_GAME_CONFIG: GameSettingsConfig = {
   winDifference: 3,
   freezeTime: 3,
   controlMode: 'touch',
-  shuffleQuestions: true,
+  shuffleQuestions: false,
   shuffleOptions: false,
   fontSize: 'normal',
   soundEnabled: true,
@@ -81,6 +78,7 @@ interface GameConfigModalProps {
   onStartGame: () => void;
   onSaveGame?: () => void;
   initialStep?: 1 | 2 | 3;
+  isFullPage?: boolean;
 }
 
 export const GameConfigModal: React.FC<GameConfigModalProps> = ({
@@ -98,6 +96,7 @@ export const GameConfigModal: React.FC<GameConfigModalProps> = ({
   onStartGame,
   onSaveGame,
   initialStep = 1,
+  isFullPage = false,
 }) => {
   // Wizard steps: 1 = Chọn đề thi, 2 = Chọn lọc câu hỏi, 3 = Luật chơi & Bắt đầu
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(initialStep);
@@ -187,46 +186,83 @@ export const GameConfigModal: React.FC<GameConfigModalProps> = ({
   const selectedCount = questions.filter((q) => q.selected !== false).length;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/50 backdrop-blur-xs animate-fadeIn select-none">
-      <div className="w-full max-w-3xl bg-white dark:bg-[#1e1f20] rounded-2xl shadow-2xl border border-slate-200/80 dark:border-white/10 flex flex-col max-h-[92vh] overflow-hidden">
-        {/* MODAL HEADER */}
-        <div className="p-4 sm:p-5 border-b border-slate-200/80 dark:border-white/10 flex items-center justify-between gap-3 shrink-0 bg-white dark:bg-[#1e1f20]">
-          <div className="flex items-center gap-3">
+    <div
+      className={
+        isFullPage
+          ? 'w-full max-w-4xl mx-auto space-y-6 pb-20 select-none animate-fadeIn'
+          : 'fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/50 backdrop-blur-xs animate-fadeIn select-none'
+      }
+    >
+      <div
+        className={
+          isFullPage
+            ? 'w-full space-y-6'
+            : 'w-full max-w-3xl bg-white dark:bg-[#1e1f20] rounded-2xl shadow-2xl border border-slate-200/80 dark:border-white/10 flex flex-col max-h-[92vh] overflow-hidden'
+        }
+      >
+        {/* HEADER */}
+        {isFullPage ? (
+          <div className="flex items-center gap-3 pb-1">
             <div className="w-10 h-10 rounded-xl bg-blue-500/10 text-google-blue dark:text-blue-400 flex items-center justify-center shrink-0">
               <Sparkles size={20} />
             </div>
             <div>
               <div className="flex items-center gap-2">
                 <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-zinc-100">
-                  Tạo Trò chơi: {gameTitle}
+                  {currentStep === 1
+                    ? 'Chọn nguồn đề thi'
+                    : currentStep === 2
+                    ? 'Chọn lọc câu hỏi'
+                    : 'Thiết lập luật chơi'}
                 </h2>
                 <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-950/80 dark:text-blue-300">
                   Bước {currentStep}/3
                 </span>
               </div>
-              <p className="text-xs text-slate-500 dark:text-zinc-400">
-                Quy trình từng bước thiết lập nguồn đề thi, câu hỏi và luật chơi lớp học
-              </p>
             </div>
           </div>
+        ) : (
+          <div className="p-4 sm:p-5 flex items-center justify-between gap-3 shrink-0 bg-white dark:bg-[#1a1b1e]">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-blue-500/10 text-google-blue dark:text-blue-400 flex items-center justify-center shrink-0">
+                <Sparkles size={20} />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h2 className="text-sm sm:text-base font-semibold text-slate-900 dark:text-zinc-100">
+                    {`Thiết lập: ${gameTitle}`}
+                  </h2>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-950/80 dark:text-blue-300">
+                    Bước {currentStep}/3
+                  </span>
+                </div>
+              </div>
+            </div>
 
-          <button
-            onClick={onClose}
-            className="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-500 hover:text-slate-800 dark:text-zinc-400 dark:hover:text-zinc-100 flex items-center justify-center transition-colors cursor-pointer"
-            title="Đóng cửa sổ"
-          >
-            <X size={16} />
-          </button>
-        </div>
+            <button
+              onClick={onClose}
+              className="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-500 hover:text-slate-800 dark:text-zinc-400 dark:hover:text-zinc-100 flex items-center justify-center transition-colors cursor-pointer"
+              title="Đóng cửa sổ"
+            >
+              <X size={16} />
+            </button>
+          </div>
+        )}
 
         {/* STEPPER PROGRESS BAR (TỪNG BƯỚC) */}
-        <div className="px-4 sm:px-6 py-3 bg-slate-50/80 dark:bg-[#18191a]/80 border-b border-slate-200/60 dark:border-white/5 shrink-0">
-          <div className="flex items-center justify-between gap-1 sm:gap-3 max-w-xl mx-auto">
+        <div
+          className={
+            isFullPage
+              ? 'py-1'
+              : 'px-4 sm:px-6 py-3 bg-slate-50/80 dark:bg-[#18191a]/80 shrink-0'
+          }
+        >
+          <div className="flex items-center justify-between gap-1 sm:gap-3 max-w-lg mx-auto">
             {/* Step 1 */}
             <button
               type="button"
               onClick={() => setCurrentStep(1)}
-              className={`flex items-center gap-2 px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
                 currentStep === 1
                   ? 'bg-google-blue text-white shadow-xs'
                   : currentStep > 1
@@ -249,18 +285,11 @@ export const GameConfigModal: React.FC<GameConfigModalProps> = ({
               <span className="sm:hidden">1. Đề thi</span>
             </button>
 
-            {/* Line 1 -> 2 */}
-            <div
-              className={`flex-1 h-0.5 rounded-full transition-colors ${
-                currentStep > 1 ? 'bg-emerald-500' : 'bg-slate-200 dark:bg-white/10'
-              }`}
-            />
-
             {/* Step 2 */}
             <button
               type="button"
               onClick={() => setCurrentStep(2)}
-              className={`flex items-center gap-2 px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
                 currentStep === 2
                   ? 'bg-google-blue text-white shadow-xs'
                   : currentStep > 2
@@ -283,18 +312,11 @@ export const GameConfigModal: React.FC<GameConfigModalProps> = ({
               <span className="sm:hidden">2. Câu hỏi</span>
             </button>
 
-            {/* Line 2 -> 3 */}
-            <div
-              className={`flex-1 h-0.5 rounded-full transition-colors ${
-                currentStep > 2 ? 'bg-emerald-500' : 'bg-slate-200 dark:bg-white/10'
-              }`}
-            />
-
             {/* Step 3 */}
             <button
               type="button"
               onClick={() => setCurrentStep(3)}
-              className={`flex items-center gap-2 px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
                 currentStep === 3
                   ? 'bg-google-blue text-white shadow-xs'
                   : 'text-slate-400 dark:text-zinc-500 hover:text-slate-700'
@@ -316,93 +338,77 @@ export const GameConfigModal: React.FC<GameConfigModalProps> = ({
         </div>
 
         {/* STEP CONTENT BODY */}
-        <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-5">
+        <div className={`space-y-4 ${isFullPage ? '' : 'flex-1 p-4 sm:p-6 overflow-y-auto'}`}>
           {/* ============================================================ */}
           {/* BƯỚC 1: CHỌN ĐỀ THI TỪ THƯ VIỆN                              */}
           {/* ============================================================ */}
           {currentStep === 1 && (
-            <div className="space-y-4 animate-fadeIn">
-              <div className="bg-blue-50/70 dark:bg-blue-950/20 p-4 rounded-2xl border border-blue-200/60 dark:border-blue-900/40">
-                <h3 className="text-sm font-bold text-slate-900 dark:text-zinc-100 flex items-center gap-2">
-                  <BookOpen size={17} className="text-google-blue" />
-                  <span>Bước 1: Chọn nguồn đề thi cho trò chơi</span>
-                </h3>
-                <p className="text-xs text-slate-600 dark:text-zinc-400 mt-1 leading-relaxed">
-                  Hệ thống hỗ trợ tự động tải câu hỏi từ các tài liệu bạn đã tạo trong kho đề thi, hoặc sử dụng ngay bộ câu hỏi mẫu để bắt đầu.
-                </p>
-              </div>
+            <div className="space-y-3 animate-fadeIn">
+              <label className="block text-xs font-bold text-slate-700 dark:text-zinc-300">
+                Chọn đề thi từ kho tài liệu: {availableExams.length} đề thi sẵn có
+              </label>
 
-              {/* Danh sách đề thi */}
-              <div className="space-y-2.5">
-                <label className="block text-xs font-bold text-slate-700 dark:text-zinc-300">
-                  Chọn đề thi từ kho tài liệu ({availableExams.length} đề thi sẵn có):
-                </label>
-
-                {availableExams.length > 0 ? (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[380px] overflow-y-auto pr-1">
-                    {availableExams.map((ex) => {
-                      const isSelected = selectedExamId === ex.id;
-                      return (
-                        <div
-                          key={ex.id}
-                          onClick={() => onSelectExam(ex.id)}
-                          className={`p-3.5 rounded-2xl border-2 transition-all cursor-pointer flex flex-col justify-between ${
-                            isSelected
-                              ? 'border-google-blue bg-blue-500/5 dark:bg-blue-950/40 shadow-xs'
-                              : 'border-slate-200/80 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20 bg-white dark:bg-[#18191a]'
-                          }`}
-                        >
-                          <div className="flex items-start gap-2.5">
-                            <div
-                              className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 mt-0.5 ${
-                                isSelected
-                                  ? 'bg-google-blue text-white'
-                                  : 'bg-slate-100 dark:bg-white/10 text-slate-500 dark:text-zinc-400'
-                              }`}
-                            >
-                              <FileText size={16} />
-                            </div>
-                            <div className="min-w-0 flex-1">
-                              <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-zinc-100 line-clamp-2 leading-snug">
-                                {ex.title}
-                              </h4>
-                              <div className="flex items-center gap-2 mt-1.5">
-                                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-950/80 dark:text-blue-300">
-                                  {ex.questions.length} câu hỏi
-                                </span>
-                              </div>
-                            </div>
+              {availableExams.length > 0 ? (
+                <div
+                  className={`grid grid-cols-1 sm:grid-cols-2 ${
+                    isFullPage ? 'lg:grid-cols-3' : ''
+                  } gap-3 ${isFullPage ? '' : 'max-h-[380px] overflow-y-auto pr-1'}`}
+                >
+                  {availableExams.map((ex) => {
+                    const isSelected = selectedExamId === ex.id;
+                    return (
+                      <div
+                        key={ex.id}
+                        onClick={() => onSelectExam(ex.id)}
+                        className={`p-3.5 rounded-2xl transition-all cursor-pointer flex items-center justify-between gap-3 ${
+                          isSelected
+                            ? 'bg-blue-500/10 dark:bg-blue-950/40 ring-2 ring-google-blue text-slate-900 dark:text-zinc-100'
+                            : 'bg-slate-50 hover:bg-slate-100/80 dark:bg-white/5 dark:hover:bg-white/10 text-slate-800 dark:text-zinc-200'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3 min-w-0 flex-1">
+                          <div
+                            className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
+                              isSelected
+                                ? 'bg-google-blue text-white'
+                                : 'bg-white dark:bg-white/10 text-slate-600 dark:text-zinc-300 shadow-2xs'
+                            }`}
+                          >
+                            <FileText size={17} />
                           </div>
-
-                          <div className="mt-3 pt-2.5 border-t border-slate-100 dark:border-white/5 flex items-center justify-between">
-                            <span className="text-[11px] text-slate-400">
-                              {isSelected ? 'Đang chọn' : 'Bấm để chọn'}
-                            </span>
-                            <div
-                              className={`w-5 h-5 rounded-full flex items-center justify-center ${
-                                isSelected
-                                  ? 'bg-google-blue text-white'
-                                  : 'border border-slate-300 dark:border-slate-600'
-                              }`}
-                            >
-                              {isSelected && <Check size={12} strokeWidth={3} />}
-                            </div>
+                          <div className="min-w-0 flex-1">
+                            <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-zinc-100 truncate">
+                              {ex.title}
+                            </h4>
+                            <p className="text-[11px] text-slate-500 dark:text-zinc-400 mt-0.5">
+                              {ex.questions.length} câu hỏi trắc nghiệm
+                            </p>
                           </div>
                         </div>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <div className="p-6 rounded-2xl bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200/70 dark:border-amber-900/40 text-center space-y-2">
-                    <p className="text-xs font-semibold text-amber-800 dark:text-amber-300">
-                      Chưa tìm thấy đề thi trắc nghiệm nào trong thư viện tài liệu.
-                    </p>
-                    <p className="text-xs text-slate-500 dark:text-zinc-400">
-                      Vui lòng tải lên hoặc tạo đề thi trắc nghiệm trong mục &quot;Kho tài liệu&quot; trước khi tổ chức trò chơi.
-                    </p>
-                  </div>
-                )}
-              </div>
+
+                        <div
+                          className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 ${
+                            isSelected
+                              ? 'bg-google-blue text-white'
+                              : 'border border-slate-300 dark:border-zinc-600'
+                          }`}
+                        >
+                          {isSelected && <Check size={12} strokeWidth={3} />}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="p-6 rounded-2xl bg-slate-50 dark:bg-white/5 text-center space-y-2">
+                  <p className="text-xs font-semibold text-amber-600 dark:text-amber-400">
+                    Chưa tìm thấy đề thi trắc nghiệm nào trong thư viện tài liệu.
+                  </p>
+                  <p className="text-xs text-slate-500 dark:text-zinc-400">
+                    Vui lòng tải lên hoặc tạo đề thi trắc nghiệm trong mục &quot;Kho tài liệu&quot; trước khi tổ chức trò chơi.
+                  </p>
+                </div>
+              )}
             </div>
           )}
 
@@ -410,41 +416,37 @@ export const GameConfigModal: React.FC<GameConfigModalProps> = ({
           {/* BƯỚC 2: CHỌN LỌC & TÙY CHỈNH CÂU HỎI                         */}
           {/* ============================================================ */}
           {currentStep === 2 && (
-            <div className="space-y-4 animate-fadeIn">
-              {/* Header Action Bar */}
-              <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-[#18191a] border border-slate-200/60 dark:border-white/5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="space-y-3 animate-fadeIn">
+              {/* Header Action Bar (Không dùng khung hộp nặng nề) */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 py-1">
                 <div>
                   <div className="flex items-center gap-2">
                     <ListChecks size={16} className="text-google-blue" />
                     <span className="text-xs sm:text-sm font-bold text-slate-900 dark:text-zinc-100">
-                      Bước 2: Chọn lọc câu hỏi xuất hiện trong game
+                      Danh sách câu hỏi
                     </span>
                   </div>
-                  <p className="text-[11px] text-slate-500 dark:text-zinc-400 mt-0.5">
-                    Đã chọn <b className="text-google-blue">{selectedCount}</b> trên tổng số{' '}
-                    <b>{questions.length}</b> câu hỏi
-                  </p>
                 </div>
 
                 <div className="flex items-center gap-2 flex-wrap">
                   <button
                     type="button"
                     onClick={() => handleSelectAll(true)}
-                    className="px-2.5 py-1.5 rounded-lg bg-white dark:bg-[#282a2c] text-slate-600 dark:text-zinc-300 text-xs font-semibold hover:bg-slate-100 cursor-pointer border border-slate-200/80 dark:border-white/5 transition-colors"
+                    className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-600 dark:text-zinc-300 text-xs font-semibold cursor-pointer transition-colors"
                   >
                     Chọn tất cả
                   </button>
                   <button
                     type="button"
                     onClick={() => handleSelectAll(false)}
-                    className="px-2.5 py-1.5 rounded-lg bg-white dark:bg-[#282a2c] text-slate-600 dark:text-zinc-300 text-xs font-semibold hover:bg-slate-100 cursor-pointer border border-slate-200/80 dark:border-white/5 transition-colors"
+                    className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-600 dark:text-zinc-300 text-xs font-semibold cursor-pointer transition-colors"
                   >
                     Bỏ chọn hết
                   </button>
                   <button
                     type="button"
                     onClick={handleOpenAddQuestion}
-                    className="px-3 py-1.5 rounded-lg bg-google-blue text-white text-xs font-bold hover:bg-blue-600 flex items-center gap-1 cursor-pointer shadow-xs transition-colors"
+                    className="px-3.5 py-1.5 rounded-xl bg-google-blue text-white text-xs font-bold hover:bg-blue-600 flex items-center gap-1.5 cursor-pointer shadow-xs transition-colors"
                   >
                     <Plus size={14} /> <span>Thêm câu hỏi</span>
                   </button>
@@ -453,7 +455,7 @@ export const GameConfigModal: React.FC<GameConfigModalProps> = ({
 
               {/* Form thêm câu hỏi mới inline */}
               {isAddingNew && (
-                <div className="p-4 rounded-2xl bg-blue-50/70 dark:bg-blue-950/20 border-2 border-google-blue/40 space-y-3 animate-fadeIn">
+                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-white/5 space-y-3 animate-fadeIn">
                   <div className="flex items-center justify-between">
                     <h4 className="text-xs font-bold text-google-blue dark:text-blue-400">
                       Tạo câu hỏi mới cho trò chơi
@@ -471,7 +473,7 @@ export const GameConfigModal: React.FC<GameConfigModalProps> = ({
                     value={newQuestionText}
                     onChange={(e) => setNewQuestionText(e.target.value)}
                     placeholder="Nhập nội dung câu hỏi..."
-                    className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-white/10 bg-white dark:bg-[#18191a] text-xs text-slate-800 dark:text-zinc-100 focus:outline-hidden"
+                    className="w-full px-3 py-2 rounded-xl bg-white dark:bg-[#18191a] text-xs text-slate-800 dark:text-zinc-100 focus:outline-hidden"
                   />
                   <div className="space-y-2">
                     <p className="text-[11px] font-medium text-slate-500">
@@ -481,7 +483,7 @@ export const GameConfigModal: React.FC<GameConfigModalProps> = ({
                       {newOptions.map((opt, i) => (
                         <div
                           key={i}
-                          className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-white dark:bg-[#18191a] border border-slate-200/80 dark:border-white/10"
+                          className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-white dark:bg-[#18191a]"
                         >
                           <input
                             type="radio"
@@ -536,7 +538,7 @@ export const GameConfigModal: React.FC<GameConfigModalProps> = ({
 
               {/* Form sửa câu hỏi inline */}
               {editingQuestion && (
-                <div className="p-4 rounded-2xl bg-amber-50/70 dark:bg-amber-950/20 border-2 border-amber-500/40 space-y-3 animate-fadeIn">
+                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-white/5 space-y-3 animate-fadeIn">
                   <div className="flex items-center justify-between">
                     <h4 className="text-xs font-bold text-amber-700 dark:text-amber-400">
                       Chỉnh sửa câu hỏi
@@ -555,7 +557,7 @@ export const GameConfigModal: React.FC<GameConfigModalProps> = ({
                     onChange={(e) =>
                       setEditingQuestion({ ...editingQuestion, content: e.target.value })
                     }
-                    className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-white/10 bg-white dark:bg-[#18191a] text-xs text-slate-800 dark:text-zinc-100 focus:outline-hidden"
+                    className="w-full px-3 py-2 rounded-xl bg-white dark:bg-[#18191a] text-xs text-slate-800 dark:text-zinc-100 focus:outline-hidden"
                   />
                   <div className="space-y-2">
                     <p className="text-[11px] font-medium text-slate-500">
@@ -565,7 +567,7 @@ export const GameConfigModal: React.FC<GameConfigModalProps> = ({
                       {editingQuestion.options.map((opt, i) => (
                         <div
                           key={i}
-                          className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-white dark:bg-[#18191a] border border-slate-200/80 dark:border-white/10"
+                          className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-white dark:bg-[#18191a]"
                         >
                           <input
                             type="radio"
@@ -623,7 +625,7 @@ export const GameConfigModal: React.FC<GameConfigModalProps> = ({
               )}
 
               {/* Danh sách câu hỏi có checkbox */}
-              <div className="space-y-2.5 max-h-[420px] overflow-y-auto pr-1">
+              <div className={`space-y-2 ${isFullPage ? '' : 'max-h-[420px] overflow-y-auto pr-1'}`}>
                 {questions.length === 0 ? (
                   <div className="py-12 text-center text-xs text-slate-400">
                     Chưa có câu hỏi nào. Vui lòng bấm &quot;Thêm câu hỏi&quot; hoặc chọn đề thi khác ở Bước 1.
@@ -634,10 +636,10 @@ export const GameConfigModal: React.FC<GameConfigModalProps> = ({
                     return (
                       <div
                         key={q.id || idx}
-                        className={`p-3.5 rounded-2xl border transition-all flex items-start gap-3 ${
+                        className={`p-3 rounded-xl transition-all flex items-start gap-3 ${
                           isSelected
-                            ? 'bg-white dark:bg-[#18191a] border-slate-200/80 dark:border-white/10'
-                            : 'bg-slate-100/50 dark:bg-white/5 border-transparent opacity-60'
+                            ? 'bg-slate-50/80 hover:bg-slate-100/70 dark:bg-white/5 dark:hover:bg-white/[0.08]'
+                            : 'bg-slate-50/30 dark:bg-white/[0.02] opacity-50'
                         }`}
                       >
                         <input
@@ -663,7 +665,7 @@ export const GameConfigModal: React.FC<GameConfigModalProps> = ({
                                 className={`text-[11px] px-2 py-0.5 rounded-md font-medium ${
                                   opt.isCorrect
                                     ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 font-semibold'
-                                    : 'bg-slate-100 text-slate-600 dark:bg-white/5 dark:text-zinc-400'
+                                    : 'bg-white dark:bg-white/10 text-slate-600 dark:text-zinc-400'
                                 }`}
                               >
                                 {String.fromCharCode(65 + oIdx)}. {opt.content}
@@ -676,7 +678,7 @@ export const GameConfigModal: React.FC<GameConfigModalProps> = ({
                           <button
                             type="button"
                             onClick={() => setEditingQuestion(q)}
-                            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-zinc-200 hover:bg-slate-100 dark:hover:bg-white/10 transition-colors cursor-pointer"
+                            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-zinc-200 hover:bg-slate-200/60 dark:hover:bg-white/10 transition-colors cursor-pointer"
                             title="Sửa câu hỏi"
                           >
                             <Edit2 size={13} />
@@ -702,17 +704,7 @@ export const GameConfigModal: React.FC<GameConfigModalProps> = ({
           {/* BƯỚC 3: CẤU HÌNH LUẬT CHƠI & ĐỘI THI                         */}
           {/* ============================================================ */}
           {currentStep === 3 && (
-            <div className="space-y-4 animate-fadeIn">
-              <div className="bg-purple-50/70 dark:bg-purple-950/20 p-4 rounded-2xl border border-purple-200/60 dark:border-purple-900/40">
-                <h3 className="text-sm font-bold text-slate-900 dark:text-zinc-100 flex items-center gap-2">
-                  <Settings size={17} className="text-purple-600 dark:text-purple-400" />
-                  <span>Bước 3: Thiết lập luật chơi & thông số giảng dạy</span>
-                </h3>
-                <p className="text-xs text-slate-600 dark:text-zinc-400 mt-1 leading-relaxed">
-                  Tùy chỉnh thời gian trả lời, điều kiện giành chiến thắng và phân chia đội ngũ thi đấu trên lớp.
-                </p>
-              </div>
-
+            <div className="space-y-5 animate-fadeIn">
               {/* Tiêu đề trò chơi */}
               <div>
                 <label className="block text-xs font-bold text-slate-700 dark:text-zinc-300 mb-1.5">
@@ -723,56 +715,22 @@ export const GameConfigModal: React.FC<GameConfigModalProps> = ({
                   value={config.title}
                   onChange={(e) => updateConfig('title', e.target.value)}
                   placeholder={`Ví dụ: Trò chơi ${gameTitle} - Ôn tập kiến thức`}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-white/10 bg-white dark:bg-[#18191a] text-xs sm:text-sm text-slate-800 dark:text-zinc-100 focus:outline-hidden focus:ring-2 focus:ring-google-blue/30 focus:border-google-blue transition-all"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-white/5 border-0 text-xs sm:text-sm text-slate-800 dark:text-zinc-100 focus:outline-hidden focus:ring-2 focus:ring-google-blue/30 transition-all placeholder:text-slate-400"
                 />
-              </div>
-
-              {/* Tên 2 Đội thi đấu */}
-              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-[#18191a] border border-slate-200/60 dark:border-white/5 space-y-3">
-                <div className="flex items-center gap-2 text-xs font-bold text-slate-700 dark:text-zinc-300">
-                  <Users size={15} className="text-blue-500" />
-                  <span>Tên các đội thi đấu trên lớp</span>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-[11px] font-medium text-slate-500 dark:text-zinc-400 mb-1">
-                      Đội 1 (Xanh / Nhóm 1)
-                    </label>
-                    <input
-                      type="text"
-                      value={config.team1Name}
-                      onChange={(e) => updateConfig('team1Name', e.target.value)}
-                      placeholder="Đội Xanh"
-                      className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-white/10 bg-white dark:bg-[#282a2c] text-xs font-medium text-slate-800 dark:text-zinc-100 focus:outline-hidden focus:ring-2 focus:ring-blue-500/30"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[11px] font-medium text-slate-500 dark:text-zinc-400 mb-1">
-                      Đội 2 (Đỏ / Nhóm 2)
-                    </label>
-                    <input
-                      type="text"
-                      value={config.team2Name}
-                      onChange={(e) => updateConfig('team2Name', e.target.value)}
-                      placeholder="Đội Đỏ"
-                      className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-white/10 bg-white dark:bg-[#282a2c] text-xs font-medium text-slate-800 dark:text-zinc-100 focus:outline-hidden focus:ring-2 focus:ring-red-500/30"
-                    />
-                  </div>
-                </div>
               </div>
 
               {/* Thời gian, điểm thắng, đóng băng */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 {/* Thời gian thi đấu */}
-                <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-[#18191a] border border-slate-200/60 dark:border-white/5">
-                  <div className="flex items-center gap-1.5 text-xs font-bold text-slate-700 dark:text-zinc-300 mb-2">
+                <div>
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-slate-700 dark:text-zinc-300 mb-1.5">
                     <Clock size={14} className="text-amber-500" />
                     <span>Thời gian thi đấu</span>
                   </div>
                   <select
                     value={config.timeLimit}
                     onChange={(e) => updateConfig('timeLimit', Number(e.target.value))}
-                    className="w-full px-2.5 py-2 rounded-lg border border-slate-300 dark:border-white/10 bg-white dark:bg-[#282a2c] text-xs text-slate-800 dark:text-zinc-200 cursor-pointer"
+                    className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-white/5 border-0 text-xs text-slate-800 dark:text-zinc-200 cursor-pointer focus:outline-hidden focus:ring-2 focus:ring-google-blue/30"
                   >
                     <option value={30}>30 giây (Rất nhanh)</option>
                     <option value={60}>60 giây (Tiêu chuẩn)</option>
@@ -783,15 +741,15 @@ export const GameConfigModal: React.FC<GameConfigModalProps> = ({
                 </div>
 
                 {/* Điểm chênh lệch thắng */}
-                <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-[#18191a] border border-slate-200/60 dark:border-white/5">
-                  <div className="flex items-center gap-1.5 text-xs font-bold text-slate-700 dark:text-zinc-300 mb-2">
+                <div>
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-slate-700 dark:text-zinc-300 mb-1.5">
                     <Sparkles size={14} className="text-emerald-500" />
                     <span>Mốc điểm thắng</span>
                   </div>
                   <select
                     value={config.winDifference}
                     onChange={(e) => updateConfig('winDifference', Number(e.target.value))}
-                    className="w-full px-2.5 py-2 rounded-lg border border-slate-300 dark:border-white/10 bg-white dark:bg-[#282a2c] text-xs text-slate-800 dark:text-zinc-200 cursor-pointer"
+                    className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-white/5 border-0 text-xs text-slate-800 dark:text-zinc-200 cursor-pointer focus:outline-hidden focus:ring-2 focus:ring-google-blue/30"
                   >
                     <option value={3}>Chênh lệch 3 câu</option>
                     <option value={5}>Chênh lệch 5 câu</option>
@@ -801,15 +759,15 @@ export const GameConfigModal: React.FC<GameConfigModalProps> = ({
                 </div>
 
                 {/* Thời gian đóng băng khi sai */}
-                <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-[#18191a] border border-slate-200/60 dark:border-white/5">
-                  <div className="flex items-center gap-1.5 text-xs font-bold text-slate-700 dark:text-zinc-300 mb-2">
+                <div>
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-slate-700 dark:text-zinc-300 mb-1.5">
                     <ShieldAlert size={14} className="text-rose-500" />
                     <span>Đóng băng khi sai</span>
                   </div>
                   <select
                     value={config.freezeTime}
                     onChange={(e) => updateConfig('freezeTime', Number(e.target.value))}
-                    className="w-full px-2.5 py-2 rounded-lg border border-slate-300 dark:border-white/10 bg-white dark:bg-[#282a2c] text-xs text-slate-800 dark:text-zinc-200 cursor-pointer"
+                    className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-white/5 border-0 text-xs text-slate-800 dark:text-zinc-200 cursor-pointer focus:outline-hidden focus:ring-2 focus:ring-google-blue/30"
                   >
                     <option value={0}>Không đóng băng (0s)</option>
                     <option value={2}>2 giây</option>
@@ -820,17 +778,17 @@ export const GameConfigModal: React.FC<GameConfigModalProps> = ({
               </div>
 
               {/* Phương thức điều khiển */}
-              <div className="p-4 rounded-xl bg-slate-50 dark:bg-[#18191a] border border-slate-200/60 dark:border-white/5 space-y-3">
+              <div className="space-y-2">
                 <label className="block text-xs font-bold text-slate-700 dark:text-zinc-300">
                   Phương thức điều khiển
                 </label>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div
                     onClick={() => updateConfig('controlMode', 'touch')}
-                    className={`p-3 rounded-xl border-2 transition-all cursor-pointer flex items-start gap-3 ${
+                    className={`p-3.5 rounded-2xl transition-all cursor-pointer flex items-start gap-3 ${
                       config.controlMode === 'touch'
-                        ? 'border-google-blue bg-blue-500/10 dark:bg-blue-950/40 text-google-blue dark:text-blue-400'
-                        : 'border-transparent bg-white dark:bg-[#282a2c] text-slate-600 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-[#323437]'
+                        ? 'bg-blue-500/10 dark:bg-blue-950/40 ring-2 ring-google-blue text-google-blue dark:text-blue-400'
+                        : 'bg-slate-50 hover:bg-slate-100/80 dark:bg-white/5 dark:hover:bg-white/10 text-slate-600 dark:text-zinc-300'
                     }`}
                   >
                     <div className="w-8 h-8 rounded-lg bg-blue-500/15 flex items-center justify-center shrink-0">
@@ -846,10 +804,10 @@ export const GameConfigModal: React.FC<GameConfigModalProps> = ({
 
                   <div
                     onClick={() => updateConfig('controlMode', 'keyboard')}
-                    className={`p-3 rounded-xl border-2 transition-all cursor-pointer flex items-start gap-3 ${
+                    className={`p-3.5 rounded-2xl transition-all cursor-pointer flex items-start gap-3 ${
                       config.controlMode === 'keyboard'
-                        ? 'border-google-blue bg-blue-500/10 dark:bg-blue-950/40 text-google-blue dark:text-blue-400'
-                        : 'border-transparent bg-white dark:bg-[#282a2c] text-slate-600 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-[#323437]'
+                        ? 'bg-blue-500/10 dark:bg-blue-950/40 ring-2 ring-google-blue text-google-blue dark:text-blue-400'
+                        : 'bg-slate-50 hover:bg-slate-100/80 dark:bg-white/5 dark:hover:bg-white/10 text-slate-600 dark:text-zinc-300'
                     }`}
                   >
                     <div className="w-8 h-8 rounded-lg bg-purple-500/15 flex items-center justify-center shrink-0">
@@ -865,9 +823,9 @@ export const GameConfigModal: React.FC<GameConfigModalProps> = ({
                 </div>
               </div>
 
-              {/* Tùy chọn đảo câu hỏi & Cỡ chữ */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-[#18191a] border border-slate-200/60 dark:border-white/5 flex items-center justify-between">
+              {/* Tùy chọn đảo câu hỏi */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="p-3 rounded-xl bg-slate-50 dark:bg-white/5 flex items-center justify-between">
                   <div>
                     <div className="text-xs font-bold text-slate-700 dark:text-zinc-300">
                       Đảo ngẫu nhiên câu hỏi
@@ -882,7 +840,7 @@ export const GameConfigModal: React.FC<GameConfigModalProps> = ({
                   />
                 </div>
 
-                <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-[#18191a] border border-slate-200/60 dark:border-white/5 flex items-center justify-between">
+                <div className="p-3 rounded-xl bg-slate-50 dark:bg-white/5 flex items-center justify-between">
                   <div>
                     <div className="text-xs font-bold text-slate-700 dark:text-zinc-300">
                       Đảo vị trí đáp án
@@ -896,56 +854,26 @@ export const GameConfigModal: React.FC<GameConfigModalProps> = ({
                     className="w-4 h-4 rounded-md accent-blue-600 cursor-pointer"
                   />
                 </div>
-
-                <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-[#18191a] border border-slate-200/60 dark:border-white/5">
-                  <div className="flex items-center gap-1.5 text-xs font-bold text-slate-700 dark:text-zinc-300 mb-1.5">
-                    <Type size={14} className="text-indigo-500" />
-                    <span>Cỡ chữ màn chiếu</span>
-                  </div>
-                  <select
-                    value={config.fontSize}
-                    onChange={(e) =>
-                      updateConfig('fontSize', e.target.value as 'normal' | 'large' | 'xlarge')
-                    }
-                    className="w-full px-2 py-1.5 rounded-lg border border-slate-300 dark:border-white/10 bg-white dark:bg-[#282a2c] text-xs text-slate-800 dark:text-zinc-200 cursor-pointer"
-                  >
-                    <option value="normal">Chuẩn (Màn hình máy tính)</option>
-                    <option value="large">Lớn (Màn chiếu TV / Lớp học)</option>
-                    <option value="xlarge">Rất lớn (Hội trường xa)</option>
-                  </select>
-                </div>
               </div>
             </div>
           )}
         </div>
 
-        {/* MODAL FOOTER WITH STEP-BY-STEP ACTIONS */}
-        <div className="p-4 sm:p-5 border-t border-slate-200/80 dark:border-white/10 flex items-center justify-between gap-3 shrink-0 bg-slate-50/80 dark:bg-[#18191a]/80">
-          <div className="text-xs text-slate-500 dark:text-zinc-400">
-            {currentStep === 1 && (
-              <span>
-                Đang nạp <b>{questions.length}</b> câu hỏi từ nguồn được chọn
-              </span>
-            )}
-            {currentStep === 2 && (
-              <span>
-                Đã chọn <b>{selectedCount}</b>/{questions.length} câu hỏi
-              </span>
-            )}
-            {currentStep === 3 && (
-              <span>
-                Sẵn sàng thi đấu với <b>{selectedCount}</b> câu hỏi
-              </span>
-            )}
-          </div>
-
+        {/* FOOTER ACTIONS */}
+        <div
+          className={
+            isFullPage
+              ? 'pt-4 flex items-center justify-end gap-2'
+              : 'p-4 sm:p-5 flex items-center justify-end gap-2 shrink-0 bg-slate-50/80 dark:bg-[#18191a]/80'
+          }
+        >
           <div className="flex items-center gap-2">
             {/* Nút Quay lại */}
             {currentStep > 1 && (
               <button
                 type="button"
                 onClick={() => setCurrentStep((prev) => (prev > 1 ? ((prev - 1) as 1 | 2 | 3) : 1))}
-                className="px-3.5 py-2 rounded-xl bg-white dark:bg-[#282a2c] hover:bg-slate-100 dark:hover:bg-white/10 text-slate-700 dark:text-zinc-300 text-xs font-semibold transition-colors cursor-pointer border border-slate-200/80 dark:border-white/10 flex items-center gap-1.5"
+                className="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-700 dark:text-zinc-300 text-xs font-semibold transition-colors cursor-pointer flex items-center gap-1.5"
               >
                 <ArrowLeft size={14} />
                 <span>Quay lại</span>
@@ -959,7 +887,7 @@ export const GameConfigModal: React.FC<GameConfigModalProps> = ({
                 onClick={() => setCurrentStep(2)}
                 className="px-4 py-2 rounded-xl bg-google-blue hover:bg-blue-600 text-white text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-xs active:scale-95"
               >
-                <span>Tiếp tục: Chọn câu hỏi</span>
+                <span>Tiếp tục</span>
                 <ArrowRight size={14} />
               </button>
             )}
@@ -972,42 +900,29 @@ export const GameConfigModal: React.FC<GameConfigModalProps> = ({
                 onClick={() => setCurrentStep(3)}
                 className="px-4 py-2 rounded-xl bg-google-blue hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-xs active:scale-95"
               >
-                <span>Tiếp tục: Cấu hình luật</span>
+                <span>Tiếp tục</span>
                 <ArrowRight size={14} />
               </button>
             )}
 
-            {/* Bước 3: Lưu bài hoặc Bắt đầu ngay */}
+            {/* Bước 3: Lưu bài chơi */}
             {currentStep === 3 && (
-              <>
-                {onSaveGame && (
-                  <button
-                    type="button"
-                    disabled={selectedCount === 0}
-                    onClick={() => {
-                      onSaveGame();
-                      onClose();
-                    }}
-                    className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-xs active:scale-95"
-                  >
-                    <Check size={14} />
-                    <span>Lưu bài chơi</span>
-                  </button>
-                )}
-                <button
-                  type="button"
-                  disabled={selectedCount === 0}
-                  onClick={() => {
-                    if (onSaveGame) onSaveGame();
-                    onClose();
+              <button
+                type="button"
+                disabled={selectedCount === 0}
+                onClick={() => {
+                  if (onSaveGame) {
+                    onSaveGame();
+                  } else {
                     onStartGame();
-                  }}
-                  className="px-4 py-2 rounded-xl bg-google-blue hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-sm active:scale-95"
-                >
-                  <Play size={14} className="fill-white" />
-                  <span>Bắt đầu chơi ngay</span>
-                </button>
-              </>
+                  }
+                  onClose();
+                }}
+                className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-xs active:scale-95"
+              >
+                <Check size={14} />
+                <span>Lưu bài chơi</span>
+              </button>
             )}
           </div>
         </div>
@@ -1015,3 +930,4 @@ export const GameConfigModal: React.FC<GameConfigModalProps> = ({
     </div>
   );
 };
+

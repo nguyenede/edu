@@ -275,7 +275,7 @@ export const BoatRaceGame: React.FC<BoatRaceGameProps> = ({
               Mỗi câu đúng +{stepPerCorrect}%
             </span>
             <span className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400">
-              <span>Vạch đích 🏁</span>
+              <span>Vạch đích</span>
             </span>
           </div>
 
@@ -341,22 +341,6 @@ export const BoatRaceGame: React.FC<BoatRaceGameProps> = ({
               </div>
               <div className="absolute right-0 top-0 bottom-0 w-4 sm:w-5 bg-[repeating-linear-gradient(45deg,#f59e0b,#f59e0b_6px,#fbbf24_6px,#fbbf24_12px)]" />
             </div>
-          </div>
-
-          {/* Bottom Status Tips */}
-          <div className="flex items-center justify-between text-xs sm:text-sm text-slate-500 dark:text-slate-400 pt-2">
-            <span className="flex items-center gap-1.5">
-              <span>Đang giải:</span>
-              <b className="px-2.5 py-0.5 rounded-lg bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 font-bold">
-                Câu {currentIndex + 1}
-              </b>
-            </span>
-            <span className="flex items-center gap-1.5">
-              <span>Dẫn đầu:</span>
-              <b className="font-extrabold text-slate-800 dark:text-white">
-                {team1Progress > team2Progress ? team1Name : team2Progress > team1Progress ? team2Name : 'Hòa nhau'}
-              </b>
-            </span>
           </div>
         </div>
 

@@ -186,9 +186,9 @@ export default function DashboardPage() {
                 </div>
                 <div>
                   <h3 className="font-bold text-sm text-slate-900 dark:text-slate-100">
-                    Kho tài liệu & Đề thi
+                    Kho tài liệu và Đề thi
                   </h3>
-                  <p className="text-xs text-slate-500">Tạo đề thi & Quản lý file</p>
+                  <p className="text-xs text-slate-500">Tạo đề thi và Quản lý file</p>
                 </div>
               </div>
 

@@ -3,7 +3,6 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import {
   ChevronRight,
-  ChevronDown,
   Folder,
   FileText,
 } from 'lucide-react';
@@ -175,7 +174,7 @@ export function BreadcrumbChevron({
 
   return (
     <div ref={containerRef} className={`relative inline-flex items-center shrink-0 ${className}`}>
-      {/* Windows 11 Style Chevron Dropdown Trigger */}
+      {/* Google Style Chevron Dropdown Trigger */}
       <button
         type="button"
         onClick={(e) => {

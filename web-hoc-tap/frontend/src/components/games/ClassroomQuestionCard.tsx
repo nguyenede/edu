@@ -79,8 +79,31 @@ export const ClassroomQuestionCard: React.FC<ClassroomQuestionCardProps> = ({
       ? 'text-base sm:text-lg md:text-xl'
       : 'text-sm sm:text-base md:text-lg';
 
+  // Đảm bảo không bao giờ có lỗi hiển thị 2 câu cùng xanh (chỉ duy nhất 1 đáp án đúng)
+  const sanitizedOptions = React.useMemo(() => {
+    const raw = question.options || [];
+    const correctIndices: number[] = [];
+    raw.forEach((o, i) => {
+      if (o?.isCorrect) correctIndices.push(i);
+    });
+
+    if (correctIndices.length <= 1) return raw;
+
+    // Nếu dữ liệu bị lỗi gán 2 đáp án cùng đúng:
+    // Ưu tiên đáp án mà học sinh vừa chọn (nếu nó nằm trong danh sách đúng) hoặc giữ lại đáp án đúng đầu tiên
+    const singleCorrectIdx =
+      answeredOptionIdx !== null && correctIndices.includes(answeredOptionIdx)
+        ? answeredOptionIdx
+        : correctIndices[0];
+
+    return raw.map((o, i) => ({
+      ...o,
+      isCorrect: i === singleCorrectIdx,
+    }));
+  }, [question.options, answeredOptionIdx]);
+
   const answeredCorrect =
-    answeredOptionIdx !== null && Boolean(question.options[answeredOptionIdx]?.isCorrect);
+    answeredOptionIdx !== null && Boolean(sanitizedOptions[answeredOptionIdx]?.isCorrect);
 
   return (
     <div className="w-full bg-white dark:bg-[#1a1b1e] rounded-3xl p-6 sm:p-8 lg:p-10 flex flex-col justify-between space-y-6 sm:space-y-8 transition-all h-full flex-1">
@@ -131,12 +154,12 @@ export const ClassroomQuestionCard: React.FC<ClassroomQuestionCardProps> = ({
 
       {/* 3. OPTIONS GRID (A, B, C, D) - KHÔNG KHUNG VIỀN CỒNG KỀNH */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5 pt-1 flex-1">
-        {(question.options || []).length === 0 ? (
+        {(sanitizedOptions || []).length === 0 ? (
           <div className="col-span-2 p-8 text-center text-sm text-slate-500 bg-slate-50 dark:bg-white/5 rounded-2xl">
             Không tìm thấy phương án trả lời.
           </div>
         ) : (
-          (question.options || []).map((opt, idx) => {
+          (sanitizedOptions || []).map((opt, idx) => {
             const label = OPTION_LABELS[idx] || String(idx + 1);
             const isCorrect = Boolean(opt?.isCorrect);
             const isSelected = answeredOptionIdx === idx;
@@ -236,7 +259,7 @@ export const ClassroomQuestionCard: React.FC<ClassroomQuestionCardProps> = ({
             onClick={onNextQuestion}
             className="flex items-center gap-2 px-6 sm:px-7 py-2.5 rounded-xl bg-google-blue hover:bg-blue-600 text-white text-sm sm:text-base font-bold shadow-xs transition-all cursor-pointer active:scale-95"
           >
-            <span>{isLastQuestion ? 'Tổng kết 🏆' : 'Câu tiếp theo'}</span>
+            <span>{isLastQuestion ? 'Tổng kết' : 'Câu tiếp theo'}</span>
             <ArrowRight size={16} />
           </button>
         </div>

@@ -78,11 +78,11 @@ export default function JoinClassPage() {
             )}
 
             <Input
-              label="Mã lớp 6 ký tự"
-              placeholder="MÃ 6 KÝ TỰ"
+              label="Mã lớp (6 chữ số)"
+              placeholder="Ví dụ: 123456"
               maxLength={6}
               value={joinCode}
-              onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
+              onChange={(e) => setJoinCode(e.target.value.replace(/\D/g, ''))}
               className="text-center font-mono font-bold tracking-widest text-lg"
               required
             />

@@ -133,7 +133,7 @@ export default function DashboardPage() {
                 onClick={() => router.push('/app/documents')}
                 className="gap-1.5 flex-1 sm:flex-none"
               >
-                <FileText size={15} /> Kho tài liệu & Đề thi
+                <FileText size={15} /> Kho tài liệu và Đề thi
               </Button>
               <Button
                 size="sm"
@@ -297,7 +297,7 @@ export default function DashboardPage() {
               <div className="space-y-0.5">
                 <h3 className="font-bold text-slate-900 dark:text-slate-100 text-sm flex items-center gap-2 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
                   <FileText size={16} className="text-emerald-600 dark:text-emerald-400" />
-                  Kho tài liệu & Đề thi SI
+                  Kho tài liệu và Đề thi SI
                 </h3>
                 <p className="text-xs text-slate-500">
                   Tạo đề thi tự động với SI chuẩn Bộ GD&ĐT, lưu trữ và xuất bản tài liệu

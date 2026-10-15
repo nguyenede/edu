@@ -58,7 +58,7 @@ export const ClassroomVictoryModal: React.FC<ClassroomVictoryModalProps> = ({
 
         {/* Victory Title */}
         <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white mb-1.5 tracking-tight">
-          {isTie ? '🎉 Cả Lớp Đều Xuất Sắc!' : `🎉 Chúc Mừng ${topTeam?.name || 'Đội Thắng'}!`}
+          {isTie ? 'Cả Lớp Đều Xuất Sắc!' : `Chúc Mừng ${topTeam?.name || 'Đội Thắng'}!`}
         </h2>
         <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mb-6 font-medium max-w-sm">
           {isTie

@@ -755,12 +755,12 @@ function DocumentDynamicViewPageContent() {
     >
       {/* 1. SCREEN VIEW (Google Drive Web UI - Hidden when Printing) */}
       <div className="print-screen-view max-w-4xl mx-auto space-y-6 pb-20 pt-2 print:hidden">
-        {/* Document Header Card */}
-        <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 md:p-8 border border-slate-200/80 dark:border-slate-800 shadow-xs space-y-4">
+        {/* Document Header (Frameless & Open) */}
+        <div className="space-y-4 pt-1 pb-2 px-1">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="space-y-1.5 flex-1 min-w-0">
               <div className="flex items-center gap-2">
-                <div className="w-6 h-6 rounded bg-[#185abd] text-white flex items-center justify-center font-normal text-[11px] shrink-0 shadow-2xs">
+                <div className="w-6 h-6 rounded-lg bg-[#185abd] text-white flex items-center justify-center font-normal text-[11px] shrink-0 shadow-2xs">
                   W
                 </div>
                 <span className="text-xs font-semibold text-google-blue uppercase tracking-wider">
@@ -784,10 +784,10 @@ function DocumentDynamicViewPageContent() {
               <button
                 type="button"
                 onClick={() => setShowAnswers(!showAnswers)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-medium border transition-colors cursor-pointer ${
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-colors cursor-pointer ${
                   showAnswers
-                    ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-300 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300'
-                    : 'bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400'
+                    ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300'
+                    : 'bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300'
                 }`}
               >
                 {showAnswers ? '✓ Đang hiện đáp án đúng' : 'Ẩn đáp án đúng'}
@@ -795,32 +795,26 @@ function DocumentDynamicViewPageContent() {
             </div>
           </div>
 
-          {/* Quick Metrics Bar */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 pt-3 border-t border-slate-100 dark:border-slate-800/80">
-            <div className="flex items-center gap-2.5 p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/50">
-              <Layers size={18} className="text-google-blue shrink-0" />
-              <div>
-                <div className="text-[11px] text-slate-400">Tổng số câu</div>
-                <div className="text-sm font-bold text-slate-800 dark:text-slate-200">{questions.length} câu</div>
-              </div>
+          {/* Quick Metrics (Frameless & Clean) */}
+          <div className="flex items-center gap-6 sm:gap-8 flex-wrap pt-1 text-xs">
+            <div className="flex items-center gap-2">
+              <Layers size={17} className="text-google-blue shrink-0" />
+              <span className="text-slate-500 dark:text-slate-400">Tổng số câu:</span>
+              <span className="font-bold text-slate-800 dark:text-slate-200">{questions.length} câu</span>
             </div>
 
-            <div className="flex items-center gap-2.5 p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/50">
-              <Award size={18} className="text-google-yellow shrink-0" />
-              <div>
-                <div className="text-[11px] text-slate-400">Tổng điểm</div>
-                <div className="text-sm font-bold text-slate-800 dark:text-slate-200">{totalPoints} điểm</div>
-              </div>
+            <div className="flex items-center gap-2">
+              <Award size={17} className="text-google-yellow shrink-0" />
+              <span className="text-slate-500 dark:text-slate-400">Tổng điểm:</span>
+              <span className="font-bold text-slate-800 dark:text-slate-200">{totalPoints} điểm</span>
             </div>
 
-            <div className="flex items-center gap-2.5 p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/50 col-span-2 sm:col-span-1">
-              <Clock size={18} className="text-emerald-500 shrink-0" />
-              <div>
-                <div className="text-[11px] text-slate-400">Ngày tạo</div>
-                <div className="text-sm font-bold text-slate-800 dark:text-slate-200">
-                  {fileItem.createdAt ? new Date(fileItem.createdAt).toLocaleDateString('vi-VN') : 'Mới tạo'}
-                </div>
-              </div>
+            <div className="flex items-center gap-2">
+              <Clock size={17} className="text-emerald-500 shrink-0" />
+              <span className="text-slate-500 dark:text-slate-400">Ngày tạo:</span>
+              <span className="font-bold text-slate-800 dark:text-slate-200">
+                {fileItem.createdAt ? new Date(fileItem.createdAt).toLocaleDateString('vi-VN') : 'Mới tạo'}
+              </span>
             </div>
           </div>
         </div>

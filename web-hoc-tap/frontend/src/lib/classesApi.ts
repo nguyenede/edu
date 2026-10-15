@@ -81,7 +81,27 @@ export function getLocalClasses(): ClassItem[] {
               localStorage.setItem(newAssignKey, assignVal);
             }
           }
-          return { ...c, id: cleanId };
+          let code = c.code;
+          if (!code || /\D/.test(code)) {
+            let hash = 0;
+            const str = (code || c.id || 'class').toString();
+            for (let i = 0; i < str.length; i++) {
+              hash = (hash * 31 + str.charCodeAt(i)) % 900000;
+            }
+            code = (100000 + Math.abs(hash)).toString();
+            hasCleaned = true;
+          }
+          return { ...c, id: cleanId, code };
+        }
+        if (!c.code || /\D/.test(c.code)) {
+          let hash = 0;
+          const str = (c.code || c.id || 'class').toString();
+          for (let i = 0; i < str.length; i++) {
+            hash = (hash * 31 + str.charCodeAt(i)) % 900000;
+          }
+          const code = (100000 + Math.abs(hash)).toString();
+          hasCleaned = true;
+          return { ...c, code };
         }
         return c;
       });
@@ -194,7 +214,7 @@ export async function createClass(
   const newClass: ClassItem = {
     id: 'cls' + Date.now() + Math.random().toString(36).substring(2, 6),
     name: trimmedName,
-    code: Math.random().toString(36).substring(2, 8).toUpperCase(),
+    code: Math.floor(100000 + Math.random() * 900000).toString(),
     schoolYear,
     group,
     sharedWith: [],
@@ -229,7 +249,7 @@ export function bulkCreateClasses(
     const newClass: ClassItem = {
       id: 'cls' + (Date.now() + idx) + Math.random().toString(36).substring(2, 6),
       name: trimmed,
-      code: Math.random().toString(36).substring(2, 8).toUpperCase(),
+      code: Math.floor(100000 + Math.random() * 900000).toString(),
       schoolYear: item.schoolYear || '2026 - 2027',
       group: item.group || 'Khác',
       sharedWith: [],

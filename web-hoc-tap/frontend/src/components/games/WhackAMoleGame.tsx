@@ -257,7 +257,7 @@ export const WhackAMoleGame: React.FC<WhackAMoleGameProps> = ({
               </span>
 
               {/* Burrows Grid */}
-              <div className="grid grid-cols-4 sm:grid-cols-6 gap-2 w-full pt-4 mt-2 border-t border-slate-200/60 dark:border-white/10">
+              <div className="grid grid-cols-4 sm:grid-cols-6 gap-2 w-full pt-3 mt-2">
                 {moleHoles.map((hole) => {
                   const status = questionStatuses[hole.questionIndex];
                   const isCurrent = currentIndex === hole.questionIndex;

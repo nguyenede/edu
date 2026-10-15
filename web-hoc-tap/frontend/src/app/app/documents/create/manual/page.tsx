@@ -432,7 +432,7 @@ function ManualQuizCreateContent() {
             <div className="flex items-center justify-between">
               <h2 className="text-sm font-normal text-slate-900 dark:text-white flex items-center gap-2">
                 <Layers size={18} className="text-google-blue" />
-                Danh sách câu hỏi ({questions.length})
+                Danh sách câu hỏi {questions.length}
               </h2>
 
               <Button size="sm" variant="outline" onClick={handleAddQuestion}>

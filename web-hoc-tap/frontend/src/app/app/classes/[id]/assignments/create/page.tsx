@@ -10,6 +10,7 @@ import { ArrowLeft, FileText, Check, ChevronRight, Users, PlusCircle, LogIn, Gra
 import { listDocumentFiles } from '@/lib/documentsApi';
 import { createClassAssignment, fetchClasses, getLocalClasses } from '@/lib/classesApi';
 import { BreadcrumbChevron, BreadcrumbDropdownItem } from '@/components/BreadcrumbChevron';
+import DateTimePicker from '@/components/DateTimePicker';
 
 export default function CreateAssignmentPage() {
   const { id: classId } = useParams();
@@ -232,12 +233,16 @@ export default function CreateAssignmentPage() {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <Input
-                label="Hạn nộp (Deadline)"
-                type="datetime-local"
-                value={deadline}
-                onChange={(e) => setDeadline(e.target.value)}
-              />
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                  Hạn nộp (Deadline)
+                </label>
+                <DateTimePicker
+                  value={deadline}
+                  onChange={setDeadline}
+                  placeholder="Chọn ngày và giờ hạn nộp"
+                />
+              </div>
               <Input
                 label="Thang điểm tối đa"
                 type="number"
@@ -299,7 +304,7 @@ export default function CreateAssignmentPage() {
                 <option value="">-- Không đính kèm đề thi --</option>
                 {documentFiles.map((doc) => (
                   <option key={doc.id} value={doc.id}>
-                    {doc.parsedQuiz?.title || doc.name} ({doc.parsedQuiz?.questions?.length || 0} câu)
+                    {doc.parsedQuiz?.title || doc.name} • {doc.parsedQuiz?.questions?.length || 0} câu
                   </option>
                 ))}
               </select>

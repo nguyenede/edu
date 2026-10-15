@@ -189,7 +189,7 @@ export class AiToolRegistry {
       const name = params.name || 'Lớp học mới';
       const grade = params.grade || '12';
       const subject = params.subject || 'Tổng hợp';
-      const code = `${(params.subject || 'CLASS').toUpperCase().slice(0, 4)}-${Math.floor(1000 + Math.random() * 9000)}`;
+      const code = Math.floor(100000 + Math.random() * 900000).toString();
 
       const studentList = (params.students || []).map((stName, idx) => ({
         id: `std${Date.now()}${idx}`,

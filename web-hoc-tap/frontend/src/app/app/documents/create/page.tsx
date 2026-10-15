@@ -690,7 +690,7 @@ function DocumentCreateContent() {
                     className="border-emerald-300 dark:border-emerald-700 text-emerald-800 dark:text-emerald-200 font-bold hover:bg-emerald-100/50"
                     onClick={() => setIsPreviewModalOpen(true)}
                   >
-                    Xem trước ({createdExamResult.questionCount} câu)
+                    Xem trước {createdExamResult.questionCount} câu
                   </Button>
                   <Button
                     size="sm"

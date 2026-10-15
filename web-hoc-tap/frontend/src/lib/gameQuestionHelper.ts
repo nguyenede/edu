@@ -36,6 +36,10 @@ export function normalizeGameQuestion(q: any, idx: number): NormalizedGameQuesti
   }
 
   const rawOptions = Array.isArray(q?.options) ? q.options : [];
+  const hasPredefinedCorrect = rawOptions.some(
+    (opt: any) => typeof opt === 'object' && opt !== null && Boolean(opt.isCorrect || opt.correct)
+  );
+
   let options: NormalizedGameOption[] = rawOptions
     .map((opt: any, oIdx: number) => {
       let optContent = '';
@@ -52,7 +56,7 @@ export function normalizeGameQuestion(q: any, idx: number): NormalizedGameQuesti
       optContent = optContent.replace(/^[A-F][\s.:)-]+/i, '').trim();
 
       const letter = String.fromCharCode(65 + oIdx);
-      if (!isCorrect) {
+      if (!isCorrect && !hasPredefinedCorrect) {
         if (
           answerKey === letter ||
           answerKey === String(oIdx) ||
@@ -71,9 +75,33 @@ export function normalizeGameQuestion(q: any, idx: number): NormalizedGameQuesti
     })
     .filter((o: NormalizedGameOption) => o.content && o.content.length > 0);
 
-  // Guarantee at least 1 correct answer
+  // Guarantee EXACTLY 1 correct answer (tránh lỗi 2 đáp án cùng đúng)
   const correctCount = options.filter((o) => o.isCorrect).length;
-  if (correctCount === 0 && options.length > 0) {
+  if (correctCount > 1) {
+    // Nếu có nhiều hơn 1 đáp án đúng, ưu tiên đáp án theo key rõ ràng hoặc chỉ giữ lại đáp án đúng đầu tiên
+    const targetLetter =
+      keyFromExplanation ||
+      (['A', 'B', 'C', 'D', 'E', 'F'].includes(answerKey) ? answerKey : '');
+    if (targetLetter) {
+      const targetIdx = targetLetter.charCodeAt(0) - 65;
+      if (targetIdx >= 0 && targetIdx < options.length) {
+        options.forEach((o, i) => {
+          o.isCorrect = i === targetIdx;
+        });
+      }
+    } else {
+      let foundFirst = false;
+      options.forEach((o) => {
+        if (o.isCorrect) {
+          if (!foundFirst) {
+            foundFirst = true;
+          } else {
+            o.isCorrect = false;
+          }
+        }
+      });
+    }
+  } else if (correctCount === 0 && options.length > 0) {
     const targetLetter =
       keyFromExplanation ||
       (['A', 'B', 'C', 'D', 'E', 'F'].includes(answerKey) ? answerKey : '');

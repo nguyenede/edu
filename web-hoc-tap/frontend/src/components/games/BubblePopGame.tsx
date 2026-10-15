@@ -243,7 +243,7 @@ export const BubblePopGame: React.FC<BubblePopGameProps> = ({
         <div className="lg:col-span-5 flex flex-col justify-between space-y-3">
           <div className="bg-white dark:bg-[#1a1b1e] rounded-2xl p-4 sm:p-5 border border-slate-200/80 dark:border-white/10 shadow-xs flex flex-col justify-between space-y-4 flex-1">
             {/* Header info */}
-            <div className="flex items-center justify-between text-xs font-bold pb-2 border-b border-slate-100 dark:border-white/10">
+            <div className="flex items-center justify-between text-xs font-bold pb-1">
               <span className="text-cyan-700 dark:text-cyan-300 font-extrabold flex items-center gap-1.5">
                 <span>🫧 Đại dương tri thức</span>
               </span>
@@ -262,7 +262,7 @@ export const BubblePopGame: React.FC<BubblePopGameProps> = ({
               </span>
 
               {/* Bubbles Grid */}
-              <div className="grid grid-cols-4 sm:grid-cols-6 gap-2 w-full pt-4 mt-2 border-t border-slate-200/60 dark:border-white/10">
+              <div className="grid grid-cols-4 sm:grid-cols-6 gap-2 w-full pt-3 mt-2">
                 {bubbleItems.map((b) => {
                   const status = questionStatuses[b.questionIndex];
                   const isCurrent = currentIndex === b.questionIndex;

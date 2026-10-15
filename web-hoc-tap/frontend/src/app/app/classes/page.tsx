@@ -229,7 +229,7 @@ export default function ClassesPage() {
 
   return (
     <AppShell
-      title={classes.length > 0 ? `Danh sách Lớp học (${classes.length})` : 'Danh sách Lớp học'}
+      title="Danh sách Lớp học"
       subtitle={
         isTeacher
           ? 'Quản lý toàn bộ các lớp bạn đang phụ trách và mã tham gia'
@@ -343,25 +343,11 @@ export default function ClassesPage() {
                     <span className="flex items-center gap-1">
                       <Users size={13} /> {cls._count?.members ?? 0} học sinh
                     </span>
-                    <span>•</span>
-                    {isTeacher ? (
-                      <span className="flex items-center gap-1 font-mono">
-                        Mã: <strong className="text-slate-700 dark:text-slate-300">{cls.code}</strong>
-                        <button
-                          type="button"
-                          onClick={(e) => handleCopyCode(e, cls.code)}
-                          className="hover:text-slate-900 dark:hover:text-white p-0.5 cursor-pointer"
-                          title="Sao chép mã"
-                        >
-                          {copiedCode === cls.code ? (
-                            <Check size={12} className="text-emerald-500" />
-                          ) : (
-                            <Copy size={12} />
-                          )}
-                        </button>
-                      </span>
-                    ) : (
-                      <span>Giáo viên: {cls.teacher?.profile?.name || cls.teacher?.email}</span>
+                    {!isTeacher && (
+                      <>
+                        <span>•</span>
+                        <span>Giáo viên: {cls.teacher?.profile?.name || cls.teacher?.email}</span>
+                      </>
                     )}
                   </div>
                 </div>
@@ -479,7 +465,7 @@ export default function ClassesPage() {
           {excelPreview.length > 0 && (
             <div className="space-y-2">
               <div className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                Xem trước danh sách ({excelPreview.length} lớp):
+                Xem trước danh sách: {excelPreview.length} lớp
               </div>
               <div className="max-h-48 overflow-y-auto rounded-lg border border-slate-100 dark:border-slate-800 divide-y divide-slate-100 dark:divide-slate-800 text-xs">
                 {excelPreview.map((item, i) => (
@@ -511,7 +497,7 @@ export default function ClassesPage() {
               className="gap-1.5"
             >
               <Check size={14} />
-              {excelImportLoading ? 'Đang nhập...' : `Xác nhận nhập (${excelPreview.length})`}
+              {excelImportLoading ? 'Đang nhập...' : `Xác nhận nhập ${excelPreview.length}`}
             </Button>
           </div>
         </div>
@@ -548,7 +534,7 @@ export default function ClassesPage() {
 
           <div className="space-y-1.5">
             <label className="text-xs font-medium text-slate-700 dark:text-slate-300">
-              Chọn các lớp muốn nhân bản ({selectedClassIdsToCopy.length}/{classes.length})
+              Chọn các lớp muốn nhân bản {selectedClassIdsToCopy.length}/{classes.length}
             </label>
             <div className="max-h-48 overflow-y-auto rounded-lg border border-slate-100 dark:border-slate-800 p-2 space-y-1 text-xs">
               {classes.map((cls) => (

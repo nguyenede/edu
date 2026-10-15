@@ -31,6 +31,7 @@ import {
   GraduationCap,
   Lock,
 } from 'lucide-react';
+import DateTimePicker, { formatDateTimeToInputValue } from '@/components/DateTimePicker';
 import { createHomework, HomeworkItem } from '@/lib/homeworkApi';
 import { getLocalClasses, ClassItem, createClassAssignment } from '@/lib/classesApi';
 import { getDocumentFile } from '@/lib/documentsApi';
@@ -352,6 +353,13 @@ function AssignPageContent() {
     a.click();
   };
 
+  const getDefaultDeadline = () => {
+    const d = new Date();
+    d.setDate(d.getDate() + 1);
+    d.setHours(23, 59, 0, 0);
+    return formatDateTimeToInputValue(d);
+  };
+
   const handleCreate = async () => {
     if (!title.trim() || !fileItem) return;
     if (assignMode === 'class' && !selectedClassId) {
@@ -563,16 +571,6 @@ function AssignPageContent() {
           </span>
         </div>
       }
-      action={
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => router.push(`/documents/${encodeURIComponent(fileId)}`)}
-          className="rounded-xl text-xs gap-1.5"
-        >
-          <ArrowLeft size={15} /> Xem đề thi
-        </Button>
-      }
     >
       <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20 pt-2 space-y-8">
         {createdHomework ? (
@@ -634,15 +632,6 @@ function AssignPageContent() {
 
                   {/* Quick Share Buttons */}
                   <div className="flex items-center justify-center gap-2.5 flex-wrap pt-1">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleCopyPin(createdHomework.pin)}
-                      className="gap-1.5 text-xs rounded-xl"
-                    >
-                      {copiedPin ? <Check size={14} className="text-emerald-500" /> : <Copy size={14} />}
-                      {copiedPin ? 'Đã sao chép PIN' : 'Sao chép mã PIN'}
-                    </Button>
                     <Button
                       variant="outline"
                       size="sm"
@@ -735,8 +724,8 @@ function AssignPageContent() {
                 <span>Hình thức giao:</span>
                 <strong className="text-slate-900 dark:text-slate-100">
                   {createdHomework.classId && createdHomework.classId !== 'public'
-                    ? `🏫 Lớp ${createdHomework.className} (Đăng nhập tài khoản lớp)`
-                    : '🌐 Bất cứ ai có mã PIN/QR (Tự do)'}
+                    ? `Lớp ${createdHomework.className} (Đăng nhập tài khoản lớp)`
+                    : 'Bất cứ ai có mã PIN/QR (Tự do)'}
                 </strong>
               </div>
               <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
@@ -811,14 +800,9 @@ function AssignPageContent() {
             <div className="lg:col-span-8 space-y-8">
               {/* Phần 1: Thông tin bài tập */}
               <div className="space-y-6 pb-8 border-b border-slate-100 dark:border-slate-800/80">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-7 h-7 rounded-lg bg-blue-50 dark:bg-blue-950 text-google-blue flex items-center justify-center font-bold text-xs">
-                    1
-                  </div>
-                  <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">
-                    Thông tin bài tập
-                  </h2>
-                </div>
+                <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">
+                  Thông tin bài tập
+                </h2>
 
                 {/* Tiêu đề */}
                 <div className="space-y-1.5">
@@ -828,7 +812,7 @@ function AssignPageContent() {
                   <Input
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
-                    placeholder="Nhập tên bài tập..."
+                    placeholder="Nhập tên bài tập"
                     className="rounded-xl text-sm"
                   />
                 </div>
@@ -836,52 +820,40 @@ function AssignPageContent() {
                 {/* Hình thức giao bài (2 Tùy chọn) */}
                 <div className="space-y-3">
                   <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                    <Users size={14} className="text-slate-400" />
+                    <Users size={15} className="text-slate-400" />
                     Hình thức giao bài <span className="text-red-500">*</span>
                   </label>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 items-start">
                     {/* Mục 1: Bất cứ ai có liên kết / Mã PIN */}
                     <div
                       onClick={() => setAssignMode('public')}
-                      className={`p-4 rounded-2xl border-2 transition-all cursor-pointer flex flex-col justify-between ${
+                      className={`p-3.5 rounded-2xl border-2 transition-all cursor-pointer flex items-center justify-between ${
                         assignMode === 'public'
                           ? 'border-google-blue bg-blue-50/40 dark:bg-blue-950/20 shadow-xs'
                           : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-slate-300 dark:hover:border-slate-700'
                       }`}
                     >
-                      <div className="space-y-1.5">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <div className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs ${
-                              assignMode === 'public' ? 'bg-blue-500 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-500'
-                            }`}>
-                              <Globe size={15} />
-                            </div>
-                            <span className="text-xs font-bold text-slate-900 dark:text-slate-100">
-                              Bất cứ ai có liên kết
-                            </span>
-                          </div>
-                          <input
-                            type="radio"
-                            name="assignMode"
-                            checked={assignMode === 'public'}
-                            onChange={() => setAssignMode('public')}
-                            className="text-google-blue focus:ring-google-blue cursor-pointer"
-                          />
+                      <div className="flex items-center gap-2.5">
+                        <div className={`w-8 h-8 rounded-xl flex items-center justify-center text-xs ${
+                          assignMode === 'public' ? 'bg-blue-500 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-500'
+                        }`}>
+                          <Globe size={18} />
                         </div>
-                        <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
-                          Bất kỳ ai có <strong>Mã PIN hoặc Mã QR</strong> đều có thể quét và vào làm ngay, <strong>không cần đăng nhập tài khoản</strong>.
-                        </p>
-                      </div>
-                      <div className="pt-2">
-                        <span className="inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-950/60 text-google-blue">
-                          Tự do &bull; Hiện mã PIN & QR
+                        <span className="text-xs font-bold text-slate-900 dark:text-slate-100">
+                          Bất cứ ai có liên kết
                         </span>
                       </div>
+                      <input
+                        type="radio"
+                        name="assignMode"
+                        checked={assignMode === 'public'}
+                        onChange={() => setAssignMode('public')}
+                        className="text-google-blue focus:ring-google-blue cursor-pointer"
+                      />
                     </div>
 
-                    {/* Mục 2: Chỉ học sinh trong lớp học */}
+                    {/* Mục 2: Chỉ học sinh trong lớp học - Kết hợp chọn lớp học */}
                     <div
                       onClick={() => {
                         setAssignMode('class');
@@ -889,82 +861,72 @@ function AssignPageContent() {
                           setSelectedClassId(classes[0].id);
                         }
                       }}
-                      className={`p-4 rounded-2xl border-2 transition-all cursor-pointer flex flex-col justify-between ${
+                      className={`p-3.5 rounded-2xl border-2 transition-all cursor-pointer space-y-2.5 ${
                         assignMode === 'class'
-                          ? 'border-emerald-500 bg-emerald-50/40 dark:bg-emerald-950/20 shadow-xs'
+                          ? 'border-google-blue bg-blue-50/40 dark:bg-blue-950/20 shadow-xs'
                           : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-slate-300 dark:hover:border-slate-700'
                       }`}
                     >
-                      <div className="space-y-1.5">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <div className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs ${
-                              assignMode === 'class' ? 'bg-emerald-500 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-500'
-                            }`}>
-                              <GraduationCap size={15} />
-                            </div>
-                            <span className="text-xs font-bold text-slate-900 dark:text-slate-100">
-                              Chỉ học sinh trong lớp
-                            </span>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2.5">
+                          <div className={`w-8 h-8 rounded-xl flex items-center justify-center text-xs ${
+                            assignMode === 'class' ? 'bg-blue-500 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-500'
+                          }`}>
+                            <GraduationCap size={18} />
                           </div>
-                          <input
-                            type="radio"
-                            name="assignMode"
-                            checked={assignMode === 'class'}
-                            onChange={() => {
-                              setAssignMode('class');
-                              if (!selectedClassId && classes.length > 0) {
-                                setSelectedClassId(classes[0].id);
-                              }
-                            }}
-                            className="text-emerald-600 focus:ring-emerald-500 cursor-pointer"
-                          />
+                          <span className="text-xs font-bold text-slate-900 dark:text-slate-100">
+                            Chỉ học sinh trong lớp
+                          </span>
                         </div>
-                        <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
-                          Chỉ định lớp học cụ thể. Học sinh <strong>bắt buộc phải đăng nhập đúng tài khoản ở lớp đó</strong> mới vào được bài.
-                        </p>
+                        <input
+                          type="radio"
+                          name="assignMode"
+                          checked={assignMode === 'class'}
+                          onChange={() => {
+                            setAssignMode('class');
+                            if (!selectedClassId && classes.length > 0) {
+                              setSelectedClassId(classes[0].id);
+                            }
+                          }}
+                          className="text-google-blue focus:ring-google-blue cursor-pointer"
+                        />
                       </div>
-                      <div className="pt-2">
-                        <span className="inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300">
-                          Bảo mật &bull; Bắt buộc tài khoản lớp
-                        </span>
-                      </div>
-                    </div>
-                  </div>
 
-                  {/* Dropdown chọn lớp nếu chọn Mục 2 */}
-                  {assignMode === 'class' && (
-                    <div className="p-3.5 bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-200/80 dark:border-emerald-900/50 rounded-2xl space-y-2 animate-in fade-in duration-200">
-                      <label className="text-xs font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-                        <span>Chọn lớp học nhận bài tập:</span>
-                        <span className="text-red-500">*</span>
-                      </label>
-                      {classes.length > 0 ? (
-                        <select
-                          value={selectedClassId}
-                          onChange={(e) => setSelectedClassId(e.target.value)}
-                          className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-xs font-medium focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                        >
-                          {classes.map((cls) => (
-                            <option key={cls.id} value={cls.id}>
-                              🏫 Lớp: {cls.name} (Mã: {cls.code}) &bull; {cls._count?.members || 0} học sinh
-                            </option>
-                          ))}
-                        </select>
-                      ) : (
-                        <div className="p-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/60 rounded-xl text-xs text-amber-800 dark:text-amber-300 flex items-center justify-between gap-3">
-                          <span>Bạn chưa có lớp học nào. Hãy tạo lớp học để quản lý học sinh và giao bài.</span>
-                          <Button
-                            size="sm"
-                            onClick={() => router.push('/app/classes')}
-                            className="bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-[11px] shrink-0"
-                          >
-                            Tạo lớp ngay
-                          </Button>
+                      {/* Dropdown chọn lớp học kết hợp trực tiếp */}
+                      {assignMode === 'class' && (
+                        <div className="pt-1.5 border-t border-blue-200/60 dark:border-blue-900/40 animate-in fade-in duration-150 space-y-1.5" onClick={(e) => e.stopPropagation()}>
+                          <label className="text-[11px] font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1">
+                            <span>Chọn lớp học:</span>
+                            <span className="text-red-500">*</span>
+                          </label>
+                          {classes.length > 0 ? (
+                            <select
+                              value={selectedClassId}
+                              onChange={(e) => setSelectedClassId(e.target.value)}
+                              className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-google-blue cursor-pointer shadow-xs"
+                            >
+                              {classes.map((cls) => (
+                                <option key={cls.id} value={cls.id}>
+                                  Lớp: {cls.name} • {cls._count?.members || 0} học sinh
+                                </option>
+                              ))}
+                            </select>
+                          ) : (
+                            <div className="p-2.5 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/60 rounded-xl text-xs text-amber-800 dark:text-amber-300 flex items-center justify-between gap-2">
+                              <span className="text-[11px]">Chưa có lớp học</span>
+                              <Button
+                                size="sm"
+                                onClick={() => router.push('/app/classes')}
+                                className="bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-[10px] px-2.5 py-1 h-7 shrink-0"
+                              >
+                                Tạo lớp ngay
+                              </Button>
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>
-                  )}
+                  </div>
                 </div>
 
                 {/* Thời gian & Hạn nộp */}
@@ -972,7 +934,7 @@ function AssignPageContent() {
                   {/* Thời gian làm bài */}
                   <div className="space-y-1.5">
                     <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                      <Clock size={14} className="text-slate-400" />
+                      <Clock size={15} className="text-slate-400" />
                       Thời gian làm bài
                     </label>
                     <select
@@ -992,7 +954,7 @@ function AssignPageContent() {
                   {/* Thời gian nộp bài tối thiểu */}
                   <div className="space-y-1.5">
                     <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                      <span className="text-amber-500">⏳</span>
+                      <Clock size={15} className="text-slate-400" />
                       Nộp bài tối thiểu
                     </label>
                     <select
@@ -1007,13 +969,13 @@ function AssignPageContent() {
                       <option value={20}>Sau tối thiểu 20 phút</option>
                       <option value={30}>Sau tối thiểu 30 phút</option>
                       <option value={45}>Sau tối thiểu 45 phút</option>
-                      <option value={-1}>Tùy chỉnh số phút...</option>
+                      <option value={-1}>Tùy chỉnh số phút</option>
                     </select>
                     {minSubmitMinutes === -1 && (
                       <Input
                         type="number"
                         min={1}
-                        placeholder="Nhập số phút tối thiểu..."
+                        placeholder="Nhập số phút tối thiểu"
                         value={customMinSubmit}
                         onChange={(e) => setCustomMinSubmit(e.target.value)}
                         className="text-xs rounded-xl mt-1.5"
@@ -1025,25 +987,30 @@ function AssignPageContent() {
                   <div className="space-y-1.5">
                     <div className="flex items-center justify-between">
                       <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                        <Calendar size={14} className="text-slate-400" />
+                        <Calendar size={15} className="text-slate-400" />
                         Hạn chót nộp bài
                       </label>
                       <label className="flex items-center gap-1.5 text-[11px] text-slate-500 cursor-pointer select-none">
                         <input
                           type="checkbox"
                           checked={hasDeadline}
-                          onChange={(e) => setHasDeadline(e.target.checked)}
-                          className="rounded text-google-blue focus:ring-0"
+                          onChange={(e) => {
+                            const checked = e.target.checked;
+                            setHasDeadline(checked);
+                            if (checked && !deadline) {
+                              setDeadline(getDefaultDeadline());
+                            }
+                          }}
+                          className="rounded text-google-blue focus:ring-0 cursor-pointer"
                         />
                         Đặt hạn nộp
                       </label>
                     </div>
                     {hasDeadline ? (
-                      <Input
-                        type="datetime-local"
+                      <DateTimePicker
                         value={deadline}
-                        onChange={(e) => setDeadline(e.target.value)}
-                        className="text-xs rounded-xl"
+                        onChange={setDeadline}
+                        placeholder="Chọn ngày và giờ hạn nộp"
                       />
                     ) : (
                       <div className="py-2.5 text-slate-400 text-xs">
@@ -1053,25 +1020,13 @@ function AssignPageContent() {
                   </div>
                 </div>
 
-                {/* Ghi chú quy chế chống nộp bừa */}
-                <div className="p-3 bg-blue-50/70 dark:bg-blue-950/30 rounded-xl border border-blue-100 dark:border-blue-900/40 text-[11px] text-blue-800 dark:text-blue-300 flex items-start gap-2">
-                  <span className="text-sm shrink-0">🛡️</span>
-                  <span>
-                    <b>Quy tắc nộp bài an toàn:</b> Hệ thống tự động <b>chặn học sinh nộp bài nếu chưa làm bất kỳ câu nào</b>. Nếu đặt thời gian nộp bài tối thiểu, học sinh phải làm bài đủ số phút quy định mới được phép bấm nộp bài.
-                  </span>
-                </div>
               </div>
 
               {/* Phần 2: Tùy chọn xáo trộn & Đáp án */}
               <div className="space-y-5 pb-8 border-b border-slate-100 dark:border-slate-800/80">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-7 h-7 rounded-lg bg-blue-50 dark:bg-blue-950 text-google-blue flex items-center justify-center font-bold text-xs">
-                    2
-                  </div>
-                  <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">
-                    Tùy chọn xáo trộn & Đáp án
-                  </h2>
-                </div>
+                <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">
+                  Tùy chọn xáo trộn và Đáp án
+                </h2>
 
                 <div className="space-y-3.5 text-xs">
                   <label className="flex items-center gap-3 cursor-pointer select-none group py-1">
@@ -1123,7 +1078,7 @@ function AssignPageContent() {
                           : 'bg-slate-100 dark:bg-slate-800 text-slate-400'
                       }`}
                     >
-                      {antiCheating ? <ShieldCheck size={20} /> : <Shield size={20} />}
+                      <ShieldCheck size={22} />
                     </div>
                     <div>
                       <div className="text-base font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
@@ -1138,9 +1093,6 @@ function AssignPageContent() {
                           </span>
                         )}
                       </div>
-                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                        Bảo vệ tính công bằng: Toàn màn hình, phát hiện chuyển tab và chống sao chép đề
-                      </p>
                     </div>
                   </div>
 
@@ -1164,7 +1116,7 @@ function AssignPageContent() {
 
                 {/* Chi tiết cơ chế bảo vệ khi BẬT */}
                 {antiCheating && (
-                  <div className="p-5 rounded-2xl bg-slate-50/80 dark:bg-slate-900/40 border border-slate-200/80 dark:border-slate-800 space-y-5 animate-in fade-in">
+                  <div className="pt-2 space-y-5 animate-in fade-in">
                     {/* Hàng 1: Giới hạn số lần vi phạm */}
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
@@ -1184,10 +1136,10 @@ function AssignPageContent() {
                             className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
                               maxViolations === num
                                 ? 'bg-google-blue text-white shadow-xs'
-                                : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:border-google-blue'
+                                : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
                             }`}
                           >
-                            {num} lần {num === 3 && '⭐'}
+                            {num} lần
                           </button>
                         ))}
                       </div>
@@ -1195,21 +1147,16 @@ function AssignPageContent() {
 
                     {/* Hàng 2: Tùy chọn xử lý khi vượt quá số lần vi phạm */}
                     <div className="pt-2 border-t border-slate-200/60 dark:border-slate-800">
-                      <label className="flex items-start gap-3 cursor-pointer group">
+                      <label className="flex items-center gap-3 cursor-pointer group select-none py-1">
                         <input
                           type="checkbox"
                           checked={autoSubmitOnLimit}
                           onChange={(e) => setAutoSubmitOnLimit(e.target.checked)}
-                          className="mt-0.5 w-4 h-4 rounded text-google-blue border-slate-300 dark:border-slate-600 focus:ring-google-blue"
+                          className="w-4 h-4 rounded text-google-blue border-slate-300 dark:border-slate-600 focus:ring-google-blue"
                         />
-                        <div className="space-y-0.5">
-                          <span className="text-xs font-semibold text-slate-800 dark:text-slate-200 group-hover:text-google-blue transition-colors">
-                            Tự động khóa và thu bài khi chạm mức vi phạm tối đa
-                          </span>
-                          <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                            Nếu bỏ chọn, học sinh vẫn được tiếp tục làm nhưng toàn bộ số lần và chi tiết vi phạm sẽ được gửi về cho giáo viên.
-                          </p>
-                        </div>
+                        <span className="text-xs font-semibold text-slate-800 dark:text-slate-200 group-hover:text-google-blue transition-colors">
+                          Tự động khóa và thu bài khi chạm mức vi phạm tối đa
+                        </span>
                       </label>
                     </div>
 
@@ -1219,59 +1166,44 @@ function AssignPageContent() {
                         Các biện pháp giám sát được áp dụng
                       </span>
 
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div className="space-y-3 pt-1">
                         {/* 1. Fullscreen */}
-                        <label className="flex items-start gap-2.5 p-3 rounded-xl bg-white dark:bg-slate-800/60 border border-slate-200/70 dark:border-slate-800 cursor-pointer hover:border-google-blue/40 transition-colors">
+                        <label className="flex items-center gap-3 cursor-pointer select-none py-0.5">
                           <input
                             type="checkbox"
                             checked={forceFullscreen}
                             onChange={(e) => setForceFullscreen(e.target.checked)}
-                            className="mt-0.5 w-4 h-4 rounded text-google-blue border-slate-300 dark:border-slate-600 focus:ring-google-blue"
+                            className="w-4 h-4 rounded text-google-blue border-slate-300 dark:border-slate-600 focus:ring-google-blue"
                           />
-                          <div className="space-y-0.5">
-                            <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block">
-                              Toàn màn hình bắt buộc
-                            </span>
-                            <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-tight">
-                              Yêu cầu chế độ Fullscreen, cảnh báo nếu học sinh thoát ra.
-                            </p>
-                          </div>
+                          <span className="text-xs font-semibold text-slate-800 dark:text-slate-200 group-hover:text-google-blue transition-colors">
+                            Toàn màn hình bắt buộc
+                          </span>
                         </label>
 
                         {/* 2. Chuyển tab */}
-                        <label className="flex items-start gap-2.5 p-3 rounded-xl bg-white dark:bg-slate-800/60 border border-slate-200/70 dark:border-slate-800 cursor-pointer hover:border-google-blue/40 transition-colors">
+                        <label className="flex items-center gap-3 cursor-pointer select-none group py-0.5">
                           <input
                             type="checkbox"
                             checked={detectTabSwitch}
                             onChange={(e) => setDetectTabSwitch(e.target.checked)}
-                            className="mt-0.5 w-4 h-4 rounded text-google-blue border-slate-300 dark:border-slate-600 focus:ring-google-blue"
+                            className="w-4 h-4 rounded text-google-blue border-slate-300 dark:border-slate-600 focus:ring-google-blue"
                           />
-                          <div className="space-y-0.5">
-                            <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block">
-                              Giám sát chuyển tab & cửa sổ
-                            </span>
-                            <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-tight">
-                              Phát hiện khi rời khỏi trang thi hoặc chuyển sang phần mềm khác.
-                            </p>
-                          </div>
+                          <span className="text-xs font-semibold text-slate-800 dark:text-slate-200 group-hover:text-google-blue transition-colors">
+                            Giám sát chuyển tab và cửa sổ
+                          </span>
                         </label>
 
                         {/* 3. Chống copy & chuột phải */}
-                        <label className="flex items-start gap-2.5 p-3 rounded-xl bg-white dark:bg-slate-800/60 border border-slate-200/70 dark:border-slate-800 cursor-pointer hover:border-google-blue/40 transition-colors sm:col-span-2">
+                        <label className="flex items-center gap-3 cursor-pointer select-none group py-0.5">
                           <input
                             type="checkbox"
                             checked={preventCopyPaste}
                             onChange={(e) => setPreventCopyPaste(e.target.checked)}
-                            className="mt-0.5 w-4 h-4 rounded text-google-blue border-slate-300 dark:border-slate-600 focus:ring-google-blue"
+                            className="w-4 h-4 rounded text-google-blue border-slate-300 dark:border-slate-600 focus:ring-google-blue"
                           />
-                          <div className="space-y-0.5">
-                            <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block">
-                              Chống sao chép & Vô hiệu chuột phải, DevTools
-                            </span>
-                            <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-tight">
-                              Ngăn bôi đen văn bản, chặn copy câu hỏi tìm kiếm trên Google/ChatGPT và chặn phím tắt F12.
-                            </p>
-                          </div>
+                          <span className="text-xs font-semibold text-slate-800 dark:text-slate-200 group-hover:text-google-blue transition-colors">
+                            Chống sao chép, vô hiệu chuột phải và DevTools
+                          </span>
                         </label>
                       </div>
                     </div>
@@ -1288,8 +1220,8 @@ function AssignPageContent() {
                     Đề thi gốc
                   </span>
                   <div className="flex items-start gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-[#185abd] text-white flex items-center justify-center font-bold text-sm shrink-0">
-                      W
+                    <div className="w-10 h-10 rounded-xl bg-blue-600 dark:bg-blue-500 text-white flex items-center justify-center shrink-0 shadow-sm">
+                      <FileText size={20} className="text-white" />
                     </div>
                     <div className="min-w-0">
                       <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 truncate" title={displayTitle}>
@@ -1302,7 +1234,7 @@ function AssignPageContent() {
                   </div>
                 </div>
 
-                <div className="space-y-2.5 text-xs pt-3 border-t border-slate-200/50 dark:border-slate-800">
+                <div className="space-y-2.5 text-xs pt-3">
                   <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
                     <span>Số câu hỏi:</span>
                     <strong className="text-slate-900 dark:text-slate-100">{questionsCount} câu</strong>
@@ -1315,8 +1247,8 @@ function AssignPageContent() {
                   </div>
                   <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
                     <span>Hình thức giao:</span>
-                    <strong className="text-slate-900 dark:text-slate-100 truncate max-w-[150px]">
-                      {assignMode === 'public' ? '🌐 Tự do (Mã PIN / QR)' : `🏫 ${classes.find(c => c.id === selectedClassId)?.name || 'Chưa chọn lớp'}`}
+                    <strong className="text-slate-900 dark:text-slate-100 truncate max-w-[170px]">
+                      {assignMode === 'public' ? 'Tự do (Mã PIN / QR)' : (classes.find(c => c.id === selectedClassId)?.name || 'Chưa chọn lớp')}
                     </strong>
                   </div>
                   <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
@@ -1341,18 +1273,10 @@ function AssignPageContent() {
                     variant="primary"
                     onClick={handleCreate}
                     disabled={creating || !title.trim() || (assignMode === 'class' && !selectedClassId)}
-                    className={`w-full py-3.5 rounded-xl text-white font-bold text-sm shadow-xs gap-2 ${
-                      assignMode === 'class'
-                        ? 'bg-emerald-600 hover:bg-emerald-700'
-                        : 'bg-google-blue hover:bg-[#1557b0]'
-                    }`}
+                    className="w-full py-3.5 rounded-xl text-white font-bold text-sm shadow-xs gap-2 bg-google-blue hover:bg-[#1557b0] transition-colors"
                   >
-                    {assignMode === 'class' ? <GraduationCap size={16} /> : <Send size={16} />}
-                    {creating
-                      ? 'Đang tạo bài tập...'
-                      : assignMode === 'class'
-                      ? 'Giao bài tập cho lớp'
-                      : 'Tạo mã PIN & Mã QR giao bài'}
+                    {assignMode === 'class' ? <GraduationCap size={18} /> : <Send size={18} />}
+                    <span>{creating ? 'Đang giao bài...' : 'Giao bài'}</span>
                   </Button>
 
                   <Button

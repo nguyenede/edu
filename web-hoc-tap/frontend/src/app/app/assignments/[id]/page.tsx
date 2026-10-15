@@ -551,21 +551,13 @@ export default function AssignmentDetailPage() {
   const handleAttemptStudentSubmit = () => {
     if (submitting) return;
 
-    // 1. Chặn nộp bài nếu học sinh chưa làm câu nào
-    if (totalAnswered === 0) {
-      alert(
-        '⚠️ BẠN CHƯA LÀM CÂU NÀO!\n\nHệ thống không cho phép nộp bài trống. Vui lòng làm ít nhất một câu hỏi hoặc nhập nội dung bài làm trước khi nộp.'
-      );
-      return;
-    }
-
-    // 2. Chặn nộp bài nếu chưa đủ thời gian làm bài tối thiểu
+    // 1. Chặn nộp bài nếu chưa đủ thời gian làm bài tối thiểu
     if (!hasMetMinTime) {
       const remMin = Math.floor(remainingLockSeconds / 60);
       const remSec = remainingLockSeconds % 60;
       const timeStr = remMin > 0 ? `${remMin} phút ${remSec < 10 ? '0' : ''}${remSec} giây` : `${remSec} giây`;
       alert(
-        `⏳ CHƯA ĐẾN THỜI GIAN ĐƯỢC PHÉP NỘP BÀI!\n\nBài thi quy định học sinh chỉ được nộp bài sau tối thiểu ${minSubmitMinutes} phút kể từ khi bắt đầu.\n\nBạn cần tiếp tục làm bài thêm: ${timeStr} nữa mới có thể nộp.`
+        `CHƯA ĐẾN THỜI GIAN ĐƯỢC PHÉP NỘP BÀI!\n\nBài thi quy định học sinh chỉ được nộp bài sau tối thiểu ${minSubmitMinutes} phút kể từ khi bắt đầu.\n\nBạn cần tiếp tục làm bài thêm: ${timeStr} nữa mới có thể nộp.`
       );
       return;
     }
@@ -574,13 +566,8 @@ export default function AssignmentDetailPage() {
   };
 
   const handleStudentSubmit = async (overrideMeta?: any) => {
-    if (totalAnswered === 0 && !overrideMeta) {
-      alert('⚠️ Bạn chưa làm câu nào! Vui lòng trả lời ít nhất một câu hỏi trước khi nộp bài.');
-      setIsSubmitConfirmOpen(false);
-      return;
-    }
     if (!hasMetMinTime && !overrideMeta) {
-      alert(`⏳ Chưa đủ thời gian làm bài tối thiểu (${minSubmitMinutes} phút)!`);
+      alert(`Chưa đủ thời gian làm bài tối thiểu (${minSubmitMinutes} phút)!`);
       setIsSubmitConfirmOpen(false);
       return;
     }
@@ -764,7 +751,7 @@ export default function AssignmentDetailPage() {
                 <>
                   <span className="text-slate-300 dark:text-slate-700">•</span>
                   <span className="text-blue-600 dark:text-blue-400 font-medium">
-                    Trắc nghiệm ({normalizedQuestions.length} câu)
+                    Trắc nghiệm {normalizedQuestions.length} câu
                   </span>
                 </>
               )}
@@ -806,9 +793,6 @@ export default function AssignmentDetailPage() {
                             </span>
                             <MathRenderer text={cleanContent} />
                           </div>
-                          <span className="text-[11px] text-slate-400 shrink-0 select-none">
-                            Trắc nghiệm đơn
-                          </span>
                         </div>
 
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
@@ -1126,7 +1110,7 @@ export default function AssignmentDetailPage() {
                         <Lock size={15} className="text-amber-600 shrink-0" />
                         <span>
                           {hasMetMinTime ? (
-                            <b className="text-emerald-700 dark:text-emerald-300">✓ Đã đủ thời gian tối thiểu ({minSubmitMinutes} phút) để nộp bài</b>
+                            <b className="text-emerald-700 dark:text-emerald-300">✓ Đã đủ thời gian tối thiểu {minSubmitMinutes} phút để nộp bài</b>
                           ) : (
                             <span>Yêu cầu làm bài tối thiểu: <b>{minSubmitMinutes} phút</b></span>
                           )}
@@ -1226,7 +1210,7 @@ export default function AssignmentDetailPage() {
                 {selectedSub.violationLogs && selectedSub.violationLogs.length > 0 && (
                   <div className="p-2.5 bg-red-50/70 dark:bg-red-950/30 rounded-xl space-y-1.5 text-xs">
                     <div className="font-semibold text-red-700 dark:text-red-400 flex items-center gap-1.5">
-                      <ShieldAlert size={14} /> Nhật ký vi phạm ({selectedSub.violationLogs.length} lần):
+                      <ShieldAlert size={14} /> Nhật ký vi phạm: {selectedSub.violationLogs.length} lần
                     </div>
                     <div className="space-y-1 max-h-28 overflow-y-auto">
                       {selectedSub.violationLogs.map((log: any, lIdx: number) => (
@@ -1253,7 +1237,7 @@ export default function AssignmentDetailPage() {
 
                   <div className="flex flex-col gap-1">
                     <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">
-                      Lời phê & Nhận xét
+                      Lời phê và Nhận xét
                     </label>
                     <textarea
                       placeholder="Nhập nhận xét gửi đến học sinh..."
@@ -1284,7 +1268,7 @@ export default function AssignmentDetailPage() {
               <div className="space-y-3 flex-1 flex flex-col min-h-0">
                 <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800 shrink-0">
                   <h3 className="font-semibold text-sm text-slate-950 dark:text-slate-100">
-                    Danh sách bài nộp ({deduplicatedSubmissions.length})
+                    Danh sách bài nộp {deduplicatedSubmissions.length}
                   </h3>
                 </div>
 
@@ -1334,10 +1318,29 @@ export default function AssignmentDetailPage() {
       <Modal
         isOpen={isQrModalOpen}
         onClose={() => setIsQrModalOpen(false)}
-        title="Mã QR & PIN làm bài kiểm tra"
+        title="Mã QR và PIN làm bài kiểm tra"
         maxWidth="md"
       >
         <div className="space-y-4 pt-1 text-center">
+          {/* PIN box - Đã chuyển lên đầu & xóa nút sao chép PIN */}
+          <div
+            onClick={() => handleCopyPin(displayPin)}
+            className="p-3.5 rounded-2xl bg-blue-50/90 dark:bg-blue-950/40 border border-blue-200/70 dark:border-blue-900/60 text-center cursor-pointer hover:bg-blue-100/70 dark:hover:bg-blue-900/40 transition-colors select-none"
+            title="Bấm để sao chép mã PIN"
+          >
+            <span className="text-[10px] text-blue-600 dark:text-blue-400 font-bold uppercase tracking-wider block">
+              Mã PIN làm bài
+            </span>
+            <div className="text-3xl sm:text-4xl font-mono font-black text-blue-700 dark:text-blue-300 tracking-widest mt-0.5">
+              {displayPin}
+            </div>
+            {copiedPin && (
+              <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 mt-1 inline-block animate-pulse">
+                ✓ Đã sao chép mã PIN
+              </span>
+            )}
+          </div>
+
           {qrCodeUrl ? (
             <div className="p-4 bg-white rounded-3xl inline-block mx-auto shadow-md border border-slate-200/80">
               <img src={qrCodeUrl} alt="Mã QR làm bài" className="w-56 h-56 mx-auto object-contain" />
@@ -1347,22 +1350,6 @@ export default function AssignmentDetailPage() {
               Đang tạo mã QR...
             </div>
           )}
-
-          {/* PIN box */}
-          <div className="flex items-center justify-between p-3.5 rounded-2xl bg-blue-50/90 dark:bg-blue-950/40 border border-blue-200/70 dark:border-blue-900/60">
-            <div className="text-left">
-              <span className="text-[10px] text-blue-600 dark:text-blue-400 font-bold uppercase tracking-wider block">
-                Mã PIN làm bài
-              </span>
-              <div className="text-2xl sm:text-3xl font-mono font-black text-blue-700 dark:text-blue-300 tracking-wider">
-                {displayPin}
-              </div>
-            </div>
-            <Button size="sm" onClick={() => handleCopyPin(displayPin)} className="gap-1.5 rounded-xl">
-              {copiedPin ? <Check size={14} /> : <Copy size={14} />}
-              <span>{copiedPin ? 'Đã sao chép' : 'Sao chép PIN'}</span>
-            </Button>
-          </div>
 
           {/* Link box */}
           <div className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/70 dark:border-white/10">

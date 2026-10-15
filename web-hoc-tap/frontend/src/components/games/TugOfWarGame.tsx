@@ -275,9 +275,6 @@ export const TugOfWarGame: React.FC<TugOfWarGameProps> = ({
                 <span className="w-2.5 h-2.5 rounded-full bg-blue-600" />
                 {team1Name}
               </span>
-              <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
-                Mục tiêu: Kéo chênh lệch {maxPullLimit} lần
-              </span>
               <span className="text-rose-600 dark:text-rose-400 font-extrabold flex items-center gap-1.5">
                 {team2Name}
                 <span className="w-2.5 h-2.5 rounded-full bg-rose-600" />
@@ -324,12 +321,6 @@ export const TugOfWarGame: React.FC<TugOfWarGameProps> = ({
                   </span>
                 </div>
               </div>
-            </div>
-
-            {/* Bottom Status Tips */}
-            <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
-              <span>Đang thi đấu: <b>Câu {currentIndex + 1}</b></span>
-              <span>Lực kéo: <b>{ropePosition < 0 ? `${team1Name} dẫn trước` : ropePosition > 0 ? `${team2Name} dẫn trước` : 'Cân bằng'}</b></span>
             </div>
           </div>
         </div>

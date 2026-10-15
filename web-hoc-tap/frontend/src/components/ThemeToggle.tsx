@@ -18,7 +18,7 @@ export const ThemeToggle: React.FC = () => {
     <button
       type="button"
       onClick={toggleTheme}
-      className="p-2.5 rounded-full hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 transition-colors cursor-pointer"
+      className="flex items-center justify-center w-10 h-10 rounded-full hover:bg-slate-200/70 dark:hover:bg-[#2d2f31] text-slate-600 dark:text-slate-400 transition-colors cursor-pointer"
       title="Chuyển chế độ giao diện"
       aria-label="Toggle Theme"
     >

@@ -106,7 +106,7 @@ export const NotificationDrawer: React.FC = () => {
           setIsOpen(!isOpen);
           if (!isOpen) fetchNotifications();
         }}
-        className="relative p-2.5 rounded-full hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 transition-colors cursor-pointer"
+        className="relative flex items-center justify-center w-10 h-10 rounded-full hover:bg-slate-200/70 dark:hover:bg-[#2d2f31] text-slate-600 dark:text-slate-400 transition-colors cursor-pointer"
         title="Thông báo"
         aria-label="Notifications"
       >
@@ -124,7 +124,7 @@ export const NotificationDrawer: React.FC = () => {
           {/* Header */}
           <div className="p-3 bg-slate-50 dark:bg-slate-900/50 flex justify-between items-center">
             <span className="text-xs font-bold text-slate-900 dark:text-slate-100 uppercase tracking-wider">
-              Thông báo ({unreadCount})
+              Thông báo {unreadCount}
             </span>
             {unreadCount > 0 && (
               <button

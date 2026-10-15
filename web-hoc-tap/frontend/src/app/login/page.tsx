@@ -10,7 +10,7 @@ import { useAuthStore } from '../../store/useAuthStore';
 import { Input } from '../../components/Input';
 import { Button } from '../../components/Button';
 import { ThemeToggle } from '../../components/ThemeToggle';
-import { LogIn, Loader2 } from 'lucide-react';
+import { LogIn, Loader2, Shield, GraduationCap, User } from 'lucide-react';
 
 const loginSchema = z.object({
   email: z.string().email('Địa chỉ email không hợp lệ'),
@@ -235,28 +235,31 @@ function LoginFormContent() {
               <button
                 type="button"
                 onClick={() => handleDemoLogin('admin@kiyovn.com', 'ADMIN', 'Quản Trị Viên')}
-                className="py-2.5 px-1 text-xs font-semibold rounded-xl bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 hover:bg-purple-100 transition border border-purple-200 dark:border-purple-800 text-center cursor-pointer"
+                className="py-2.5 px-1 text-xs font-semibold rounded-xl bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 hover:bg-purple-100 transition border border-purple-200 dark:border-purple-800 text-center cursor-pointer flex items-center justify-center gap-1.5"
               >
-                👑 Admin
+                <Shield size={15} />
+                <span>Admin</span>
               </button>
               <button
                 type="button"
                 onClick={() => handleDemoLogin('teacher@kiyovn.com', 'TEACHER', 'Thầy Nguyễn Văn Giáo')}
-                className="py-2.5 px-1 text-xs font-semibold rounded-xl bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 hover:bg-blue-100 transition border border-blue-200 dark:border-blue-800 text-center cursor-pointer"
+                className="py-2.5 px-1 text-xs font-semibold rounded-xl bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 hover:bg-blue-100 transition border border-blue-200 dark:border-blue-800 text-center cursor-pointer flex items-center justify-center gap-1.5"
               >
-                👨‍🏫 Giáo viên
+                <GraduationCap size={15} />
+                <span>Giáo viên</span>
               </button>
               <button
                 type="button"
                 onClick={() => handleDemoLogin('student@kiyovn.com', 'STUDENT', 'Em Nguyễn Văn Học')}
-                className="py-2.5 px-1 text-xs font-semibold rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 transition border border-emerald-200 dark:border-emerald-800 text-center cursor-pointer"
+                className="py-2.5 px-1 text-xs font-semibold rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 transition border border-emerald-200 dark:border-emerald-800 text-center cursor-pointer flex items-center justify-center gap-1.5"
               >
-                🎓 Học sinh
+                <User size={15} />
+                <span>Học sinh</span>
               </button>
             </div>
           </div>
 
-          <div className="text-center text-xs text-slate-500 pt-3 border-t border-slate-100 dark:border-slate-800">
+          <div className="text-center text-xs text-slate-500 pt-3">
             Chưa có tài khoản?{' '}
             <Link
               href={searchParams?.get('redirect') ? `/register?redirect=${encodeURIComponent(searchParams.get('redirect')!)}` : '/register'}

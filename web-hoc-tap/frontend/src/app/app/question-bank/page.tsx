@@ -312,7 +312,7 @@ export default function QuestionBankPage() {
                   : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-900'
               }`}
             >
-              Tất cả câu hỏi ({questions.length})
+              Tất cả câu hỏi {questions.length}
             </button>
 
             {banks.map((b) => (
@@ -325,7 +325,7 @@ export default function QuestionBankPage() {
                     : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-900'
                 }`}
               >
-                {b.name} ({b._count?.questions ?? 0})
+                {b.name} {b._count?.questions ?? 0}
               </button>
             ))}
           </div>

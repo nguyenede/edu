@@ -37,6 +37,7 @@ import { safeLocalStorageGet } from '@/lib/safeStorage';
 import QRCode from 'qrcode';
 import * as XLSX from 'xlsx';
 import { listDocumentFiles } from '@/lib/documentsApi';
+import DateTimePicker from '@/components/DateTimePicker';
 
 import {
   fetchClasses,
@@ -544,12 +545,11 @@ export default function ClassDetailPage() {
           </span>
         </div>
       }
-      subtitle={`Mã tham gia lớp: ${clazz.code}`}
       action={
         <div className="flex items-center gap-2">
-          <Button variant="secondary" size="sm" onClick={handleCopyCode} className="gap-1.5">
+          <Button variant="secondary" size="sm" onClick={handleCopyCode} className="gap-1.5 font-mono">
             {copiedCode ? <Check size={14} /> : <Copy size={14} />}
-            {copiedCode ? 'Đã sao chép' : `Mã lớp: ${clazz.code}`}
+            {copiedCode ? 'Đã sao chép' : clazz.code}
           </Button>
 
           <Button
@@ -597,7 +597,7 @@ export default function ClassDetailPage() {
                 : 'border-transparent text-slate-700 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white hover:border-slate-300 dark:hover:border-slate-700 font-semibold'
             }`}
           >
-            Bài tập & Đề thi ({assignments.length})
+            Bài tập và Đề thi {assignments.length}
           </button>
 
           {isTeacher && (
@@ -610,7 +610,7 @@ export default function ClassDetailPage() {
                   : 'border-transparent text-slate-700 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white hover:border-slate-300 dark:hover:border-slate-700 font-semibold'
               }`}
             >
-              Danh sách Học sinh ({members.length})
+              Danh sách Học sinh {members.length}
             </button>
           )}
 
@@ -770,7 +770,7 @@ export default function ClassDetailPage() {
 
             {members.length === 0 ? (
               <p className="text-xs text-slate-400 py-8 text-center">
-                Chưa có học sinh nào tham gia bằng mã lớp: <strong className="font-mono">{clazz.code}</strong>
+                Chưa có học sinh nào tham gia lớp này.
               </p>
             ) : (
               <div className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -848,7 +848,7 @@ export default function ClassDetailPage() {
                         {assignments.map((asg) => (
                           <th key={asg.id} className="py-2.5 px-3 text-center min-w-[100px]">
                             <div className="truncate max-w-[120px]" title={asg.title}>{asg.title}</div>
-                            <span className="text-[10px] text-slate-400 font-normal">({asg.maxScore}đ)</span>
+                            <span className="text-[10px] text-slate-400 font-normal">• {asg.maxScore}đ</span>
                           </th>
                         ))}
                         <th className="py-2.5 px-3 text-center font-bold text-blue-600">ĐTB</th>
@@ -1060,12 +1060,12 @@ export default function ClassDetailPage() {
           {excelStudentsPreview.length > 0 && (
             <div className="space-y-2">
               <div className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                Xem trước danh sách ({excelStudentsPreview.length} học sinh):
+                Xem trước danh sách: {excelStudentsPreview.length} học sinh
               </div>
               <div className="max-h-48 overflow-y-auto rounded-lg border border-slate-100 dark:border-slate-800 divide-y divide-slate-100 dark:divide-slate-800 text-xs">
                 {excelStudentsPreview.map((item, i) => (
                   <div key={i} className="p-2 flex items-center justify-between">
-                    <span className="font-medium">{item.name} {item.studentCode && `(${item.studentCode})`}</span>
+                    <span className="font-medium">{item.name} {item.studentCode && ` - ${item.studentCode}`}</span>
                     <span className="text-slate-400">{item.gender} • {item.email || item.phone || 'Trống'}</span>
                   </div>
                 ))}
@@ -1092,7 +1092,7 @@ export default function ClassDetailPage() {
               className="gap-1.5"
             >
               <Check size={14} />
-              {excelImporting ? 'Đang thêm...' : `Xác nhận thêm (${excelStudentsPreview.length})`}
+              {excelImporting ? 'Đang thêm...' : `Xác nhận thêm ${excelStudentsPreview.length}`}
             </Button>
           </div>
         </div>
@@ -1149,7 +1149,7 @@ export default function ClassDetailPage() {
               <option value="">-- Tự nhập / Không đính kèm đề trắc nghiệm --</option>
               {documentFiles.map((doc) => (
                 <option key={doc.id} value={doc.id}>
-                  {doc.parsedQuiz?.title || doc.name} ({doc.parsedQuiz?.questions?.length || 0} câu)
+                  {doc.parsedQuiz?.title || doc.name} • {doc.parsedQuiz?.questions?.length || 0} câu
                 </option>
               ))}
             </select>
@@ -1161,11 +1161,10 @@ export default function ClassDetailPage() {
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <label className="text-xs font-medium text-slate-700 dark:text-slate-300">Hạn nộp</label>
-              <input
-                type="datetime-local"
+              <DateTimePicker
                 value={deadline}
-                onChange={(e) => setDeadline(e.target.value)}
-                className="w-full px-3 py-2 text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#1a1b1d]"
+                onChange={setDeadline}
+                placeholder="Chọn ngày và giờ hạn nộp"
               />
             </div>
             <Input

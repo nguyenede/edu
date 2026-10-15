@@ -35,6 +35,7 @@ import {
   fetchAssignmentSubmissions,
   ClassItem,
 } from '@/lib/classesApi';
+import * as XLSX from 'xlsx';
 
 export default function ResultsPage() {
   const router = useRouter();
@@ -365,29 +366,40 @@ export default function ResultsPage() {
     setTimeout(() => setCopiedCodeId(null), 2000);
   };
 
-  const handleExportCsv = () => {
+  const handleExportExcel = () => {
     if (classStats.studentLeaderboard.length === 0) {
       showToast('Lớp học chưa có danh sách học sinh để xuất báo cáo.');
       return;
     }
 
-    const header = 'Hạng,Họ và tên,Email,Số bài đã nộp,Điểm trung bình,Tỷ lệ hoàn thành,Xếp loại\n';
-    const rows = classStats.studentLeaderboard
-      .map(
-        (st, idx) =>
-          `${idx + 1},"${st.name}","${st.email}",${st.submittedCount},${st.averageScore},${st.completionPercent}%,${st.rankLabel}`
-      )
-      .join('\n');
+    const exportData = classStats.studentLeaderboard.map((st, idx) => ({
+      'Hạng': idx + 1,
+      'Họ và tên': st.name,
+      'Email': st.email,
+      'Số bài đã nộp': st.submittedCount,
+      'Điểm trung bình': st.averageScore,
+      'Tỷ lệ hoàn thành': `${st.completionPercent}%`,
+      'Xếp loại': st.rankLabel,
+    }));
 
-    const blob = new Blob(['\uFEFF' + header + rows], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.setAttribute('download', `Bao_cao_lop_${selectedClass?.name || 'hoc_tap'}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    showToast('Đã xuất báo cáo CSV thành công!');
+    const ws = XLSX.utils.json_to_sheet(exportData);
+    ws['!cols'] = [
+      { wch: 8 },   // Hạng
+      { wch: 26 },  // Họ và tên
+      { wch: 30 },  // Email
+      { wch: 16 },  // Số bài đã nộp
+      { wch: 18 },  // Điểm trung bình
+      { wch: 18 },  // Tỷ lệ hoàn thành
+      { wch: 15 },  // Xếp loại
+    ];
+
+    const wb = XLSX.utils.book_new();
+    const sheetTitle = (selectedClass?.name || 'Bao_cao').replace(/[:\\/?*\[\]]/g, '').substring(0, 31);
+    XLSX.utils.book_append_sheet(wb, ws, sheetTitle);
+
+    const safeName = (selectedClass?.name || 'hoc_tap').trim().replace(/[/\\?%*:|"<>]/g, '_');
+    XLSX.writeFile(wb, `Bao_cao_lop_${safeName}.xlsx`);
+    showToast('Đã xuất báo cáo Excel (.xlsx) thành công!');
   };
 
   const selectedClass = classes.find((c) => c.id === selectedClassId);
@@ -445,11 +457,11 @@ export default function ResultsPage() {
                   <Button
                     variant="primary"
                     size="sm"
-                    onClick={handleExportCsv}
+                    onClick={handleExportExcel}
                     className="flex items-center gap-1.5 text-xs font-semibold"
                   >
                     <Download size={14} />
-                    <span>Xuất báo cáo</span>
+                    <span>Xuất báo cáo Excel</span>
                   </Button>
                 </>
               ) : (
@@ -569,7 +581,7 @@ export default function ResultsPage() {
                     Không tìm thấy lớp học phù hợp với từ khóa tìm kiếm.
                   </div>
                 ) : (
-                  <div className="divide-y divide-slate-100 dark:divide-slate-800">
+                  <div className="space-y-1">
                     {filteredClasses.map((cls) => (
                       <div
                         key={cls.id}
@@ -785,13 +797,7 @@ export default function ResultsPage() {
                     <Sparkles size={16} className="text-blue-600 dark:text-blue-400" />
                     <h4 className="font-bold text-sm text-slate-900 dark:text-slate-100">Thông tin tổng hợp lớp</h4>
                   </div>
-                  <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-                    {classStats.totalAssignments === 0
-                      ? 'Lớp học hiện tại chưa có dữ liệu bài tập nào.'
-                      : classStats.totalStudents === 0
-                      ? 'Lớp học chưa có học sinh. Hãy gửi mã tham gia cho học sinh vào lớp.'
-                      : `Lớp có ${classStats.totalStudents} học sinh, đã giao ${classStats.totalAssignments} bài tập với ${classStats.totalSubmissionsCount} lượt nộp.`}
-                  </p>
+
 
                   <div className="pt-2 space-y-2 text-xs">
                     <div className="flex items-center justify-between">
@@ -828,7 +834,7 @@ export default function ResultsPage() {
                   <div>
                     <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
                       <FileText size={16} className="text-blue-600 dark:text-blue-400" />
-                      Danh sách bài tập đã giao ({classStats.assignmentMetrics.length})
+                      Danh sách bài tập đã giao {classStats.assignmentMetrics.length}
                     </h3>
                   </div>
                   {classStats.assignmentMetrics.length > 0 && (
@@ -859,16 +865,16 @@ export default function ResultsPage() {
                   <div className="overflow-x-auto">
                     <table className="w-full text-left text-xs border-collapse">
                       <thead>
-                        <tr className="border-b border-slate-100 dark:border-slate-800 text-slate-400 text-[11px] font-bold uppercase tracking-wider">
-                          <th className="py-2 px-2">Tên bài tập / Đề kiểm tra</th>
-                          <th className="py-2 px-2 text-center">Thang điểm</th>
-                          <th className="py-2 px-2 text-center">Đã nộp</th>
-                          <th className="py-2 px-2">Tiến độ nộp</th>
-                          <th className="py-2 px-2 text-center">ĐTB</th>
-                          <th className="py-2 px-2 text-right">Thao tác</th>
+                        <tr className="text-slate-400 text-[11px] font-bold uppercase tracking-wider">
+                          <th className="py-2.5 px-2">Tên bài tập / Đề kiểm tra</th>
+                          <th className="py-2.5 px-2 text-center">Thang điểm</th>
+                          <th className="py-2.5 px-2 text-center">Đã nộp</th>
+                          <th className="py-2.5 px-2 text-center">Tiến độ nộp</th>
+                          <th className="py-2.5 px-2 text-center">ĐTB</th>
+                          <th className="py-2.5 px-2 text-right">Thao tác</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
+                      <tbody>
                         {classStats.assignmentMetrics.map((asg) => (
                           <tr
                             key={asg.id}
@@ -893,18 +899,8 @@ export default function ResultsPage() {
                             <td className="py-3 px-2 text-center font-bold text-slate-900 dark:text-slate-100">
                               {asg.submissionCount} / {classStats.totalStudents}
                             </td>
-                            <td className="py-3 px-2 min-w-[140px]">
-                              <div className="space-y-1">
-                                <div className="flex items-center justify-between text-[10px] font-bold text-slate-500">
-                                  <span>{asg.completionRate}%</span>
-                                </div>
-                                <div className="h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                                  <div
-                                    className="h-full rounded-full bg-blue-500"
-                                    style={{ width: `${asg.completionRate}%` }}
-                                  ></div>
-                                </div>
-                              </div>
+                            <td className="py-3 px-2 text-center font-bold text-slate-700 dark:text-slate-300">
+                              {asg.completionRate}%
                             </td>
                             <td className="py-3 px-2 text-center font-mono font-extrabold text-sm text-blue-600 dark:text-blue-400">
                               {asg.averageScore}
@@ -933,7 +929,7 @@ export default function ResultsPage() {
                   <div>
                     <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
                       <Award size={16} className="text-amber-500" />
-                      Danh sách học sinh trong lớp ({classStats.studentLeaderboard.length})
+                      Danh sách học sinh trong lớp {classStats.studentLeaderboard.length}
                     </h3>
                   </div>
 
@@ -996,16 +992,16 @@ export default function ResultsPage() {
                   <div className="overflow-x-auto">
                     <table className="w-full text-left text-xs border-collapse">
                       <thead>
-                        <tr className="border-b border-slate-100 dark:border-slate-800 text-slate-400 text-[11px] font-bold uppercase tracking-wider">
-                          <th className="py-2 px-2 w-12 text-center">Hạng</th>
-                          <th className="py-2 px-2">Học sinh</th>
-                          <th className="py-2 px-2 text-center">Số bài đã nộp</th>
-                          <th className="py-2 px-2 text-center">Điểm TB</th>
-                          <th className="py-2 px-2 text-center">Xếp loại</th>
-                          <th className="py-2 px-2 text-right">Trạng thái</th>
+                        <tr className="text-slate-400 text-[11px] font-bold uppercase tracking-wider">
+                          <th className="py-2.5 px-2 w-12 text-center">Hạng</th>
+                          <th className="py-2.5 px-2">Học sinh</th>
+                          <th className="py-2.5 px-2 text-center">Số bài đã nộp</th>
+                          <th className="py-2.5 px-2 text-center">Điểm TB</th>
+                          <th className="py-2.5 px-2 text-center">Xếp loại</th>
+                          <th className="py-2.5 px-2 text-right">Trạng thái</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
+                      <tbody>
                         {filteredStudents.map((st, idx) => (
                           <tr
                             key={st.id}
@@ -1120,7 +1116,7 @@ export default function ResultsPage() {
                   </Button>
                 </div>
               ) : (
-                <div className="divide-y divide-slate-100 dark:divide-slate-800">
+                <div className="space-y-1">
                   {studentSubmissionsList.map((sub: any) => (
                     <div
                       key={sub.id}

@@ -16,16 +16,15 @@ import {
   X,
   HelpCircle,
   Settings,
-  Home,
-  GraduationCap,
-  BookOpen,
-  Play,
-  FileText,
-  BarChart3,
-  Bell,
   LogIn,
   UserPlus,
   Sparkles,
+  Home,
+  GraduationCap,
+  BookOpen,
+  FileText,
+  BarChart2,
+  Bell,
   Gamepad2,
 } from 'lucide-react';
 
@@ -84,12 +83,12 @@ export const AppShell: React.FC<AppShellProps> = ({
     { label: 'Lớp học của tôi', href: '/classes', icon: GraduationCap },
     ...(isTeacher
       ? [
-          { label: 'Kho tài liệu & Đề thi', href: '/documents', icon: FileText },
+          { label: 'Kho tài liệu và Đề thi', href: '/documents', icon: FileText },
           { label: 'Ngân hàng câu hỏi', href: '/question-bank', icon: BookOpen },
         ]
       : []),
     { label: 'Trò chơi lớp học', href: '/games', icon: Gamepad2 },
-    { label: 'Báo cáo', href: '/results', icon: BarChart3 },
+    { label: 'Báo cáo', href: '/results', icon: BarChart2 },
     { label: 'Thông báo', href: '/notifications', icon: Bell },
     { label: 'Cài đặt', href: '/settings', icon: Settings },
   ];
@@ -161,7 +160,7 @@ export const AppShell: React.FC<AppShellProps> = ({
         {/* Center: Google Drive Search Bar */}
         <div className="hidden md:block flex-1 max-w-2xl mx-2 relative z-10">
           <form onSubmit={handleSearch} className="w-full">
-            <div className="flex items-center gap-3 px-4 py-2.5 bg-google-hover/80 dark:bg-[#282a2c] hover:bg-google-hover dark:hover:bg-[#323437] rounded-full transition-all text-slate-900 dark:text-slate-100 border border-transparent">
+            <div className="flex items-center gap-3 px-4 py-2 bg-google-hover/80 dark:bg-[#282a2c] hover:bg-google-hover dark:hover:bg-[#323437] rounded-full transition-all text-slate-900 dark:text-slate-100 border border-transparent">
               <Search size={18} className="text-slate-500 shrink-0" />
               <input
                 type="text"
@@ -205,8 +204,8 @@ export const AppShell: React.FC<AppShellProps> = ({
           <button
             type="button"
             onClick={() => router.push('/help')}
-            className="hidden sm:block p-2.5 rounded-full hover:bg-slate-200/70 dark:hover:bg-[#2d2f31] text-slate-600 dark:text-slate-400 transition-colors cursor-pointer"
-            title="Trợ giúp & Hướng dẫn"
+            className="hidden sm:flex items-center justify-center w-10 h-10 rounded-full hover:bg-slate-200/70 dark:hover:bg-[#2d2f31] text-slate-600 dark:text-slate-400 transition-colors cursor-pointer"
+            title="Trợ giúp và Hướng dẫn"
           >
             <HelpCircle size={20} />
           </button>
@@ -217,7 +216,7 @@ export const AppShell: React.FC<AppShellProps> = ({
             <button
               type="button"
               onClick={() => router.push('/settings')}
-              className="hidden sm:block p-2.5 rounded-full hover:bg-slate-200/70 dark:hover:bg-[#2d2f31] text-slate-600 dark:text-slate-400 transition-colors cursor-pointer"
+              className="hidden sm:flex items-center justify-center w-10 h-10 rounded-full hover:bg-slate-200/70 dark:hover:bg-[#2d2f31] text-slate-600 dark:text-slate-400 transition-colors cursor-pointer"
               title="Cài đặt"
             >
               <Settings size={20} />

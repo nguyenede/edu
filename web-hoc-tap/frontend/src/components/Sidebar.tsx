@@ -12,8 +12,6 @@ import {
   LucideIcon,
 } from 'lucide-react';
 
-import { startTopLoading } from './TopLoadingBar';
-
 export interface NavItem {
   label: string;
   href: string;
@@ -80,7 +78,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
       return;
     }
 
-    startTopLoading();
     router.push(href);
   };
 
@@ -91,7 +88,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       suppressHydrationWarning
       className={`shrink-0 ${
         isMounted ? 'transition-[width,transform] duration-300 ease-in-out' : ''
-      } select-none flex flex-col justify-between fixed top-16 left-0 bottom-0 z-50 overflow-y-auto md:overflow-visible bg-white dark:bg-[#1e1f20] shadow-xl md:bg-google-bg md:dark:bg-[#131314] md:shadow-none md:z-50 py-3 px-2 ${
+      } select-none flex flex-col justify-between fixed top-16 left-0 bottom-0 z-50 overflow-y-auto md:overflow-visible bg-white dark:bg-[#1e1f20] shadow-xl md:bg-google-bg md:dark:bg-[#131314] md:shadow-none md:z-50 py-3 px-2.5 ${
         sidebarCollapsed
           ? 'w-[280px] -translate-x-full md:translate-x-0 md:w-[64px]'
           : 'translate-x-0 w-[280px] md:w-[200px]'
@@ -123,25 +120,33 @@ export const Sidebar: React.FC<SidebarProps> = ({
               >
                 <button
                   type="button"
-                  title={item.label}
+                  aria-label={item.label}
                   onClick={() => handleNavClick(item.href)}
-                  className={`h-11 transition-colors duration-200 ease-in-out flex items-center rounded-full overflow-hidden shrink-0 cursor-pointer ${
-                    sidebarCollapsed ? 'w-11 justify-center' : 'w-full'
-                  } ${
+                  className={`h-11 transition-[background-color,color] duration-200 ease-in-out flex items-center justify-start rounded-full overflow-hidden shrink-0 cursor-pointer w-full ${
                     isActive
                       ? 'bg-google-pill text-google-pill-text dark:bg-[#2d2f31] dark:text-[#f1f3f4] font-[550]'
                       : 'text-slate-700 dark:text-slate-300 hover:bg-google-hover dark:hover:bg-[#282a2c] font-normal'
                   }`}
                 >
-                  <div className={`${sidebarCollapsed ? 'w-11' : 'w-10 pl-0.5'} h-11 flex items-center justify-center shrink-0`}>
-                    <Icon size={20} />
+                  {/* Fixed 44x44 icon container, anchored permanently to left edge without shifting */}
+                  <div className="w-11 h-11 flex items-center justify-center shrink-0">
+                    {Icon && (
+                      <Icon
+                        size={20}
+                        className={
+                          isActive
+                            ? 'text-google-pill-text dark:text-[#f1f3f4] stroke-[2.2]'
+                            : 'text-slate-700 dark:text-slate-300 stroke-[1.8]'
+                        }
+                      />
+                    )}
                   </div>
                   <span
                     className={`truncate text-left whitespace-nowrap overflow-hidden pr-2 text-[13.5px] tracking-tight ${
                       isActive ? 'font-[550]' : 'font-normal'
                     } ${
-                      sidebarCollapsed ? 'hidden' : 'inline-block'
-                    }`}
+                      sidebarCollapsed ? 'opacity-0 w-0 pointer-events-none' : 'opacity-100'
+                    } transition-opacity duration-150`}
                   >
                     {item.label}
                   </span>
@@ -149,7 +154,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
                 {/* Floating Tooltip Pill on Hover when Sidebar is Collapsed */}
                 <div
-                  className={`absolute left-full top-1/2 -translate-y-1/2 ml-2 transition-all duration-150 ease-out pointer-events-none z-[9999] ${
+                  className={`absolute left-[52px] top-1/2 -translate-y-1/2 ml-1 transition-all duration-150 ease-out pointer-events-none z-[9999] ${
                     isTooltipVisible
                       ? 'opacity-100 scale-100 translate-x-0'
                       : 'opacity-0 scale-95 -translate-x-1.5'

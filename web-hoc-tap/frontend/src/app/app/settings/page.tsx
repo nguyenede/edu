@@ -1290,7 +1290,7 @@ export default function SettingsPage(props: any) {
                       <div className="p-4 bg-slate-100/90 dark:bg-slate-800/70 border border-transparent dark:border-slate-800/60 rounded-t-xl rounded-b-[4px] flex items-center justify-between">
                         <div className="space-y-0.5 pr-4">
                           <span className="text-sm font-medium text-slate-900 dark:text-slate-100 block">
-                            Thông báo khi có học sinh nộp bài tập & đề thi
+                            Thông báo khi có học sinh nộp bài tập và đề thi
                           </span>
                           <span className="text-xs text-slate-400 block font-normal">
                             Gửi email và thông báo đẩy tức thì khi học sinh hoàn thành bài nộp vào lớp của bạn

@@ -37,26 +37,22 @@ export const QuestionGridModal: React.FC<QuestionGridModalProps> = ({
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}
-        <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-white/10 mb-4">
+        <div className="flex items-center justify-between pb-1 mb-3">
           <div className="flex items-center gap-2">
             <span className="w-7 h-7 rounded-lg bg-google-blue/15 text-google-blue dark:text-blue-400 flex items-center justify-center font-bold text-xs">
               <Sparkles size={15} />
             </span>
-            <div>
-              <h3 className="text-sm font-bold text-slate-900 dark:text-white">
-                Bảng chọn câu hỏi ({questionsCount} câu)
-              </h3>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                Gọi học sinh chọn số câu hỏi bất kỳ để cùng thi đấu
-              </p>
-            </div>
+            <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+              Bảng chọn câu hỏi {questionsCount} câu
+            </h3>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="text-xs px-2.5 py-1 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/10 transition-colors cursor-pointer"
+            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/10 transition-colors cursor-pointer"
+            title="Đóng"
           >
-            Đóng ✕
+            <X size={16} />
           </button>
         </div>
 
@@ -110,7 +106,7 @@ export const QuestionGridModal: React.FC<QuestionGridModalProps> = ({
         </div>
 
         {/* Legend */}
-        <div className="mt-4 pt-3 border-t border-slate-100 dark:border-white/10 flex items-center justify-center gap-4 text-[11px] text-slate-500">
+        <div className="mt-4 pt-1 flex items-center justify-center gap-4 text-[11px] text-slate-500">
           <div className="flex items-center gap-1.5">
             <span className="w-2.5 h-2.5 rounded-full bg-slate-200 dark:bg-white/20" />
             <span>Chưa mở</span>

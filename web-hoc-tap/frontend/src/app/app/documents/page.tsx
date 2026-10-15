@@ -1610,7 +1610,7 @@ function DocumentsPageContent() {
 
   if (user && !isTeacher) {
     return (
-      <AppShell title="Kho tài liệu & Đề thi">
+      <AppShell title="Kho tài liệu và Đề thi">
         <div className="flex flex-col items-center justify-center py-24 px-4 text-center space-y-4">
           <div className="w-16 h-16 rounded-2xl bg-amber-50 dark:bg-amber-950/50 flex items-center justify-center text-amber-600">
             <Lock size={32} />
@@ -1806,9 +1806,9 @@ function DocumentsPageContent() {
                     }}
                     onContextMenu={(e) => {
                       if (!selectedItemIds.includes(folder.id)) {
-                        setSelectedItemIds([folder.id]);
+                        setSelectedItemIds([]);
+                        setSelectedItemId(null);
                       }
-                      setSelectedItemId(folder.id);
                       openContextMenu(e, 'folder', folder);
                     }}
                     className={`group relative h-12 px-3.5 rounded-[12px] flex items-center justify-between transition-all duration-200 cursor-pointer select-none ${
@@ -1852,10 +1852,18 @@ function DocumentsPageContent() {
                         onClick={(e) => {
                           e.stopPropagation();
                           e.nativeEvent?.stopImmediatePropagation?.();
-                          setSelectedItemId(folder.id);
+                          setSelectedItemId(null);
+                          setSelectedItemIds([]);
                           openContextMenu(e, 'folder', folder);
                         }}
-                        className="p-1 rounded-full text-slate-600 dark:text-slate-400 hover:bg-slate-300/60 dark:hover:bg-slate-700/70 transition-colors shrink-0 cursor-pointer"
+                        onContextMenu={(e) => {
+                          e.stopPropagation();
+                          e.nativeEvent?.stopImmediatePropagation?.();
+                          setSelectedItemId(null);
+                          setSelectedItemIds([]);
+                          openContextMenu(e, 'folder', folder);
+                        }}
+                        className="p-1 rounded-full text-slate-600 dark:text-slate-400 hover:bg-slate-300/60 dark:hover:bg-slate-700/70 transition-colors shrink-0 cursor-pointer outline-none focus:outline-none focus:ring-0"
                         title="Tùy chọn"
                       >
                         <MoreVertical size={14} />
@@ -1914,9 +1922,9 @@ function DocumentsPageContent() {
                     }}
                     onContextMenu={(e) => {
                       if (!selectedItemIds.includes(fileItem.id)) {
-                        setSelectedItemIds([fileItem.id]);
+                        setSelectedItemIds([]);
+                        setSelectedItemId(null);
                       }
-                      setSelectedItemId(fileItem.id);
                       openContextMenu(e, 'file', undefined, fileItem);
                     }}
                     className={`group relative rounded-[12px] p-2.5 flex flex-col justify-between max-w-[200px] w-full aspect-square transition-all duration-200 select-none cursor-pointer ${
@@ -1948,10 +1956,18 @@ function DocumentsPageContent() {
                           onClick={(e) => {
                             e.stopPropagation();
                             e.nativeEvent?.stopImmediatePropagation?.();
-                            setSelectedItemId(fileItem.id);
+                            setSelectedItemId(null);
+                            setSelectedItemIds([]);
                             openContextMenu(e, 'file', undefined, fileItem);
                           }}
-                          className="p-1 rounded-full text-slate-600 dark:text-slate-400 hover:bg-slate-300/60 dark:hover:bg-slate-700/70 transition-colors shrink-0 cursor-pointer"
+                          onContextMenu={(e) => {
+                            e.stopPropagation();
+                            e.nativeEvent?.stopImmediatePropagation?.();
+                            setSelectedItemId(null);
+                            setSelectedItemIds([]);
+                            openContextMenu(e, 'file', undefined, fileItem);
+                          }}
+                          className="p-1 rounded-full text-slate-600 dark:text-slate-400 hover:bg-slate-300/60 dark:hover:bg-slate-700/70 transition-colors shrink-0 cursor-pointer outline-none focus:outline-none focus:ring-0"
                           title="Tùy chọn"
                         >
                           <MoreVertical size={14} />
