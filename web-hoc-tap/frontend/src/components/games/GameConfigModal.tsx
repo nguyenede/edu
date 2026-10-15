@@ -649,13 +649,11 @@ export const GameConfigModal: React.FC<GameConfigModalProps> = ({
                         />
 
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className="text-xs font-bold text-slate-500">
-                              Câu {idx + 1}
-                            </span>
-                          </div>
                           <p className="text-xs sm:text-sm font-medium text-slate-800 dark:text-zinc-100 leading-snug">
-                            {q.content}
+                            <strong className="font-bold text-google-blue dark:text-blue-400 mr-1.5 whitespace-nowrap">
+                              Câu {idx + 1}:
+                            </strong>
+                            <span>{(q.content || '').replace(/^Câu\s*\d+\s*[:.]\s*/i, '')}</span>
                           </p>
 
                           <div className="flex flex-wrap gap-1.5 mt-2">
@@ -1007,7 +1005,7 @@ export const GameConfigModal: React.FC<GameConfigModalProps> = ({
                   className="px-4 py-2 rounded-xl bg-google-blue hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-sm active:scale-95"
                 >
                   <Play size={14} className="fill-white" />
-                  <span>Bắt đầu dạy ngay</span>
+                  <span>Bắt đầu chơi ngay</span>
                 </button>
               </>
             )}

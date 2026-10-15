@@ -388,14 +388,17 @@ export default function QuestionBankPage() {
             </div>
           ) : (
             <div className="space-y-2">
-              {questions.map((q) => (
+              {questions.map((q, idx) => (
                 <div
                   key={q.id}
                   className="py-4 space-y-3 hover:bg-slate-50/50 dark:hover:bg-slate-900/30 px-2 rounded-lg transition-colors group"
                 >
                   <div className="flex justify-between items-start gap-4">
                     <span className="font-bold text-sm text-slate-950 dark:text-slate-100 leading-relaxed">
-                      {q.content}
+                      <span className="text-google-blue dark:text-blue-400 mr-1.5 whitespace-nowrap">
+                        Câu {idx + 1}:
+                      </span>
+                      <span>{(q.content || '').replace(/^Câu\s*\d+\s*[:.]\s*/i, '')}</span>
                     </span>
                     <button
                       onClick={() => setQuestionToDelete(q.id)}

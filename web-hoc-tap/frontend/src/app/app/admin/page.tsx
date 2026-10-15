@@ -152,7 +152,7 @@ export default function AdminPage() {
                 : 'border-transparent text-slate-500'
             }`}
           >
-            Quản lý người dùng
+            Quản lý người dùng ({usersList.length})
           </button>
           <button
             onClick={() => setActiveTab('logs')}
@@ -162,7 +162,7 @@ export default function AdminPage() {
                 : 'border-transparent text-slate-500'
             }`}
           >
-            Nhật ký hệ thống (Audit Logs) ({auditLogs.length})
+            Nhật ký hệ thống ({auditLogs.length})
           </button>
         </div>
 

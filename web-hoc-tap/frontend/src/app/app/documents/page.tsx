@@ -2377,7 +2377,10 @@ function DocumentsPageContent() {
                 {parsedPreview.questions.slice(0, 3).map((q, i) => (
                   <div key={i} className="p-2 bg-white dark:bg-slate-900 rounded-xl text-[11px] border border-slate-200/60 dark:border-slate-800">
                     <p className="font-semibold text-slate-800 dark:text-slate-200 line-clamp-1">
-                      {(q as any).rawLabel || `Câu ${i + 1}`}: {q.content}
+                      <span className="font-bold text-google-blue dark:text-blue-400 mr-1.5 whitespace-nowrap">
+                        {((q as any).rawLabel || `Câu ${i + 1}`).replace(/[:.]\s*$/, '')}:
+                      </span>
+                      <span>{(q.content || '').replace(/^Câu\s*\d+\s*[:.]\s*/i, '')}</span>
                     </p>
                     <p className="text-[10px] text-slate-400 mt-0.5">
                       {(q as any).type === 'essay'

@@ -912,19 +912,22 @@ function BlooketPlayContent() {
                 const correctOpt = (q.options || []).find((o: any) => o.isCorrect);
                 const isCorrect = userAns && correctOpt && (typeof correctOpt === 'string' ? correctOpt : correctOpt.content) === userAns;
 
+                const cleanContent = (q.content || '').replace(/^Câu\s*\d+\s*[:.]\s*/i, '');
                 return (
                   <div
                     key={q.id || idx}
                     className="p-5 bg-white dark:bg-[#1e1f20] rounded-2xl border border-slate-200/80 dark:border-slate-800 space-y-3 text-xs"
                   >
-                    <div className="flex items-center justify-between font-bold">
-                      <span>Câu {idx + 1}</span>
-                      <span className={isCorrect ? 'text-emerald-600' : 'text-red-500'}>
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="text-sm font-medium text-slate-800 dark:text-slate-200 leading-relaxed flex-1">
+                        <span className="font-bold text-google-blue dark:text-blue-400 mr-1.5 whitespace-nowrap">
+                          Câu {idx + 1}:
+                        </span>
+                        <PlayMathRenderer text={cleanContent} />
+                      </div>
+                      <span className={`text-xs font-bold shrink-0 ${isCorrect ? 'text-emerald-600' : 'text-red-500'}`}>
                         {isCorrect ? '✓ Đúng' : '✕ Sai'}
                       </span>
-                    </div>
-                    <div className="text-sm font-medium text-slate-800 dark:text-slate-200">
-                      <PlayMathRenderer text={q.content} />
                     </div>
                     <div className="p-2.5 bg-slate-50 dark:bg-slate-900 rounded-xl space-y-1">
                       <div>
@@ -1161,7 +1164,10 @@ function BlooketPlayContent() {
 
             {/* Question Content */}
             <div className="text-base sm:text-lg font-semibold text-slate-900 dark:text-slate-100 leading-relaxed whitespace-pre-wrap select-none">
-              <PlayMathRenderer text={currentQ.content || ''} />
+              <span className="font-bold text-google-blue dark:text-blue-400 mr-2 whitespace-nowrap">
+                Câu {currentIndex + 1}:
+              </span>
+              <PlayMathRenderer text={(currentQ.content || '').replace(/^Câu\s*\d+\s*[:.]\s*/i, '')} />
             </div>
 
             {/* Multiple Choice Options */}

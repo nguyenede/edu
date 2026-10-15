@@ -229,7 +229,7 @@ export default function ClassesPage() {
 
   return (
     <AppShell
-      title="Danh sách Lớp học"
+      title={classes.length > 0 ? `Danh sách Lớp học (${classes.length})` : 'Danh sách Lớp học'}
       subtitle={
         isTeacher
           ? 'Quản lý toàn bộ các lớp bạn đang phụ trách và mã tham gia'
@@ -452,10 +452,6 @@ export default function ClassesPage() {
         maxWidth="lg"
       >
         <div className="space-y-4 pt-1">
-          <p className="text-xs text-slate-500">
-            Tải lên file Excel (.xlsx, .xls) chứa danh sách các lớp học để thêm tự động hàng loạt.
-          </p>
-
           <div className="flex items-center justify-between p-3 rounded-lg bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800">
             <span className="text-xs text-slate-600 dark:text-slate-400">
               Tải file mẫu Excel danh sách lớp học

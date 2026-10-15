@@ -41,7 +41,7 @@ interface ClassroomQuestionCardProps {
 
 const formatContent = (str?: string) => {
   if (!str) return '';
-  return str.replace(/\$+/g, '').trim();
+  return str.replace(/\$+/g, '').replace(/^Câu\s*\d+\s*[:.]\s*/i, '').trim();
 };
 
 const OPTION_LABELS = ['A', 'B', 'C', 'D', 'E', 'F'];
@@ -122,7 +122,10 @@ export const ClassroomQuestionCard: React.FC<ClassroomQuestionCardProps> = ({
         <h2
           className={`font-bold text-slate-900 dark:text-white leading-relaxed tracking-tight ${questionTextSize}`}
         >
-          {formatContent(question.content)}
+          <span className="text-google-blue dark:text-blue-400 mr-2.5 whitespace-nowrap">
+            Câu {questionNumber}:
+          </span>
+          <span>{formatContent(question.content)}</span>
         </h2>
       </div>
 

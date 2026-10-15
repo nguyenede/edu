@@ -910,12 +910,12 @@ export default function AssignmentDetailPage() {
                     </span>
                     <div className="divide-y divide-slate-100 dark:divide-slate-800">
                       {(mySubmission.answers || []).map((ans: any, idx: number) => (
-                        <div key={ans.id || idx} className="py-3 text-xs space-y-1">
-                          <span className="font-semibold text-slate-700 dark:text-slate-300 block">
-                            Câu {idx + 1}:
-                          </span>
-                          <p className="text-slate-900 dark:text-slate-100 font-mono bg-slate-50 dark:bg-slate-900 p-2.5 rounded-lg flex items-center justify-between">
-                            <span>{formatSubmittedAnswer(ans)}</span>
+                        <div key={ans.id || idx} className="py-2 text-xs">
+                          <p className="text-slate-900 dark:text-slate-100 bg-slate-50 dark:bg-slate-900 p-2.5 rounded-lg flex items-center justify-between">
+                            <span>
+                              <strong className="font-bold text-google-blue dark:text-blue-400 mr-1.5">Câu {idx + 1}:</strong>
+                              <span className="font-mono">{formatSubmittedAnswer(ans)}</span>
+                            </span>
                             {typeof ans.isCorrect === 'boolean' && (
                               <span className={ans.isCorrect ? 'text-emerald-600 font-bold ml-2' : 'text-red-600 font-bold ml-2'}>
                                 {ans.isCorrect ? '✓ Đúng' : '✕ Sai'}
@@ -1205,18 +1205,18 @@ export default function AssignmentDetailPage() {
                   </span>
                   <div className="max-h-52 overflow-y-auto p-2.5 bg-white/80 dark:bg-[#1a1b1d]/80 rounded-xl text-xs space-y-2">
                     {(selectedSub.answers || []).map((ans: any, idx: number) => (
-                      <div key={ans.id || idx} className="space-y-0.5">
-                        <span className="text-[10px] text-slate-400 font-bold block">
-                          Câu {idx + 1}:
-                        </span>
-                        <p className="font-mono text-slate-800 dark:text-slate-200 flex items-center justify-between">
+                      <div key={ans.id || idx} className="flex items-center justify-between py-1 border-b border-slate-100 dark:border-slate-800/60 last:border-0 font-mono text-slate-800 dark:text-slate-200">
+                        <span className="flex items-center gap-1.5 flex-wrap">
+                          <strong className="font-bold text-google-blue dark:text-blue-400 shrink-0">
+                            Câu {idx + 1}:
+                          </strong>
                           <span>{formatSubmittedAnswer(ans)}</span>
-                          {typeof ans.isCorrect === 'boolean' && (
-                            <span className={ans.isCorrect ? 'ml-2 text-emerald-600 font-bold' : 'ml-2 text-red-600 font-bold'}>
-                              {ans.isCorrect ? '✓ Đúng' : '✕ Sai'}
-                            </span>
-                          )}
-                        </p>
+                        </span>
+                        {typeof ans.isCorrect === 'boolean' && (
+                          <span className={ans.isCorrect ? 'ml-2 text-emerald-600 font-bold shrink-0' : 'ml-2 text-red-600 font-bold shrink-0'}>
+                            {ans.isCorrect ? '✓ Đúng' : '✕ Sai'}
+                          </span>
+                        )}
                       </div>
                     ))}
                   </div>

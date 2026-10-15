@@ -523,7 +523,7 @@ function OcrQuizCreateContent() {
                   >
                     <div className="font-bold text-slate-900 dark:text-slate-100 flex items-start gap-1.5">
                       <span className="text-purple-600 shrink-0">Câu {idx + 1}:</span>
-                      <span className="whitespace-pre-wrap">{q.content}</span>
+                      <span className="whitespace-pre-wrap">{(q.content || '').replace(/^Câu\s*\d+\s*[:.]\s*/i, '')}</span>
                     </div>
 
                     {Array.isArray(q.options) && q.options.length > 0 && (
