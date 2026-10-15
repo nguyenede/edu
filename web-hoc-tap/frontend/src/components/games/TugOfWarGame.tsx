@@ -268,9 +268,9 @@ export const TugOfWarGame: React.FC<TugOfWarGameProps> = ({
         {/* LEFT COLUMN: TUG OF WAR ARENA (lg:col-span-5) */}
         <div className="lg:col-span-5 flex flex-col justify-between space-y-4">
           {/* Minimalist Rope Arena */}
-          <div className="bg-white dark:bg-[#1a1b1e] rounded-2xl p-5 sm:p-6 border border-slate-200/80 dark:border-white/10 shadow-xs flex flex-col justify-between space-y-5 flex-1">
+          <div className="bg-white dark:bg-[#1a1b1e] rounded-3xl p-5 sm:p-6 flex flex-col justify-between space-y-5 flex-1">
             {/* Arena Header */}
-            <div className="flex items-center justify-between text-xs font-bold pb-2 border-b border-slate-100 dark:border-white/10">
+            <div className="flex items-center justify-between text-xs font-bold pb-2">
               <span className="text-blue-600 dark:text-blue-400 font-extrabold flex items-center gap-1.5">
                 <span className="w-2.5 h-2.5 rounded-full bg-blue-600" />
                 {team1Name}

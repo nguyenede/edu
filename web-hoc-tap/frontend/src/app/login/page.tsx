@@ -22,10 +22,19 @@ type LoginForm = z.infer<typeof loginSchema>;
 function LoginFormContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirectUrl = searchParams?.get('redirect') || searchParams?.get('next') || '/dashboard';
-  const loginUser = useAuthStore((state) => state.login);
+  const rawRedirect = searchParams?.get('redirect') || searchParams?.get('next');
+  const redirectUrl = rawRedirect && rawRedirect !== '/dashboard' && rawRedirect !== '/app/dashboard'
+    ? rawRedirect
+    : '/settings/plans';
+  const { isAuthenticated, login: loginUser } = useAuthStore();
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  React.useEffect(() => {
+    if (isAuthenticated) {
+      router.replace(redirectUrl);
+    }
+  }, [isAuthenticated, redirectUrl, router]);
 
   const {
     register,
@@ -231,7 +240,7 @@ function LoginFormContent() {
           <div className="text-center text-xs text-slate-500 pt-3 border-t border-slate-100 dark:border-slate-800">
             Chưa có tài khoản?{' '}
             <Link
-              href={redirectUrl !== '/dashboard' ? `/register?redirect=${encodeURIComponent(redirectUrl)}` : '/register'}
+              href={redirectUrl !== '/settings/plans' ? `/register?redirect=${encodeURIComponent(redirectUrl)}` : '/register'}
               className="font-bold text-google-blue hover:underline"
             >
               Đăng ký tài khoản mới

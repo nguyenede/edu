@@ -24,10 +24,19 @@ type RegisterForm = z.infer<typeof registerSchema>;
 function RegisterFormContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirectUrl = searchParams?.get('redirect') || searchParams?.get('next') || '/dashboard';
-  const loginUser = useAuthStore((state) => state.login);
+  const rawRedirect = searchParams?.get('redirect') || searchParams?.get('next');
+  const redirectUrl = rawRedirect && rawRedirect !== '/dashboard' && rawRedirect !== '/app/dashboard'
+    ? rawRedirect
+    : '/settings/plans';
+  const { isAuthenticated, login: loginUser } = useAuthStore();
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  React.useEffect(() => {
+    if (isAuthenticated) {
+      router.replace(redirectUrl);
+    }
+  }, [isAuthenticated, redirectUrl, router]);
 
   const {
     register,
@@ -211,7 +220,7 @@ function RegisterFormContent() {
           <div className="text-center text-xs text-slate-500 pt-3 border-t border-slate-100 dark:border-slate-800">
             Đã có tài khoản?{' '}
             <Link
-              href={redirectUrl !== '/dashboard' ? `/login?redirect=${encodeURIComponent(redirectUrl)}` : '/login'}
+              href={redirectUrl !== '/settings/plans' ? `/login?redirect=${encodeURIComponent(redirectUrl)}` : '/login'}
               className="font-bold text-google-blue hover:underline"
             >
               Đăng nhập ngay

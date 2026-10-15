@@ -264,7 +264,7 @@ export const BoatRaceGame: React.FC<BoatRaceGameProps> = ({
       {/* 2. WIDESCREEN FULL VIEWPORT 16:9 GRID LAYOUT (KHÔNG KHUNG VIỀN CỒNG KỀNH) */}
       <div className="p-4 sm:p-6 lg:p-8 grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-stretch flex-1">
         {/* LEFT COLUMN: BOAT RACE STAGE (lg:col-span-5) */}
-        <div className="lg:col-span-5 flex flex-col justify-between space-y-4 bg-white dark:bg-[#1a1b1e] rounded-3xl p-6 sm:p-8 shadow-xs">
+        <div className="lg:col-span-5 flex flex-col justify-between space-y-4 bg-white dark:bg-[#1a1b1e] rounded-3xl p-6 sm:p-8">
           {/* Header info */}
           <div className="flex items-center justify-between text-xs sm:text-sm font-bold text-slate-500 dark:text-slate-400">
             <span className="flex items-center gap-1.5 text-blue-600 dark:text-blue-400">
@@ -307,7 +307,7 @@ export const BoatRaceGame: React.FC<BoatRaceGameProps> = ({
               >
                 <span className="text-3xl sm:text-4xl lg:text-5xl filter drop-shadow-md">🛶</span>
               </div>
-              <div className="absolute right-0 top-0 bottom-0 w-4 sm:w-5 bg-[repeating-linear-gradient(45deg,#f59e0b,#f59e0b_6px,#fbbf24_6px,#fbbf24_12px)] border-l-2 border-amber-500" />
+              <div className="absolute right-0 top-0 bottom-0 w-4 sm:w-5 bg-[repeating-linear-gradient(45deg,#f59e0b,#f59e0b_6px,#fbbf24_6px,#fbbf24_12px)]" />
             </div>
           </div>
 
@@ -339,7 +339,7 @@ export const BoatRaceGame: React.FC<BoatRaceGameProps> = ({
               >
                 <span className="text-3xl sm:text-4xl lg:text-5xl filter drop-shadow-md">⛵</span>
               </div>
-              <div className="absolute right-0 top-0 bottom-0 w-4 sm:w-5 bg-[repeating-linear-gradient(45deg,#f59e0b,#f59e0b_6px,#fbbf24_6px,#fbbf24_12px)] border-l-2 border-amber-500" />
+              <div className="absolute right-0 top-0 bottom-0 w-4 sm:w-5 bg-[repeating-linear-gradient(45deg,#f59e0b,#f59e0b_6px,#fbbf24_6px,#fbbf24_12px)]" />
             </div>
           </div>
 

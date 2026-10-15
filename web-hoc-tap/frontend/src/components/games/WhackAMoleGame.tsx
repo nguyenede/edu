@@ -236,9 +236,9 @@ export const WhackAMoleGame: React.FC<WhackAMoleGameProps> = ({
       <div className="p-3 sm:p-5 grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-5 items-stretch">
         {/* LEFT COLUMN: MINIMALIST MOLE BURROWS STAGE (lg:col-span-5) */}
         <div className="lg:col-span-5 flex flex-col justify-between space-y-3">
-          <div className="bg-white dark:bg-[#1a1b1e] rounded-2xl p-4 sm:p-5 border border-slate-200/80 dark:border-white/10 shadow-xs flex flex-col justify-between space-y-4 flex-1">
+          <div className="bg-white dark:bg-[#1a1b1e] rounded-3xl p-4 sm:p-5 flex flex-col justify-between space-y-4 flex-1">
             {/* Header info */}
-            <div className="flex items-center justify-between text-xs font-bold pb-2 border-b border-slate-100 dark:border-white/10">
+            <div className="flex items-center justify-between text-xs font-bold pb-2">
               <span className="text-orange-700 dark:text-orange-300 font-extrabold flex items-center gap-1.5">
                 <span>🔨 Hang chuột tri thức</span>
               </span>
