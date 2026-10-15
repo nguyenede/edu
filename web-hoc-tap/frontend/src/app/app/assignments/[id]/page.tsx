@@ -777,26 +777,12 @@ export default function AssignmentDetailPage() {
                   </span>
                 </>
               )}
-
-
             </div>
-
-            {assignment.description && (
-              <div className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed whitespace-pre-line">
-                {assignment.description}
-              </div>
-            )}
           </div>
 
           {/* ================= TEACHER VIEW ================= */}
           {isTeacher && (
             <div className="space-y-4">
-              <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
-                <h3 className="font-semibold text-sm text-slate-900 dark:text-slate-100">
-                  Đề thi & Danh sách câu hỏi ({normalizedQuestions.length})
-                </h3>
-              </div>
-
               {normalizedQuestions.length === 0 ? (
                 <div className="py-12 text-center space-y-2">
                   <HelpCircle size={32} className="mx-auto text-slate-300 dark:text-slate-600" />
@@ -1184,12 +1170,12 @@ export default function AssignmentDetailPage() {
 
         {/* Right 1 Col: Teacher Submissions List & Grading Panel */}
         {isTeacher && (
-          <div className="md:col-span-1 space-y-4">
+          <div className="md:col-span-1 space-y-4 md:sticky md:top-4 md:self-start md:max-h-[calc(100vh-5.5rem)] flex flex-col">
             {/* Nút mở mã mời */}
             <Button
               type="button"
               onClick={() => setIsQrModalOpen(true)}
-              className="w-full text-xs font-semibold py-2.5 rounded-xl bg-google-blue hover:bg-[#1557b0] text-white gap-2 shadow-xs cursor-pointer flex items-center justify-center"
+              className="w-full text-xs font-semibold py-2.5 rounded-xl bg-google-blue hover:bg-[#1557b0] text-white gap-2 shadow-xs cursor-pointer flex items-center justify-center shrink-0"
             >
               <QrCode size={15} />
               <span>Mã mời</span>
@@ -1197,8 +1183,8 @@ export default function AssignmentDetailPage() {
 
             {selectedSub ? (
               /* Grading Form Panel */
-              <div className="p-4 bg-slate-50/70 dark:bg-slate-900/40 rounded-2xl space-y-4">
-                <div className="space-y-1 pb-2 border-b border-slate-200/60 dark:border-slate-800/60">
+              <div className="p-4 bg-slate-50/70 dark:bg-slate-900/40 rounded-2xl space-y-4 overflow-y-auto max-h-[calc(100vh-10rem)] pr-1 [scrollbar-width:thin]">
+                <div className="space-y-1 pb-2 border-b border-slate-200/60 dark:border-slate-800/60 sticky top-0 bg-slate-50/95 dark:bg-slate-900/95 backdrop-blur-xs z-10 -mt-1 pt-1">
                   <h3 className="font-semibold text-sm text-slate-950 dark:text-slate-100">
                     Chấm điểm bài nộp
                   </h3>
@@ -1290,19 +1276,19 @@ export default function AssignmentDetailPage() {
               </div>
             ) : (
               /* Submissions List */
-              <div className="space-y-3">
-                <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
+              <div className="space-y-3 flex-1 flex flex-col min-h-0">
+                <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800 shrink-0">
                   <h3 className="font-semibold text-sm text-slate-950 dark:text-slate-100">
                     Danh sách bài nộp ({deduplicatedSubmissions.length})
                   </h3>
                 </div>
 
                 {deduplicatedSubmissions.length === 0 ? (
-                  <p className="text-xs text-slate-400 py-8 text-center">
+                  <p className="text-xs text-slate-400 py-8 text-center shrink-0">
                     Chưa có học sinh nào nộp bài.
                   </p>
                 ) : (
-                  <div className="divide-y divide-slate-100 dark:divide-slate-800/70">
+                  <div className="divide-y divide-slate-100 dark:divide-slate-800/70 overflow-y-auto max-h-[calc(100vh-12rem)] pr-1.5 [scrollbar-width:thin]">
                     {deduplicatedSubmissions.map((sub) => {
                       const studentName = sub.student?.profile?.name || sub.student?.name || sub.student?.email || 'Học sinh';
                       return (
