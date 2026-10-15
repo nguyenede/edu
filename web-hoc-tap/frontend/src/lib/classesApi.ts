@@ -483,6 +483,7 @@ export async function fetchClassAssignments(token: string | null, classId: strin
                 antiCheat: hw.antiCheating,
                 antiCheatConfig: hw.antiCheatConfig,
                 durationMinutes: hw.durationMinutes,
+                minSubmitMinutes: hw.minSubmitMinutes || 0,
                 quiz: {
                   id: `quiz_${hw.id}`,
                   title: hw.quizData?.title || hw.title,
@@ -657,6 +658,7 @@ export async function fetchAssignmentDetail(token: string | null, assignmentId: 
               antiCheat: Boolean(matched.antiCheating),
               antiCheatConfig: matched.antiCheatConfig,
               durationMinutes: matched.durationMinutes,
+              minSubmitMinutes: matched.minSubmitMinutes || 0,
               quiz: {
                 id: `quiz_${matched.id}`,
                 title: matched.quizData?.title || matched.title,
@@ -768,6 +770,9 @@ export async function fetchAssignmentDetail(token: string | null, assignmentId: 
           const cfg = JSON.parse(match[1]);
           if (cfg.durationMinutes !== undefined && cfg.durationMinutes !== null) {
             found.durationMinutes = cfg.durationMinutes;
+          }
+          if (cfg.minSubmitMinutes !== undefined && cfg.minSubmitMinutes !== null) {
+            found.minSubmitMinutes = cfg.minSubmitMinutes;
           }
           if (cfg.antiCheat !== undefined && cfg.antiCheat !== null) {
             found.antiCheat = cfg.antiCheat;
@@ -1209,6 +1214,7 @@ export async function createClassAssignment(
     deadline?: string;
     maxScore?: number;
     durationMinutes?: number;
+    minSubmitMinutes?: number;
     antiCheat?: boolean;
     antiCheatConfig?: AntiCheatConfig;
   }
@@ -1217,9 +1223,10 @@ export async function createClassAssignment(
 
   const generatedPin = Math.floor(100000 + Math.random() * 900000).toString();
 
-  // Encode antiCheat & durationMinutes into description comment for backend DTO compliance
+  // Encode antiCheat, durationMinutes & minSubmitMinutes into description comment for backend DTO compliance
   const metaConfig = {
     durationMinutes: payload.durationMinutes || null,
+    minSubmitMinutes: payload.minSubmitMinutes || null,
     antiCheat: Boolean(payload.antiCheat),
     antiCheatConfig: payload.antiCheatConfig || null,
     pin: generatedPin,
@@ -1279,6 +1286,7 @@ export async function createClassAssignment(
       documentFileId: payload.documentFileId || null,
       quizId: payload.quizId || null,
       durationMinutes: payload.durationMinutes || null,
+      minSubmitMinutes: payload.minSubmitMinutes || null,
       antiCheat: Boolean(payload.antiCheat),
       antiCheatConfig: payload.antiCheatConfig || null,
       documentFile: docFile
@@ -1297,6 +1305,7 @@ export async function createClassAssignment(
   } else {
     created.pin = generatedPin;
     created.durationMinutes = payload.durationMinutes || null;
+    created.minSubmitMinutes = payload.minSubmitMinutes || null;
     created.antiCheat = Boolean(payload.antiCheat);
     created.antiCheatConfig = payload.antiCheatConfig || null;
   }

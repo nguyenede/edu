@@ -199,6 +199,8 @@ function AssignPageContent() {
   const [hasDeadline, setHasDeadline] = useState(false);
   const [deadline, setDeadline] = useState('');
   const [durationMinutes, setDurationMinutes] = useState<number>(45);
+  const [minSubmitMinutes, setMinSubmitMinutes] = useState<number>(0);
+  const [customMinSubmit, setCustomMinSubmit] = useState<string>('');
   const [shuffleQuestions, setShuffleQuestions] = useState(true);
   const [shuffleOptions, setShuffleOptions] = useState(false);
   const [showAnswersAfterSubmit, setShowAnswersAfterSubmit] = useState(true);
@@ -363,6 +365,8 @@ function AssignPageContent() {
       const selectedClass = classes.find((c) => c.id === finalClassId);
       const questions = fileItem.parsedQuiz?.questions || [];
 
+      const finalMinSubmit = Number(minSubmitMinutes === -1 ? customMinSubmit : minSubmitMinutes) || 0;
+
       const hw = await createHomework({
         title: title.trim(),
         description: fileItem.parsedQuiz?.description || `Bài tập từ tài liệu ${fileItem.name}`,
@@ -371,6 +375,7 @@ function AssignPageContent() {
         className: selectedClass ? selectedClass.name : 'Công khai / Tự do',
         deadline: hasDeadline && deadline ? new Date(deadline).toISOString() : null,
         durationMinutes: Number(durationMinutes),
+        minSubmitMinutes: finalMinSubmit,
         shuffleQuestions,
         shuffleOptions,
         showAnswersAfterSubmit,
@@ -398,6 +403,7 @@ function AssignPageContent() {
           documentFileId: fileItem.id,
           deadline: hasDeadline && deadline ? new Date(deadline).toISOString() : undefined,
           durationMinutes: Number(durationMinutes),
+          minSubmitMinutes: finalMinSubmit,
           antiCheat: antiCheating,
           antiCheatConfig: {
             enabled: antiCheating,
@@ -744,6 +750,20 @@ function AssignPageContent() {
                 </strong>
               </div>
               <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
+                <span>Nộp bài tối thiểu:</span>
+                <strong className="text-slate-900 dark:text-slate-100">
+                  {createdHomework.minSubmitMinutes && createdHomework.minSubmitMinutes > 0
+                    ? `Sau ${createdHomework.minSubmitMinutes} phút`
+                    : 'Không yêu cầu (Nộp bài bất kỳ lúc nào)'}
+                </strong>
+              </div>
+              <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
+                <span>Quy tắc nộp bài:</span>
+                <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
+                  Bắt buộc làm ít nhất 1 câu (Chặn nộp bài trống)
+                </span>
+              </div>
+              <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
                 <span>Chống gian lận:</span>
                 {createdHomework.antiCheating ? (
                   <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-blue-50 text-google-blue dark:bg-blue-950/60 dark:text-blue-300">
@@ -948,7 +968,7 @@ function AssignPageContent() {
                 </div>
 
                 {/* Thời gian & Hạn nộp */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-1">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 pt-1">
                   {/* Thời gian làm bài */}
                   <div className="space-y-1.5">
                     <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
@@ -967,6 +987,38 @@ function AssignPageContent() {
                       <option value={60}>60 phút</option>
                       <option value={90}>90 phút</option>
                     </select>
+                  </div>
+
+                  {/* Thời gian nộp bài tối thiểu */}
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                      <span className="text-amber-500">⏳</span>
+                      Nộp bài tối thiểu
+                    </label>
+                    <select
+                      value={minSubmitMinutes}
+                      onChange={(e) => setMinSubmitMinutes(Number(e.target.value))}
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-xs focus:outline-none focus:ring-1 focus:ring-google-blue"
+                    >
+                      <option value={0}>Không yêu cầu (Nộp bất kỳ lúc nào)</option>
+                      <option value={5}>Sau tối thiểu 5 phút</option>
+                      <option value={10}>Sau tối thiểu 10 phút</option>
+                      <option value={15}>Sau tối thiểu 15 phút</option>
+                      <option value={20}>Sau tối thiểu 20 phút</option>
+                      <option value={30}>Sau tối thiểu 30 phút</option>
+                      <option value={45}>Sau tối thiểu 45 phút</option>
+                      <option value={-1}>Tùy chỉnh số phút...</option>
+                    </select>
+                    {minSubmitMinutes === -1 && (
+                      <Input
+                        type="number"
+                        min={1}
+                        placeholder="Nhập số phút tối thiểu..."
+                        value={customMinSubmit}
+                        onChange={(e) => setCustomMinSubmit(e.target.value)}
+                        className="text-xs rounded-xl mt-1.5"
+                      />
+                    )}
                   </div>
 
                   {/* Hạn chót nộp bài */}
@@ -999,6 +1051,14 @@ function AssignPageContent() {
                       </div>
                     )}
                   </div>
+                </div>
+
+                {/* Ghi chú quy chế chống nộp bừa */}
+                <div className="p-3 bg-blue-50/70 dark:bg-blue-950/30 rounded-xl border border-blue-100 dark:border-blue-900/40 text-[11px] text-blue-800 dark:text-blue-300 flex items-start gap-2">
+                  <span className="text-sm shrink-0">🛡️</span>
+                  <span>
+                    <b>Quy tắc nộp bài an toàn:</b> Hệ thống tự động <b>chặn học sinh nộp bài nếu chưa làm bất kỳ câu nào</b>. Nếu đặt thời gian nộp bài tối thiểu, học sinh phải làm bài đủ số phút quy định mới được phép bấm nộp bài.
+                  </span>
                 </div>
               </div>
 

@@ -34,6 +34,8 @@ export interface BreadcrumbDropdownItem {
   href?: string;
   onClick?: () => void;
   icon?: React.ReactNode;
+  isDivider?: boolean;
+  isActive?: boolean;
 }
 
 interface BreadcrumbChevronProps {
@@ -180,7 +182,7 @@ export function BreadcrumbChevron({
           e.stopPropagation();
           setIsOpen((prev) => !prev);
         }}
-        title="Chọn thư mục"
+        title={menuTitle || 'Mở danh sách'}
         className={`w-6 h-6 rounded flex items-center justify-center cursor-pointer select-none transition-colors ${
           isOpen
             ? 'bg-slate-200/90 dark:bg-[#333333] text-slate-900 dark:text-slate-100'
@@ -196,32 +198,54 @@ export function BreadcrumbChevron({
       {/* Windows 11 Address Bar Dropdown Menu (Acrylic Frosted Glass Blur) */}
       {isOpen && (
         <div
-          className="absolute left-0 top-full mt-1 z-50 min-w-[190px] max-w-[280px] max-h-[340px] flex flex-col bg-white/85 dark:bg-[#202020]/85 backdrop-blur-xl rounded-md shadow-[0_8px_28px_rgba(0,0,0,0.22)] dark:shadow-[0_12px_36px_rgba(0,0,0,0.7)] border border-slate-200/70 dark:border-white/10 py-1 text-xs select-none overflow-hidden animate-in fade-in-0 duration-100"
+          className="absolute left-0 top-full mt-1 z-50 min-w-[200px] max-w-[320px] max-h-[360px] flex flex-col bg-white/95 dark:bg-[#202020]/95 backdrop-blur-xl rounded-xl shadow-[0_8px_28px_rgba(0,0,0,0.22)] dark:shadow-[0_12px_36px_rgba(0,0,0,0.7)] border border-slate-200/80 dark:border-white/10 py-1.5 text-xs select-none overflow-hidden animate-in fade-in-0 duration-100"
           onClick={(e) => e.stopPropagation()}
         >
+          {menuTitle && (
+            <div className="px-3 py-1 text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider select-none border-b border-slate-200/50 dark:border-white/10 mb-0.5">
+              {menuTitle}
+            </div>
+          )}
           <div className="overflow-y-auto win-scrollbar py-0.5 max-h-[330px]">
             {items ? (
-              items.map((item, idx) => (
-                <button
-                  key={item.id || idx}
-                  type="button"
-                  onClick={() => {
-                    setIsOpen(false);
-                    if (item.onClick) item.onClick();
-                    else if (item.href) router.push(item.href);
-                  }}
-                  className="w-full text-left px-3 py-1.5 flex items-center gap-2 hover:bg-slate-200/60 dark:hover:bg-white/10 active:bg-slate-300/60 dark:active:bg-white/15 text-slate-800 dark:text-slate-200 transition-colors cursor-pointer text-xs"
-                >
-                  {item.icon ? (
-                    <span className="shrink-0 flex items-center justify-center">{item.icon}</span>
-                  ) : (
-                    <span className="w-3.5 h-3.5 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center shrink-0">
-                      <span className="w-1.5 h-1.5 rounded-full bg-slate-500 dark:bg-slate-300" />
-                    </span>
-                  )}
-                  <span className="truncate">{item.label || item.name}</span>
-                </button>
-              ))
+              items.map((item, idx) => {
+                if (item.isDivider) {
+                  return (
+                    <div
+                      key={item.id || `divider-${idx}`}
+                      className="my-1 border-t border-slate-200/60 dark:border-white/10"
+                    />
+                  );
+                }
+                return (
+                  <button
+                    key={item.id || idx}
+                    type="button"
+                    onClick={() => {
+                      setIsOpen(false);
+                      if (item.onClick) item.onClick();
+                      else if (item.href) router.push(item.href);
+                    }}
+                    className={`w-full text-left px-3 py-1.5 flex items-center gap-2 hover:bg-slate-200/60 dark:hover:bg-white/10 active:bg-slate-300/60 dark:active:bg-white/15 transition-colors cursor-pointer text-xs rounded-sm ${
+                      item.isActive
+                        ? 'bg-blue-50/80 text-google-blue font-semibold dark:bg-blue-950/50 dark:text-blue-300'
+                        : 'text-slate-800 dark:text-slate-200'
+                    }`}
+                  >
+                    {item.icon ? (
+                      <span className="shrink-0 flex items-center justify-center">{item.icon}</span>
+                    ) : (
+                      <span className="w-3.5 h-3.5 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center shrink-0">
+                        <span className="w-1.5 h-1.5 rounded-full bg-slate-500 dark:bg-slate-300" />
+                      </span>
+                    )}
+                    <span className="truncate flex-1">{item.label || item.name}</span>
+                    {item.isActive && (
+                      <span className="w-1.5 h-1.5 rounded-full bg-google-blue shrink-0" />
+                    )}
+                  </button>
+                );
+              })
             ) : subfolders.length === 0 && subfiles.length === 0 ? (
               <div className="px-3 py-2 text-xs text-slate-400 dark:text-slate-500 text-center">
                 Thư mục trống

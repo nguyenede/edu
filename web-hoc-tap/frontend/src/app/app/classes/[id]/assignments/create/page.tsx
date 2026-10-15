@@ -6,14 +6,95 @@ import { AppShell } from '@/components/AppShell';
 import { useAuthStore } from '@/store/useAuthStore';
 import { Button } from '@/components/Button';
 import { Input } from '@/components/Input';
-import { ArrowLeft, FileText, Check, ChevronRight } from 'lucide-react';
+import { ArrowLeft, FileText, Check, ChevronRight, Users, PlusCircle, LogIn, GraduationCap } from 'lucide-react';
 import { listDocumentFiles } from '@/lib/documentsApi';
-import { createClassAssignment } from '@/lib/classesApi';
+import { createClassAssignment, fetchClasses, getLocalClasses } from '@/lib/classesApi';
+import { BreadcrumbChevron, BreadcrumbDropdownItem } from '@/components/BreadcrumbChevron';
 
 export default function CreateAssignmentPage() {
   const { id: classId } = useParams();
   const router = useRouter();
-  const { token } = useAuthStore();
+  const { token, user } = useAuthStore();
+
+  const isTeacher = React.useMemo(() => {
+    if (!user) return true;
+    const r = (user.role || '').toUpperCase();
+    return r === 'TEACHER' || r === 'ADMIN' || r === 'GIAOVIEN';
+  }, [user]);
+
+  // Breadcrumb dropdown state: all classes
+  const [allClasses, setAllClasses] = useState<any[]>(() => {
+    if (typeof window !== 'undefined') {
+      return getLocalClasses();
+    }
+    return [];
+  });
+
+  useEffect(() => {
+    let isCancelled = false;
+    const loadAll = async () => {
+      try {
+        const activeToken = token || (typeof window !== 'undefined' ? localStorage.getItem('token') : null);
+        const list = await fetchClasses(activeToken, isTeacher);
+        if (!isCancelled && Array.isArray(list) && list.length > 0) {
+          setAllClasses(list);
+        }
+      } catch (_) {}
+    };
+    loadAll();
+    return () => {
+      isCancelled = true;
+    };
+  }, [token, isTeacher]);
+
+  const classBreadcrumbItems = React.useMemo<BreadcrumbDropdownItem[]>(() => {
+    const items: BreadcrumbDropdownItem[] = [
+      {
+        label: 'Tất cả lớp học',
+        href: '/app/classes',
+        icon: <Users size={14} className="text-blue-500 shrink-0" />,
+      },
+    ];
+
+    if (isTeacher) {
+      items.push({
+        label: 'Tạo lớp học mới',
+        href: '/app/classes/create',
+        icon: <PlusCircle size={14} className="text-emerald-500 shrink-0" />,
+      });
+    }
+
+    items.push({
+      label: 'Tham gia lớp học',
+      href: '/app/classes/join',
+      icon: <LogIn size={14} className="text-purple-500 shrink-0" />,
+    });
+
+    if (allClasses && allClasses.length > 0) {
+      items.push({ isDivider: true });
+      allClasses.forEach((c) => {
+        const isCurrent = String(c.id) === String(classId);
+        items.push({
+          id: String(c.id),
+          label: c.name,
+          href: `/app/classes/${c.id}`,
+          isActive: isCurrent,
+          icon: (
+            <GraduationCap
+              size={14}
+              className={isCurrent ? 'text-google-blue shrink-0' : 'text-slate-400 dark:text-slate-500 shrink-0'}
+            />
+          ),
+        });
+      });
+    }
+
+    return items;
+  }, [allClasses, classId, isTeacher]);
+
+  const currentClassObj = React.useMemo(() => {
+    return allClasses.find((c) => String(c.id) === String(classId));
+  }, [allClasses, classId]);
 
   const [documentFiles, setDocumentFiles] = useState<any[]>([]);
   const [newTitle, setNewTitle] = useState('');
@@ -21,6 +102,8 @@ export default function CreateAssignmentPage() {
   const [deadline, setDeadline] = useState('');
   const [linkedDocumentFileId, setLinkedDocumentFileId] = useState('');
   const [maxScore, setMaxScore] = useState(10);
+  const [durationMinutes, setDurationMinutes] = useState(45);
+  const [minSubmitMinutes, setMinSubmitMinutes] = useState(0);
   const [loading, setLoading] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [toast, setToast] = useState(false);
@@ -58,6 +141,8 @@ export default function CreateAssignmentPage() {
         documentFileId: linkedDocumentFileId || undefined,
         deadline: deadline ? new Date(deadline).toISOString() : undefined,
         maxScore: Number(maxScore),
+        durationMinutes: Number(durationMinutes),
+        minSubmitMinutes: Number(minSubmitMinutes),
       });
 
       setToast(true);
@@ -82,15 +167,27 @@ export default function CreateAssignmentPage() {
           >
             Lớp học của tôi
           </button>
-          <ChevronRight size={20} className="text-slate-400 dark:text-slate-500 shrink-0 stroke-[1.75]" />
+          <BreadcrumbChevron
+            menuTitle="Lớp học của tôi"
+            items={classBreadcrumbItems}
+          />
           <button
             type="button"
             onClick={() => router.push(`/app/classes/${classId}`)}
             className="transition-colors cursor-pointer px-2 py-0.5 rounded-xl hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-normal"
           >
-            Chi tiết lớp
+            {currentClassObj?.name || 'Chi tiết lớp'}
           </button>
-          <ChevronRight size={20} className="text-slate-400 dark:text-slate-500 shrink-0 stroke-[1.75]" />
+          <BreadcrumbChevron
+            menuTitle={currentClassObj?.name || 'Chi tiết lớp'}
+            items={[
+              {
+                label: currentClassObj?.name ? `Về lớp: ${currentClassObj.name}` : 'Chi tiết lớp',
+                href: `/app/classes/${classId}`,
+                icon: <GraduationCap size={14} className="text-blue-500 shrink-0" />,
+              },
+            ]}
+          />
           <span className="px-2 py-0.5 rounded-xl text-slate-900 dark:text-white font-normal">
             Giao bài tập mới
           </span>
@@ -150,6 +247,44 @@ export default function CreateAssignmentPage() {
                 max={100}
                 required
               />
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                  Thời gian làm bài (Phút)
+                </label>
+                <select
+                  value={durationMinutes}
+                  onChange={(e) => setDurationMinutes(Number(e.target.value))}
+                  className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-xs focus:outline-none focus:ring-1 focus:ring-google-blue"
+                >
+                  <option value={0}>Không giới hạn thời gian</option>
+                  <option value={15}>15 phút</option>
+                  <option value={30}>30 phút</option>
+                  <option value={45}>45 phút (Mặc định)</option>
+                  <option value={60}>60 phút</option>
+                  <option value={90}>90 phút</option>
+                </select>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                  Thời gian nộp bài tối thiểu
+                </label>
+                <select
+                  value={minSubmitMinutes}
+                  onChange={(e) => setMinSubmitMinutes(Number(e.target.value))}
+                  className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-xs focus:outline-none focus:ring-1 focus:ring-google-blue"
+                >
+                  <option value={0}>Không yêu cầu (Nộp bất kỳ lúc nào)</option>
+                  <option value={5}>Sau tối thiểu 5 phút</option>
+                  <option value={10}>Sau tối thiểu 10 phút</option>
+                  <option value={15}>Sau tối thiểu 15 phút</option>
+                  <option value={20}>Sau tối thiểu 20 phút</option>
+                  <option value={30}>Sau tối thiểu 30 phút</option>
+                </select>
+              </div>
             </div>
 
             <div className="space-y-1">

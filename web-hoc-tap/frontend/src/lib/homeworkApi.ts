@@ -18,6 +18,7 @@ export interface HomeworkItem {
   className?: string | null;
   deadline?: string | null;
   durationMinutes: number; // 0 = Không giới hạn
+  minSubmitMinutes?: number; // 0 = Không giới hạn, > 0 = số phút làm bài tối thiểu mới được nộp
   shuffleQuestions: boolean;
   shuffleOptions: boolean;
   showAnswersAfterSubmit: boolean;
@@ -158,6 +159,7 @@ export async function createHomework(
     title: item.title,
     description: `${item.description || ''}\n<!--CONFIG:${JSON.stringify({
       durationMinutes: item.durationMinutes,
+      minSubmitMinutes: item.minSubmitMinutes || 0,
       antiCheat: item.antiCheating,
       antiCheatConfig: item.antiCheatConfig,
       pin: item.pin,
@@ -245,6 +247,7 @@ export async function getHomeworkByPin(pin: string): Promise<HomeworkItem | null
                 let parsedAntiCheat: boolean = Boolean(match.antiCheat ?? match.antiCheating ?? true);
                 let parsedAntiCheatConfig = match.antiCheatConfig || null;
                 let parsedDuration = match.durationMinutes || 45;
+                let parsedMinSubmitMinutes = Number(match.minSubmitMinutes) || 0;
 
                 if (match.description && typeof match.description === 'string') {
                   const cfgMatch = match.description.match(/<!--CONFIG:([\s\S]*?)-->/);
@@ -259,6 +262,9 @@ export async function getHomeworkByPin(pin: string): Promise<HomeworkItem | null
                       }
                       if (cfg.durationMinutes) {
                         parsedDuration = cfg.durationMinutes;
+                      }
+                      if (cfg.minSubmitMinutes !== undefined && cfg.minSubmitMinutes !== null) {
+                        parsedMinSubmitMinutes = Number(cfg.minSubmitMinutes) || 0;
                       }
                     } catch {}
                   }
@@ -277,6 +283,7 @@ export async function getHomeworkByPin(pin: string): Promise<HomeworkItem | null
                   className: match.className || match.class?.name || 'Lớp học',
                   deadline: match.deadline,
                   durationMinutes: parsedDuration,
+                  minSubmitMinutes: parsedMinSubmitMinutes,
                   shuffleQuestions: true,
                   shuffleOptions: false,
                   showAnswersAfterSubmit: true,
@@ -404,6 +411,7 @@ function formatServerAssignmentToHomework(asg: any, pin: string): HomeworkItem {
   let parsedAntiCheat: boolean = true;
   let parsedAntiCheatConfig: any = null;
   let parsedDuration = asg.durationMinutes || 45;
+  let parsedMinSubmitMinutes = Number(asg.minSubmitMinutes) || 0;
 
   if (asg.description && typeof asg.description === 'string') {
     const cfgMatch = asg.description.match(/<!--CONFIG:([\s\S]*?)-->/);
@@ -418,6 +426,9 @@ function formatServerAssignmentToHomework(asg: any, pin: string): HomeworkItem {
         }
         if (cfg.durationMinutes) {
           parsedDuration = cfg.durationMinutes;
+        }
+        if (cfg.minSubmitMinutes !== undefined && cfg.minSubmitMinutes !== null) {
+          parsedMinSubmitMinutes = Number(cfg.minSubmitMinutes) || 0;
         }
       } catch (_) {}
     }
@@ -437,6 +448,7 @@ function formatServerAssignmentToHomework(asg: any, pin: string): HomeworkItem {
     className: asg.className || asg.class?.name || 'Lớp học',
     deadline: asg.deadline,
     durationMinutes: parsedDuration,
+    minSubmitMinutes: parsedMinSubmitMinutes,
     shuffleQuestions: true,
     shuffleOptions: false,
     showAnswersAfterSubmit: true,

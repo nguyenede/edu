@@ -960,6 +960,49 @@ function BlooketPlayContent() {
   const currentQ = questions[currentIndex];
   const totalQ = questions.length;
 
+  const answeredCount = Object.values(selectedAnswers).filter(
+    (ans) => typeof ans === 'string' && ans.trim().length > 0
+  ).length;
+
+  const minSubmitMinutes = Number(homework?.minSubmitMinutes) || 0;
+  const minSubmitSeconds = minSubmitMinutes * 60;
+  const hasMetMinTime = minSubmitMinutes <= 0 || timeSpent >= minSubmitSeconds;
+  const remainingLockSeconds = Math.max(0, minSubmitSeconds - timeSpent);
+
+  const handleAttemptSubmit = () => {
+    if (isSubmitting) return;
+
+    // 1. Kiểm tra nếu học sinh chưa làm câu nào -> Không cho nộp bài
+    if (answeredCount === 0) {
+      alert(
+        '⚠️ BẠN CHƯA LÀM CÂU NÀO!\n\nHệ thống không cho phép nộp bài trống. Vui lòng chọn đáp án cho ít nhất 1 câu hỏi trước khi nộp bài.'
+      );
+      return;
+    }
+
+    // 2. Kiểm tra nếu chưa đủ thời gian làm bài tối thiểu -> Không cho nộp bài
+    if (!hasMetMinTime) {
+      const remMin = Math.floor(remainingLockSeconds / 60);
+      const remSec = remainingLockSeconds % 60;
+      const timeStr = remMin > 0 ? `${remMin} phút ${remSec < 10 ? '0' : ''}${remSec} giây` : `${remSec} giây`;
+      alert(
+        `⏳ CHƯA ĐẾN THỜI GIAN ĐƯỢC PHÉP NỘP BÀI!\n\nBài thi quy định học sinh chỉ được nộp bài sau tối thiểu ${minSubmitMinutes} phút kể từ khi bắt đầu.\n\nBạn cần tiếp tục làm bài thêm: ${timeStr} nữa mới có thể nộp bài.`
+      );
+      return;
+    }
+
+    // 3. Xác nhận nộp bài
+    const unAnsweredCount = totalQ - answeredCount;
+    const confirmMsg =
+      unAnsweredCount > 0
+        ? `Bạn đã làm ${answeredCount}/${totalQ} câu (còn ${unAnsweredCount} câu chưa trả lời).\n\nBạn có chắc chắn muốn nộp bài ngay bây giờ?`
+        : `Bạn đã hoàn thành tất cả ${totalQ} câu hỏi!\n\nBạn có chắc chắn muốn nộp bài ngay bây giờ?`;
+
+    if (confirm(confirmMsg)) {
+      handleFinalSubmit();
+    }
+  };
+
   return (
     <div className="min-h-screen bg-google-bg dark:bg-[#131314] text-slate-900 dark:text-slate-100 flex flex-col justify-between font-sans selection:bg-blue-500 selection:text-white">
       {/* ⚠️ VIOLATION WARNING MODAL (ANTI-CHEATING) */}
@@ -1044,19 +1087,49 @@ function BlooketPlayContent() {
               </div>
             )}
 
+            {/* Min Submit Time Lock Badge */}
+            {minSubmitMinutes > 0 && !hasMetMinTime && (
+              <div
+                className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 font-bold text-xs border border-amber-200/60 dark:border-amber-900/60"
+                title={`Yêu cầu làm bài tối thiểu ${minSubmitMinutes} phút mới được nộp bài`}
+              >
+                <Lock size={13} className="text-amber-600 dark:text-amber-400" />
+                <span>Nộp bài sau: <b className="font-mono">{formatTimer(remainingLockSeconds)}</b></span>
+              </div>
+            )}
+
             <Button
               variant="primary"
               size="sm"
               disabled={isSubmitting}
-              onClick={() => {
-                if (isSubmitting) return;
-                if (confirm('Bạn có chắc chắn muốn nộp bài ngay bây giờ?')) {
-                  handleFinalSubmit();
-                }
-              }}
-              className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl disabled:opacity-50"
+              onClick={handleAttemptSubmit}
+              className={`${
+                answeredCount === 0
+                  ? 'bg-slate-400 hover:bg-slate-500 text-white'
+                  : !hasMetMinTime
+                  ? 'bg-amber-600 hover:bg-amber-700 text-white'
+                  : 'bg-emerald-600 hover:bg-emerald-700 text-white'
+              } font-bold text-xs rounded-xl disabled:opacity-50 transition-colors flex items-center gap-1.5 shadow-xs`}
+              title={
+                answeredCount === 0
+                  ? 'Bạn chưa làm câu nào'
+                  : !hasMetMinTime
+                  ? `Chưa đến thời gian nộp bài (còn ${formatTimer(remainingLockSeconds)})`
+                  : 'Nộp bài ngay'
+              }
             >
-              {isSubmitting ? 'Đang nộp bài...' : 'Nộp bài'}
+              {!hasMetMinTime && minSubmitMinutes > 0 ? (
+                <Lock size={13} />
+              ) : null}
+              <span>
+                {isSubmitting
+                  ? 'Đang nộp...'
+                  : answeredCount === 0
+                  ? 'Nộp bài (chưa làm)'
+                  : !hasMetMinTime
+                  ? `Nộp bài (${formatTimer(remainingLockSeconds)})`
+                  : 'Nộp bài'}
+              </span>
             </Button>
           </div>
         </div>
@@ -1187,8 +1260,23 @@ function BlooketPlayContent() {
       </main>
 
       {/* Footer info */}
-      <footer className="text-center text-xs text-slate-400 py-3 border-t border-slate-200/50 dark:border-slate-800/50">
-        HocRealtime Play &bull; Đã hoàn thành {Object.keys(selectedAnswers).length} / {totalQ} câu
+      <footer className="text-center text-xs text-slate-400 py-3 border-t border-slate-200/50 dark:border-slate-800/50 space-y-1">
+        <div>
+          HocRealtime Play &bull; Đã hoàn thành {answeredCount} / {totalQ} câu
+        </div>
+        {minSubmitMinutes > 0 && (
+          <div className="text-[11px]">
+            {hasMetMinTime ? (
+              <span className="text-emerald-600 dark:text-emerald-400 font-medium">
+                ✓ Đã đạt thời gian làm bài tối thiểu ({minSubmitMinutes} phút) &bull; Có thể nộp bài
+              </span>
+            ) : (
+              <span className="text-amber-600 dark:text-amber-400 font-medium">
+                ⏳ Yêu cầu làm bài tối thiểu: còn {formatTimer(remainingLockSeconds)} nữa mới được nộp
+              </span>
+            )}
+          </div>
+        )}
       </footer>
     </div>
   );

@@ -29,6 +29,9 @@ import {
   Search,
   Play,
   ExternalLink,
+  GraduationCap,
+  PlusCircle,
+  LogIn,
 } from 'lucide-react';
 import { safeLocalStorageGet } from '@/lib/safeStorage';
 import QRCode from 'qrcode';
@@ -36,6 +39,8 @@ import * as XLSX from 'xlsx';
 import { listDocumentFiles } from '@/lib/documentsApi';
 
 import {
+  fetchClasses,
+  getLocalClasses,
   fetchClassDetail,
   fetchClassAssignments,
   fetchAssignmentSubmissions,
@@ -50,6 +55,7 @@ import {
   createClassPost,
   ClassPost,
 } from '@/lib/classesApi';
+import { BreadcrumbChevron, BreadcrumbDropdownItem } from '@/components/BreadcrumbChevron';
 
 type TabKey = 'assignments' | 'students' | 'gradebook';
 
@@ -115,6 +121,76 @@ export default function ClassDetailPage() {
     const r = (user.role || '').toUpperCase();
     return r === 'TEACHER' || r === 'ADMIN' || r === 'GIAOVIEN';
   }, [user]);
+
+  // Danh sách các lớp học phục vụ cho menu thả xuống của mũi tên Breadcrumb
+  const [allClasses, setAllClasses] = useState<any[]>(() => {
+    if (typeof window !== 'undefined') {
+      return getLocalClasses();
+    }
+    return [];
+  });
+
+  useEffect(() => {
+    let isCancelled = false;
+    const loadAll = async () => {
+      try {
+        const activeToken = token || (typeof window !== 'undefined' ? localStorage.getItem('token') : null);
+        const list = await fetchClasses(activeToken, isTeacher);
+        if (!isCancelled && Array.isArray(list) && list.length > 0) {
+          setAllClasses(list);
+        }
+      } catch (_) {}
+    };
+    loadAll();
+    return () => {
+      isCancelled = true;
+    };
+  }, [token, isTeacher]);
+
+  const classBreadcrumbItems = useMemo<BreadcrumbDropdownItem[]>(() => {
+    const items: BreadcrumbDropdownItem[] = [
+      {
+        label: 'Tất cả lớp học',
+        href: '/app/classes',
+        icon: <Users size={14} className="text-blue-500 shrink-0" />,
+      },
+    ];
+
+    if (isTeacher) {
+      items.push({
+        label: 'Tạo lớp học mới',
+        href: '/app/classes/create',
+        icon: <PlusCircle size={14} className="text-emerald-500 shrink-0" />,
+      });
+    }
+
+    items.push({
+      label: 'Tham gia lớp học',
+      href: '/app/classes/join',
+      icon: <LogIn size={14} className="text-purple-500 shrink-0" />,
+    });
+
+    if (allClasses && allClasses.length > 0) {
+      items.push({ isDivider: true });
+      allClasses.forEach((c) => {
+        const isCurrent = String(c.id) === String(classId);
+        items.push({
+          id: String(c.id),
+          label: c.name,
+          href: `/app/classes/${c.id}`,
+          isActive: isCurrent,
+          icon: (
+            <GraduationCap
+              size={14}
+              className={isCurrent ? 'text-google-blue shrink-0' : 'text-slate-400 dark:text-slate-500 shrink-0'}
+            />
+          ),
+        });
+      });
+    }
+
+    return items;
+  }, [allClasses, classId, isTeacher]);
 
   const resolveAssignmentPin = (assign: any): string => {
     if (assign?.pin && String(assign.pin).trim()) {
@@ -459,7 +535,10 @@ export default function ClassDetailPage() {
           >
             Lớp học của tôi
           </button>
-          <ChevronRight size={14} className="text-slate-400 dark:text-slate-500 shrink-0 stroke-[2]" />
+          <BreadcrumbChevron
+            menuTitle="Lớp học của tôi"
+            items={classBreadcrumbItems}
+          />
           <span className="px-2 py-0.5 rounded-xl text-slate-900 dark:text-white font-normal">
             {clazz.name}
           </span>

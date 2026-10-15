@@ -34,6 +34,11 @@ import {
   Play,
   RotateCcw,
   Download,
+  Lock,
+  Users,
+  GraduationCap,
+  PlusCircle,
+  LogIn,
 } from 'lucide-react';
 import QRCode from 'qrcode';
 import ReactMarkdown from 'react-markdown';
@@ -42,6 +47,8 @@ import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 
 import {
+  fetchClasses,
+  getLocalClasses,
   fetchAssignmentDetail,
   fetchAssignmentSubmissions,
   fetchMyAssignmentSubmission,
@@ -49,6 +56,7 @@ import {
   gradeAssignmentSubmission,
   deleteClassAssignment,
 } from '@/lib/classesApi';
+import { BreadcrumbChevron, BreadcrumbDropdownItem } from '@/components/BreadcrumbChevron';
 import { safeLocalStorageGet } from '@/lib/safeStorage';
 
 // Error Boundary for Math/KaTeX rendering
@@ -209,6 +217,7 @@ export default function AssignmentDetailPage() {
   // Student State
   const [studentAnswers, setStudentAnswers] = useState<{ [qId: string]: string }>({});
   const [essayContent, setEssayContent] = useState('');
+  const [timeSpent, setTimeSpent] = useState<number>(0);
   const [isSubmitConfirmOpen, setIsSubmitConfirmOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [studentViolations, setStudentViolations] = useState<any[]>([]);
@@ -235,6 +244,97 @@ export default function AssignmentDetailPage() {
     const r = (user.role || '').toUpperCase();
     return r === 'TEACHER' || r === 'ADMIN' || r === 'GIAOVIEN';
   }, [user]);
+
+  // Breadcrumb dropdown state: all classes
+  const [allClasses, setAllClasses] = useState<any[]>(() => {
+    if (typeof window !== 'undefined') {
+      return getLocalClasses();
+    }
+    return [];
+  });
+
+  useEffect(() => {
+    let isCancelled = false;
+    const loadAll = async () => {
+      try {
+        const activeToken = token || (typeof window !== 'undefined' ? localStorage.getItem('token') : null);
+        const list = await fetchClasses(activeToken, isTeacher);
+        if (!isCancelled && Array.isArray(list) && list.length > 0) {
+          setAllClasses(list);
+        }
+      } catch (_) {}
+    };
+    loadAll();
+    return () => {
+      isCancelled = true;
+    };
+  }, [token, isTeacher]);
+
+  const classBreadcrumbItems = useMemo<BreadcrumbDropdownItem[]>(() => {
+    const items: BreadcrumbDropdownItem[] = [
+      {
+        label: 'Tất cả lớp học',
+        href: '/app/classes',
+        icon: <Users size={14} className="text-blue-500 shrink-0" />,
+      },
+    ];
+
+    if (isTeacher) {
+      items.push({
+        label: 'Tạo lớp học mới',
+        href: '/app/classes/create',
+        icon: <PlusCircle size={14} className="text-emerald-500 shrink-0" />,
+      });
+    }
+
+    items.push({
+      label: 'Tham gia lớp học',
+      href: '/app/classes/join',
+      icon: <LogIn size={14} className="text-purple-500 shrink-0" />,
+    });
+
+    if (allClasses && allClasses.length > 0) {
+      items.push({ isDivider: true });
+      allClasses.forEach((c) => {
+        const isCurrent = String(c.id) === String(assignment?.classId);
+        items.push({
+          id: String(c.id),
+          label: c.name,
+          href: `/app/classes/${c.id}`,
+          isActive: isCurrent,
+          icon: (
+            <GraduationCap
+              size={14}
+              className={isCurrent ? 'text-google-blue shrink-0' : 'text-slate-400 dark:text-slate-500 shrink-0'}
+            />
+          ),
+        });
+      });
+    }
+
+    return items;
+  }, [allClasses, assignment?.classId, isTeacher]);
+
+  const classNameDisplay = assignment?.class?.name || assignment?.className || 'Lớp học';
+
+  const assignmentBreadcrumbItems = useMemo<BreadcrumbDropdownItem[]>(() => {
+    if (!assignment?.classId || assignment.classId === 'public') return [];
+    const items: BreadcrumbDropdownItem[] = [
+      {
+        label: `Về lớp: ${classNameDisplay}`,
+        href: `/app/classes/${assignment.classId}`,
+        icon: <GraduationCap size={14} className="text-blue-500 shrink-0" />,
+      },
+    ];
+    if (isTeacher) {
+      items.push({
+        label: 'Giao bài tập mới cho lớp',
+        href: `/app/classes/${assignment.classId}/assignments/create`,
+        icon: <PlusCircle size={14} className="text-emerald-500 shrink-0" />,
+      });
+    }
+    return items;
+  }, [assignment?.classId, classNameDisplay, isTeacher]);
 
   const displayPin = useMemo(() => {
     if (assignment?.pin && String(assignment.pin).trim()) return String(assignment.pin).trim();
@@ -428,7 +528,62 @@ export default function AssignmentDetailPage() {
     };
   }, [isTeacher, mySubmission, assignment?.antiCheat, showInlineFallback]);
 
+  // Bộ đếm thời gian làm bài của học sinh
+  useEffect(() => {
+    if (isTeacher || mySubmission) return;
+    const timer = setInterval(() => {
+      setTimeSpent((prev) => prev + 1);
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [isTeacher, mySubmission]);
+
+  const answeredQuestionsCount = Object.keys(studentAnswers).filter(
+    (k) => typeof studentAnswers[k] === 'string' && studentAnswers[k].trim().length > 0
+  ).length;
+  const hasEssayAnswer = Boolean(essayContent.trim());
+  const totalAnswered = normalizedQuestions.length > 0 ? answeredQuestionsCount : (hasEssayAnswer ? 1 : 0);
+
+  const minSubmitMinutes = Number(assignment?.minSubmitMinutes) || 0;
+  const minSubmitSeconds = minSubmitMinutes * 60;
+  const hasMetMinTime = minSubmitMinutes <= 0 || timeSpent >= minSubmitSeconds;
+  const remainingLockSeconds = Math.max(0, minSubmitSeconds - timeSpent);
+
+  const handleAttemptStudentSubmit = () => {
+    if (submitting) return;
+
+    // 1. Chặn nộp bài nếu học sinh chưa làm câu nào
+    if (totalAnswered === 0) {
+      alert(
+        '⚠️ BẠN CHƯA LÀM CÂU NÀO!\n\nHệ thống không cho phép nộp bài trống. Vui lòng làm ít nhất một câu hỏi hoặc nhập nội dung bài làm trước khi nộp.'
+      );
+      return;
+    }
+
+    // 2. Chặn nộp bài nếu chưa đủ thời gian làm bài tối thiểu
+    if (!hasMetMinTime) {
+      const remMin = Math.floor(remainingLockSeconds / 60);
+      const remSec = remainingLockSeconds % 60;
+      const timeStr = remMin > 0 ? `${remMin} phút ${remSec < 10 ? '0' : ''}${remSec} giây` : `${remSec} giây`;
+      alert(
+        `⏳ CHƯA ĐẾN THỜI GIAN ĐƯỢC PHÉP NỘP BÀI!\n\nBài thi quy định học sinh chỉ được nộp bài sau tối thiểu ${minSubmitMinutes} phút kể từ khi bắt đầu.\n\nBạn cần tiếp tục làm bài thêm: ${timeStr} nữa mới có thể nộp.`
+      );
+      return;
+    }
+
+    setIsSubmitConfirmOpen(true);
+  };
+
   const handleStudentSubmit = async (overrideMeta?: any) => {
+    if (totalAnswered === 0 && !overrideMeta) {
+      alert('⚠️ Bạn chưa làm câu nào! Vui lòng trả lời ít nhất một câu hỏi trước khi nộp bài.');
+      setIsSubmitConfirmOpen(false);
+      return;
+    }
+    if (!hasMetMinTime && !overrideMeta) {
+      alert(`⏳ Chưa đủ thời gian làm bài tối thiểu (${minSubmitMinutes} phút)!`);
+      setIsSubmitConfirmOpen(false);
+      return;
+    }
     setSubmitting(true);
     const answersList = normalizedQuestions.length > 0
       ? Object.entries(studentAnswers).map(([questionId, answerContent]) => ({
@@ -518,8 +673,6 @@ export default function AssignmentDetailPage() {
     );
   }
 
-  const classNameDisplay = assignment.class?.name || assignment.className || 'Lớp học';
-
   return (
     <AppShell
       title={
@@ -531,7 +684,10 @@ export default function AssignmentDetailPage() {
           >
             Lớp học của tôi
           </button>
-          <ChevronRight size={14} className="text-slate-400 dark:text-slate-500 shrink-0 stroke-[2]" />
+          <BreadcrumbChevron
+            menuTitle="Lớp học của tôi"
+            items={classBreadcrumbItems}
+          />
           {assignment.classId && assignment.classId !== 'public' ? (
             <button
               type="button"
@@ -545,7 +701,10 @@ export default function AssignmentDetailPage() {
               {classNameDisplay}
             </span>
           )}
-          <ChevronRight size={14} className="text-slate-400 dark:text-slate-500 shrink-0 stroke-[2]" />
+          <BreadcrumbChevron
+            menuTitle={classNameDisplay}
+            items={assignmentBreadcrumbItems}
+          />
           <span className="px-2 py-0.5 rounded-xl text-slate-900 dark:text-white font-[450] truncate max-w-md">
             {assignment.title}
           </span>
@@ -553,37 +712,20 @@ export default function AssignmentDetailPage() {
       }
       subtitle={`Lớp: ${classNameDisplay} | Thang điểm: ${assignment.maxScore || 10}đ`}
       action={
-        <div className="flex items-center gap-2">
+        isTeacher ? (
           <Button
-            variant="secondary"
+            variant="ghost"
             size="sm"
-            onClick={() => {
-              if (assignment.classId && assignment.classId !== 'public') {
-                router.push(`/app/classes/${assignment.classId}`);
-              } else {
-                router.push('/app/classes');
-              }
-            }}
-            className="gap-1.5"
+            onClick={() => setIsDeleteAssignOpen(true)}
+            className="text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20"
+            title="Xóa bài tập"
           >
-            <ArrowLeft size={16} /> Quay lại lớp
+            <Trash2 size={16} />
           </Button>
-
-          {isTeacher && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setIsDeleteAssignOpen(true)}
-              className="text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20"
-              title="Xóa bài tập"
-            >
-              <Trash2 size={16} />
-            </Button>
-          )}
-        </div>
+        ) : undefined
       }
     >
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
         {/* Left 2 Cols: Main Content Area */}
         <div className="md:col-span-2 space-y-6">
           {/* Assignment Meta Header */}
@@ -986,13 +1128,53 @@ export default function AssignmentDetailPage() {
                     </div>
                   )}
 
+                  {/* Min Submit Time Notice */}
+                  {minSubmitMinutes > 0 && (
+                    <div className="p-3 rounded-xl bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200/60 dark:border-amber-900/60 text-xs text-amber-800 dark:text-amber-300 flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        <Lock size={15} className="text-amber-600 shrink-0" />
+                        <span>
+                          {hasMetMinTime ? (
+                            <b className="text-emerald-700 dark:text-emerald-300">✓ Đã đủ thời gian tối thiểu ({minSubmitMinutes} phút) để nộp bài</b>
+                          ) : (
+                            <span>Yêu cầu làm bài tối thiểu: <b>{minSubmitMinutes} phút</b></span>
+                          )}
+                        </span>
+                      </div>
+                      {!hasMetMinTime && (
+                        <span className="font-mono font-bold text-amber-700 dark:text-amber-300">
+                          Còn {Math.floor(remainingLockSeconds / 60)}p{remainingLockSeconds % 60 < 10 ? '0' : ''}{remainingLockSeconds % 60}s
+                        </span>
+                      )}
+                    </div>
+                  )}
+
                   <Button
                     size="md"
                     fullWidth
-                    onClick={() => setIsSubmitConfirmOpen(true)}
-                    className="gap-2 font-bold"
+                    onClick={handleAttemptStudentSubmit}
+                    className={`gap-2 font-bold ${
+                      totalAnswered === 0
+                        ? 'bg-slate-400 hover:bg-slate-500'
+                        : !hasMetMinTime
+                        ? 'bg-amber-600 hover:bg-amber-700'
+                        : ''
+                    }`}
                   >
-                    <Send size={16} /> Nộp bài tập ngay
+                    {!hasMetMinTime && minSubmitMinutes > 0 ? (
+                      <Lock size={16} />
+                    ) : (
+                      <Send size={16} />
+                    )}
+                    <span>
+                      {submitting
+                        ? 'Đang nộp bài...'
+                        : totalAnswered === 0
+                        ? 'Nộp bài tập ngay (chưa làm)'
+                        : !hasMetMinTime
+                        ? `Nộp bài tập (khóa: còn ${Math.floor(remainingLockSeconds / 60)}p${remainingLockSeconds % 60 < 10 ? '0' : ''}${remainingLockSeconds % 60}s)`
+                        : 'Nộp bài tập ngay'}
+                    </span>
                   </Button>
                 </div>
               )}
@@ -1165,16 +1347,9 @@ export default function AssignmentDetailPage() {
         maxWidth="md"
       >
         <div className="space-y-4 pt-1 text-center">
-          <p className="text-xs text-slate-500 dark:text-zinc-400">
-            Học sinh có thể quét mã QR bằng Camera điện thoại / Zalo hoặc vào <strong>kiyoedu.com/play</strong> và nhập mã PIN.
-          </p>
-
           {qrCodeUrl ? (
             <div className="p-4 bg-white rounded-3xl inline-block mx-auto shadow-md border border-slate-200/80">
               <img src={qrCodeUrl} alt="Mã QR làm bài" className="w-56 h-56 mx-auto object-contain" />
-              <span className="text-[11px] font-bold text-slate-500 mt-1 block">
-                Quét bằng Camera điện thoại hoặc Zalo
-              </span>
             </div>
           ) : (
             <div className="w-56 h-56 bg-slate-100 dark:bg-slate-800 rounded-2xl flex items-center justify-center mx-auto text-xs text-slate-400">
