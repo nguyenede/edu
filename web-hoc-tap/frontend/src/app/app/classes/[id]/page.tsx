@@ -586,14 +586,15 @@ export default function ClassDetailPage() {
       }
     >
       <div className="space-y-6">
-        {/* Navigation Tabs (Original horizontal minimal design) */}
-        <div className="flex gap-4 items-center border-b border-slate-100 dark:border-slate-800 pb-2 overflow-x-auto">
+        {/* Navigation Tabs (Thiết kế thanh tab chuẩn hiện đại với gạch chân xanh và khoảng cách tinh tế) */}
+        <div className="flex gap-6 sm:gap-8 items-center border-b border-slate-200/90 dark:border-slate-800 overflow-x-auto no-scrollbar pt-1">
           <button
+            type="button"
             onClick={() => setActiveTab('assignments')}
-            className={`text-sm transition-colors whitespace-nowrap cursor-pointer ${
+            className={`pb-3 text-sm tracking-tight whitespace-nowrap cursor-pointer transition-all border-b-[2.5px] -mb-[1.5px] ${
               activeTab === 'assignments'
-                ? 'text-blue-600 dark:text-blue-400 font-bold'
-                : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 font-medium'
+                ? 'border-blue-600 text-blue-600 dark:border-blue-500 dark:text-blue-400 font-bold'
+                : 'border-transparent text-slate-700 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white hover:border-slate-300 dark:hover:border-slate-700 font-semibold'
             }`}
           >
             Bài tập & Đề thi ({assignments.length})
@@ -601,25 +602,25 @@ export default function ClassDetailPage() {
 
           {isTeacher && (
             <button
+              type="button"
               onClick={() => setActiveTab('students')}
-              className={`text-sm transition-colors whitespace-nowrap cursor-pointer ${
+              className={`pb-3 text-sm tracking-tight whitespace-nowrap cursor-pointer transition-all border-b-[2.5px] -mb-[1.5px] ${
                 activeTab === 'students'
-                  ? 'text-blue-600 dark:text-blue-400 font-bold'
-                  : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 font-medium'
+                  ? 'border-blue-600 text-blue-600 dark:border-blue-500 dark:text-blue-400 font-bold'
+                  : 'border-transparent text-slate-700 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white hover:border-slate-300 dark:hover:border-slate-700 font-semibold'
               }`}
             >
               Danh sách Học sinh ({members.length})
             </button>
           )}
 
-
-
           <button
+            type="button"
             onClick={() => setActiveTab('gradebook')}
-            className={`text-sm transition-colors whitespace-nowrap cursor-pointer ${
+            className={`pb-3 text-sm tracking-tight whitespace-nowrap cursor-pointer transition-all border-b-[2.5px] -mb-[1.5px] ${
               activeTab === 'gradebook'
-                ? 'text-blue-600 dark:text-blue-400 font-bold'
-                : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 font-medium'
+                ? 'border-blue-600 text-blue-600 dark:border-blue-500 dark:text-blue-400 font-bold'
+                : 'border-transparent text-slate-700 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white hover:border-slate-300 dark:hover:border-slate-700 font-semibold'
             }`}
           >
             Bảng điểm
