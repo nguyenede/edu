@@ -50,11 +50,24 @@ export default function PlansPage() {
       }
     }
 
-    // Giữ trang hiển thị tự nhiên từ trên cùng, không tự động cuộn xuống
-    const viewport = document.getElementById('app-main-viewport');
-    if (viewport) {
-      viewport.scrollTo({ top: 0, behavior: 'instant' });
-    }
+    // Tự động cuộn xuống dưới cùng của trang bảng giá / nâng cấp gói
+    const scrollToBottom = () => {
+      const viewport = document.getElementById('app-main-viewport');
+      if (viewport) {
+        viewport.scrollTo({ top: viewport.scrollHeight, behavior: 'smooth' });
+      }
+      window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+    };
+
+    // Cuộn ngay và sau khi các thẻ thành phần được mount / tải ảnh xong
+    scrollToBottom();
+    const t1 = setTimeout(scrollToBottom, 150);
+    const t2 = setTimeout(scrollToBottom, 450);
+
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+    };
   }, [user]);
 
   const handleCopy = (text: string, label: string) => {
