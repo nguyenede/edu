@@ -116,6 +116,7 @@ html.dark .border-zinc-800 {
   overflow: hidden !important;
   text-overflow: ellipsis !important;
   word-break: break-word !important;
+  white-space: normal !important;
 }
 
 /* Xóa tất cả thanh kẻ ngang phân cách (horizontal divider lines) trên toàn bộ website */

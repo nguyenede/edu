@@ -675,7 +675,7 @@ function DocumentCreateContent() {
                         Không thể nhận diện đề thi
                       </span>
                     </div>
-                    <h4 className="text-sm font-bold text-red-900 dark:text-white truncate">
+                    <h4 className="text-sm font-bold text-red-900 dark:text-white truncate-tight">
                       {selectedFile?.name || 'Tài liệu không hợp lệ'}
                     </h4>
                     <p className="text-xs text-red-700 dark:text-red-300 font-medium">
@@ -705,7 +705,7 @@ function DocumentCreateContent() {
                 <div className="flex items-center gap-3">
                   <CheckCircle2 size={22} className="text-google-green shrink-0" />
                   <div className="text-left flex-1 min-w-0">
-                    <h4 className="text-sm font-semibold text-slate-900 dark:text-white truncate">
+                    <h4 className="text-sm font-semibold text-slate-900 dark:text-white truncate-tight">
                       {createdExamResult.title}
                     </h4>
                     <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">

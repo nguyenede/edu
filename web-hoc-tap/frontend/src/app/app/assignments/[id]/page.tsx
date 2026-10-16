@@ -692,7 +692,7 @@ export default function AssignmentDetailPage() {
             menuTitle={classNameDisplay}
             items={assignmentBreadcrumbItems}
           />
-          <span className="px-2 py-0.5 rounded-xl text-slate-900 dark:text-white font-[450] truncate max-w-md">
+          <span className="px-2 py-0.5 rounded-xl text-slate-900 dark:text-white font-normal truncate-tight max-w-xs sm:max-w-md md:max-w-xl lg:max-w-3xl xl:max-w-5xl">
             {assignment.title}
           </span>
         </div>

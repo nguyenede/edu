@@ -304,7 +304,7 @@ export default function CreateAssignmentPage() {
                 <option value="">-- Không đính kèm đề thi --</option>
                 {documentFiles.map((doc) => (
                   <option key={doc.id} value={doc.id}>
-                    {doc.parsedQuiz?.title || doc.name} • {doc.parsedQuiz?.questions?.length || 0} câu
+                    {doc.parsedQuiz?.title || doc.name} ({doc.parsedQuiz?.questions?.length || 0} câu)
                   </option>
                 ))}
               </select>

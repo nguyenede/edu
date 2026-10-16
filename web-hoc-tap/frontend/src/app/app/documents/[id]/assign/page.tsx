@@ -457,7 +457,10 @@ function AssignPageContent() {
   };
 
   const folderPath = getFolderPath();
-  const displayTitle = (fileItem?.name || 'Đề thi').replace(/\.[^/.]+$/, '');
+  const displayTitle = (fileItem?.name || 'Đề thi')
+    .replace(/\.[^/.]+$/, '')
+    .replace(/\s+/g, ' ')
+    .trim();
   const questionsCount = fileItem?.parsedQuiz?.questions?.length || 0;
 
   if (isLoading) {
@@ -1201,8 +1204,8 @@ function AssignPageContent() {
                   <div className="w-10 h-10 rounded-xl bg-blue-600 dark:bg-blue-500 text-white flex items-center justify-center shrink-0 shadow-sm">
                     <FileText size={20} className="text-white" />
                   </div>
-                  <div className="min-w-0">
-                    <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 truncate" title={displayTitle}>
+                  <div className="min-w-0 flex-1">
+                    <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 truncate-tight" title={displayTitle}>
                       {displayTitle}
                     </h3>
                     <p className="text-xs text-slate-400 mt-0.5">
@@ -1224,7 +1227,7 @@ function AssignPageContent() {
                   </div>
                   <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
                     <span>Hình thức giao</span>
-                    <strong className="text-slate-900 dark:text-slate-100 truncate max-w-[170px]">
+                    <strong className="text-slate-900 dark:text-slate-100 truncate-tight max-w-[170px] text-right">
                       {assignMode === 'public' ? 'Tự do (Mã PIN / QR)' : (classes.find(c => c.id === selectedClassId)?.name || 'Chưa chọn lớp')}
                     </strong>
                   </div>

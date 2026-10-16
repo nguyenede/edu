@@ -855,8 +855,8 @@ export default function ClassDetailPage() {
                         <th className="py-2.5 px-3 min-w-[140px]">{isTeacher ? 'Học sinh' : 'Tên bạn'}</th>
                         {assignments.map((asg) => (
                           <th key={asg.id} className="py-2.5 px-3 text-center min-w-[100px]">
-                            <div className="truncate max-w-[120px]" title={asg.title}>{asg.title}</div>
-                            <span className="text-[10px] text-slate-400 font-normal">• {asg.maxScore}đ</span>
+                            <div className="truncate-tight max-w-[120px] mx-auto" title={asg.title}>{asg.title}</div>
+                            <span className="text-[10px] text-slate-400 font-normal">({asg.maxScore}đ)</span>
                           </th>
                         ))}
                         <th className="py-2.5 px-3 text-center font-bold text-blue-600">ĐTB</th>
@@ -1114,7 +1114,7 @@ export default function ClassDetailPage() {
                 {excelStudentsPreview.map((item, i) => (
                   <div key={i} className="p-2 flex items-center justify-between">
                     <span className="font-medium">{item.name} {item.studentCode && ` - ${item.studentCode}`}</span>
-                    <span className="text-slate-400">{item.gender} • {item.email || item.phone || 'Trống'}</span>
+                    <span className="text-slate-400">{item.gender}, {item.email || item.phone || 'Trống'}</span>
                   </div>
                 ))}
               </div>
@@ -1197,7 +1197,7 @@ export default function ClassDetailPage() {
               <option value="">-- Tự nhập / Không đính kèm đề trắc nghiệm --</option>
               {documentFiles.map((doc) => (
                 <option key={doc.id} value={doc.id}>
-                  {doc.parsedQuiz?.title || doc.name} • {doc.parsedQuiz?.questions?.length || 0} câu
+                  {doc.parsedQuiz?.title || doc.name} ({doc.parsedQuiz?.questions?.length || 0} câu)
                 </option>
               ))}
             </select>
