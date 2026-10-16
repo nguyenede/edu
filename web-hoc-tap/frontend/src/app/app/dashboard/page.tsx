@@ -247,16 +247,11 @@ export default function DashboardPage() {
                     <h3 className="font-bold text-slate-950 dark:text-slate-100 text-sm group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
                       {cls.name}
                     </h3>
-                    <p className="text-xs text-slate-500">
-                      {isTeacherUser
-                        ? `Mã mời: `
-                        : `Giáo viên: ${cls.teacher?.profile?.name || cls.teacher?.email}`}
-                      {isTeacherUser && (
-                        <span className="font-mono font-bold text-blue-600 dark:text-blue-400">
-                          {cls.code}
-                        </span>
-                      )}
-                    </p>
+                    {!isTeacherUser && (
+                      <p className="text-xs text-slate-500">
+                        Giáo viên: {cls.teacher?.profile?.name || cls.teacher?.email}
+                      </p>
+                    )}
                   </div>
 
                   <div className="flex items-center gap-4 text-xs text-slate-500">
