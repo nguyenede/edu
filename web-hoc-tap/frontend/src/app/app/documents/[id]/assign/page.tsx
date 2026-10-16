@@ -819,7 +819,7 @@ function AssignPageContent() {
                     {/* Mục 1: Bất cứ ai có liên kết / Mã PIN */}
                     <div
                       onClick={() => setAssignMode('public')}
-                      className={`p-3.5 rounded-2xl border-2 transition-all cursor-pointer flex items-center justify-between ${
+                      className={`p-3.5 rounded-xl border transition-all cursor-pointer flex items-center justify-between ${
                         assignMode === 'public'
                           ? 'border-google-blue bg-blue-50/40 dark:bg-blue-950/20 shadow-xs'
                           : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-slate-300 dark:hover:border-slate-700'
@@ -852,7 +852,7 @@ function AssignPageContent() {
                           setSelectedClassId(classes[0].id);
                         }
                       }}
-                      className={`p-3.5 rounded-2xl border-2 transition-all cursor-pointer space-y-2.5 ${
+                      className={`p-3.5 rounded-xl border transition-all cursor-pointer space-y-2.5 ${
                         assignMode === 'class'
                           ? 'border-google-blue bg-blue-50/40 dark:bg-blue-950/20 shadow-xs'
                           : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-slate-300 dark:hover:border-slate-700'
@@ -1251,17 +1251,32 @@ function AssignPageContent() {
                   </div>
                 </div>
 
-                {/* Primary Action Button */}
-                <div className="pt-2 space-y-2.5">
-                  <Button
-                    variant="primary"
-                    onClick={handleCreate}
-                    disabled={creating || !title.trim() || (assignMode === 'class' && !selectedClassId)}
-                    className="w-full py-3.5 rounded-xl text-white font-bold text-sm shadow-xs gap-2 bg-google-blue hover:bg-[#1557b0] transition-colors"
-                  >
-                    {assignMode === 'class' ? <GraduationCap size={18} /> : <Send size={18} />}
-                    <span>{creating ? 'Đang giao bài...' : 'Giao bài'}</span>
-                  </Button>
+                {/* Blooket-style Assign & Host Combo */}
+                <div className="pt-2 space-y-3">
+                  <div className="flex items-center bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl p-1 shadow-xs justify-between">
+                    <button
+                      type="button"
+                      onClick={handleCreate}
+                      disabled={creating || (assignMode === 'class' && !selectedClassId)}
+                      className="flex-1 px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold text-sm flex items-center justify-center gap-2 transition-colors cursor-pointer select-none disabled:opacity-50 disabled:cursor-not-allowed"
+                      title="Xác nhận giao bài tập (Assign)"
+                    >
+                      <FileText size={18} className="text-slate-600 dark:text-slate-400 stroke-[2.2]" />
+                      <span>{creating ? 'Đang giao...' : 'Assign'}</span>
+                    </button>
+
+                    <div className="h-6 w-[1px] bg-slate-300 dark:bg-slate-700 mx-1.5" />
+
+                    <button
+                      type="button"
+                      onClick={() => router.push(`/app/games?examId=${encodeURIComponent(fileId)}`)}
+                      className="flex-1 px-4 py-2 rounded-xl bg-[#00c0cb] hover:bg-[#00b0ba] text-white font-black text-sm flex items-center justify-center gap-1.5 shadow-[0_3px_0_#008f99] active:translate-y-[2px] active:shadow-none transition-all cursor-pointer select-none"
+                      title="Chuyển sang tổ chức trò chơi trực tiếp (Host Game)"
+                    >
+                      <Play size={16} className="fill-white text-white ml-0.5" />
+                      <span>Host</span>
+                    </button>
+                  </div>
 
                   <Button
                     variant="ghost"
