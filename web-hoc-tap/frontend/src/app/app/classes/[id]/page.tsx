@@ -710,10 +710,10 @@ export default function ClassDetailPage() {
                               handleOpenExamInNewTab(assign);
                             }}
                             className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-950/40 rounded-lg transition-colors cursor-pointer"
-                            title="Làm thử đề thi trong tab mới"
+                            title="Xem đề thi trong tab mới"
                           >
                             <Play size={12} />
-                            <span>Thi thử</span>
+                            <span>Xem đề</span>
                             <ExternalLink size={11} className="opacity-70" />
                           </button>
 

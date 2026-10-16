@@ -755,7 +755,7 @@ function DocumentCreateContent() {
                     className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold"
                     onClick={() => router.push(createdExamResult.examUrl)}
                   >
-                    Vào thi thử ngay
+                    Vào xem đề
                   </Button>
                 </div>
               </div>
@@ -1047,7 +1047,7 @@ function DocumentCreateContent() {
                   }}
                 >
                   <Play size={14} className="mr-1 fill-current" />
-                  Vào thi thử ngay
+                  Vào xem đề
                 </Button>
               </div>
             </div>
