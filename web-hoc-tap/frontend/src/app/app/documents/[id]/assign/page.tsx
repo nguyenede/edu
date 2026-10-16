@@ -718,11 +718,11 @@ function AssignPageContent() {
             {/* Assignment Overview */}
             <div className="p-5 bg-slate-50/50 dark:bg-slate-900/30 rounded-2xl space-y-2 text-xs">
               <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
-                <span>Tiêu đề bài tập:</span>
+                <span>Tiêu đề bài tập</span>
                 <strong className="text-slate-900 dark:text-slate-100">{createdHomework.title}</strong>
               </div>
               <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
-                <span>Hình thức giao:</span>
+                <span>Hình thức giao</span>
                 <strong className="text-slate-900 dark:text-slate-100">
                   {createdHomework.classId && createdHomework.classId !== 'public'
                     ? `Lớp ${createdHomework.className} (Đăng nhập tài khoản lớp)`
@@ -730,17 +730,17 @@ function AssignPageContent() {
                 </strong>
               </div>
               <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
-                <span>Số lượng câu hỏi:</span>
+                <span>Số lượng câu hỏi</span>
                 <strong className="text-slate-900 dark:text-slate-100">{questionsCount} câu</strong>
               </div>
               <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
-                <span>Thời gian làm bài:</span>
+                <span>Thời gian làm bài</span>
                 <strong className="text-slate-900 dark:text-slate-100">
                   {createdHomework.durationMinutes > 0 ? `${createdHomework.durationMinutes} phút` : 'Không giới hạn'}
                 </strong>
               </div>
               <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
-                <span>Nộp bài tối thiểu:</span>
+                <span>Nộp bài tối thiểu</span>
                 <strong className="text-slate-900 dark:text-slate-100">
                   {createdHomework.minSubmitMinutes && createdHomework.minSubmitMinutes > 0
                     ? `Sau ${createdHomework.minSubmitMinutes} phút`
@@ -748,13 +748,13 @@ function AssignPageContent() {
                 </strong>
               </div>
               <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
-                <span>Quy tắc nộp bài:</span>
+                <span>Quy tắc nộp bài</span>
                 <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
                   Bắt buộc làm ít nhất 1 câu (Chặn nộp bài trống)
                 </span>
               </div>
               <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
-                <span>Chống gian lận:</span>
+                <span>Chống gian lận</span>
                 {createdHomework.antiCheating ? (
                   <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-blue-50 text-google-blue dark:bg-blue-950/60 dark:text-blue-300">
                     Đang BẬT (Tối đa 3 lần)
@@ -1237,29 +1237,29 @@ function AssignPageContent() {
 
                 <div className="space-y-2.5 text-xs pt-3">
                   <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
-                    <span>Số câu hỏi:</span>
+                    <span>Số câu hỏi</span>
                     <strong className="text-slate-900 dark:text-slate-100">{questionsCount} câu</strong>
                   </div>
                   <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
-                    <span>Thời gian làm:</span>
+                    <span>Thời gian làm</span>
                     <strong className="text-slate-900 dark:text-slate-100">
                       {durationMinutes > 0 ? `${durationMinutes} phút` : 'Không giới hạn'}
                     </strong>
                   </div>
                   <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
-                    <span>Hình thức giao:</span>
+                    <span>Hình thức giao</span>
                     <strong className="text-slate-900 dark:text-slate-100 truncate max-w-[170px]">
                       {assignMode === 'public' ? 'Tự do (Mã PIN / QR)' : (classes.find(c => c.id === selectedClassId)?.name || 'Chưa chọn lớp')}
                     </strong>
                   </div>
                   <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
-                    <span>Yêu cầu đăng nhập:</span>
+                    <span>Yêu cầu đăng nhập</span>
                     <strong className="text-slate-900 dark:text-slate-100">
                       {assignMode === 'public' ? 'Không bắt buộc' : 'Bắt buộc tài khoản lớp'}
                     </strong>
                   </div>
                   <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
-                    <span>Chế độ bảo mật:</span>
+                    <span>Chế độ bảo mật</span>
                     {antiCheating ? (
                       <span className="text-google-blue font-semibold">Chống gian lận</span>
                     ) : (
