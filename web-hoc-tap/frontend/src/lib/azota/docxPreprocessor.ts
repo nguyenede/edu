@@ -255,4 +255,48 @@ export class DocxPreprocessor {
       tableCount,
     };
   }
+
+  /**
+   * Chuyển đổi mã nguồn đề thi định dạng LaTeX (gói ex_test, exam chuẩn Việt Nam)
+   * tương đương module LatexUtils trong Azota Production
+   */
+  public static preprocessLatex(latexContent: string): string {
+    if (!latexContent) return '';
+    let text = latexContent;
+
+    // 1. Tiền xử lý ngắt dòng và dọn dẹp comment LaTeX
+    text = text.replace(/\\\\\\n/g, '\n');
+    text = text.replace(/\r\n/g, '\n');
+    text = text.replace(/\r/g, '\n');
+    text = text.replace(/(^|[^\\])%.*$/gm, '$1');
+
+    // 2. Chuyển đổi bộ đếm câu hỏi \\setcounter{ex}{...} và \\begin{ex}
+    let qIdx = 1;
+    text = text.replace(/\\setcounter\{ex\}\{([0-9]+)\}/g, (_, num) => {
+      qIdx = parseInt(num, 10);
+      return '';
+    });
+    text = text.replace(/\\begin\{ex\}/g, () => `\nCâu ${qIdx++}: `);
+    text = text.replace(/\\end\{ex\}/g, '\n');
+
+    // 3. Chuyển đổi câu hỏi trả lời ngắn: \\shortans{...}
+    text = text.replace(/\\shortans\{\s*\$(.*?)\$\s*\}/g, 'Đáp số: $1');
+    text = text.replace(/\\shortans\{(.*?)\}/g, 'Đáp số: $1');
+
+    // 4. Chuyển đổi lời giải: \\loigiai{...}
+    text = text.replace(/\\loigiai\{/g, '\nLời giải: ');
+
+    // 5. Chuyển đổi các gói lựa chọn phương án: \\choice và \\choiceTF
+    text = text.replace(/\\choiceTF\b/g, '\n');
+    text = text.replace(/\\choice\b/g, '\n');
+
+    // 6. Dọn dẹp các lệnh định dạng phông chữ LaTeX phổ biến
+    text = text.replace(/\\textbf\{([^}]+)\}/g, '$1');
+    text = text.replace(/\\textit\{([^}]+)\}/g, '$1');
+    text = text.replace(/\\underline\{([^}]+)\}/g, '$1');
+    text = text.replace(/\\centerline\{([^}]+)\}/g, '$1');
+    text = text.replace(/\\noindent/g, '');
+
+    return this.normalizeText(text);
+  }
 }
