@@ -19,12 +19,14 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import { fetchClasses, createClass, joinClass } from '@/lib/classesApi';
+import { idbSyncAndGetAll } from '@/lib/indexedDbStorage';
 
 export default function DashboardPage() {
   const router = useRouter();
   const { user, token } = useAuthStore();
   const [classes, setClasses] = useState<any[]>([]);
   const [recentAssignments, setRecentAssignments] = useState<any[]>([]);
+  const [createdExamsCount, setCreatedExamsCount] = useState<number>(0);
   const [stats, setStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
@@ -58,7 +60,15 @@ export default function DashboardPage() {
       const classList = await fetchClasses(activeToken, isTeacher);
       setClasses(classList);
 
-      // 2. Fetch Results / History
+      // 2. Fetch Real Exams / Documents Count (100% real data)
+      if (typeof window !== 'undefined') {
+        try {
+          const { documents: idbDocs } = await idbSyncAndGetAll();
+          setCreatedExamsCount(idbDocs.length);
+        } catch (_) {}
+      }
+
+      // 3. Fetch Results / History
       try {
         const histRes = await fetch(
           isTeacher
@@ -183,7 +193,7 @@ export default function DashboardPage() {
               {isTeacherUser ? 'Đề thi đã tạo' : 'Phòng thi đã đấu'}
             </span>
             <p className="text-2xl font-bold text-slate-950 dark:text-slate-100">
-              {isTeacherUser ? 'Sẵn sàng' : 'Hoạt động'}
+              {isTeacherUser ? createdExamsCount : recentAssignments.length}
             </p>
           </div>
 

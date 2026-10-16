@@ -425,14 +425,11 @@ export async function fetchClassDetail(token: string | null, classId: string): P
         c.id === cleanClassId ||
         c.id.replace(/_/g, '') === cleanClassId ||
         c.code === classId
-    ) || {
-      id: cleanClassId,
-      name: 'Lớp học ' + cleanClassId,
-      code: cleanClassId.toUpperCase().slice(-6),
-      teacher: { profile: { name: 'Giáo viên phụ trách' } },
-      _count: { members: 0 },
-      createdAt: new Date().toISOString(),
-    };
+    ) || null;
+  }
+
+  if (!detail) {
+    return null as any;
   }
 
   // Sync member count from members storage

@@ -571,6 +571,19 @@ export async function idbSyncAndGetAll(): Promise<{
  */
 export function isDummyDocument(doc: DocumentFileItem): boolean {
   if (!doc) return true;
+  const title = (doc.name || doc.parsedQuiz?.title || '').trim().toLowerCase();
+
+  // 1. Tự động dọn dẹp các đề thi bị AI bịa ra từ danh sách học sinh / hành chính hoặc đề mẫu không có thật
+  if (
+    title.includes('danh sách học sinh') ||
+    title.includes('danh sách lớp học') ||
+    title.includes('quản lý và xử lý danh sách lớp học') ||
+    title.includes('quản lý danh sách lớp học') ||
+    /^đề\s*(?:mẫu|demo|test|thử|dummy)$/i.test(title)
+  ) {
+    return true;
+  }
+
   const questions = doc.parsedQuiz?.questions;
   if (!Array.isArray(questions) || questions.length === 0) return false;
 
@@ -581,7 +594,11 @@ export function isDummyDocument(doc: DocumentFileItem): boolean {
         return (
           /^Phương án\s*[A-D0-9]?$/i.test(text) ||
           /^Lựa chọn\s*[A-D0-9]?$/i.test(text) ||
-          text === 'Phương án đúng chính xác'
+          text === 'Phương án đúng chính xác' ||
+          text === 'Đáp án A' ||
+          text === 'Đáp án B' ||
+          text === 'Đáp án C' ||
+          text === 'Đáp án D'
         );
       });
       if (hasDummyOption) return true;
