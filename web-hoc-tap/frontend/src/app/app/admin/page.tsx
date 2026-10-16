@@ -143,26 +143,28 @@ export default function AdminPage() {
         )}
 
         {/* Tab Navigation */}
-        <div className="flex gap-4 border-b border-slate-100 dark:border-slate-900 pb-1">
+        <div className="flex gap-2 sm:gap-2.5 items-center overflow-x-auto no-scrollbar py-1">
           <button
+            type="button"
             onClick={() => setActiveTab('users')}
-            className={`pb-2.5 text-sm font-semibold border-b-2 ${
+            className={`px-3.5 py-1.5 text-xs sm:text-sm tracking-tight whitespace-nowrap cursor-pointer transition-all rounded-xl ${
               activeTab === 'users'
-                ? 'border-blue-600 text-blue-600 dark:border-blue-500 dark:text-blue-500'
-                : 'border-transparent text-slate-500'
+                ? 'bg-blue-50 dark:bg-blue-950/60 text-google-blue dark:text-blue-400 font-semibold shadow-2xs'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/60 font-medium'
             }`}
           >
-            Quản lý người dùng {usersList.length}
+            Quản lý người dùng ({usersList.length})
           </button>
           <button
+            type="button"
             onClick={() => setActiveTab('logs')}
-            className={`pb-2.5 text-sm font-semibold border-b-2 ${
+            className={`px-3.5 py-1.5 text-xs sm:text-sm tracking-tight whitespace-nowrap cursor-pointer transition-all rounded-xl ${
               activeTab === 'logs'
-                ? 'border-blue-600 text-blue-600 dark:border-blue-500 dark:text-blue-500'
-                : 'border-transparent text-slate-500'
+                ? 'bg-blue-50 dark:bg-blue-950/60 text-google-blue dark:text-blue-400 font-semibold shadow-2xs'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/60 font-medium'
             }`}
           >
-            Nhật ký hệ thống {auditLogs.length}
+            Nhật ký hệ thống ({auditLogs.length})
           </button>
         </div>
 

@@ -131,6 +131,12 @@ hr {
   border-color: transparent !important;
 }
 
+[role="tablist"],
+.tab-nav,
+nav[aria-label="Tabs"] {
+  border-bottom: none !important;
+}
+
 button:focus,
 input:focus,
 select:focus,

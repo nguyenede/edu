@@ -594,15 +594,15 @@ export default function ClassDetailPage() {
       }
     >
       <div className="space-y-6">
-        {/* Navigation Tabs (Thiết kế thanh tab hiện đại không có thanh gạch kẻ trắng ngang) */}
-        <div className="flex gap-6 sm:gap-8 items-center overflow-x-auto no-scrollbar pt-1">
+        {/* Navigation Tabs (Thiết kế thanh tab hiện đại dạng thẻ mềm, không gạch chân hay đường kẻ) */}
+        <div className="flex gap-2 sm:gap-2.5 items-center overflow-x-auto no-scrollbar py-1">
           <button
             type="button"
             onClick={() => setActiveTab('assignments')}
-            className={`pb-2.5 text-sm tracking-tight whitespace-nowrap cursor-pointer transition-all border-b-2 ${
+            className={`px-3.5 py-1.5 text-xs sm:text-sm tracking-tight whitespace-nowrap cursor-pointer transition-all rounded-xl ${
               activeTab === 'assignments'
-                ? 'border-blue-600 text-blue-600 dark:border-blue-500 dark:text-blue-400 font-medium'
-                : 'border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white font-normal'
+                ? 'bg-blue-50 dark:bg-blue-950/60 text-google-blue dark:text-blue-400 font-semibold shadow-2xs'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/60 font-medium'
             }`}
           >
             Bài tập và Đề thi ({assignments.length})
@@ -612,10 +612,10 @@ export default function ClassDetailPage() {
             <button
               type="button"
               onClick={() => setActiveTab('students')}
-              className={`pb-2.5 text-sm tracking-tight whitespace-nowrap cursor-pointer transition-all border-b-2 ${
+              className={`px-3.5 py-1.5 text-xs sm:text-sm tracking-tight whitespace-nowrap cursor-pointer transition-all rounded-xl ${
                 activeTab === 'students'
-                  ? 'border-blue-600 text-blue-600 dark:border-blue-500 dark:text-blue-400 font-medium'
-                  : 'border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white font-normal'
+                  ? 'bg-blue-50 dark:bg-blue-950/60 text-google-blue dark:text-blue-400 font-semibold shadow-2xs'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/60 font-medium'
               }`}
             >
               Danh sách Học sinh ({members.length})
@@ -625,10 +625,10 @@ export default function ClassDetailPage() {
           <button
             type="button"
             onClick={() => setActiveTab('gradebook')}
-            className={`pb-2.5 text-sm tracking-tight whitespace-nowrap cursor-pointer transition-all border-b-2 ${
+            className={`px-3.5 py-1.5 text-xs sm:text-sm tracking-tight whitespace-nowrap cursor-pointer transition-all rounded-xl ${
               activeTab === 'gradebook'
-                ? 'border-blue-600 text-blue-600 dark:border-blue-500 dark:text-blue-400 font-medium'
-                : 'border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white font-normal'
+                ? 'bg-blue-50 dark:bg-blue-950/60 text-google-blue dark:text-blue-400 font-semibold shadow-2xs'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/60 font-medium'
             }`}
           >
             Bảng điểm
@@ -646,7 +646,7 @@ export default function ClassDetailPage() {
                 </h3>
               </div>
             ) : (
-              <div className="divide-y divide-slate-100 dark:divide-slate-800">
+              <div className="space-y-1.5">
                 {assignments.map((assign) => (
                   <div
                     key={assign.id}
@@ -657,7 +657,7 @@ export default function ClassDetailPage() {
                         handleOpenExamInNewTab(assign);
                       }
                     }}
-                    className="py-3.5 px-3 flex justify-between items-center cursor-pointer select-none hover:bg-blue-50/50 dark:hover:bg-blue-950/20 rounded-xl transition-all border border-transparent hover:border-blue-100 dark:hover:border-blue-900/40 group"
+                    className="py-3.5 px-3 flex justify-between items-center cursor-pointer select-none hover:bg-blue-50/50 dark:hover:bg-blue-950/20 rounded-xl transition-all group"
                   >
                     <div className="space-y-1">
                       <div className="flex items-center gap-2 flex-wrap">
@@ -781,7 +781,7 @@ export default function ClassDetailPage() {
                 Chưa có học sinh nào tham gia lớp này.
               </p>
             ) : (
-              <div className="divide-y divide-slate-100 dark:divide-slate-800">
+              <div className="space-y-1">
                 {filteredMembers.map((m) => {
                   const studentName = m.student?.profile?.name || m.student?.name || m.name || m.student?.email || m.email || 'Học sinh';
                   const studentEmail = m.student?.email || m.email || '';
@@ -847,7 +847,7 @@ export default function ClassDetailPage() {
                   {isTeacher ? 'Chưa có học sinh trong lớp để thống kê điểm.' : 'Chưa có dữ liệu điểm của bạn trong lớp học này.'}
                 </p>
               ) : (
-                <div className="overflow-x-auto rounded-lg border border-slate-100 dark:border-slate-800">
+                <div className="overflow-x-auto rounded-lg">
                   <table className="w-full text-left text-xs">
                     <thead className="bg-slate-50/70 dark:bg-slate-900/40 text-slate-600 dark:text-slate-300 font-semibold">
                       <tr>
@@ -862,7 +862,7 @@ export default function ClassDetailPage() {
                         <th className="py-2.5 px-3 text-center font-bold text-blue-600">ĐTB</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                    <tbody>
                       {displayedMembers.map((m, idx) => {
                         const name = m.student?.profile?.name || m.name || 'Học sinh';
                         const studentId = m.student?.id || m.studentId || m.id;
@@ -1110,7 +1110,7 @@ export default function ClassDetailPage() {
               <div className="text-xs font-semibold text-slate-700 dark:text-slate-300">
                 Xem trước danh sách: {excelStudentsPreview.length} học sinh
               </div>
-              <div className="max-h-48 overflow-y-auto rounded-lg border border-slate-100 dark:border-slate-800 divide-y divide-slate-100 dark:divide-slate-800 text-xs">
+              <div className="max-h-48 overflow-y-auto rounded-lg space-y-1 text-xs">
                 {excelStudentsPreview.map((item, i) => (
                   <div key={i} className="p-2 flex items-center justify-between">
                     <span className="font-medium">{item.name} {item.studentCode && ` - ${item.studentCode}`}</span>
