@@ -5,7 +5,7 @@ import {
   detectSubjectFromText,
   detectGradeFromText,
 } from '@/lib/examStructureParser';
-import { validateAndSanitizeQuestions, cleanVietnameseEncoding } from '@/lib/questionValidator';
+import { validateAndSanitizeQuestions, cleanVietnameseEncoding, validateEducationalDocument } from '@/lib/questionValidator';
 
 interface QuestionOption {
   content: string;
@@ -335,6 +335,15 @@ export async function POST(req: NextRequest) {
       : '';
 
     if (candidateStructuredText) {
+      // Kiểm tra tính hợp lệ của tài liệu trước: Nếu là danh sách hành chính hoặc vô nghĩa -> Không tạo đề
+      const docCheck = validateEducationalDocument(candidateStructuredText, fileName);
+      if (!docCheck.isValid) {
+        return NextResponse.json({
+          success: false,
+          error: docCheck.reason || 'Tài liệu không chứa nội dung bài học hoặc câu hỏi thi hợp lệ.',
+        }, { status: 400 });
+      }
+
       try {
         const directParsed = parseExamFromStructuredText(candidateStructuredText, {
           title: resolvedTitle,
@@ -387,6 +396,14 @@ QUY TẮC BẮT BUỘC TUÂN THỦ:
    - "subject": Xác định đúng môn học từ nội dung câu hỏi trong ảnh (Toán, Vật lý, Hóa học, Tiếng Anh...).
    - "title": Đặt tiêu đề phản ánh đúng nội dung bài học / đề thi trong ảnh.
    - "grade": Khối lớp chuẩn xác (Lớp 1 đến Lớp 12).
+4. PHÁT HIỆN HÌNH ẢNH KHÔNG HỢP LỆ (BẮT BUỘC):
+   - Nếu bức ảnh KHÔNG PHẢI là đề thi, bài tập hoặc bài học giáo dục (ví dụ: ảnh cá nhân, ảnh phong cảnh, hóa đơn, danh sách điểm danh, ảnh mờ không đọc được chữ hoặc ảnh vô nghĩa):
+   - TUYỆT ĐỐI 100% KHÔNG ĐƯỢC TỰ BỊA RA CÂU HỎI HAY ĐỀ THI GIẢ!
+   - BẮT BUỘC trả về JSON:
+   {
+     "error": "INVALID_DOCUMENT",
+     "message": "Hình ảnh không chứa câu hỏi đề thi hoặc nội dung học tập hợp lệ."
+   }
 3. CHỈ TRẢ VỀ JSON DUY NHẤT HỢP LỆ THEO CẤU TRÚC:
 {
   "title": "${resolvedTitle || (fileName ? fileName.replace(/\.[^/.]+$/, '') : 'Đề thi trích xuất từ ảnh')}",
@@ -451,6 +468,15 @@ QUY TẮC TỐI THƯỢNG (BẮT BUỘC TUÂN THỦ 100%):
    - QUY TẮC PHÂN SỐ: Viết dạng \\frac{tử_số}{mẫu_số}. TỬ SỐ Ở TRÊN, MẪU SỐ Ở DƯỚI. TUYỆT ĐỐI KHÔNG ĐẢO NGƯỢC (1/3 là \\frac{1}{3}).
    - CHUẨN HÓA TIẾNG VIỆT: Dùng 100% Unicode NFC dựng sẵn.
    - Lời giải (explanation) BẮT BUỘC phân tích chi tiết từng bước, giải thích vì sao đáp án đúng và vì sao các phương án khác sai.
+
+4. PHÁT HIỆN TÀI LIỆU KHÔNG HỢP LỆ (BẮT BUỘC):
+   - Nếu tài liệu được cung cấp KHÔNG PHẢI là bài học, bài giảng, đề thi hoặc nội dung kiến thức giáo dục (ví dụ: chỉ là danh sách học sinh, danh sách điểm danh, bảng chấm công, hóa đơn, giấy tờ hành chính, văn bản ngẫu nhiên, vô nghĩa hoặc không có kiến thức học tập):
+   - TUYỆT ĐỐI 100% KHÔNG ĐƯỢC TỰ BỊA RA ĐỀ THI HAY BẤT KỲ CÂU HỎI GIẢ NÀO!
+   - Thay vào đó, BẮT BUỘC chỉ trả về JSON thông báo lỗi sau:
+   {
+     "error": "INVALID_DOCUMENT",
+     "message": "Tài liệu không chứa nội dung bài học, đề thi hoặc kiến thức giáo dục hợp lệ để tạo đề thi."
+   }
 
 CHỈ TRẢ VỀ JSON DUY NHẤT:
 {
@@ -828,6 +854,16 @@ Hãy đọc kỹ mô tả trên và tạo CHÍNH XÁC ĐỦ ${targetCount} câu 
 
     // 3. Phân tích kết quả do AI sinh ra
     let parsedData = cleanAndParseJson<any>(rawAiText);
+
+    if (parsedData?.error === 'INVALID_DOCUMENT' || (parsedData?.error && !parsedData?.questions?.length)) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: parsedData.message || parsedData.error || 'Tài liệu không chứa nội dung bài học hoặc câu hỏi thi hợp lệ.',
+        },
+        { status: 400 }
+      );
+    }
 
     // Chuẩn hóa cấu trúc mảng hoặc các key bao bọc khác từ AI
     if (Array.isArray(parsedData)) {

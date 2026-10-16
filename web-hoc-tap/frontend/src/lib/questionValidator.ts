@@ -485,3 +485,122 @@ export function validateAndSanitizeQuestions(rawQuestions: any[]): ValidatedQues
 
   return validQuestions;
 }
+
+/**
+ * 6. Kiểm định tính hợp lệ của tài liệu tải lên:
+ * Đảm bảo tài liệu là tài liệu học tập, bài giảng, bài tập, đề thi thực thụ.
+ * Tuyệt đối chặn:
+ * - Danh sách học sinh, điểm danh, danh sách lớp, sổ điểm, hồ sơ hành chính
+ * - Văn bản rỗng, quá ngắn (< 40 ký tự)
+ * - Văn bản ngẫu nhiên, vô nghĩa, chuỗi ký tự rác, code log/trace
+ */
+export function validateEducationalDocument(text: string, fileName?: string): { isValid: boolean; reason?: string } {
+  if (!text || text.trim().length < 40) {
+    return {
+      isValid: false,
+      reason: 'Tài liệu quá ngắn hoặc không có nội dung chữ để phân tích đề thi.',
+    };
+  }
+
+  const clean = text.toLowerCase();
+  const fileClean = (fileName || '').toLowerCase();
+
+  // 1. Kiểm tra tài liệu dạng Danh sách học sinh / Điểm danh / Bảng điểm hành chính
+  const rosterKeywords = [
+    'danh sách học sinh',
+    'danh sach hoc sinh',
+    'danh sách lớp',
+    'danh sach lop',
+    'danh sách sinh viên',
+    'bảng điểm danh',
+    'bang diem danh',
+    'điểm danh',
+    'diem danh',
+    'sổ gọi tên',
+    'so goi ten',
+    'danh sách thi',
+    'danh sach thi',
+    'sổ điểm',
+    'so diem',
+    'danh sách cán bộ',
+    'danh sách giáo viên',
+    'bảng lương',
+    'hóa đơn',
+    'biên lai',
+  ];
+  const isRosterTitle = rosterKeywords.some((kw) => clean.includes(kw) || fileClean.includes(kw));
+
+  // Kiểm tra các cột dữ liệu hành chính điển hình
+  const adminColumns = [
+    /\bhọ\s*và\s*tên\b/,
+    /\bho\s*va\s*ten\b/,
+    /\bngày\s*sinh\b/,
+    /\bngay\s*sinh\b/,
+    /\bgiới\s*tính\b/,
+    /\bgioi\s*tinh\b/,
+    /\bnơi\s*sinh\b/,
+    /\bnoi\s*sinh\b/,
+    /\bdân\s*tộc\b/,
+    /\bchức\s*vụ\b/,
+    /\bsố\s*điện\s*thoại\b/,
+    /\bsđt\b/,
+    /\bcccd\b/,
+    /\bcmnd\b/,
+    /\bmshs\b/,
+    /\bmssv\b/,
+    /\bsbd\b/,
+    /\bchữ\s*ký\b/,
+  ];
+  let adminColCount = 0;
+  for (const reg of adminColumns) {
+    if (reg.test(clean)) adminColCount++;
+  }
+
+  // Kiểm tra từ khóa câu hỏi hoặc bài tập giáo dục
+  const educationalKeywords = [
+    /\b(?:câu|câu\s*hỏi|bài|bài\s*tập|question)\s*\d+/i,
+    /\b(?:đáp\s*án|lời\s*giải|hướng\s*dẫn\s*giải)\b/i,
+    /\b(?:chứng\s*minh|tính\s*giá\s*trị|rút\s*gọn|tìm\s*x|giải\s*phương\s*trình|hàm\s*số)\b/i,
+    /\b(?:định\s*nghĩa|định\s*lý|khái\s*niệm|tính\s*chất|công\s*thức|lý\s*thuyết)\b/i,
+    /\b(?:phương\s*án|lựa\s*chọn|trắc\s*nghiệm|tự\s*luận)\b/i,
+    /(?:^|\n)\s*[A-D][\s.)]/,
+  ];
+  const hasEducationalContent = educationalKeywords.some((reg) => reg.test(text));
+
+  // Nếu tiêu đề là danh sách lớp/học sinh hoặc có >= 2 cột hành chính và KHÔNG CÓ nội dung bài tập giáo dục
+  if ((isRosterTitle || adminColCount >= 2) && !hasEducationalContent) {
+    return {
+      isValid: false,
+      reason: 'Tài liệu tải lên là danh sách học sinh / bảng điểm hành chính, không phải đề thi hay tài liệu bài giảng giáo dục. Hệ thống không tạo đề thi từ file này!',
+    };
+  }
+
+  // 2. Kiểm tra văn bản rác / ngẫu nhiên / vô nghĩa
+  const commonWords = [
+    /\b(?:và|của|trong|cho|với|có|các|được|này|khi|sau|như|về|đến|từ|bằng|không|những|theo|đã|sẽ|phải|để|người|việc|thì|mà|ở|ra|vào|lại|rồi|lên|qua|nhiều|khác|một|hai|ba|bốn|năm)\b/i,
+    /\b(?:the|and|in|of|to|is|are|for|with|on|that|this|by|from|as|at|or|an|be|which|have|has)\b/i,
+    /\b(?:bài|học|giáo|khoa|sách|chương|phần|mục|tiết|lý|thuyết|thực|hành|kiến|thức|kỹ|năng)\b/i,
+  ];
+  let commonWordMatches = 0;
+  for (const cw of commonWords) {
+    const m = clean.match(cw);
+    if (m) commonWordMatches += m.length;
+  }
+
+  if (!hasEducationalContent && commonWordMatches < 3) {
+    return {
+      isValid: false,
+      reason: 'Tài liệu không chứa nội dung bài học hoặc câu hỏi kiểm tra có ý nghĩa.',
+    };
+  }
+
+  const letters = text.match(/[a-zA-Z\u00C0-\u024F\u1EA0-\u1EF9]/g) || [];
+  if (letters.length < 25) {
+    return {
+      isValid: false,
+      reason: 'Tài liệu không chứa đủ nội dung chữ có nghĩa để phân tích đề thi.',
+    };
+  }
+
+  return { isValid: true };
+}

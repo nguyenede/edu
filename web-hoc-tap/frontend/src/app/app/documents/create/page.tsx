@@ -11,6 +11,7 @@ import { parseDocxFile, ParsedQuiz } from '@/lib/docParser';
 import { parseExamFileStructure, validateDeterministicResult } from '@/lib/examStructureParser';
 import { downloadSampleTemplate } from '@/lib/templateGenerator';
 import { extractFileForAi } from '@/lib/fileExtractor';
+import { validateEducationalDocument } from '@/lib/questionValidator';
 import { AiToolRegistry } from '@/lib/ai/aiToolRegistry';
 import { syncExamActionToDocument } from '@/lib/examDocumentSync';
 import { useAuthStore } from '@/store/useAuthStore';
@@ -33,6 +34,7 @@ import {
   Save,
   Edit3,
   Lock,
+  AlertCircle,
 } from 'lucide-react';
 
 interface ParsedExamQuestion {
@@ -158,6 +160,7 @@ function DocumentCreateContent() {
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
   const [isSavingChanges, setIsSavingChanges] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const { user, token } = useAuthStore();
   const isTeacher = React.useMemo(() => {
     if (!user) return false;
@@ -180,6 +183,7 @@ function DocumentCreateContent() {
     const cleanName = file.name.replace(/\.[^/.]+$/, '');
     setIsParsing(true);
     setCreatedExamResult(null);
+    setErrorMessage(null);
 
     // Watchdog timer: Đảm bảo giao diện không bao giờ bị treo loading vô hạn
     const watchdogTimer = setTimeout(() => {
@@ -238,15 +242,26 @@ function DocumentCreateContent() {
         return;
       }
 
-      // 2. CHỈ KHI THUẬT TOÁN KHÔNG NHẬN DIỆN ĐƯỢC (0 câu hỏi, ảnh chụp, PDF scan) -> MỚI CHUYỂN QUA SI
-      console.log('Thuật toán không nhận diện được cấu trúc câu hỏi, chuyển qua SI để nhận diện...');
-
+      // 2. CHỈ KHI THUẬT TOÁN KHÔNG NHẬN DIỆN ĐƯỢC (0 câu hỏi, ảnh chụp, PDF scan)
       const extracted = await extractFileForAi(file);
+      const cleanDocText = (extracted.text || '').replace(/data:image\/[^;]+;base64,[A-Za-z0-9+/=]+/g, '[Hình ảnh]').slice(0, 35000);
+
+      // KIỂM ĐỊNH TÍNH HỢP LỆ CỦA TÀI LIỆU TRƯỚC KHI CHUYỂN QUA SI
+      if (extracted.type !== 'image') {
+        const docCheck = validateEducationalDocument(cleanDocText, file.name);
+        if (!docCheck.isValid) {
+          setIsParsing(false);
+          const reason = docCheck.reason || 'Tài liệu không chứa nội dung bài học hoặc đề thi hợp lệ.';
+          setErrorMessage(reason);
+          setToastMessage(reason);
+          return;
+        }
+      }
+
+      console.log('Chuyển qua SI để nhận diện nội dung học tập...');
 
       const aiController = new AbortController();
       const aiTimeoutId = setTimeout(() => aiController.abort(), 75000);
-
-      const cleanDocText = (extracted.text || '').replace(/data:image\/[^;]+;base64,[A-Za-z0-9+/=]+/g, '[Hình ảnh]').slice(0, 35000);
 
       const res = await fetch('/api/si/generate-exam', {
         method: 'POST',
@@ -264,7 +279,10 @@ function DocumentCreateContent() {
 
       const data = await res.json();
       if (!res.ok || !data.success || !data.exam) {
-        throw new Error(data.error || 'SI không thể nhận diện đề thi từ tài liệu này. 100% không làm giả dữ liệu.');
+        const errorMsg = data.error || 'SI không thể nhận diện đề thi từ tài liệu này. 100% không làm giả dữ liệu.';
+        setErrorMessage(errorMsg);
+        setToastMessage(errorMsg);
+        return;
       }
 
       const examData = data.exam;
@@ -314,7 +332,9 @@ function DocumentCreateContent() {
       setToastMessage(`SI đã nhận diện môn "${detectedSubject}" và tạo thành công ${examData.questions.length} câu hỏi!`);
     } catch (err: any) {
       console.error('Error processing file:', err);
-      setToastMessage(err.message || 'Có lỗi xảy ra trong quá trình nhận diện file.');
+      const msg = err.message || 'Có lỗi xảy ra trong quá trình nhận diện file.';
+      setErrorMessage(msg);
+      setToastMessage(msg);
     } finally {
       clearTimeout(watchdogTimer);
       setIsParsing(false);
@@ -641,6 +661,41 @@ function DocumentCreateContent() {
                 <p className="text-xs text-slate-500">
                   Hệ thống đang trích xuất câu hỏi, phương án A/B/C/D, đáp án đúng và lời giải chi tiết
                 </p>
+              </div>
+            )}
+
+            {/* Error Message Box */}
+            {errorMessage && !isParsing && (
+              <div className="mt-4 p-5 bg-red-50/95 dark:bg-red-950/40 rounded-2xl border border-red-300 dark:border-red-800 space-y-3 shadow-xs">
+                <div className="flex items-center gap-3">
+                  <AlertCircle size={26} className="text-red-600 shrink-0" />
+                  <div className="text-left flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5 mb-1">
+                      <span className="px-2 py-0.5 rounded-md text-[11px] font-bold bg-red-100 dark:bg-red-900/60 text-red-800 dark:text-red-200">
+                        Không thể nhận diện đề thi
+                      </span>
+                    </div>
+                    <h4 className="text-sm font-bold text-red-900 dark:text-white truncate">
+                      {selectedFile?.name || 'Tài liệu không hợp lệ'}
+                    </h4>
+                    <p className="text-xs text-red-700 dark:text-red-300 font-medium">
+                      {errorMessage}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center justify-end gap-2 pt-1">
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="text-red-700 hover:bg-red-100/50"
+                    onClick={() => {
+                      setErrorMessage(null);
+                      setSelectedFile(null);
+                    }}
+                  >
+                    Đóng thông báo
+                  </Button>
+                </div>
               </div>
             )}
 
