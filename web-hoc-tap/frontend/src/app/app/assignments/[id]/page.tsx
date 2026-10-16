@@ -716,7 +716,7 @@ export default function AssignmentDetailPage() {
         {/* Left 2 Cols: Main Content Area */}
         <div className="md:col-span-2 space-y-6">
           {/* Assignment Meta Header */}
-          <div className="pb-3 border-b border-slate-100 dark:border-slate-800 space-y-2.5">
+          <div className="pb-3 space-y-2.5">
             <div className="flex flex-wrap gap-2.5 items-center text-xs text-slate-500">
               <span className="flex items-center gap-1.5">
                 <Calendar size={13} className="text-slate-400" />
@@ -850,7 +850,7 @@ export default function AssignmentDetailPage() {
               {mySubmission ? (
                 /* Already Submitted Result View */
                 <div className="space-y-4">
-                  <div className="flex justify-between items-center pb-3 border-b border-slate-100 dark:border-slate-800">
+                  <div className="flex justify-between items-center pb-3">
                     <div className="flex items-center gap-2">
                       <CheckCircle2 size={18} className="text-emerald-600 dark:text-emerald-400" />
                       <span className="font-bold text-sm text-slate-950 dark:text-slate-100">
@@ -987,7 +987,7 @@ export default function AssignmentDetailPage() {
               ) : (
                 /* Student Submission Form (Fallback) */
                 <div className="space-y-5">
-                  <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
+                  <div className="flex items-center justify-between pb-2">
                     <button
                       type="button"
                       onClick={() => setShowInlineFallback(false)}

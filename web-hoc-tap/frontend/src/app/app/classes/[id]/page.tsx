@@ -1058,7 +1058,7 @@ export default function ClassDetailPage() {
             />
           </div>
 
-          <div className="flex justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+          <div className="flex justify-end gap-2 pt-2">
             <Button variant="ghost" size="sm" onClick={() => setIsAddStudentModalOpen(false)}>
               Hủy
             </Button>
@@ -1121,7 +1121,7 @@ export default function ClassDetailPage() {
             </div>
           )}
 
-          <div className="flex justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+          <div className="flex justify-end gap-2 pt-2">
             <Button
               variant="ghost"
               size="sm"
@@ -1225,7 +1225,7 @@ export default function ClassDetailPage() {
             />
           </div>
 
-          <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800">
+          <div className="flex items-center justify-between pt-2">
             <button
               type="button"
               onClick={() => {

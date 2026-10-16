@@ -132,3 +132,15 @@ a:focus-visible,
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Xóa tất cả thanh kẻ ngang phân cách trên toàn bộ website */
+hr {
+  display: none !important;
+}
+
+.divide-y > * + *,
+.divide-y > :not([hidden]) ~ :not([hidden]) {
+  border-top-width: 0px !important;
+  border-bottom-width: 0px !important;
+  border-color: transparent !important;
+}

@@ -291,8 +291,8 @@ function AssignPageContent() {
           const defaultTitle =
             cleanedDoc.parsedQuiz?.title ||
             cleanedDoc.name?.replace(/\.[^/.]+$/, '') ||
-            'Bài tập trắc nghiệm';
-          setTitle(`Bài tập: ${defaultTitle}`);
+            'Bài tập';
+          setTitle(defaultTitle);
           setDurationMinutes(cleanedDoc.parsedQuiz?.durationMinutes || 45);
         }
       } catch (err) {
@@ -361,7 +361,8 @@ function AssignPageContent() {
   };
 
   const handleCreate = async () => {
-    if (!title.trim() || !fileItem) return;
+    if (!fileItem) return;
+    const effectiveTitle = title.trim() || fileItem.parsedQuiz?.title || fileItem.name?.replace(/\.[^/.]+$/, '') || 'Bài tập';
     if (assignMode === 'class' && !selectedClassId) {
       alert('Vui lòng chọn lớp học để giao bài.');
       return;
@@ -376,7 +377,7 @@ function AssignPageContent() {
       const finalMinSubmit = Number(minSubmitMinutes === -1 ? customMinSubmit : minSubmitMinutes) || 0;
 
       const hw = await createHomework({
-        title: title.trim(),
+        title: effectiveTitle,
         description: fileItem.parsedQuiz?.description || `Bài tập từ tài liệu ${fileItem.name}`,
         documentId: fileItem.id,
         classId: finalClassId,
@@ -800,23 +801,11 @@ function AssignPageContent() {
             {/* CỘT TRÁI (8 COLS): CÁC CÀI ĐẶT BÀI TẬP (KHÔNG KHUNG) */}
             <div className="lg:col-span-8 space-y-8">
               {/* Phần 1: Thông tin bài tập */}
-              <div className="space-y-6 pb-8 border-b border-slate-100 dark:border-slate-800/80">
+              <div className="space-y-6 pb-6">
                 <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">
                   Thông tin bài tập
                 </h2>
 
-                {/* Tiêu đề */}
-                <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                    Tiêu đề bài tập <span className="text-red-500">*</span>
-                  </label>
-                  <Input
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    placeholder="Nhập tên bài tập"
-                    className="rounded-xl text-sm"
-                  />
-                </div>
 
                 {/* Hình thức giao bài (2 Tùy chọn) */}
                 <div className="space-y-3">
@@ -895,22 +884,24 @@ function AssignPageContent() {
 
                       {/* Dropdown chọn lớp học kết hợp trực tiếp */}
                       {assignMode === 'class' && (
-                        <div className="pt-1.5 border-t border-blue-200/60 dark:border-blue-900/40 animate-in fade-in duration-150 space-y-1.5" onClick={(e) => e.stopPropagation()}>
-                          <label className="text-[11px] font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1">
-                            <span>Chọn lớp học:</span>
-                            <span className="text-red-500">*</span>
-                          </label>
+                        <div className="pt-1 animate-in fade-in duration-150" onClick={(e) => e.stopPropagation()}>
                           {classes.length > 0 ? (
                             <select
                               value={selectedClassId}
                               onChange={(e) => setSelectedClassId(e.target.value)}
-                              className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-google-blue cursor-pointer shadow-xs"
+                              className="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-google-blue cursor-pointer shadow-xs"
                             >
-                              {classes.map((cls) => (
-                                <option key={cls.id} value={cls.id}>
-                                  Lớp: {cls.name} • {cls._count?.members || 0} học sinh
-                                </option>
-                              ))}
+                              {classes.map((cls) => {
+                                const rawName = (cls.name || '').trim();
+                                const displayName = /^lớp\b/i.test(rawName)
+                                  ? rawName.charAt(0).toUpperCase() + rawName.slice(1)
+                                  : `Lớp ${rawName}`;
+                                return (
+                                  <option key={cls.id} value={cls.id}>
+                                    {displayName} • {cls._count?.members || 0} học sinh
+                                  </option>
+                                );
+                              })}
                             </select>
                           ) : (
                             <div className="p-2.5 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/60 rounded-xl text-xs text-amber-800 dark:text-amber-300 flex items-center justify-between gap-2">
@@ -1024,7 +1015,7 @@ function AssignPageContent() {
               </div>
 
               {/* Phần 2: Tùy chọn xáo trộn & Đáp án */}
-              <div className="space-y-5 pb-8 border-b border-slate-100 dark:border-slate-800/80">
+              <div className="space-y-5 pb-6">
                 <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">
                   Tùy chọn xáo trộn và Đáp án
                 </h2>
@@ -1147,7 +1138,7 @@ function AssignPageContent() {
                     </div>
 
                     {/* Hàng 2: Tùy chọn xử lý khi vượt quá số lần vi phạm */}
-                    <div className="pt-2 border-t border-slate-200/60 dark:border-slate-800">
+                    <div className="pt-2">
                       <label className="flex items-center gap-3 cursor-pointer group select-none py-1">
                         <input
                           type="checkbox"
@@ -1162,7 +1153,7 @@ function AssignPageContent() {
                     </div>
 
                     {/* Hàng 3: Các quy tắc giám sát chi tiết */}
-                    <div className="pt-2 border-t border-slate-200/60 dark:border-slate-800 space-y-3">
+                    <div className="pt-2 space-y-3">
                       <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
                         Các biện pháp giám sát được áp dụng
                       </span>

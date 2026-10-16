@@ -813,7 +813,7 @@ function DocumentCreateContent() {
             description={`Đã trích xuất ${parsedExamData.questions.length} câu hỏi • Thời gian làm bài: ${parsedExamData.durationMinutes || 45} phút`}
           >
             {/* Top Toolbar */}
-            <div className="flex flex-wrap items-center justify-between gap-3 pb-3 pt-1 border-b border-slate-100 dark:border-slate-800">
+            <div className="flex flex-wrap items-center justify-between gap-3 pb-3 pt-1">
               <div className="flex items-center gap-2">
                 <span className="px-3 py-1 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-google-blue dark:text-blue-400 font-semibold text-xs border border-blue-200/60 dark:border-blue-800/60">
                   Tổng số: {parsedExamData.questions.length} câu
@@ -965,7 +965,7 @@ function DocumentCreateContent() {
             </div>
 
             {/* Modal Bottom Footer */}
-            <div className="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-slate-800 mt-2">
+            <div className="flex items-center justify-between pt-4 mt-2">
               <Button variant="outline" size="sm" onClick={() => setIsPreviewModalOpen(false)}>
                 Đóng
               </Button>

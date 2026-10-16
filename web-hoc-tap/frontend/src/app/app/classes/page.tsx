@@ -396,7 +396,7 @@ export default function ClassesPage() {
             </select>
           </div>
 
-          <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
+          <div className="flex items-center justify-end gap-2 pt-3">
             <Button
               type="button"
               variant="ghost"
@@ -478,7 +478,7 @@ export default function ClassesPage() {
             </div>
           )}
 
-          <div className="flex justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+          <div className="flex justify-end gap-2 pt-2">
             <Button
               variant="ghost"
               size="sm"
@@ -560,7 +560,7 @@ export default function ClassesPage() {
             </div>
           </div>
 
-          <div className="flex justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+          <div className="flex justify-end gap-2 pt-2">
             <Button variant="ghost" size="sm" onClick={() => setIsNewTermModalOpen(false)}>
               Hủy
             </Button>

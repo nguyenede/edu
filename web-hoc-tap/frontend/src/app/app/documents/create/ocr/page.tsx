@@ -501,7 +501,7 @@ function OcrQuizCreateContent() {
           {/* PREVIEW KẾT QUẢ BÓC TÁCH */}
           {scannedExamData && (
             <div className="space-y-4 p-5 bg-white dark:bg-slate-900 rounded-3xl border border-purple-200 dark:border-purple-800 shadow-sm animate-in fade-in duration-300">
-              <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+              <div className="flex items-center justify-between pb-3">
                 <div className="flex items-center gap-2 text-google-green">
                   <CheckCircle2 size={18} />
                   <span className="text-xs font-bold">
@@ -560,7 +560,7 @@ function OcrQuizCreateContent() {
                 ))}
               </div>
 
-              <div className="pt-2 flex items-center justify-end gap-2 border-t border-slate-100 dark:border-slate-800">
+              <div className="pt-2 flex items-center justify-end gap-2">
                 <Button
                   variant="ghost"
                   size="sm"

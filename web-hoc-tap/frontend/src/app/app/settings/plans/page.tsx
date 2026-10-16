@@ -290,7 +290,7 @@ export default function PlansPage() {
                   <span className="text-xs text-slate-500 font-medium"> / vĩnh viễn</span>
                 </div>
 
-                <div className="border-t border-slate-200 dark:border-slate-700/60 pt-4">
+                <div className="pt-4">
                   <ul className="space-y-3 text-xs text-slate-600 dark:text-slate-300">
                     <li className="flex items-center gap-2.5">
                       <Check size={16} className="text-google-blue shrink-0" />
@@ -363,7 +363,7 @@ export default function PlansPage() {
                   )}
                 </div>
 
-                <div className="border-t border-slate-200 dark:border-slate-800 pt-4">
+                <div className="pt-4">
                   <ul className="space-y-3 text-xs text-slate-700 dark:text-slate-200">
                     <li className="flex items-center gap-2.5 font-semibold text-google-blue">
                       <Zap size={16} className="text-google-blue shrink-0" />
@@ -442,7 +442,7 @@ export default function PlansPage() {
                   )}
                 </div>
 
-                <div className="border-t border-slate-200 dark:border-slate-800 pt-4">
+                <div className="pt-4">
                   <ul className="space-y-3 text-xs text-slate-700 dark:text-slate-200">
                     <li className="flex items-center gap-2.5 font-bold text-amber-700 dark:text-amber-300">
                       <Sparkles size={16} className="text-amber-500 shrink-0" />

@@ -444,7 +444,7 @@ function ManualQuizCreateContent() {
               {questions.map((q, qIdx) => (
                 <div
                   key={q.id}
-                  className="py-5 border-b border-slate-100 dark:border-slate-800 space-y-4"
+                  className="py-5 space-y-4"
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">

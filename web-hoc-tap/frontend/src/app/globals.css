@@ -118,6 +118,18 @@ html.dark .border-zinc-800 {
   word-break: break-word !important;
 }
 
+/* Xóa tất cả thanh kẻ ngang phân cách (horizontal divider lines) trên toàn bộ website */
+hr {
+  display: none !important;
+}
+
+.divide-y > * + *,
+.divide-y > :not([hidden]) ~ :not([hidden]) {
+  border-top-width: 0px !important;
+  border-bottom-width: 0px !important;
+  border-color: transparent !important;
+}
+
 button:focus,
 input:focus,
 select:focus,
