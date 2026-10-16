@@ -2,8 +2,26 @@ import { AzotaQuestion, CognitiveLevel, MatrixGenerationResult, MatrixRule, Ques
 
 export class MatrixEngine {
   /**
-   * Biên dịch cú pháp DSL Ma trận: `[@Selector][@Filter] => Count`
-   * Hỗ trợ các trường: @Subject, @Grade, @Level, @Type, @Topic, @Chapter, @Tag
+   * Bảng ánh xạ nhãn Tag ngôn ngữ trích xuất từ Azota Production Utils.tagLang
+   */
+  private static readonly TAG_LANG_MAP: Record<string, string> = {
+    EASY: 'NB',
+    MEDIUM: 'TH',
+    HARD: 'VD',
+    HARDEST: 'VDC',
+    OC: 'TN', // One choice
+    MC: 'TNNDA', // Multiple choice
+    FB: 'ĐT', // Fill in / Short answer
+    ES: 'TL', // Essay
+    TF: 'ĐS', // True / False
+    GR: 'NH' // Question Group
+  };
+
+  /**
+   * Biên dịch cú pháp DSL Ma trận theo chuẩn hệ thống Azota Production:
+   * Hỗ trợ cả 2 dạng:
+   * 1. Cú pháp tường minh: `[@Subject:Toán 12][@Level:NB][@Type:TN] => 5`
+   * 2. Cú pháp mã hóa Azota: `[@C123][@K456][@F:NB][@F:TN] => 5` hoặc `[@K12.C34.F:VD.F:TN] => 2`
    */
   public static parseDSL(script: string): MatrixRule[] {
     if (!script) return [];
@@ -22,21 +40,59 @@ export class MatrixEngine {
       const tagsPart = arrowSplit[0].trim();
       const count = parseInt(arrowSplit[1].trim(), 10) || 1;
 
-      const tagMatches = Array.from(tagsPart.matchAll(/\[@([^:\]]+)(?::([^\]]+))?\]/g));
-      if (tagMatches.length === 0) continue;
-
       const selectors: Record<string, string> = {};
       const filters: Record<string, string> = {};
 
-      for (const m of tagMatches) {
-        const rawKey = m[1].trim().toLowerCase();
-        const val = (m[2] || '').trim();
+      // 1. Bóc tách các thẻ dạng `[@Key:Value]` hoặc `[@Key]` hoặc `[@F:Tag]`
+      const tagMatches = Array.from(tagsPart.matchAll(/\[@([^\]]+)\]/g));
 
-        const key = this.normalizeKey(rawKey);
-        if (['subject', 'grade', 'topic', 'chapter'].includes(key)) {
-          selectors[key] = val;
-        } else {
-          filters[key] = val;
+      for (const m of tagMatches) {
+        const rawContent = m[1].trim();
+
+        // Xử lý chuỗi ngăn cách bởi dấu chấm dạng chuỗi Azota `K12.C34.F:VD`
+        const subParts = rawContent.split('.');
+        for (const sub of subParts) {
+          const colonIdx = sub.indexOf(':');
+          let rawKey = colonIdx !== -1 ? sub.substring(0, colonIdx).trim() : sub.trim();
+          let rawVal = colonIdx !== -1 ? sub.substring(colonIdx + 1).trim() : '';
+
+          // Chuẩn hóa tiền tố Azota F:
+          if (rawKey.toUpperCase() === 'F' && rawVal) {
+            const mappedTag = this.TAG_LANG_MAP[rawVal.toUpperCase()] || rawVal.toUpperCase();
+            if (['NB', 'TH', 'VD', 'VDC'].includes(mappedTag)) {
+              filters['level'] = mappedTag;
+            } else if (['TN', 'TNNDA', 'ĐS', 'ĐT', 'TL', 'NH'].includes(mappedTag)) {
+              filters['type'] = mappedTag;
+            } else {
+              filters['tag'] = mappedTag;
+            }
+            continue;
+          }
+
+          // Xử lý mã nhận diện danh mục C\d+, kiến thức K\d+, câu hỏi Q\d+
+          if (/^C\d+$/i.test(rawKey)) {
+            selectors['category_id'] = rawKey.substring(1);
+            continue;
+          }
+          if (/^K\d+$/i.test(rawKey)) {
+            selectors['knowledge_id'] = rawKey.substring(1);
+            continue;
+          }
+          if (/^Q\d+$/i.test(rawKey)) {
+            selectors['question_id'] = rawKey.substring(1);
+            continue;
+          }
+          if (/^G\d+$/i.test(rawKey)) {
+            selectors['group_id'] = rawKey.substring(1);
+            continue;
+          }
+
+          const normKey = this.normalizeKey(rawKey.toLowerCase());
+          if (['subject', 'grade', 'topic', 'chapter'].includes(normKey)) {
+            selectors[normKey] = rawVal;
+          } else {
+            filters[normKey] = rawVal;
+          }
         }
       }
 
@@ -81,11 +137,14 @@ export class MatrixEngine {
         if (rule.selectors.grade && !this.matchFuzzy(q.grade, rule.selectors.grade)) return false;
         if (rule.selectors.topic && !this.matchFuzzy(q.topic, rule.selectors.topic)) return false;
         if (rule.selectors.chapter && !this.matchFuzzy(q.chapter, rule.selectors.chapter)) return false;
+        if (rule.selectors.question_id && q.id !== rule.selectors.question_id) return false;
+        if (rule.selectors.group_id && q.groupId !== rule.selectors.group_id) return false;
 
         // 2. Kiểm tra filters: Level (NB, TH, VD, VDC)
         if (rule.filters.level) {
           const reqLevel = rule.filters.level.toUpperCase();
-          if ((q.level || '').toUpperCase() !== reqLevel) return false;
+          const qLevel = (q.level || '').toUpperCase();
+          if (qLevel !== reqLevel) return false;
         }
 
         // 3. Kiểm tra filters: Type (multiple_choice, true_false, short_answer, essay)
@@ -98,14 +157,14 @@ export class MatrixEngine {
       });
 
       // Lấy ngẫu nhiên theo số lượng Count đã định
-      const shuffledCandidates = this.shuffleArray([...candidates]);
-      const picked = shuffledCandidates.slice(0, rule.count);
+      const shuffled = [...candidates].sort(() => 0.5 - Math.random());
+      const picked = shuffled.slice(0, rule.count);
 
-      for (const p of picked) {
-        const qId = p.id || `q_${p.index}_${p.content.slice(0, 20)}`;
+      picked.forEach((q) => {
+        const qId = q.id || `q_${q.index}_${q.content.slice(0, 20)}`;
         usedIds.add(qId);
-        selectedQuestions.push(p);
-      }
+        selectedQuestions.push({ ...q });
+      });
 
       ruleMatches.push({
         rule: rule.raw,
@@ -115,53 +174,64 @@ export class MatrixEngine {
       });
     }
 
-    // Đánh số lại thứ tự câu hỏi từ 1 đến N
-    const reindexedQuestions = selectedQuestions.map((q, idx) => ({
-      ...q,
-      index: idx + 1,
-    }));
+    // Đánh lại số thứ tự câu hỏi từ 1 đến N
+    selectedQuestions.forEach((q, idx) => {
+      q.index = idx + 1;
+    });
 
     return {
       rules,
-      questions: reindexedQuestions,
+      questions: selectedQuestions,
       stats: {
         totalRequested,
-        totalGenerated: reindexedQuestions.length,
+        totalGenerated: selectedQuestions.length,
         ruleMatches,
       },
     };
   }
 
-  private static normalizeKey(rawKey: string): string {
-    const k = rawKey.toLowerCase();
-    if (['subject', 'mon', 'môn'].includes(k)) return 'subject';
-    if (['grade', 'lop', 'lớp', 'khoi', 'khối'].includes(k)) return 'grade';
-    if (['level', 'mucdo', 'mứcđộ', 'do_kho'].includes(k)) return 'level';
-    if (['type', 'loai', 'loại', 'dang', 'dạng'].includes(k)) return 'type';
-    if (['topic', 'chude', 'chủđề', 'chuyênđề', 'chuyende'].includes(k)) return 'topic';
-    if (['chapter', 'chuong', 'chương'].includes(k)) return 'chapter';
+  /**
+   * Chuẩn hóa từ khóa selector/filter
+   */
+  private static normalizeKey(key: string): string {
+    const k = key.toLowerCase();
+    if (['mon', 'monhoc', 'subject'].includes(k)) return 'subject';
+    if (['khoi', 'lop', 'grade'].includes(k)) return 'grade';
+    if (['mucdo', 'capdo', 'level'].includes(k)) return 'level';
+    if (['dang', 'loai', 'type'].includes(k)) return 'type';
+    if (['chude', 'topic'].includes(k)) return 'topic';
+    if (['chuong', 'chapter'].includes(k)) return 'chapter';
     return k;
   }
 
+  /**
+   * So khớp kiểu câu hỏi theo chuẩn Azota
+   */
   private static normalizeQuestionType(typeStr: string): QuestionType {
-    const s = typeStr.toLowerCase();
-    if (s.includes('dung') || s.includes('true') || s.includes('tf')) return 'true_false';
-    if (s.includes('ngan') || s.includes('short')) return 'short_answer';
-    if (s.includes('tu_luan') || s.includes('essay')) return 'essay';
+    const t = typeStr.toLowerCase().trim();
+    if (['mc', 'multiple_choice', 'tn', 'trac_nghiem', 'trắc nghiệm', '1'].includes(t)) {
+      return 'multiple_choice';
+    }
+    if (['tf', 'true_false', 'đs', 'dung_sai', 'đúng sai', '5'].includes(t)) {
+      return 'true_false';
+    }
+    if (['sa', 'short_answer', 'dt', 'điền từ', 'tra_loi_ngan', 'trả lời ngắn', '4'].includes(t)) {
+      return 'short_answer';
+    }
+    if (['es', 'essay', 'tl', 'tu_luan', 'tự luận', '3'].includes(t)) {
+      return 'essay';
+    }
     return 'multiple_choice';
   }
 
-  private static matchFuzzy(source?: string, target?: string): boolean {
-    if (!target) return true;
-    if (!source) return false;
-    return source.toLowerCase().includes(target.toLowerCase());
-  }
-
-  private static shuffleArray<T>(array: T[]): T[] {
-    for (let i = array.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [array[i], array[j]] = [array[j], array[i]];
-    }
-    return array;
+  /**
+   * So khớp mờ chuỗi văn bản không phân biệt hoa thường và dấu cách
+   */
+  private static matchFuzzy(actual?: string, expected?: string): boolean {
+    if (!expected) return true;
+    if (!actual) return false;
+    const a = actual.toLowerCase().replace(/\s+/g, ' ').trim();
+    const e = expected.toLowerCase().replace(/\s+/g, ' ').trim();
+    return a.includes(e) || e.includes(a);
   }
 }

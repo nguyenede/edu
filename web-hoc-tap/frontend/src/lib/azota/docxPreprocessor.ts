@@ -1,29 +1,36 @@
 import JSZip from 'jszip';
 import { convertOmmlToLatex } from '../examStructureParser';
 import { parseMtefBinaryToLatex, cleanLeakedOleGarbage } from '../mtefParser';
+import { replaceHomoglyphs } from './patterns';
 
 export interface DocxPreprocessResult {
   text: string;
-  images: Map<string, string>; // rId -> base64 Data URL
+  images: Map<string, string>; // rId / imageKey -> base64 Data URL
   mathCount: number;
   tableCount: number;
 }
 
 export class DocxPreprocessor {
   /**
-   * Chuẩn hóa văn bản Unicode, loại bỏ các ký tự ẩn, chuẩn hóa khoảng trắng và dòng
+   * Chuẩn hóa văn bản Unicode, loại bỏ các ký tự ẩn, chuyển ký tự đồng dạng (Homoglyphs),
+   * làm sạch các anchor tag từ Word export và chuẩn hóa khoảng trắng
    */
   public static normalizeText(text: string): string {
     if (!text) return '';
-    return text
+    let result = text
       .normalize('NFC')
+      .replace(/<a id="[^"]+"><\/a>/g, '') // Bỏ anchor tags tự sinh từ Word
       .replace(/\u00A0/g, ' ') // Non-breaking space
-      .replace(/[\u200B-\u200D\uFEFF]/g, '') // Zero-width spaces
       .replace(/\r\n/g, '\n')
       .replace(/\r/g, '\n')
       .replace(/[\u201C\u201D]/g, '"') // Smart double quotes
       .replace(/[\u2018\u2019]/g, "'") // Smart single quotes
       .replace(/[\u2013\u2014]/g, '-'); // En-dash & Em-dash
+
+    // Chuyển ký tự đồng dạng và xóa zero-width characters (TVCN_CHAR)
+    result = replaceHomoglyphs(result);
+
+    return result;
   }
 
   /**
