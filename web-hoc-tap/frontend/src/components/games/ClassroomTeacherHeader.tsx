@@ -79,7 +79,7 @@ export const ClassroomTeacherHeader: React.FC<ClassroomTeacherHeaderProps> = ({
             <ArrowLeft size={18} />
           </button>
         )}
-        <div className="flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-slate-900 dark:text-white truncate">
+        <div className="flex items-center gap-1.5 text-xs sm:text-sm font-normal text-slate-900 dark:text-white truncate">
           {onBack ? (
             <button
               type="button"
@@ -92,7 +92,7 @@ export const ClassroomTeacherHeader: React.FC<ClassroomTeacherHeaderProps> = ({
             <span className="text-slate-500 dark:text-slate-400 shrink-0">Trò chơi lớp học</span>
           )}
           <span className="text-slate-400 dark:text-slate-500 font-normal">/</span>
-          <span className="font-bold text-slate-900 dark:text-white truncate">
+          <span className="font-normal text-slate-900 dark:text-white truncate">
             {gameShortName || title}
           </span>
         </div>

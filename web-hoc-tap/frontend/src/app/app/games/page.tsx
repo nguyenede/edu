@@ -595,7 +595,7 @@ export default function GamesHubPage() {
                 setIsConfigModalOpen(false);
                 setActiveCategory(null);
               }}
-              className="transition-all cursor-pointer px-2 py-0.5 rounded-xl text-slate-900 dark:text-white font-semibold hover:bg-slate-200/70 dark:hover:bg-slate-800"
+              className="transition-all cursor-pointer px-2 py-0.5 rounded-xl text-slate-900 dark:text-white font-normal hover:bg-slate-200/70 dark:hover:bg-slate-800"
             >
               Trò chơi lớp học
             </button>
@@ -613,13 +613,13 @@ export default function GamesHubPage() {
             <button
               type="button"
               onClick={() => setIsConfigModalOpen(false)}
-              className="transition-all cursor-pointer px-2 py-0.5 rounded-xl text-slate-900 dark:text-white font-semibold hover:bg-slate-200/70 dark:hover:bg-slate-800 truncate-tight max-w-xs sm:max-w-md md:max-w-xl lg:max-w-3xl xl:max-w-5xl text-left"
+              className="transition-all cursor-pointer px-2 py-0.5 rounded-xl text-slate-900 dark:text-white font-normal hover:bg-slate-200/70 dark:hover:bg-slate-800 truncate-tight max-w-xs sm:max-w-md md:max-w-xl lg:max-w-3xl xl:max-w-5xl text-left"
               title={getCategoryMeta(activeCategory).title}
             >
               {getCategoryMeta(activeCategory).title}
             </button>
             <BreadcrumbChevron isStatic={true} />
-            <span className="px-2 py-0.5 rounded-xl text-slate-900 dark:text-white font-semibold">
+            <span className="px-2 py-0.5 rounded-xl text-slate-900 dark:text-white font-normal">
               {editingLessonId ? 'Chỉnh sửa bài chơi' : 'Tạo bài chơi mới'}
             </span>
           </div>
@@ -628,7 +628,7 @@ export default function GamesHubPage() {
             <button
               type="button"
               onClick={() => setActiveCategory(null)}
-              className="transition-all cursor-pointer px-2 py-0.5 rounded-xl text-slate-900 dark:text-white font-semibold hover:bg-slate-200/70 dark:hover:bg-slate-800"
+              className="transition-all cursor-pointer px-2 py-0.5 rounded-xl text-slate-900 dark:text-white font-normal hover:bg-slate-200/70 dark:hover:bg-slate-800"
             >
               Trò chơi lớp học
             </button>
@@ -640,7 +640,7 @@ export default function GamesHubPage() {
               }))}
               fallbackToStaticChevron={true}
             />
-            <span className="px-2 py-0.5 rounded-xl text-slate-900 dark:text-white font-semibold">
+            <span className="px-2 py-0.5 rounded-xl text-slate-900 dark:text-white font-normal">
               {getCategoryMeta(activeCategory).title}
             </span>
           </div>
@@ -648,7 +648,7 @@ export default function GamesHubPage() {
           <div className="flex items-center gap-1 text-2xl tracking-tight text-slate-900 dark:text-slate-100 flex-wrap -ml-2">
             <button
               type="button"
-              className="transition-all cursor-pointer px-2 py-0.5 rounded-xl text-slate-900 dark:text-white font-semibold hover:bg-slate-200/70 dark:hover:bg-slate-800"
+              className="transition-all cursor-pointer px-2 py-0.5 rounded-xl text-slate-900 dark:text-white font-normal hover:bg-slate-200/70 dark:hover:bg-slate-800"
             >
               Trò chơi lớp học
             </button>
