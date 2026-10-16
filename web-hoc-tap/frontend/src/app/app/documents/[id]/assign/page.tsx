@@ -1247,32 +1247,16 @@ function AssignPageContent() {
                   </div>
                 </div>
 
-                {/* Blooket-style Assign & Host Combo */}
                 <div className="pt-2 space-y-3">
-                  <div className="flex items-center bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-1 shadow-2xs justify-between gap-1">
-                    <button
-                      type="button"
-                      onClick={handleCreate}
-                      disabled={creating || (assignMode === 'class' && !selectedClassId)}
-                      className="flex-1 px-3 py-2 rounded-lg bg-google-blue hover:bg-blue-600 active:bg-blue-700 text-white font-semibold text-sm flex items-center justify-center gap-2 shadow-xs transition-colors cursor-pointer select-none disabled:opacity-50 disabled:cursor-not-allowed"
-                      title="Xác nhận giao bài tập"
-                    >
-                      <FileText size={17} className="text-white" />
-                      <span>{creating ? 'Đang giao...' : 'Giao bài'}</span>
-                    </button>
-
-                    <div className="h-6 w-[1px] bg-slate-200 dark:bg-slate-700 mx-1" />
-
-                    <button
-                      type="button"
-                      onClick={() => router.push(`/app/games?examId=${encodeURIComponent(fileId)}`)}
-                      className="px-4 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold text-sm flex items-center justify-center gap-1.5 transition-colors cursor-pointer select-none"
-                      title="Chuyển sang tổ chức trò chơi trực tiếp"
-                    >
-                      <Play size={15} className="fill-slate-600 dark:fill-slate-400 text-slate-600 dark:text-slate-400 ml-0.5" />
-                      <span>Tổ chức</span>
-                    </button>
-                  </div>
+                  <button
+                    type="button"
+                    onClick={handleCreate}
+                    disabled={creating || (assignMode === 'class' && !selectedClassId)}
+                    className="w-full py-2.5 rounded-xl bg-google-blue hover:bg-blue-600 active:bg-blue-700 text-white font-semibold text-sm flex items-center justify-center transition-colors cursor-pointer select-none disabled:opacity-50 disabled:cursor-not-allowed shadow-xs"
+                    title="Xác nhận giao bài tập"
+                  >
+                    <span>{creating ? 'Đang giao...' : 'Giao bài'}</span>
+                  </button>
 
                   <Button
                     variant="ghost"
