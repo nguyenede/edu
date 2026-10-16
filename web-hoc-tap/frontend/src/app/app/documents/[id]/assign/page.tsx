@@ -30,6 +30,7 @@ import {
   Globe,
   GraduationCap,
   Lock,
+  Play,
 } from 'lucide-react';
 import DateTimePicker, { formatDateTimeToInputValue } from '@/components/DateTimePicker';
 import { createHomework, HomeworkItem } from '@/lib/homeworkApi';
@@ -1073,17 +1074,8 @@ function AssignPageContent() {
                       <ShieldCheck size={22} />
                     </div>
                     <div>
-                      <div className="text-base font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                      <div className="text-base font-bold text-slate-900 dark:text-slate-100">
                         Tính năng chống gian lận
-                        {antiCheating ? (
-                          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-google-blue dark:bg-blue-950 dark:text-blue-300 uppercase">
-                            Đang BẬT
-                          </span>
-                        ) : (
-                          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400 uppercase">
-                            Đang TẮT
-                          </span>
-                        )}
                       </div>
                     </div>
                   </div>
