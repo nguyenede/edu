@@ -81,7 +81,7 @@ export const Modal: React.FC<ModalProps> = ({
 
       {/* Material You Modal Dialog */}
       <div
-        className={`relative z-10 w-full ${maxWidths[maxWidth]} bg-white dark:bg-[#1e1f20] border border-slate-200/60 dark:border-[#2d2f31] rounded-3xl p-4 text-left flex flex-col gap-2 shadow-2xl my-auto transition-all duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] transform ${
+        className={`relative z-10 w-full ${maxWidths[maxWidth]} bg-white dark:bg-[#1e1f20] rounded-3xl p-4 sm:p-6 text-left flex flex-col gap-2 shadow-2xl my-auto transition-all duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] transform ${
           isVisible
             ? 'scale-100 opacity-100 translate-y-0'
             : 'scale-95 opacity-0 translate-y-2'

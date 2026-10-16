@@ -557,10 +557,10 @@ function DocumentCreateContent() {
                   handleProcessFile(e.dataTransfer.files[0]);
                 }
               }}
-              className={`min-h-[520px] md:min-h-[580px] p-8 md:p-12 border-2 border-dashed rounded-3xl text-center flex flex-col justify-center items-center space-y-5 transition-all shadow-xs ${
+              className={`min-h-[520px] md:min-h-[580px] p-8 md:p-12 rounded-3xl text-center flex flex-col justify-center items-center space-y-5 transition-all ${
                 isDragging
-                  ? 'border-amber-500 bg-amber-50/70 dark:bg-amber-950/40 scale-[1.01]'
-                  : 'border-google-blue/40 dark:border-google-blue/60 bg-blue-50/40 dark:bg-slate-800/40 hover:bg-blue-50/70'
+                  ? 'border-2 border-dashed border-amber-500 bg-amber-50/70 dark:bg-amber-950/40 scale-[1.01]'
+                  : 'bg-blue-50/40 dark:bg-slate-800/40 hover:bg-blue-50/70'
               }`}
             >
               {/* Cloud Upload Icon */}
@@ -701,7 +701,7 @@ function DocumentCreateContent() {
 
             {/* AI Exam Generated Success Box */}
             {createdExamResult && (
-              <div className="mt-4 p-4 bg-emerald-50/70 dark:bg-emerald-950/30 rounded-2xl border border-emerald-200 dark:border-emerald-900/50 space-y-3">
+              <div className="mt-4 p-4 bg-emerald-50/70 dark:bg-emerald-950/30 rounded-2xl space-y-3">
                 <div className="flex items-center gap-3">
                   <CheckCircle2 size={22} className="text-google-green shrink-0" />
                   <div className="text-left flex-1 min-w-0">
@@ -757,7 +757,7 @@ function DocumentCreateContent() {
               <button
                 type="button"
                 onClick={() => router.push('/app/documents/create/manual' + targetQuery)}
-                className="w-full p-4 bg-white dark:bg-slate-900 hover:bg-blue-50/50 dark:hover:bg-slate-800/80 border border-slate-200 dark:border-slate-800 rounded-2xl transition-all text-left flex items-center justify-between group shadow-xs cursor-pointer"
+                className="w-full p-4 bg-slate-50/70 dark:bg-slate-900/60 hover:bg-blue-50/60 dark:hover:bg-slate-800/80 rounded-2xl transition-all text-left flex items-center justify-between group cursor-pointer"
               >
                 <div className="flex items-center gap-3.5">
                   <div className="w-11 h-11 rounded-xl bg-blue-100 dark:bg-blue-950 text-google-blue flex items-center justify-center shrink-0">
@@ -779,7 +779,7 @@ function DocumentCreateContent() {
               <button
                 type="button"
                 onClick={() => router.push('/app/documents/create/si' + targetQuery)}
-                className="w-full p-4 bg-white dark:bg-slate-900 hover:bg-amber-50/50 dark:hover:bg-slate-800/80 border border-slate-200 dark:border-slate-800 rounded-2xl transition-all text-left flex items-center justify-between group shadow-xs cursor-pointer"
+                className="w-full p-4 bg-slate-50/70 dark:bg-slate-900/60 hover:bg-amber-50/60 dark:hover:bg-slate-800/80 rounded-2xl transition-all text-left flex items-center justify-between group cursor-pointer"
               >
                 <div className="flex items-center gap-3.5">
                   <div className="w-11 h-11 rounded-xl bg-amber-100 dark:bg-amber-950 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
@@ -801,7 +801,7 @@ function DocumentCreateContent() {
               <button
                 type="button"
                 onClick={() => router.push('/app/documents/create/bank' + targetQuery)}
-                className="w-full p-4 bg-white dark:bg-slate-900 hover:bg-emerald-50/50 dark:hover:bg-slate-800/80 border border-slate-200 dark:border-slate-800 rounded-2xl transition-all text-left flex items-center justify-between group shadow-xs cursor-pointer"
+                className="w-full p-4 bg-slate-50/70 dark:bg-slate-900/60 hover:bg-emerald-50/60 dark:hover:bg-slate-800/80 rounded-2xl transition-all text-left flex items-center justify-between group cursor-pointer"
               >
                 <div className="flex items-center gap-3.5">
                   <div className="w-11 h-11 rounded-xl bg-emerald-100 dark:bg-emerald-950 text-google-green flex items-center justify-center shrink-0">
@@ -823,7 +823,7 @@ function DocumentCreateContent() {
               <button
                 type="button"
                 onClick={() => router.push('/app/documents/create/ocr' + targetQuery)}
-                className="w-full p-4 bg-white dark:bg-slate-900 hover:bg-purple-50/50 dark:hover:bg-slate-800/80 border border-slate-200 dark:border-slate-800 rounded-2xl transition-all text-left flex items-center justify-between group shadow-xs cursor-pointer"
+                className="w-full p-4 bg-slate-50/70 dark:bg-slate-900/60 hover:bg-purple-50/60 dark:hover:bg-slate-800/80 rounded-2xl transition-all text-left flex items-center justify-between group cursor-pointer"
               >
                 <div className="flex items-center gap-3.5">
                   <div className="w-11 h-11 rounded-xl bg-purple-100 dark:bg-purple-950 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0">
@@ -856,7 +856,7 @@ function DocumentCreateContent() {
             {/* Top Toolbar */}
             <div className="flex flex-wrap items-center justify-between gap-3 pb-3 pt-1">
               <div className="flex items-center gap-2">
-                <span className="px-3 py-1 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-google-blue dark:text-blue-400 font-semibold text-xs border border-blue-200/60 dark:border-blue-800/60">
+                <span className="px-3 py-1 rounded-xl bg-blue-50/80 dark:bg-blue-950/60 text-google-blue dark:text-blue-400 font-semibold text-xs">
                   Tổng số: {parsedExamData.questions.length} câu
                 </span>
                 <span className="px-3 py-1 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium text-xs">
@@ -866,9 +866,9 @@ function DocumentCreateContent() {
               <Button
                 type="button"
                 size="sm"
-                variant="outline"
+                variant="ghost"
                 onClick={handleAddParsedQuestion}
-                className="text-xs font-semibold text-google-blue border-blue-200 dark:border-blue-800 hover:bg-blue-50/50"
+                className="text-xs font-semibold text-google-blue hover:bg-blue-50 dark:hover:bg-blue-950/40"
               >
                 <Plus size={14} className="mr-1" />
                 Thêm câu hỏi
@@ -880,10 +880,10 @@ function DocumentCreateContent() {
               {parsedExamData.questions.map((q, qIdx) => (
                 <div
                   key={qIdx}
-                  className="p-4 sm:p-5 bg-slate-50/80 dark:bg-slate-800/50 rounded-2xl border border-slate-200/80 dark:border-slate-700/80 space-y-3.5 hover:border-slate-300 dark:hover:border-slate-600 transition-colors shadow-2xs"
+                  className="p-4 sm:p-5 bg-slate-50/70 dark:bg-slate-900/40 rounded-2xl space-y-3.5"
                 >
-                  {/* Card Header */}
-                  <div className="flex items-center justify-between pb-2 border-b border-slate-200/60 dark:border-slate-700/60">
+                  {/* Card Header (Frameless, Không đường kẻ ngang) */}
+                  <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <span className="px-3 py-0.5 rounded-lg bg-google-blue text-white font-bold text-xs shadow-2xs">
                         Câu {qIdx + 1}
@@ -911,7 +911,7 @@ function DocumentCreateContent() {
                       value={q.content}
                       onChange={(val) => handleUpdateParsedQuestionContent(qIdx, val)}
                       placeholder="Nhập nội dung câu hỏi..."
-                      className="p-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-slate-100 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-google-blue/30 focus:border-google-blue leading-relaxed shadow-2xs"
+                      className="p-3 bg-white dark:bg-slate-900/80 border-0 rounded-xl text-slate-900 dark:text-slate-100 text-xs font-medium focus:outline-none focus:ring-1 focus:ring-google-blue/30 leading-relaxed shadow-none"
                     />
                   </div>
 
@@ -929,10 +929,10 @@ function DocumentCreateContent() {
                             <div
                               key={optIdx}
                               onClick={() => handleSelectParsedCorrectOption(qIdx, optIdx)}
-                              className={`p-2.5 rounded-xl border flex items-center gap-2.5 transition-all cursor-pointer ${
+                              className={`p-2.5 rounded-xl flex items-center gap-2.5 transition-all cursor-pointer ${
                                 opt.isCorrect
-                                  ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-500 dark:border-emerald-600 shadow-2xs ring-1 ring-emerald-500/30'
-                                  : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700/80 hover:border-slate-300 dark:hover:border-slate-600'
+                                  ? 'bg-emerald-500/15 dark:bg-emerald-950/60 text-emerald-950 dark:text-emerald-100'
+                                  : 'bg-white dark:bg-slate-900/80 hover:bg-slate-100/70 dark:hover:bg-slate-800/60'
                               }`}
                             >
                               <div
@@ -971,16 +971,16 @@ function DocumentCreateContent() {
                       </div>
                     </div>
                   ) : (
-                    <div className="flex items-center justify-between p-3 bg-slate-100/70 dark:bg-slate-900/50 rounded-xl border border-dashed border-slate-300 dark:border-slate-700 text-xs">
+                    <div className="flex items-center justify-between p-3 bg-slate-100/50 dark:bg-slate-900/30 rounded-xl text-xs">
                       <span className="text-slate-500 dark:text-slate-400 text-[11px]">
                         Câu hỏi tự luận / Chưa có phương án trắc nghiệm
                       </span>
                       <Button
                         type="button"
                         size="sm"
-                        variant="outline"
+                        variant="ghost"
                         onClick={() => handleAddDefaultOptionsToQuestion(qIdx)}
-                        className="text-[11px] h-7 px-2.5 font-semibold text-google-blue border-blue-200 dark:border-blue-800"
+                        className="text-[11px] h-7 px-2.5 font-semibold text-google-blue hover:bg-blue-50 dark:hover:bg-blue-950/40"
                       >
                         <Plus size={12} className="mr-1" />
                         + Thêm 4 phương án (A, B, C, D)
@@ -998,7 +998,7 @@ function DocumentCreateContent() {
                       value={q.explanation || ''}
                       onChange={(val) => handleUpdateParsedExplanation(qIdx, val)}
                       placeholder="Nhập hướng dẫn giải hoặc lời giải chi tiết (không bắt buộc)..."
-                      className="p-2.5 bg-amber-50/40 dark:bg-amber-950/20 border border-amber-200/80 dark:border-amber-900/50 rounded-xl text-slate-800 dark:text-slate-200 text-xs font-normal focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 leading-relaxed shadow-2xs"
+                      className="p-2.5 bg-amber-50/30 dark:bg-amber-950/20 border-0 rounded-xl text-slate-800 dark:text-slate-200 text-xs font-normal focus:outline-none focus:ring-1 focus:ring-amber-500/30 leading-relaxed shadow-none"
                     />
                   </div>
                 </div>
@@ -1007,23 +1007,23 @@ function DocumentCreateContent() {
 
             {/* Modal Bottom Footer */}
             <div className="flex items-center justify-between pt-4 mt-2">
-              <Button variant="outline" size="sm" onClick={() => setIsPreviewModalOpen(false)}>
+              <Button variant="ghost" size="sm" onClick={() => setIsPreviewModalOpen(false)}>
                 Đóng
               </Button>
               <div className="flex items-center gap-2.5">
                 <Button
                   size="sm"
-                  variant="outline"
+                  variant="ghost"
                   disabled={isSavingChanges}
                   onClick={handleSaveExamEdits}
-                  className="font-bold text-xs border-blue-300 dark:border-blue-800 text-google-blue hover:bg-blue-50/60 dark:hover:bg-blue-950/40"
+                  className="font-bold text-xs text-google-blue hover:bg-blue-50/60 dark:hover:bg-blue-950/40"
                 >
                   <Save size={14} className="mr-1" />
                   {isSavingChanges ? 'Đang lưu...' : 'Lưu thay đổi'}
                 </Button>
                 <Button
                   size="sm"
-                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-2xs"
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-none border-0"
                   onClick={() => {
                     setIsPreviewModalOpen(false);
                     if (parsedExamData.examUrl) router.push(parsedExamData.examUrl);
