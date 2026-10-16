@@ -11,6 +11,7 @@ import {
   Sparkles,
   Shuffle,
   Type,
+  ArrowLeft,
 } from 'lucide-react';
 
 export interface ClassroomTeam {
@@ -61,15 +62,40 @@ export const ClassroomTeacherHeader: React.FC<ClassroomTeacherHeaderProps> = ({
   onToggleSound,
   isFullscreen,
   onToggleFullscreen,
+  onBack,
   onRestart,
 }) => {
   return (
-    <div className="w-full bg-white dark:bg-[#1a1b1e] px-4 sm:px-6 py-3 flex items-center justify-between gap-3 select-none transition-colors">
-      {/* 1. LEFT: GAME TITLE */}
-      <div className="flex items-center gap-2.5 sm:gap-4 min-w-0">
-        <span className="text-base sm:text-lg font-bold text-slate-900 dark:text-white truncate">
-          {gameShortName || title}
-        </span>
+    <div className="w-full bg-white dark:bg-[#1a1b1e] px-4 sm:px-6 py-3 flex items-center justify-between gap-3 select-none transition-colors border-b border-slate-200/80 dark:border-slate-800">
+      {/* 1. LEFT: BACK & BREADCRUMB */}
+      <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+        {onBack && (
+          <button
+            type="button"
+            onClick={onBack}
+            className="w-9 h-9 rounded-xl flex items-center justify-center hover:bg-slate-100 dark:hover:bg-white/10 text-slate-600 dark:text-slate-300 transition-colors cursor-pointer shrink-0"
+            title="Thoát trò chơi về danh sách"
+          >
+            <ArrowLeft size={18} />
+          </button>
+        )}
+        <div className="flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-slate-900 dark:text-white truncate">
+          {onBack ? (
+            <button
+              type="button"
+              onClick={onBack}
+              className="text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 transition-colors cursor-pointer shrink-0"
+            >
+              Trò chơi lớp học
+            </button>
+          ) : (
+            <span className="text-slate-500 dark:text-slate-400 shrink-0">Trò chơi lớp học</span>
+          )}
+          <span className="text-slate-400 dark:text-slate-500 font-normal">/</span>
+          <span className="font-bold text-slate-900 dark:text-white truncate">
+            {gameShortName || title}
+          </span>
+        </div>
       </div>
 
       {/* 2. CENTER: TEAM SCORES WITH QUICK (+1 / -1) CONTROLS */}

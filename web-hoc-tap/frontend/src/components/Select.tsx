@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { ChevronLeft, Check } from 'lucide-react';
+import { ChevronRight, Check } from 'lucide-react';
 
 export interface SelectOption<T = string | number> {
   value: T;
@@ -91,11 +91,11 @@ export function CustomSelect<T extends string | number>({
           {selectedOption ? selectedOption.label : placeholder}
         </span>
 
-        {/* Direction arrow: points left (<) when closed, points down (v) when open */}
-        <ChevronLeft
+        {/* Direction arrow: points right (>) when closed, points down (v) when open */}
+        <ChevronRight
           size={15}
           className={`text-slate-400 shrink-0 transition-transform duration-200 ease-in-out ${
-            isOpen ? '-rotate-90 text-google-blue' : 'rotate-0'
+            isOpen ? 'rotate-90 text-google-blue' : 'rotate-0'
           }`}
         />
       </button>

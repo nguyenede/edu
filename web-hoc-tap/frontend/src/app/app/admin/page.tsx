@@ -37,7 +37,7 @@ export default function AdminPage() {
       return;
     }
     if (user?.role !== 'ADMIN') {
-      router.push('/dashboard');
+      router.push('/app/dashboard');
       return;
     }
     fetchStats();

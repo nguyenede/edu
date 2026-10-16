@@ -40,12 +40,12 @@ function RegisterFormContent() {
         const hasSeenPlans = localStorage.getItem(`app_first_login_seen_${emailKey}`);
         if (!hasSeenPlans) {
           localStorage.setItem(`app_first_login_seen_${emailKey}`, 'true');
-          return '/settings/plans';
+          return '/app/settings/plans';
         }
       }
     }
 
-    return '/dashboard';
+    return '/app/dashboard';
   };
 
   React.useEffect(() => {

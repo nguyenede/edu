@@ -95,7 +95,7 @@ export const FeatureBentoGrid: React.FC = () => {
           <div className="relative z-10 pt-2 flex items-center justify-between">
             <button
               type="button"
-              onClick={() => router.push('/documents')}
+              onClick={() => router.push('/app/documents')}
               className="inline-flex items-center gap-1.5 text-xs font-bold text-google-pill dark:text-blue-300 hover:text-white transition-colors cursor-pointer"
             >
               Khám phá Kho tài liệu & Đề thi <ArrowUpRight size={14} />
@@ -145,7 +145,7 @@ export const FeatureBentoGrid: React.FC = () => {
           <div className="pt-6">
             <button
               type="button"
-              onClick={() => router.push('/documents/create')}
+              onClick={() => router.push('/app/documents/create')}
               className="inline-flex items-center gap-1 text-xs font-bold text-google-blue hover:underline cursor-pointer"
             >
               Thử tạo đề thi ngay <ArrowUpRight size={14} />
@@ -185,7 +185,7 @@ export const FeatureBentoGrid: React.FC = () => {
           <div className="pt-6">
             <button
               type="button"
-              onClick={() => router.push('/classes')}
+              onClick={() => router.push('/app/classes')}
               className="inline-flex items-center gap-1 text-xs font-bold text-google-green hover:underline cursor-pointer"
             >
               Xem danh sách lớp học <ArrowUpRight size={14} />
@@ -238,7 +238,7 @@ export const FeatureBentoGrid: React.FC = () => {
           <div className="pt-6">
             <button
               type="button"
-              onClick={() => router.push('/si')}
+              onClick={() => router.push('/app/si')}
               className="inline-flex items-center gap-1 text-xs font-bold text-purple-600 dark:text-purple-400 hover:underline cursor-pointer"
             >
               Trò chuyện cùng SI Kiyo <ArrowUpRight size={14} />

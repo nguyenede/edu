@@ -64,7 +64,7 @@ export default function HomePage() {
           </a>
           <button
             type="button"
-            onClick={() => router.push('/help')}
+            onClick={() => router.push('/app/help')}
             className="hover:text-google-blue transition-colors cursor-pointer"
           >
             Hỗ trợ
@@ -77,7 +77,7 @@ export default function HomePage() {
           {isAuthenticated ? (
             <Button
               size="sm"
-              onClick={() => router.push('/dashboard')}
+              onClick={() => router.push('/app/dashboard')}
               className="font-bold gap-1.5 shadow-sm"
             >
               Vào Dashboard ({user?.name || user?.email?.split('@')[0]})
@@ -132,7 +132,7 @@ export default function HomePage() {
             <div className="pt-2 flex flex-wrap items-center justify-center lg:justify-start gap-3">
               <Button
                 size="lg"
-                onClick={() => router.push(isAuthenticated ? '/dashboard' : '/register')}
+                onClick={() => router.push(isAuthenticated ? '/app/dashboard' : '/register')}
                 className="font-bold gap-2 shadow-lg shadow-blue-500/25 hover:shadow-blue-500/35 cursor-pointer"
               >
                 {isAuthenticated ? 'Vào khu vực học tập' : 'Bắt đầu miễn phí ngay'}
@@ -303,10 +303,10 @@ export default function HomePage() {
         <div className="flex flex-wrap items-center justify-center gap-6 font-medium">
           <a href="#features" className="hover:text-google-blue">Tính năng</a>
           <a href="#how-it-works" className="hover:text-google-blue">Cách hoạt động</a>
-          <button type="button" onClick={() => router.push('/help')} className="hover:text-google-blue cursor-pointer">
+          <button type="button" onClick={() => router.push('/app/help')} className="hover:text-google-blue cursor-pointer">
             Trung tâm trợ giúp
           </button>
-          <button type="button" onClick={() => router.push('/settings')} className="hover:text-google-blue cursor-pointer">
+          <button type="button" onClick={() => router.push('/app/settings')} className="hover:text-google-blue cursor-pointer">
             Cài đặt
           </button>
         </div>

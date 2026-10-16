@@ -68,19 +68,19 @@ export const AppShell: React.FC<AppShellProps> = ({
   }, [effectiveUser]);
 
   const navItems = [
-    { label: 'Trang chủ', href: '/dashboard', icon: Home },
-    { label: 'Trợ lý SI', href: '/si', icon: Sparkles },
-    { label: 'Lớp học của tôi', href: '/classes', icon: GraduationCap },
+    { label: 'Trang chủ', href: '/app/dashboard', icon: Home },
+    { label: 'Trợ lý SI', href: '/app/si', icon: Sparkles },
+    { label: 'Lớp học của tôi', href: '/app/classes', icon: GraduationCap },
     ...(isTeacher
       ? [
-          { label: 'Kho tài liệu', href: '/documents', icon: FileText },
-          { label: 'Ngân hàng câu hỏi', href: '/question-bank', icon: BookOpen },
+          { label: 'Kho tài liệu', href: '/app/documents', icon: FileText },
+          { label: 'Ngân hàng câu hỏi', href: '/app/question-bank', icon: BookOpen },
         ]
       : []),
-    { label: 'Trò chơi lớp học', href: '/games', icon: Gamepad2 },
-    { label: 'Báo cáo', href: '/results', icon: BarChart2 },
-    { label: 'Thông báo', href: '/notifications', icon: Bell },
-    { label: 'Cài đặt', href: '/settings', icon: Settings },
+    { label: 'Trò chơi lớp học', href: '/app/games', icon: Gamepad2 },
+    { label: 'Báo cáo', href: '/app/results', icon: BarChart2 },
+    { label: 'Thông báo', href: '/app/notifications', icon: Bell },
+    { label: 'Cài đặt', href: '/app/settings', icon: Settings },
   ];
 
   const handleLogout = () => {
@@ -92,9 +92,9 @@ export const AppShell: React.FC<AppShellProps> = ({
     e.preventDefault();
     if (!searchQuery.trim()) return;
     if (isTeacher) {
-      router.push(`/question-bank?search=${encodeURIComponent(searchQuery)}`);
+      router.push(`/app/question-bank?search=${encodeURIComponent(searchQuery)}`);
     } else {
-      router.push(`/classes?search=${encodeURIComponent(searchQuery)}`);
+      router.push(`/app/classes?search=${encodeURIComponent(searchQuery)}`);
     }
   };
 
@@ -103,8 +103,6 @@ export const AppShell: React.FC<AppShellProps> = ({
       setSidebarCollapsed(true);
     }
   };
-
-
 
   return (
     <div className="relative h-dvh w-full overflow-hidden bg-google-bg dark:bg-[#131314] text-slate-900 dark:text-slate-100 font-sans">
@@ -124,7 +122,7 @@ export const AppShell: React.FC<AppShellProps> = ({
           </button>
 
           <div
-            onClick={() => router.push('/dashboard')}
+            onClick={() => router.push('/app/dashboard')}
             className="flex items-center gap-2.5 cursor-pointer whitespace-nowrap ml-1 min-w-0"
           >
             {/* KiyoEdu modern logo */}
@@ -181,7 +179,7 @@ export const AppShell: React.FC<AppShellProps> = ({
         <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 relative z-10">
           {/* Nâng cấp Button */}
           <button
-            onClick={() => router.push('/settings/plans')}
+            onClick={() => router.push('/app/settings/plans')}
             className="hidden lg:flex items-center gap-2 h-10 px-5 rounded-full text-sm font-semibold bg-gradient-to-r from-blue-500/15 via-indigo-500/15 to-purple-500/15 hover:from-blue-500/25 hover:via-indigo-500/25 hover:to-purple-500/25 text-google-blue dark:text-blue-300 transition-all cursor-pointer mr-1"
             title="Nâng cấp tài khoản"
           >
@@ -193,7 +191,7 @@ export const AppShell: React.FC<AppShellProps> = ({
 
           <button
             type="button"
-            onClick={() => router.push('/help')}
+            onClick={() => router.push('/app/help')}
             className="hidden sm:flex items-center justify-center w-10 h-10 rounded-full hover:bg-slate-200/70 dark:hover:bg-[#2d2f31] text-slate-600 dark:text-slate-400 transition-colors cursor-pointer"
             title="Trợ giúp và Hướng dẫn"
           >
@@ -205,7 +203,7 @@ export const AppShell: React.FC<AppShellProps> = ({
           {effectiveUser && (
             <button
               type="button"
-              onClick={() => router.push('/settings')}
+              onClick={() => router.push('/app/settings')}
               className="hidden sm:flex items-center justify-center w-10 h-10 rounded-full hover:bg-slate-200/70 dark:hover:bg-[#2d2f31] text-slate-600 dark:text-slate-400 transition-colors cursor-pointer"
               title="Cài đặt"
             >
@@ -216,7 +214,7 @@ export const AppShell: React.FC<AppShellProps> = ({
           {effectiveUser ? (
             /* Google Avatar Circle with colorful ring */
             <div
-              onClick={() => router.push('/settings')}
+              onClick={() => router.push('/app/settings')}
               className="relative cursor-pointer p-0.5 rounded-full ring-2 ring-google-blue/60 ml-1"
               title={`${effectiveUser?.name || effectiveUser?.email} (${effectiveUser?.role})`}
             >

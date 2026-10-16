@@ -34,7 +34,7 @@ export default function Error({
     console.error('App Error caught by boundary:', error);
   }, [error, initialize]);
 
-  const homeHref = mounted && isAuthenticated ? '/dashboard' : '/';
+  const homeHref = mounted && isAuthenticated ? '/app/dashboard' : '/';
 
   return (
     <div className="min-h-screen flex flex-col bg-google-bg dark:bg-google-bg-dark text-slate-900 dark:text-slate-100 font-sans transition-colors duration-200">

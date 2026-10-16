@@ -541,7 +541,7 @@ function BlooketPlayContent() {
         <header className="h-16 px-4 sm:px-6 flex items-center justify-between border-b border-slate-200/80 dark:border-slate-800 bg-white/80 dark:bg-[#18181b]/80 backdrop-blur-md">
           <div className="flex items-center gap-3">
             <button
-              onClick={() => router.push('/documents')}
+              onClick={() => router.push('/app/documents')}
               className="p-2 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
               title="Quay lại tài liệu"
             >
@@ -877,7 +877,7 @@ function BlooketPlayContent() {
               )}
               <Button
                 variant="primary"
-                onClick={() => router.push('/documents')}
+                onClick={() => router.push('/app/documents')}
                 className="flex-1 rounded-2xl text-xs gap-1.5 bg-google-blue hover:bg-[#1557b0] text-white"
               >
                 <Home size={15} /> Về trang chủ

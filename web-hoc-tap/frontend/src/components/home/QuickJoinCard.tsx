@@ -65,7 +65,7 @@ export const QuickJoinCard: React.FC = () => {
         </span>
         <button
           type="button"
-          onClick={() => router.push('/help')}
+          onClick={() => router.push('/app/help')}
           className="hover:text-google-blue underline decoration-slate-300 dark:decoration-slate-700 cursor-pointer"
         >
           Hướng dẫn tham gia?

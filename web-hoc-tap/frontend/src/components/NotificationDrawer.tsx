@@ -175,7 +175,7 @@ export const NotificationDrawer: React.FC = () => {
             <button
               onClick={() => {
                 setIsOpen(false);
-                router.push('/notifications');
+                router.push('/app/notifications');
               }}
               className="text-xs text-blue-600 dark:text-blue-400 font-semibold"
             >

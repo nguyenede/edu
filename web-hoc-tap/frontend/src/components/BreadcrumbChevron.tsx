@@ -263,7 +263,7 @@ export function BreadcrumbChevron({
                           sessionStorage.setItem('app_active_folder_id', folder.id);
                           sessionStorage.setItem('app_active_folder_name', folder.name);
                         }
-                        router.push('/documents');
+                        router.push('/app/documents');
                       }
                     }}
                     className="w-full text-left px-3 py-1.5 flex items-center gap-2 hover:bg-slate-200/60 dark:hover:bg-white/10 active:bg-slate-300/60 dark:active:bg-white/15 text-slate-800 dark:text-slate-200 transition-colors cursor-pointer text-xs"
@@ -286,7 +286,7 @@ export function BreadcrumbChevron({
                       onClick={() => {
                         setIsOpen(false);
                         if (onNavigateFile) onNavigateFile(file.id);
-                        else router.push(`/documents/${file.id}`);
+                        else router.push(`/app/documents/${file.id}`);
                       }}
                       className="w-full text-left px-3 py-1.5 flex items-center gap-2 hover:bg-slate-200/60 dark:hover:bg-white/10 active:bg-slate-300/60 dark:active:bg-white/15 text-slate-700 dark:text-slate-300 transition-colors cursor-pointer text-xs"
                     >

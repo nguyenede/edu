@@ -40,13 +40,13 @@ function LoginFormContent() {
         const hasSeenPlans = localStorage.getItem(`app_first_login_seen_${emailKey}`);
         if (!hasSeenPlans) {
           localStorage.setItem(`app_first_login_seen_${emailKey}`, 'true');
-          return '/settings/plans';
+          return '/app/settings/plans';
         }
       }
     }
 
-    // 3. Mấy lần sau: Không hiện nữa, vào thẳng trang chính /dashboard
-    return '/dashboard';
+    // 3. Mấy lần sau: Không hiện nữa, vào thẳng trang chính /app/dashboard
+    return '/app/dashboard';
   };
 
   React.useEffect(() => {
