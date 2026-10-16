@@ -17,7 +17,7 @@ export interface ParsedOptionItem {
   hasDistinctFormatting?: boolean;
 }
 
-export type QuestionType = 'multiple_choice' | 'essay' | 'fill_blank' | 'true_false';
+export type QuestionType = 'multiple_choice' | 'essay' | 'fill_blank' | 'true_false' | 'short_answer';
 
 export interface ParsedExamQuestion {
   id?: string;
@@ -36,7 +36,7 @@ export interface DeterministicExamResult {
   grade: string;
   durationMinutes: number;
   questions: ParsedExamQuestion[];
-  parserUsed: 'docx_xml' | 'docx_mammoth' | 'excel_xlsx' | 'latex_tex' | 'azota_text' | 'plain_text' | 'pdf_text' | 'zip_archive';
+  parserUsed: 'azota_compiler_engine' | 'docx_xml' | 'docx_mammoth' | 'excel_xlsx' | 'latex_tex' | 'azota_text' | 'plain_text' | 'pdf_text' | 'zip_archive';
 }
 
 /**
@@ -1794,8 +1794,36 @@ export async function parseExamFileStructure(file: File): Promise<DeterministicE
   const fileName = file.name;
   const ext = fileName.slice(fileName.lastIndexOf('.')).toLowerCase();
 
-  // 1. File Word (.docx)
+  // 1. File Word (.docx, .doc)
   if (ext === '.docx' || ext === '.doc') {
+    try {
+      const { DocxPreprocessor } = await import('./azota/docxPreprocessor');
+      const { ExamParser } = await import('./azota/examParser');
+      const prep = await DocxPreprocessor.preprocessDocx(file);
+      if (prep.text && prep.text.length > 20) {
+        const azotaRes = ExamParser.parse(prep.text, { fileName });
+        if (azotaRes && azotaRes.questions.length > 0) {
+          return {
+            title: azotaRes.title || fileName.replace(/\.[^/.]+$/, ''),
+            subject: azotaRes.subject || 'Kiến thức tổng hợp',
+            grade: azotaRes.grade || 'Tự do',
+            durationMinutes: azotaRes.durationMinutes || 45,
+            questions: azotaRes.questions.map((q) => ({
+              id: q.id,
+              rawLabel: q.rawLabel,
+              content: q.content,
+              options: q.options.map((o) => ({ content: o.content, isCorrect: o.isCorrect })),
+              explanation: q.explanation,
+              type: q.type,
+              answer: q.shortAnswer || (q.options.find((o) => o.isCorrect)?.letter),
+            })),
+            parserUsed: 'azota_compiler_engine',
+          };
+        }
+      }
+    } catch (azotaErr) {
+      console.warn('Azota DocxPreprocessor pass fallback:', azotaErr);
+    }
     return await parseDocxFileStructure(file);
   }
 
@@ -1818,6 +1846,32 @@ export async function parseExamFileStructure(file: File): Promise<DeterministicE
   // 5. File Văn bản Azota (.azt), Text (.txt), Markdown (.md)
   if (['.azt', '.txt', '.md'].includes(ext)) {
     const text = await file.text().catch(() => '');
+    if (text) {
+      try {
+        const { ExamParser } = await import('./azota/examParser');
+        const azotaRes = ExamParser.parse(text, { fileName });
+        if (azotaRes && azotaRes.questions.length > 0) {
+          return {
+            title: azotaRes.title || fileName.replace(/\.[^/.]+$/, ''),
+            subject: azotaRes.subject || 'Kiến thức tổng hợp',
+            grade: azotaRes.grade || 'Tự do',
+            durationMinutes: azotaRes.durationMinutes || 45,
+            questions: azotaRes.questions.map((q) => ({
+              id: q.id,
+              rawLabel: q.rawLabel,
+              content: q.content,
+              options: q.options.map((o) => ({ content: o.content, isCorrect: o.isCorrect })),
+              explanation: q.explanation,
+              type: q.type,
+              answer: q.shortAnswer || (q.options.find((o) => o.isCorrect)?.letter),
+            })),
+            parserUsed: 'azota_compiler_engine',
+          };
+        }
+      } catch (azotaErr) {
+        console.warn('Azota text parser fallback:', azotaErr);
+      }
+    }
     return parseExamFromStructuredText(text, { fileName });
   }
 
@@ -1825,6 +1879,30 @@ export async function parseExamFileStructure(file: File): Promise<DeterministicE
   if (ext === '.pdf') {
     const pdfText = await extractTextFromPdf(file);
     if (pdfText && pdfText.trim().length > 15) {
+      try {
+        const { ExamParser } = await import('./azota/examParser');
+        const azotaRes = ExamParser.parse(pdfText, { fileName });
+        if (azotaRes && azotaRes.questions.length > 0) {
+          return {
+            title: azotaRes.title || fileName.replace(/\.[^/.]+$/, ''),
+            subject: azotaRes.subject || 'Kiến thức tổng hợp',
+            grade: azotaRes.grade || 'Tự do',
+            durationMinutes: azotaRes.durationMinutes || 45,
+            questions: azotaRes.questions.map((q) => ({
+              id: q.id,
+              rawLabel: q.rawLabel,
+              content: q.content,
+              options: q.options.map((o) => ({ content: o.content, isCorrect: o.isCorrect })),
+              explanation: q.explanation,
+              type: q.type,
+              answer: q.shortAnswer || (q.options.find((o) => o.isCorrect)?.letter),
+            })),
+            parserUsed: 'azota_compiler_engine',
+          };
+        }
+      } catch (azotaErr) {
+        console.warn('Azota PDF parser fallback:', azotaErr);
+      }
       const res = parseExamFromStructuredText(pdfText, { fileName });
       if (res && res.questions.length > 0) {
         res.parserUsed = 'pdf_text';
@@ -1921,3 +1999,5 @@ export function validateDeterministicResult(result: DeterministicExamResult | nu
   result.questions = validQuestions;
   return true;
 }
+
+export * from './azota';

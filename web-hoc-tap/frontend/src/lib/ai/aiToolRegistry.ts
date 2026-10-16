@@ -17,7 +17,7 @@ export interface QuestionItem {
   options: { content: string; isCorrect: boolean }[];
   points?: number;
   explanation?: string;
-  type?: 'multiple_choice' | 'essay' | 'fill_blank' | 'true_false';
+  type?: 'multiple_choice' | 'essay' | 'fill_blank' | 'true_false' | 'short_answer';
   answer?: string;
 }
 

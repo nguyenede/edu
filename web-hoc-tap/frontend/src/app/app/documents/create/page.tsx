@@ -40,6 +40,9 @@ interface ParsedExamQuestion {
   options: { content: string; isCorrect: boolean }[];
   explanation?: string;
   points?: number;
+  type?: 'multiple_choice' | 'essay' | 'fill_blank' | 'true_false' | 'short_answer';
+  rawLabel?: string;
+  answer?: string;
 }
 
 interface ParsedExamData {

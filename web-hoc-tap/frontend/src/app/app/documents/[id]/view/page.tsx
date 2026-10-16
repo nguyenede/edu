@@ -8,7 +8,6 @@ import { Button } from '@/components/Button';
 import {
   ArrowLeft,
   ChevronRight,
-  Download,
   CheckCircle2,
   FileText,
   Clock,
@@ -514,36 +513,6 @@ function DocumentDynamicViewPageContent() {
     };
   }, [fileId, token, searchFolderId]);
 
-  const handleDownloadJson = () => {
-    if (!fileItem) return;
-    const jsonOutput = {
-      title: fileItem.parsedQuiz.title,
-      total_questions: fileItem.parsedQuiz.questions.length,
-      questions: fileItem.parsedQuiz.questions.map((q, idx) => {
-        const cleanQ = (q.content || '')
-          .replace(/^(?:(?:Câu|câu|CÂU|Question|QUESTION|Bài\s*tập|BÀI\s*TẬP|Bài|BÀI|CH|Ví\s*dụ|VÍ\s*DỤ|Luyện\s*tập|Vận\s*dụng|Dạng)\s*(?:\d+|[IVXLCDM]+)[\s:.-]*|(?:\d+)[\.\)]\s+)/i, '')
-          .replace(/^[:.-]+\s*/, '')
-          .trim();
-        const correctOpt = q.options?.find((o) => o.isCorrect);
-        return {
-          id: idx + 1,
-          question: cleanQ || q.content,
-          options: (q.options || []).map((o) => o.content),
-          answer: correctOpt ? correctOpt.content : ((q as any).answer || ''),
-        };
-      }),
-    };
-    const dataStr =
-      'data:text/json;charset=utf-8,' +
-      encodeURIComponent(JSON.stringify(jsonOutput, null, 2));
-    const downloadAnchor = document.createElement('a');
-    downloadAnchor.setAttribute('href', dataStr);
-    downloadAnchor.setAttribute('download', `${fileItem.name.replace(/\.[^/.]+$/, '')}.json`);
-    document.body.appendChild(downloadAnchor);
-    downloadAnchor.click();
-    downloadAnchor.remove();
-  };
-
   const handlePrint = () => {
     if (typeof window !== 'undefined') {
       window.print();
@@ -729,17 +698,6 @@ function DocumentDynamicViewPageContent() {
           <Button
             variant="outline"
             size="sm"
-            onClick={handleDownloadJson}
-            title="Tải xuống tệp JSON"
-            className="rounded-xl text-xs gap-1.5 hidden md:inline-flex"
-          >
-            <Download size={14} />
-            Tải JSON
-          </Button>
-
-          <Button
-            variant="outline"
-            size="sm"
             onClick={handlePrint}
             title="In đề thi"
             className="rounded-xl text-xs gap-1.5 hidden md:inline-flex"
@@ -748,16 +706,16 @@ function DocumentDynamicViewPageContent() {
             In đề
           </Button>
 
-          {/* Blooket-style Assign & Host Combo */}
-          <div className="flex items-center bg-white dark:bg-[#1f2023] border border-slate-200/90 dark:border-slate-800 rounded-2xl p-1 shadow-2xs">
+          {/* Synchronized Web-native Assign & Host Combo */}
+          <div className="flex items-center bg-white dark:bg-[#1f2023] border border-slate-200 dark:border-slate-700/80 rounded-xl p-1 shadow-2xs">
             <button
               type="button"
               onClick={() => router.push(`/documents/${encodeURIComponent(fileId)}/assign`)}
-              className="px-3.5 py-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold text-xs sm:text-sm flex items-center gap-2 transition-colors cursor-pointer select-none"
-              title="Giao bài tập về nhà (Assign)"
+              className="px-3.5 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-semibold text-xs sm:text-sm flex items-center gap-1.5 transition-colors cursor-pointer select-none"
+              title="Giao bài tập về nhà"
             >
-              <FileText size={17} className="text-slate-600 dark:text-slate-300" />
-              <span>Assign</span>
+              <FileText size={16} className="text-slate-500 dark:text-slate-400" />
+              <span>Giao bài</span>
             </button>
 
             <div className="h-5 w-[1px] bg-slate-200 dark:bg-slate-700 mx-1" />
@@ -765,11 +723,11 @@ function DocumentDynamicViewPageContent() {
             <button
               type="button"
               onClick={() => router.push(`/app/games?examId=${encodeURIComponent(fileId)}`)}
-              className="px-4 py-1.5 rounded-xl bg-[#00c0b6] hover:bg-[#00ad9e] text-white font-black text-xs sm:text-sm flex items-center gap-1.5 shadow-[0_3px_0_#009ca8] active:translate-y-[2px] active:shadow-[0_1px_0_#009ca8] transition-all cursor-pointer select-none"
-              title="Tổ chức trò chơi trực tiếp (Host Game)"
+              className="px-4 py-1.5 rounded-lg bg-google-blue hover:bg-blue-600 active:bg-blue-700 text-white font-semibold text-xs sm:text-sm flex items-center gap-1.5 shadow-xs hover:shadow-sm active:scale-[0.98] transition-all cursor-pointer select-none"
+              title="Tổ chức trò chơi trực tiếp"
             >
-              <Play size={15} className="fill-current text-white ml-0.5" />
-              <span>Host</span>
+              <Play size={14} className="fill-white text-white ml-0.5" />
+              <span>Tổ chức</span>
             </button>
           </div>
         </div>

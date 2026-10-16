@@ -65,7 +65,7 @@ export default function DateTimePicker({
         value={inputValue}
         min={minStr}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#1a1b1d] text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-google-blue font-sans cursor-pointer transition-colors shadow-2xs"
+        className="w-full px-3 py-2 text-xs rounded-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#1a1b1d] text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-google-blue font-sans cursor-pointer transition-colors shadow-2xs"
       />
     </div>
   );

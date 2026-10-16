@@ -33,6 +33,7 @@ import {
   Play,
 } from 'lucide-react';
 import DateTimePicker, { formatDateTimeToInputValue } from '@/components/DateTimePicker';
+import { CustomSelect } from '@/components/Select';
 import { createHomework, HomeworkItem } from '@/lib/homeworkApi';
 import { getLocalClasses, ClassItem, createClassAssignment } from '@/lib/classesApi';
 import { getDocumentFile } from '@/lib/documentsApi';
@@ -887,30 +888,27 @@ function AssignPageContent() {
                       {assignMode === 'class' && (
                         <div className="pt-1 animate-in fade-in duration-150" onClick={(e) => e.stopPropagation()}>
                           {classes.length > 0 ? (
-                            <select
+                            <CustomSelect
                               value={selectedClassId}
-                              onChange={(e) => setSelectedClassId(e.target.value)}
-                              className="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-google-blue cursor-pointer shadow-xs"
-                            >
-                              {classes.map((cls) => {
+                              onChange={(val) => setSelectedClassId(String(val))}
+                              options={classes.map((cls) => {
                                 const rawName = (cls.name || '').trim();
                                 const displayName = /^lớp\b/i.test(rawName)
                                   ? rawName.charAt(0).toUpperCase() + rawName.slice(1)
                                   : `Lớp ${rawName}`;
-                                return (
-                                  <option key={cls.id} value={cls.id}>
-                                    {displayName} • {cls._count?.members || 0} học sinh
-                                  </option>
-                                );
+                                return {
+                                  value: cls.id,
+                                  label: `${displayName} • ${cls._count?.members || 0} học sinh`,
+                                };
                               })}
-                            </select>
+                            />
                           ) : (
-                            <div className="p-2.5 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/60 rounded-xl text-xs text-amber-800 dark:text-amber-300 flex items-center justify-between gap-2">
+                            <div className="p-2.5 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/60 rounded-md text-xs text-amber-800 dark:text-amber-300 flex items-center justify-between gap-2">
                               <span className="text-[11px]">Chưa có lớp học</span>
                               <Button
                                 size="sm"
                                 onClick={() => router.push('/app/classes')}
-                                className="bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-[10px] px-2.5 py-1 h-7 shrink-0"
+                                className="bg-amber-600 hover:bg-amber-700 text-white rounded-md text-[10px] px-2.5 py-1 h-7 shrink-0"
                               >
                                 Tạo lớp ngay
                               </Button>
@@ -930,18 +928,18 @@ function AssignPageContent() {
                       <Clock size={15} className="text-slate-400" />
                       Thời gian làm bài
                     </label>
-                    <select
+                    <CustomSelect
                       value={durationMinutes}
-                      onChange={(e) => setDurationMinutes(Number(e.target.value))}
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-xs focus:outline-none focus:ring-1 focus:ring-google-blue"
-                    >
-                      <option value={0}>Không giới hạn thời gian</option>
-                      <option value={15}>15 phút</option>
-                      <option value={30}>30 phút</option>
-                      <option value={45}>45 phút (Mặc định)</option>
-                      <option value={60}>60 phút</option>
-                      <option value={90}>90 phút</option>
-                    </select>
+                      onChange={(val) => setDurationMinutes(Number(val))}
+                      options={[
+                        { value: 0, label: 'Không giới hạn thời gian' },
+                        { value: 15, label: '15 phút' },
+                        { value: 30, label: '30 phút' },
+                        { value: 45, label: '45 phút (Mặc định)' },
+                        { value: 60, label: '60 phút' },
+                        { value: 90, label: '90 phút' },
+                      ]}
+                    />
                   </div>
 
                   {/* Thời gian nộp bài tối thiểu */}
@@ -950,20 +948,20 @@ function AssignPageContent() {
                       <Clock size={15} className="text-slate-400" />
                       Nộp bài tối thiểu
                     </label>
-                    <select
+                    <CustomSelect
                       value={minSubmitMinutes}
-                      onChange={(e) => setMinSubmitMinutes(Number(e.target.value))}
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-xs focus:outline-none focus:ring-1 focus:ring-google-blue"
-                    >
-                      <option value={0}>Không yêu cầu (Nộp bất kỳ lúc nào)</option>
-                      <option value={5}>Sau tối thiểu 5 phút</option>
-                      <option value={10}>Sau tối thiểu 10 phút</option>
-                      <option value={15}>Sau tối thiểu 15 phút</option>
-                      <option value={20}>Sau tối thiểu 20 phút</option>
-                      <option value={30}>Sau tối thiểu 30 phút</option>
-                      <option value={45}>Sau tối thiểu 45 phút</option>
-                      <option value={-1}>Tùy chỉnh số phút</option>
-                    </select>
+                      onChange={(val) => setMinSubmitMinutes(Number(val))}
+                      options={[
+                        { value: 0, label: 'Không yêu cầu (Nộp bất kỳ lúc nào)' },
+                        { value: 5, label: 'Sau tối thiểu 5 phút' },
+                        { value: 10, label: 'Sau tối thiểu 10 phút' },
+                        { value: 15, label: 'Sau tối thiểu 15 phút' },
+                        { value: 20, label: 'Sau tối thiểu 20 phút' },
+                        { value: 30, label: 'Sau tối thiểu 30 phút' },
+                        { value: 45, label: 'Sau tối thiểu 45 phút' },
+                        { value: -1, label: 'Tùy chỉnh số phút' },
+                      ]}
+                    />
                     {minSubmitMinutes === -1 && (
                       <Input
                         type="number"
@@ -971,7 +969,7 @@ function AssignPageContent() {
                         placeholder="Nhập số phút tối thiểu"
                         value={customMinSubmit}
                         onChange={(e) => setCustomMinSubmit(e.target.value)}
-                        className="text-xs rounded-xl mt-1.5"
+                        className="text-xs rounded-md mt-1.5"
                       />
                     )}
                   </div>
@@ -1117,7 +1115,7 @@ function AssignPageContent() {
                             key={num}
                             type="button"
                             onClick={() => setMaxViolations(num)}
-                            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                            className={`px-3.5 py-1.5 rounded-md text-xs font-bold transition-all ${
                               maxViolations === num
                                 ? 'bg-google-blue text-white shadow-xs'
                                 : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
@@ -1253,28 +1251,28 @@ function AssignPageContent() {
 
                 {/* Blooket-style Assign & Host Combo */}
                 <div className="pt-2 space-y-3">
-                  <div className="flex items-center bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl p-1 shadow-xs justify-between">
+                  <div className="flex items-center bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-1 shadow-2xs justify-between gap-1">
                     <button
                       type="button"
                       onClick={handleCreate}
                       disabled={creating || (assignMode === 'class' && !selectedClassId)}
-                      className="flex-1 px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold text-sm flex items-center justify-center gap-2 transition-colors cursor-pointer select-none disabled:opacity-50 disabled:cursor-not-allowed"
-                      title="Xác nhận giao bài tập (Assign)"
+                      className="flex-1 px-3 py-2 rounded-lg bg-google-blue hover:bg-blue-600 active:bg-blue-700 text-white font-semibold text-sm flex items-center justify-center gap-2 shadow-xs transition-colors cursor-pointer select-none disabled:opacity-50 disabled:cursor-not-allowed"
+                      title="Xác nhận giao bài tập"
                     >
-                      <FileText size={18} className="text-slate-600 dark:text-slate-400 stroke-[2.2]" />
-                      <span>{creating ? 'Đang giao...' : 'Assign'}</span>
+                      <FileText size={17} className="text-white" />
+                      <span>{creating ? 'Đang giao...' : 'Giao bài'}</span>
                     </button>
 
-                    <div className="h-6 w-[1px] bg-slate-300 dark:bg-slate-700 mx-1.5" />
+                    <div className="h-6 w-[1px] bg-slate-200 dark:bg-slate-700 mx-1" />
 
                     <button
                       type="button"
                       onClick={() => router.push(`/app/games?examId=${encodeURIComponent(fileId)}`)}
-                      className="flex-1 px-4 py-2 rounded-xl bg-[#00c0cb] hover:bg-[#00b0ba] text-white font-black text-sm flex items-center justify-center gap-1.5 shadow-[0_3px_0_#008f99] active:translate-y-[2px] active:shadow-none transition-all cursor-pointer select-none"
-                      title="Chuyển sang tổ chức trò chơi trực tiếp (Host Game)"
+                      className="px-4 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold text-sm flex items-center justify-center gap-1.5 transition-colors cursor-pointer select-none"
+                      title="Chuyển sang tổ chức trò chơi trực tiếp"
                     >
-                      <Play size={16} className="fill-white text-white ml-0.5" />
-                      <span>Host</span>
+                      <Play size={15} className="fill-slate-600 dark:fill-slate-400 text-slate-600 dark:text-slate-400 ml-0.5" />
+                      <span>Tổ chức</span>
                     </button>
                   </div>
 

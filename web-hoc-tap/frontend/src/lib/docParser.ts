@@ -8,7 +8,7 @@ export interface ParsedQuestionOption {
   hasFormatting?: boolean;
 }
 
-export type QuestionType = 'multiple_choice' | 'essay' | 'fill_blank' | 'true_false';
+export type QuestionType = 'multiple_choice' | 'essay' | 'fill_blank' | 'true_false' | 'short_answer';
 
 export interface ParsedQuestion {
   id: string;
