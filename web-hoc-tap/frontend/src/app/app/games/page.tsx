@@ -584,14 +584,14 @@ export default function GamesHubPage() {
     <AppShell
       title={
         isConfigModalOpen && activeCategory ? (
-          <div className="flex items-center gap-1.5 flex-wrap">
+          <div className="flex items-center gap-1 text-2xl tracking-tight text-slate-900 dark:text-slate-100 flex-wrap -ml-2">
             <button
               type="button"
               onClick={() => {
                 setIsConfigModalOpen(false);
                 setActiveCategory(null);
               }}
-              className="text-sm font-medium text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 transition-colors cursor-pointer"
+              className="transition-all cursor-pointer px-2 py-0.5 rounded-xl text-slate-900 dark:text-white font-semibold hover:bg-slate-200/70 dark:hover:bg-slate-800"
             >
               Trò chơi lớp học
             </button>
@@ -605,25 +605,26 @@ export default function GamesHubPage() {
                   setActiveCategory(g.id);
                 },
               }))}
+              fallbackToStaticChevron={true}
             />
             <button
               type="button"
               onClick={() => setIsConfigModalOpen(false)}
-              className="text-sm font-medium text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 transition-colors cursor-pointer truncate max-w-xs md:max-w-md"
+              className="transition-all cursor-pointer px-2 py-0.5 rounded-xl text-slate-900 dark:text-white font-semibold hover:bg-slate-200/70 dark:hover:bg-slate-800 truncate max-w-xs md:max-w-md"
             >
               {getCategoryMeta(activeCategory).title}
             </button>
             <BreadcrumbChevron isStatic={true} />
-            <span className="text-xl sm:text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
+            <span className="px-2 py-0.5 rounded-xl text-slate-900 dark:text-white font-semibold">
               {editingLessonId ? 'Chỉnh sửa bài chơi' : 'Tạo bài chơi mới'}
             </span>
           </div>
         ) : activeCategory ? (
-          <div className="flex items-center gap-1.5 flex-wrap">
+          <div className="flex items-center gap-1 text-2xl tracking-tight text-slate-900 dark:text-slate-100 flex-wrap -ml-2">
             <button
               type="button"
               onClick={() => setActiveCategory(null)}
-              className="text-sm font-medium text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 transition-colors cursor-pointer"
+              className="transition-all cursor-pointer px-2 py-0.5 rounded-xl text-slate-900 dark:text-white font-semibold hover:bg-slate-200/70 dark:hover:bg-slate-800"
             >
               Trò chơi lớp học
             </button>
@@ -634,13 +635,21 @@ export default function GamesHubPage() {
                 icon: getGameCustomIcon(g.id, 18),
                 onClick: () => setActiveCategory(g.id),
               }))}
+              fallbackToStaticChevron={true}
             />
-            <span className="text-xl sm:text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
+            <span className="px-2 py-0.5 rounded-xl text-slate-900 dark:text-white font-semibold">
               {getCategoryMeta(activeCategory).title}
             </span>
           </div>
         ) : (
-          'Trò chơi lớp học'
+          <div className="flex items-center gap-1 text-2xl tracking-tight text-slate-900 dark:text-slate-100 flex-wrap -ml-2">
+            <button
+              type="button"
+              className="transition-all cursor-pointer px-2 py-0.5 rounded-xl text-slate-900 dark:text-white font-semibold hover:bg-slate-200/70 dark:hover:bg-slate-800"
+            >
+              Trò chơi lớp học
+            </button>
+          </div>
         )
       }
       action={

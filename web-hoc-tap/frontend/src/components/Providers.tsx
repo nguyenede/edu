@@ -27,6 +27,38 @@ export const Providers: React.FC<{ children: React.ReactNode }> = ({ children })
 
     // Load theme & appearance
     initializeTheme();
+
+    // Chặn các lỗi do Extension trình duyệt (như Urban VPN, Adblock...) gây ra
+    // để không làm kích hoạt bảng đỏ Unhandled Runtime Error của Next.js
+    const handleExtensionErrors = (event: ErrorEvent) => {
+      const filename = event.filename || '';
+      const stack = event.error?.stack ? String(event.error.stack) : '';
+      if (
+        filename.includes('chrome-extension://') ||
+        filename.includes('moz-extension://') ||
+        stack.includes('chrome-extension://') ||
+        stack.includes('moz-extension://')
+      ) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+      }
+    };
+
+    const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
+      const stack = event.reason?.stack ? String(event.reason.stack) : '';
+      if (stack.includes('chrome-extension://') || stack.includes('moz-extension://')) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+      }
+    };
+
+    window.addEventListener('error', handleExtensionErrors, true);
+    window.addEventListener('unhandledrejection', handleUnhandledRejection, true);
+
+    return () => {
+      window.removeEventListener('error', handleExtensionErrors, true);
+      window.removeEventListener('unhandledrejection', handleUnhandledRejection, true);
+    };
   }, [initializeAuth, initializeTheme]);
 
   return (

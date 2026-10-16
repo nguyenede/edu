@@ -972,6 +972,23 @@ function BlooketPlayContent() {
   const hasMetMinTime = minSubmitMinutes <= 0 || timeSpent >= minSubmitSeconds;
   const remainingLockSeconds = Math.max(0, minSubmitSeconds - timeSpent);
 
+  const toggleFullscreen = async () => {
+    try {
+      if (!document.fullscreenElement) {
+        if (document.documentElement.requestFullscreen) {
+          await document.documentElement.requestFullscreen();
+          hasEnteredFullscreenRef.current = true;
+        }
+      } else {
+        if (document.exitFullscreen) {
+          await document.exitFullscreen();
+        }
+      }
+    } catch (err) {
+      console.warn('Fullscreen toggle error:', err);
+    }
+  };
+
   const handleAttemptSubmit = () => {
     if (isSubmitting) return;
 
@@ -1049,35 +1066,45 @@ function BlooketPlayContent() {
         </div>
       )}
 
-      {/* Top Header Bar */}
-      <header className="sticky top-0 z-30 bg-white/90 dark:bg-[#18181b]/90 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800 px-4 py-3">
-        <div className="max-w-4xl mx-auto flex items-center justify-between gap-3">
+      {/* Top Header Bar - Full Width with Max Constraint */}
+      <header className="sticky top-0 z-30 bg-white/95 dark:bg-[#18181b]/95 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800 px-4 sm:px-8 lg:px-12 py-3.5 shadow-2xs">
+        <div className="w-full max-w-[1680px] mx-auto flex items-center justify-between gap-4">
           {/* Left: Homework title & student name */}
-          <div className="min-w-0">
-            <h1 className="text-sm font-bold text-slate-900 dark:text-slate-100 truncate">
+          <div className="min-w-0 flex-1">
+            <h1 className="text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100 truncate">
               {homework?.title || 'Bài tập trực tuyến'}
             </h1>
-            <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
-              <span>Học sinh: <strong className="text-slate-700 dark:text-slate-300">{studentName}</strong></span>
+            <div className="flex items-center gap-3 text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">
+              <span>Học sinh: <strong className="text-slate-800 dark:text-slate-200 font-semibold">{studentName}</strong></span>
               {homework?.antiCheating && (
                 <span className="flex items-center gap-1 text-google-blue font-semibold">
-                  <ShieldCheck size={12} /> Chống gian lận (Lỗi: {violationCount}/{homework.antiCheatConfig?.maxViolations || 3})
+                  <ShieldCheck size={14} /> Chống gian lận (Lỗi: {violationCount}/{homework.antiCheatConfig?.maxViolations || 3})
                 </span>
               )}
             </div>
           </div>
 
-          {/* Right: Timer & Submit Button */}
-          <div className="flex items-center gap-2.5">
+          {/* Right: Fullscreen, Timer & Submit Button */}
+          <div className="flex items-center gap-2.5 sm:gap-3 shrink-0">
+            <button
+              type="button"
+              onClick={toggleFullscreen}
+              className="p-2 sm:px-3 sm:py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
+              title="Bật/Tắt Toàn màn hình"
+            >
+              <Maximize2 size={15} />
+              <span className="hidden md:inline">Toàn màn hình</span>
+            </button>
+
             {secondsLeft !== null && (
               <div
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-mono text-xs font-bold ${
+                className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl font-mono text-xs sm:text-sm font-bold shadow-2xs ${
                   secondsLeft < 60
                     ? 'bg-red-50 text-red-600 dark:bg-red-950/40 dark:text-red-400 animate-pulse'
                     : 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300'
                 }`}
               >
-                <Clock size={14} />
+                <Clock size={15} />
                 <span>{formatTimer(secondsLeft)}</span>
               </div>
             )}
@@ -1085,7 +1112,7 @@ function BlooketPlayContent() {
             {/* Min Submit Time Lock Badge */}
             {minSubmitMinutes > 0 && !hasMetMinTime && (
               <div
-                className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 font-bold text-xs border border-amber-200/60 dark:border-amber-900/60"
+                className="hidden sm:flex items-center gap-1.5 px-3 py-2 rounded-xl bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 font-bold text-xs border border-amber-200/60 dark:border-amber-900/60"
                 title={`Yêu cầu làm bài tối thiểu ${minSubmitMinutes} phút mới được nộp bài`}
               >
                 <Lock size={13} className="text-amber-600 dark:text-amber-400" />
@@ -1102,7 +1129,7 @@ function BlooketPlayContent() {
                 !hasMetMinTime
                   ? 'bg-amber-600 hover:bg-amber-700 text-white'
                   : 'bg-google-blue hover:bg-[#1557b0] text-white'
-              } font-bold text-xs rounded-xl disabled:opacity-50 transition-colors flex items-center gap-1.5 shadow-xs`}
+              } font-bold text-xs sm:text-sm px-4 py-2 sm:px-5 sm:py-2.5 rounded-xl disabled:opacity-50 transition-colors flex items-center gap-1.5 shadow-xs cursor-pointer`}
               title={
                 !hasMetMinTime
                   ? `Chưa đến thời gian nộp bài (còn ${formatTimer(remainingLockSeconds)})`
@@ -1110,7 +1137,7 @@ function BlooketPlayContent() {
               }
             >
               {!hasMetMinTime && minSubmitMinutes > 0 ? (
-                <Lock size={13} />
+                <Lock size={14} />
               ) : null}
               <span>
                 {isSubmitting
@@ -1124,8 +1151,8 @@ function BlooketPlayContent() {
         </div>
 
         {/* Progress Bar */}
-        <div className="max-w-4xl mx-auto mt-2.5">
-          <div className="w-full h-1 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+        <div className="w-full max-w-[1680px] mx-auto mt-3">
+          <div className="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
             <div
               className="h-full bg-google-blue transition-all duration-300"
               style={{ width: `${((currentIndex + 1) / totalQ) * 100}%` }}
@@ -1134,104 +1161,106 @@ function BlooketPlayContent() {
         </div>
       </header>
 
-      {/* Main Question View */}
-      <main className="max-w-4xl w-full mx-auto p-4 sm:p-6 space-y-6 flex-1">
+      {/* Main Question View - Expansive Full Screen Area */}
+      <main className="w-full max-w-[1680px] mx-auto px-4 sm:px-8 lg:px-12 py-6 sm:py-8 space-y-6 sm:space-y-8 flex-1 flex flex-col justify-between">
         {currentQ ? (
-          <div className="bg-white dark:bg-[#1e1f20] rounded-3xl p-6 sm:p-8 border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-6">
-            {/* Question Header */}
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
-              <span className="text-xs font-bold text-google-blue uppercase tracking-wider">
-                Câu {currentIndex + 1} / {totalQ}
-              </span>
-              <span className="text-xs font-semibold text-slate-400">
-                {currentQ.points ? `${currentQ.points} điểm` : '1 điểm'}
-              </span>
-            </div>
+          <div className="w-full bg-white dark:bg-[#1e1f20] rounded-3xl p-6 sm:p-10 lg:p-12 border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-6 sm:space-y-8 flex-1 flex flex-col justify-between">
+            <div className="space-y-6">
+              {/* Question Header */}
+              <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800">
+                <span className="text-xs sm:text-sm font-bold text-google-blue uppercase tracking-wider">
+                  Câu {currentIndex + 1} / {totalQ}
+                </span>
+                <span className="text-xs sm:text-sm font-semibold text-slate-400">
+                  {currentQ.points ? `${currentQ.points} điểm` : '1 điểm'}
+                </span>
+              </div>
 
-            {/* Question Content */}
-            <div className="text-base sm:text-lg font-semibold text-slate-900 dark:text-slate-100 leading-relaxed whitespace-pre-wrap select-none">
-              <span className="font-bold text-google-blue dark:text-blue-400 mr-2 whitespace-nowrap">
-                Câu {currentIndex + 1}:
-              </span>
-              <PlayMathRenderer text={(currentQ.content || '').replace(/^Câu\s*\d+\s*[:.]\s*/i, '')} />
-            </div>
+              {/* Question Content - Large, crisp typography */}
+              <div className="text-xl sm:text-2xl md:text-3xl font-bold text-slate-900 dark:text-slate-100 leading-relaxed whitespace-pre-wrap select-none">
+                <span className="font-bold text-google-blue dark:text-blue-400 mr-2.5 whitespace-nowrap">
+                  Câu {currentIndex + 1}:
+                </span>
+                <PlayMathRenderer text={(currentQ.content || '').replace(/^Câu\s*\d+\s*[:.]\s*/i, '')} />
+              </div>
 
-            {/* Multiple Choice Options */}
-            {Array.isArray(currentQ.options) && currentQ.options.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-                {currentQ.options.map((opt: any, optIdx: number) => {
-                  const letter = String.fromCharCode(65 + optIdx);
-                  const optContent = typeof opt === 'string' ? opt : opt.content || '';
-                  const isSelected = selectedAnswers[currentQ.id] === optContent;
+              {/* Multiple Choice Options - Large Cards Grid */}
+              {Array.isArray(currentQ.options) && currentQ.options.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6 pt-3">
+                  {currentQ.options.map((opt: any, optIdx: number) => {
+                    const letter = String.fromCharCode(65 + optIdx);
+                    const optContent = typeof opt === 'string' ? opt : opt.content || '';
+                    const isSelected = selectedAnswers[currentQ.id] === optContent;
 
-                  return (
-                    <button
-                      key={optIdx}
-                      type="button"
-                      onClick={() => handleSelectOption(currentQ.id, optContent)}
-                      className={`p-4 rounded-2xl border text-left flex items-start gap-3 transition-all select-none cursor-pointer ${
-                        isSelected
-                          ? 'bg-blue-50 dark:bg-blue-950/40 border-google-blue text-slate-900 dark:text-slate-100 font-bold shadow-xs ring-1 ring-google-blue'
-                          : 'bg-slate-50/70 dark:bg-slate-800/40 border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'
-                      }`}
-                    >
-                      <span
-                        className={`w-7 h-7 rounded-xl flex items-center justify-center font-bold text-xs shrink-0 ${
+                    return (
+                      <button
+                        key={optIdx}
+                        type="button"
+                        onClick={() => handleSelectOption(currentQ.id, optContent)}
+                        className={`p-5 sm:p-6 lg:p-7 rounded-2xl border text-left flex items-start gap-4 transition-all select-none cursor-pointer ${
                           isSelected
-                            ? 'bg-google-blue text-white'
-                            : 'bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600'
+                            ? 'bg-blue-50/90 dark:bg-blue-950/50 border-google-blue text-slate-900 dark:text-slate-100 font-bold shadow-sm ring-2 ring-google-blue'
+                            : 'bg-slate-50/70 dark:bg-slate-800/40 border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
                         }`}
                       >
-                        {letter}
-                      </span>
-                      <div className="flex-1 text-sm sm:text-base leading-snug pt-0.5">
-                        <PlayMathRenderer text={optContent} />
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            ) : (
-              /* Essay answer input */
-              <div className="space-y-2 pt-2">
-                <label className="text-xs font-semibold text-slate-500">
-                  Nhập câu trả lời tự luận của bạn:
-                </label>
-                <textarea
-                  rows={4}
-                  value={selectedAnswers[currentQ.id] || ''}
-                  onChange={(e) => handleSelectOption(currentQ.id, e.target.value)}
-                  placeholder="Gõ lời giải / câu trả lời..."
-                  className="w-full p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-sm focus:outline-none focus:ring-1 focus:ring-google-blue"
-                />
-              </div>
-            )}
+                        <span
+                          className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center font-bold text-sm sm:text-base shrink-0 ${
+                            isSelected
+                              ? 'bg-google-blue text-white shadow-2xs'
+                              : 'bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600'
+                          }`}
+                        >
+                          {letter}
+                        </span>
+                        <div className="flex-1 text-base sm:text-lg lg:text-xl leading-relaxed pt-0.5">
+                          <PlayMathRenderer text={optContent} />
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : (
+                /* Essay answer input */
+                <div className="space-y-3 pt-3">
+                  <label className="text-sm font-semibold text-slate-600 dark:text-slate-400">
+                    Nhập câu trả lời tự luận của bạn:
+                  </label>
+                  <textarea
+                    rows={6}
+                    value={selectedAnswers[currentQ.id] || ''}
+                    onChange={(e) => handleSelectOption(currentQ.id, e.target.value)}
+                    placeholder="Gõ lời giải / câu trả lời của bạn vào đây..."
+                    className="w-full p-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-base focus:outline-none focus:ring-2 focus:ring-google-blue"
+                  />
+                </div>
+              )}
+            </div>
           </div>
         ) : null}
 
         {/* Navigation buttons */}
-        <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center justify-between gap-4 pt-2">
           <Button
             variant="outline"
             disabled={currentIndex === 0}
             onClick={() => setCurrentIndex((prev) => Math.max(0, prev - 1))}
-            className="gap-1.5 text-xs rounded-xl"
+            className="px-5 py-2.5 sm:px-6 sm:py-3 gap-2 text-xs sm:text-sm font-semibold rounded-2xl cursor-pointer"
           >
-            <ChevronLeft size={16} /> Câu trước
+            <ChevronLeft size={18} /> Câu trước
           </Button>
 
           {/* Quick jump pills */}
-          <div className="hidden sm:flex items-center gap-1.5 flex-wrap justify-center">
+          <div className="hidden sm:flex items-center gap-2 flex-wrap justify-center">
             {questions.map((q, idx) => (
               <button
                 key={idx}
                 type="button"
                 onClick={() => setCurrentIndex(idx)}
-                className={`w-8 h-8 rounded-xl font-bold text-xs transition-colors cursor-pointer ${
+                className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl font-bold text-xs sm:text-sm transition-all cursor-pointer ${
                   currentIndex === idx
-                    ? 'bg-google-blue text-white'
+                    ? 'bg-google-blue text-white shadow-xs scale-105'
                     : selectedAnswers[q.id]
-                    ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300'
+                    ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 font-semibold'
                     : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
                 }`}
               >
@@ -1244,15 +1273,15 @@ function BlooketPlayContent() {
             variant="primary"
             disabled={currentIndex === totalQ - 1}
             onClick={() => setCurrentIndex((prev) => Math.min(totalQ - 1, prev + 1))}
-            className="gap-1.5 text-xs rounded-xl bg-google-blue hover:bg-[#1557b0] text-white"
+            className="px-5 py-2.5 sm:px-6 sm:py-3 gap-2 text-xs sm:text-sm font-semibold rounded-2xl bg-google-blue hover:bg-[#1557b0] text-white shadow-xs cursor-pointer"
           >
-            Câu tiếp <ChevronRight size={16} />
+            Câu tiếp <ChevronRight size={18} />
           </Button>
         </div>
       </main>
 
       {/* Footer info */}
-      <footer className="text-center text-xs text-slate-400 py-3 border-t border-slate-200/50 dark:border-slate-800/50 space-y-1">
+      <footer className="w-full max-w-[1680px] mx-auto text-center text-xs text-slate-400 py-3.5 border-t border-slate-200/50 dark:border-slate-800/50 space-y-1 px-4">
         <div>
           HocRealtime Play &bull; Đã hoàn thành {answeredCount} / {totalQ} câu
         </div>

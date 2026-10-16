@@ -91,7 +91,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       } select-none flex flex-col justify-between fixed top-16 left-0 bottom-0 z-50 overflow-y-auto md:overflow-visible bg-white dark:bg-[#1e1f20] shadow-xl md:bg-google-bg md:dark:bg-[#131314] md:shadow-none md:z-50 py-3 px-2.5 ${
         sidebarCollapsed
           ? 'w-[280px] -translate-x-full md:translate-x-0 md:w-[64px]'
-          : 'translate-x-0 w-[280px] md:w-[200px]'
+          : 'translate-x-0 w-[280px] md:w-[220px]'
       }`}
     >
       <div className="space-y-4 w-full">
@@ -124,8 +124,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   onClick={() => handleNavClick(item.href)}
                   className={`h-11 transition-[background-color,color] duration-200 ease-in-out flex items-center justify-start rounded-full overflow-hidden shrink-0 cursor-pointer w-full ${
                     isActive
-                      ? 'bg-google-pill text-google-pill-text dark:bg-[#2d2f31] dark:text-[#f1f3f4] font-[550]'
-                      : 'text-slate-700 dark:text-slate-300 hover:bg-google-hover dark:hover:bg-[#282a2c] font-normal'
+                      ? 'bg-blue-100/80 dark:bg-blue-950/60 text-google-blue dark:text-blue-400 font-medium'
+                      : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 font-medium'
                   }`}
                 >
                   {/* Fixed 44x44 icon container, anchored permanently to left edge without shifting */}
@@ -135,16 +135,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
                         size={20}
                         className={
                           isActive
-                            ? 'text-google-pill-text dark:text-[#f1f3f4] stroke-[2.2]'
-                            : 'text-slate-700 dark:text-slate-300 stroke-[1.8]'
+                            ? 'text-google-blue dark:text-blue-400 stroke-[2]'
+                            : 'text-slate-600 dark:text-slate-400 stroke-[1.8]'
                         }
                       />
                     )}
                   </div>
                   <span
-                    className={`truncate text-left whitespace-nowrap overflow-hidden pr-2 text-[13.5px] tracking-tight ${
-                      isActive ? 'font-[550]' : 'font-normal'
-                    } ${
+                    className={`truncate text-left whitespace-nowrap overflow-hidden pr-2 text-sm font-medium ${
                       sidebarCollapsed ? 'opacity-0 w-0 pointer-events-none' : 'opacity-100'
                     } transition-opacity duration-150`}
                   >

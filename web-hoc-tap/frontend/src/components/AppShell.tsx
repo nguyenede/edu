@@ -286,7 +286,7 @@ export const AppShell: React.FC<AppShellProps> = ({
         suppressHydrationWarning
         className={`absolute inset-0 pt-16 overflow-hidden ${
           isMounted ? 'transition-all duration-300 ease-in-out' : ''
-        } ${sidebarCollapsed ? 'md:pl-[64px]' : 'md:pl-[200px]'}`}
+        } ${sidebarCollapsed ? 'md:pl-[64px]' : 'md:pl-[220px]'}`}
       >
         <div className="mr-0 h-full flex flex-col">
           {/* Inner Google White Sheet Canvas */}
