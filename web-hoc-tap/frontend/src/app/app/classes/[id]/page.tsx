@@ -574,7 +574,7 @@ export default function ClassDetailPage() {
             <>
               <Button
                 size="sm"
-                onClick={() => router.push(`/documents?assignClassId=${classId}&className=${encodeURIComponent(clazz?.name || '')}`)}
+                onClick={() => router.push(`/app/documents?assignClassId=${classId}&className=${encodeURIComponent(clazz?.name || '')}`)}
                 className="gap-1.5"
               >
                 <Plus size={16} /> Giao bài tập
@@ -594,41 +594,41 @@ export default function ClassDetailPage() {
       }
     >
       <div className="space-y-6">
-        {/* Navigation Tabs (Thiết kế thanh tab chuẩn hiện đại với gạch chân xanh và khoảng cách tinh tế) */}
-        <div className="flex gap-6 sm:gap-8 items-center border-b border-slate-200/90 dark:border-slate-800 overflow-x-auto no-scrollbar pt-1">
+        {/* Navigation Tabs (Thiết kế thanh tab hiện đại không có thanh gạch kẻ trắng ngang) */}
+        <div className="flex gap-6 sm:gap-8 items-center overflow-x-auto no-scrollbar pt-1">
           <button
             type="button"
             onClick={() => setActiveTab('assignments')}
-            className={`pb-3 text-sm tracking-tight whitespace-nowrap cursor-pointer transition-all border-b-[2.5px] -mb-[1.5px] ${
+            className={`pb-2.5 text-sm tracking-tight whitespace-nowrap cursor-pointer transition-all border-b-2 ${
               activeTab === 'assignments'
-                ? 'border-blue-600 text-blue-600 dark:border-blue-500 dark:text-blue-400 font-bold'
-                : 'border-transparent text-slate-700 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white hover:border-slate-300 dark:hover:border-slate-700 font-semibold'
+                ? 'border-blue-600 text-blue-600 dark:border-blue-500 dark:text-blue-400 font-medium'
+                : 'border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white font-normal'
             }`}
           >
-            Bài tập và Đề thi {assignments.length}
+            Bài tập và Đề thi ({assignments.length})
           </button>
 
           {isTeacher && (
             <button
               type="button"
               onClick={() => setActiveTab('students')}
-              className={`pb-3 text-sm tracking-tight whitespace-nowrap cursor-pointer transition-all border-b-[2.5px] -mb-[1.5px] ${
+              className={`pb-2.5 text-sm tracking-tight whitespace-nowrap cursor-pointer transition-all border-b-2 ${
                 activeTab === 'students'
-                  ? 'border-blue-600 text-blue-600 dark:border-blue-500 dark:text-blue-400 font-bold'
-                  : 'border-transparent text-slate-700 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white hover:border-slate-300 dark:hover:border-slate-700 font-semibold'
+                  ? 'border-blue-600 text-blue-600 dark:border-blue-500 dark:text-blue-400 font-medium'
+                  : 'border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white font-normal'
               }`}
             >
-              Danh sách Học sinh {members.length}
+              Danh sách Học sinh ({members.length})
             </button>
           )}
 
           <button
             type="button"
             onClick={() => setActiveTab('gradebook')}
-            className={`pb-3 text-sm tracking-tight whitespace-nowrap cursor-pointer transition-all border-b-[2.5px] -mb-[1.5px] ${
+            className={`pb-2.5 text-sm tracking-tight whitespace-nowrap cursor-pointer transition-all border-b-2 ${
               activeTab === 'gradebook'
-                ? 'border-blue-600 text-blue-600 dark:border-blue-500 dark:text-blue-400 font-bold'
-                : 'border-transparent text-slate-700 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white hover:border-slate-300 dark:hover:border-slate-700 font-semibold'
+                ? 'border-blue-600 text-blue-600 dark:border-blue-500 dark:text-blue-400 font-medium'
+                : 'border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white font-normal'
             }`}
           >
             Bảng điểm
