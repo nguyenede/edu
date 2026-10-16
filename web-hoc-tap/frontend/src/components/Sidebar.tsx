@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
+import React, { useState } from 'react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import {
   Plus,
   FolderPlus,
@@ -41,22 +42,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
   handleLogout,
   onNavigate,
 }) => {
-  const router = useRouter();
   const pathname = usePathname();
 
   // State-driven hover and warm tooltip tracking
   const [activeTooltipKey, setActiveTooltipKey] = useState<string | null>(null);
   const [clickedKey, setClickedKey] = useState<string | null>(null);
 
-  const [isMounted, setIsMounted] = useState(false);
-
-  useEffect(() => {
-    const timer = setTimeout(() => setIsMounted(true), 60);
-    return () => clearTimeout(timer);
-  }, []);
-
   const handleMouseEnter = (href: string) => {
-    // Di trỏ chuột vào là hiện lên tiêu đề ngay lập tức (0ms)
     setActiveTooltipKey(href);
   };
 
@@ -65,30 +57,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
     setClickedKey(null);
   };
 
-  const handleNavClick = (href: string) => {
-    setClickedKey(href);
-    setActiveTooltipKey(null);
-    onNavigate?.();
-
-    const normPath = (pathname || '').replace(/^\/app(?=\/|$)/, '') || '/dashboard';
-    const normHref = href.replace(/^\/app(?=\/|$)/, '') || '/dashboard';
-
-    // If already on the target route, don't trigger loading or navigation
-    if (normPath === normHref) {
-      return;
-    }
-
-    router.push(href);
-  };
-
   return (
     <aside
       id="app-sidebar"
       aria-label="Điều hướng chính"
       suppressHydrationWarning
-      className={`shrink-0 ${
-        isMounted ? 'transition-[width,transform] duration-300 ease-in-out' : ''
-      } select-none flex flex-col justify-between fixed top-16 left-0 bottom-0 z-50 overflow-y-auto md:overflow-visible bg-white dark:bg-[#1e1f20] shadow-xl md:bg-google-bg md:dark:bg-[#131314] md:shadow-none md:z-50 py-3 px-2.5 ${
+      className={`shrink-0 transition-[width,transform] duration-200 ease-in-out select-none flex flex-col justify-between fixed top-16 left-0 bottom-0 z-50 overflow-y-auto md:overflow-visible bg-white dark:bg-[#1e1f20] shadow-xl md:bg-google-bg md:dark:bg-[#131314] md:shadow-none md:z-50 py-3 px-2.5 ${
         sidebarCollapsed
           ? 'w-[280px] -translate-x-full md:translate-x-0 md:w-[64px]'
           : 'translate-x-0 w-[280px] md:w-[220px]'
@@ -118,11 +92,22 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 onMouseEnter={() => handleMouseEnter(item.href)}
                 onMouseLeave={() => handleMouseLeave(item.href)}
               >
-                <button
-                  type="button"
+                <Link
+                  href={item.href}
+                  prefetch={true}
                   aria-label={item.label}
-                  onClick={() => handleNavClick(item.href)}
-                  className={`h-11 transition-[background-color,color] duration-200 ease-in-out flex items-center justify-start rounded-full overflow-hidden shrink-0 cursor-pointer w-full ${
+                  onClick={(e) => {
+                    const currentNorm = (pathname || '').replace(/^\/app(?=\/|$)/, '') || '/dashboard';
+                    const targetNorm = item.href.replace(/^\/app(?=\/|$)/, '') || '/dashboard';
+                    if (currentNorm === targetNorm) {
+                      e.preventDefault();
+                      return;
+                    }
+                    setClickedKey(item.href);
+                    setActiveTooltipKey(null);
+                    onNavigate?.();
+                  }}
+                  className={`h-11 transition-[background-color,color] duration-150 ease-in-out flex items-center justify-start rounded-full overflow-hidden shrink-0 cursor-pointer w-full ${
                     isActive
                       ? 'bg-blue-100/80 dark:bg-blue-950/60 text-google-blue dark:text-blue-400 font-medium'
                       : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 font-medium'
@@ -148,7 +133,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   >
                     {item.label}
                   </span>
-                </button>
+                </Link>
 
                 {/* Floating Tooltip Pill on Hover when Sidebar is Collapsed */}
                 <div

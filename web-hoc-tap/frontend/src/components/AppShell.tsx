@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { useAuthStore } from '../store/useAuthStore';
+import { useAuthStore, getStoredUser } from '../store/useAuthStore';
 import { ThemeToggle } from './ThemeToggle';
 import { NotificationDrawer } from './NotificationDrawer';
 import { Modal } from './Modal';
@@ -44,19 +44,9 @@ export const AppShell: React.FC<AppShellProps> = ({
   const router = useRouter();
   const pathname = usePathname();
   const { user, logout } = useAuthStore();
+  const effectiveUser = user || (typeof window !== 'undefined' ? getStoredUser() : null);
 
   const { sidebarCollapsed, setSidebarCollapsed, toggleSidebar } = useSidebarStore();
-  const [isMounted, setIsMounted] = useState(false);
-
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem('sidebar_collapsed');
-      if (saved !== null) {
-        setSidebarCollapsed(saved === 'true');
-      }
-    } catch (e) {}
-    setIsMounted(true);
-  }, [setSidebarCollapsed]);
   const [searchQuery, setSearchQuery] = useState('');
   const [isNewMenuOpen, setIsNewMenuOpen] = useState(false);
 
@@ -69,13 +59,13 @@ export const AppShell: React.FC<AppShellProps> = ({
 
     document.addEventListener('keydown', handleEscape);
     return () => document.removeEventListener('keydown', handleEscape);
-  }, []);
+  }, [setSidebarCollapsed]);
 
   const isTeacher = useMemo(() => {
-    if (!isMounted || !user) return false;
-    const r = (user.role || '').toUpperCase();
+    if (!effectiveUser) return false;
+    const r = (effectiveUser.role || '').toUpperCase();
     return r === 'TEACHER' || r === 'ADMIN' || r === 'GIAOVIEN';
-  }, [isMounted, user]);
+  }, [effectiveUser]);
 
   const navItems = [
     { label: 'Trang chủ', href: '/dashboard', icon: Home },
@@ -210,9 +200,9 @@ export const AppShell: React.FC<AppShellProps> = ({
             <HelpCircle size={20} />
           </button>
 
-          {isMounted && user && <NotificationDrawer />}
+          {effectiveUser && <NotificationDrawer />}
 
-          {isMounted && user && (
+          {effectiveUser && (
             <button
               type="button"
               onClick={() => router.push('/settings')}
@@ -223,17 +213,15 @@ export const AppShell: React.FC<AppShellProps> = ({
             </button>
           )}
 
-          {!isMounted ? (
-            <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-zinc-700/60 animate-pulse ml-1" />
-          ) : user ? (
+          {effectiveUser ? (
             /* Google Avatar Circle with colorful ring */
             <div
               onClick={() => router.push('/settings')}
               className="relative cursor-pointer p-0.5 rounded-full ring-2 ring-google-blue/60 ml-1"
-              title={`${user?.name || user?.email} (${user?.role})`}
+              title={`${effectiveUser?.name || effectiveUser?.email} (${effectiveUser?.role})`}
             >
               <div className="w-8 h-8 rounded-full bg-google-blue text-white flex items-center justify-center font-bold text-xs">
-                {user?.name ? user.name[0].toUpperCase() : 'U'}
+                {effectiveUser?.name ? effectiveUser.name[0].toUpperCase() : 'U'}
               </div>
             </div>
           ) : (
@@ -275,7 +263,7 @@ export const AppShell: React.FC<AppShellProps> = ({
         setIsNewMenuOpen={setIsNewMenuOpen}
         setIsCreateClassOpen={() => {}}
         navItems={navItems}
-        user={user}
+        user={effectiveUser}
         handleLogout={handleLogout}
         onNavigate={handleSidebarNavigation}
       />
@@ -284,9 +272,9 @@ export const AppShell: React.FC<AppShellProps> = ({
       <div
         id="main-scroll"
         suppressHydrationWarning
-        className={`absolute inset-0 pt-16 overflow-hidden ${
-          isMounted ? 'transition-all duration-300 ease-in-out' : ''
-        } ${sidebarCollapsed ? 'md:pl-[64px]' : 'md:pl-[220px]'}`}
+        className={`absolute inset-0 pt-16 overflow-hidden transition-[padding-left] duration-200 ease-in-out ${
+          sidebarCollapsed ? 'md:pl-[64px]' : 'md:pl-[220px]'
+        }`}
       >
         <div className="mr-0 h-full flex flex-col">
           {/* Inner Google White Sheet Canvas */}
