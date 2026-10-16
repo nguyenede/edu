@@ -163,7 +163,7 @@ export default function Error({
                 </div>
                 <div>
                   <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 group-hover:text-google-blue transition-colors">
-                    Kho tài liệu và Đề thi
+                    Kho tài liệu
                   </h3>
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 line-clamp-1">
                     Soạn đề thi SI chuẩn Bộ GD&ĐT, lưu trữ tệp đề

@@ -1610,7 +1610,7 @@ function DocumentsPageContent() {
 
   if (user && !isTeacher) {
     return (
-      <AppShell title="Kho tài liệu và Đề thi">
+      <AppShell title="Kho tài liệu">
         <div className="flex flex-col items-center justify-center py-24 px-4 text-center space-y-4">
           <div className="w-16 h-16 rounded-2xl bg-amber-50 dark:bg-amber-950/50 flex items-center justify-center text-amber-600">
             <Lock size={32} />

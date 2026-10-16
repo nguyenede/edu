@@ -83,7 +83,7 @@ export const AppShell: React.FC<AppShellProps> = ({
     { label: 'Lớp học của tôi', href: '/classes', icon: GraduationCap },
     ...(isTeacher
       ? [
-          { label: 'Kho tài liệu và Đề thi', href: '/documents', icon: FileText },
+          { label: 'Kho tài liệu', href: '/documents', icon: FileText },
           { label: 'Ngân hàng câu hỏi', href: '/question-bank', icon: BookOpen },
         ]
       : []),
