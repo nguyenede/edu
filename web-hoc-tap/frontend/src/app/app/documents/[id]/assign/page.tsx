@@ -898,7 +898,7 @@ function AssignPageContent() {
                                   : `Lớp ${rawName}`;
                                 return {
                                   value: cls.id,
-                                  label: `${displayName} • ${cls._count?.members || 0} học sinh`,
+                                  label: displayName,
                                 };
                               })}
                             />
@@ -1206,7 +1206,7 @@ function AssignPageContent() {
                       {displayTitle}
                     </h3>
                     <p className="text-xs text-slate-400 mt-0.5">
-                      {questionsCount} câu hỏi &bull; {fileItem.parsedQuiz?.durationMinutes || 45} phút
+                      {questionsCount} câu hỏi, {fileItem.parsedQuiz?.durationMinutes || 45} phút
                     </p>
                   </div>
                 </div>
