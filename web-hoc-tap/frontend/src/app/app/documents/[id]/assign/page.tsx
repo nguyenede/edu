@@ -561,7 +561,8 @@ function AssignPageContent() {
           <button
             type="button"
             onClick={() => router.push(`/documents/${encodeURIComponent(fileId)}`)}
-            className="transition-colors cursor-pointer px-2 py-0.5 rounded-xl hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-900 dark:text-white font-normal truncate max-w-xs md:max-w-md"
+            className="transition-colors cursor-pointer px-2 py-0.5 rounded-xl hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-900 dark:text-white font-normal truncate-tight max-w-xs sm:max-w-md md:max-w-xl lg:max-w-3xl xl:max-w-5xl text-left"
+            title={displayTitle}
           >
             {displayTitle}
           </button>

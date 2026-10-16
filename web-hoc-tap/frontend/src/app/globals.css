@@ -107,6 +107,17 @@ html.dark .border-zinc-800 {
   scrollbar-gutter: stable;
 }
 
+/* Truncate text cleanly so ellipsis is tightly attached to the word without floating whitespace */
+.truncate-tight {
+  display: -webkit-box !important;
+  -webkit-box-orient: vertical !important;
+  -webkit-line-clamp: 1 !important;
+  line-clamp: 1 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  word-break: break-word !important;
+}
+
 button:focus,
 input:focus,
 select:focus,

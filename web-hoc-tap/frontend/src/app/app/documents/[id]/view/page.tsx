@@ -18,6 +18,7 @@ import {
   Loader2,
   Send,
   Gamepad2,
+  Play,
   Lock,
 } from 'lucide-react';
 import { ParsedQuiz } from '@/lib/docParser';
@@ -715,41 +716,62 @@ function DocumentDynamicViewPageContent() {
             }}
             onNavigateFile={(id) => router.push(`/documents/${id}`)}
           />
-          <span className="px-2 py-0.5 rounded-xl text-slate-900 dark:text-white font-normal truncate max-w-xs md:max-w-md">
+          <span
+            className="px-2 py-0.5 rounded-xl text-slate-900 dark:text-white font-normal truncate-tight max-w-xs sm:max-w-md md:max-w-xl lg:max-w-3xl xl:max-w-5xl"
+            title={displayTitle}
+          >
             {displayTitle}
           </span>
         </div>
       }
       action={
-        <div className="flex items-center gap-2">
-          <Button
-            variant="primary"
-            size="sm"
-            onClick={() => router.push(`/documents/${encodeURIComponent(fileId)}/assign`)}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white font-medium shadow-xs"
-            title="Giao bài tập phong cách Blooket"
-          >
-            <Send size={15} className="mr-1.5" />
-            Giao bài tập
-          </Button>
+        <div className="flex items-center gap-2 sm:gap-2.5">
           <Button
             variant="outline"
             size="sm"
             onClick={handleDownloadJson}
             title="Tải xuống tệp JSON"
+            className="rounded-xl text-xs gap-1.5 hidden md:inline-flex"
           >
-            <Download size={15} className="mr-1.5" />
+            <Download size={14} />
             Tải JSON
           </Button>
+
           <Button
             variant="outline"
             size="sm"
             onClick={handlePrint}
             title="In đề thi"
+            className="rounded-xl text-xs gap-1.5 hidden md:inline-flex"
           >
-            <Printer size={15} className="mr-1.5" />
+            <Printer size={14} />
             In đề
           </Button>
+
+          {/* Blooket-style Assign & Host Combo */}
+          <div className="flex items-center bg-white dark:bg-[#1f2023] border border-slate-200/90 dark:border-slate-800 rounded-2xl p-1 shadow-2xs">
+            <button
+              type="button"
+              onClick={() => router.push(`/documents/${encodeURIComponent(fileId)}/assign`)}
+              className="px-3.5 py-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold text-xs sm:text-sm flex items-center gap-2 transition-colors cursor-pointer select-none"
+              title="Giao bài tập về nhà (Assign)"
+            >
+              <FileText size={17} className="text-slate-600 dark:text-slate-300" />
+              <span>Assign</span>
+            </button>
+
+            <div className="h-5 w-[1px] bg-slate-200 dark:bg-slate-700 mx-1" />
+
+            <button
+              type="button"
+              onClick={() => router.push(`/app/games?examId=${encodeURIComponent(fileId)}`)}
+              className="px-4 py-1.5 rounded-xl bg-[#00c0b6] hover:bg-[#00ad9e] text-white font-black text-xs sm:text-sm flex items-center gap-1.5 shadow-[0_3px_0_#009ca8] active:translate-y-[2px] active:shadow-[0_1px_0_#009ca8] transition-all cursor-pointer select-none"
+              title="Tổ chức trò chơi trực tiếp (Host Game)"
+            >
+              <Play size={15} className="fill-current text-white ml-0.5" />
+              <span>Host</span>
+            </button>
+          </div>
         </div>
       }
     >

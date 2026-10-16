@@ -183,7 +183,11 @@ export default function GamesHubPage() {
         const validExams = Array.from(docMap.values());
         setExams(validExams);
         if (validExams.length > 0) {
-          setSelectedExamId(validExams[0].id);
+          const targetFromQuery = typeof window !== 'undefined'
+            ? new URLSearchParams(window.location.search).get('examId')
+            : null;
+          const matched = targetFromQuery ? validExams.find((e) => e.id === targetFromQuery) : null;
+          setSelectedExamId(matched ? matched.id : validExams[0].id);
         }
       } catch (err) {
         console.error('Error loading documents for games:', err);
@@ -610,7 +614,8 @@ export default function GamesHubPage() {
             <button
               type="button"
               onClick={() => setIsConfigModalOpen(false)}
-              className="transition-all cursor-pointer px-2 py-0.5 rounded-xl text-slate-900 dark:text-white font-semibold hover:bg-slate-200/70 dark:hover:bg-slate-800 truncate max-w-xs md:max-w-md"
+              className="transition-all cursor-pointer px-2 py-0.5 rounded-xl text-slate-900 dark:text-white font-semibold hover:bg-slate-200/70 dark:hover:bg-slate-800 truncate-tight max-w-xs sm:max-w-md md:max-w-xl lg:max-w-3xl xl:max-w-5xl text-left"
+              title={getCategoryMeta(activeCategory).title}
             >
               {getCategoryMeta(activeCategory).title}
             </button>

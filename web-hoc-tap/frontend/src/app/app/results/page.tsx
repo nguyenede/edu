@@ -434,7 +434,10 @@ export default function ResultsPage() {
                   onClick: () => setSelectedClassId(c.id),
                 }))}
               />
-              <span className="px-2 py-0.5 rounded-xl text-slate-900 dark:text-white font-normal truncate max-w-xs md:max-w-md">
+              <span
+                className="px-2 py-0.5 rounded-xl text-slate-900 dark:text-white font-normal truncate-tight max-w-xs sm:max-w-md md:max-w-xl lg:max-w-3xl xl:max-w-5xl"
+                title={selectedClass.name}
+              >
                 {selectedClass.name}
               </span>
             </>
