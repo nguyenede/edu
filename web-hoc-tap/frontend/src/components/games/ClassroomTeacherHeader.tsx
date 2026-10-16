@@ -12,6 +12,7 @@ import {
   Shuffle,
   Type,
   ArrowLeft,
+  ChevronRight,
 } from 'lucide-react';
 
 export interface ClassroomTeam {
@@ -84,14 +85,14 @@ export const ClassroomTeacherHeader: React.FC<ClassroomTeacherHeaderProps> = ({
             <button
               type="button"
               onClick={onBack}
-              className="text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 transition-colors cursor-pointer shrink-0"
+              className="text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors cursor-pointer shrink-0"
             >
               Trò chơi lớp học
             </button>
           ) : (
-            <span className="text-slate-500 dark:text-slate-400 shrink-0">Trò chơi lớp học</span>
+            <span className="text-slate-600 dark:text-slate-400 shrink-0">Trò chơi lớp học</span>
           )}
-          <span className="text-slate-400 dark:text-slate-500 font-normal">/</span>
+          <ChevronRight size={14} className="text-slate-400 dark:text-slate-500 shrink-0" />
           <span className="font-normal text-slate-900 dark:text-white truncate">
             {gameShortName || title}
           </span>
