@@ -11,7 +11,6 @@ import {
   ShieldAlert,
   ShieldCheck,
   Clock,
-  CheckCircle2,
   XCircle,
   AlertTriangle,
   Award,
@@ -864,21 +863,6 @@ function BlooketPlayContent() {
               </div>
             </div>
 
-            {/* Anti-Cheating Audit Summary */}
-            {homework?.antiCheating && (
-              <div className="p-3 bg-slate-50 dark:bg-slate-900/60 rounded-xl border border-slate-200/60 dark:border-slate-800 text-xs flex items-center justify-between">
-                <span className="text-slate-500">Giám sát chống gian lận:</span>
-                {violationCount === 0 ? (
-                  <span className="text-emerald-600 font-bold flex items-center gap-1">
-                    <CheckCircle2 size={14} /> 0 vi phạm (Trung thực)
-                  </span>
-                ) : (
-                  <span className="text-red-500 font-bold flex items-center gap-1">
-                    <AlertTriangle size={14} /> Rời màn hình {violationCount} lần
-                  </span>
-                )}
-              </div>
-            )}
 
             {/* Actions */}
             <div className="flex items-center gap-3 pt-2">
