@@ -797,21 +797,18 @@ function DocumentDynamicViewPageContent() {
 
           {/* Quick Metrics (Frameless & Clean) */}
           <div className="flex items-center gap-6 sm:gap-8 flex-wrap pt-1 text-xs">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5" title="Tổng số câu">
               <Layers size={17} className="text-google-blue shrink-0" />
-              <span className="text-slate-500 dark:text-slate-400">Tổng số câu:</span>
               <span className="font-bold text-slate-800 dark:text-slate-200">{questions.length} câu</span>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5" title="Tổng điểm">
               <Award size={17} className="text-google-yellow shrink-0" />
-              <span className="text-slate-500 dark:text-slate-400">Tổng điểm:</span>
               <span className="font-bold text-slate-800 dark:text-slate-200">{totalPoints} điểm</span>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5" title="Ngày tạo">
               <Clock size={17} className="text-emerald-500 shrink-0" />
-              <span className="text-slate-500 dark:text-slate-400">Ngày tạo:</span>
               <span className="font-bold text-slate-800 dark:text-slate-200">
                 {fileItem.createdAt ? new Date(fileItem.createdAt).toLocaleDateString('vi-VN') : 'Mới tạo'}
               </span>
