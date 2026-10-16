@@ -1197,22 +1197,17 @@ function AssignPageContent() {
             {/* CỘT PHẢI (4 COLS): TỔNG QUAN TÀI LIỆU & NÚT TẠO (GỌN GÀNG, KHÔNG KHUNG HỘP DÀY) */}
             <div className="lg:col-span-4 space-y-6 sticky top-6">
               <div className="bg-slate-50/70 dark:bg-slate-900/40 rounded-3xl p-6 sm:p-7 space-y-5">
-                <div className="space-y-3">
-                  <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
-                    Đề thi gốc
-                  </span>
-                  <div className="flex items-start gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-blue-600 dark:bg-blue-500 text-white flex items-center justify-center shrink-0 shadow-sm">
-                      <FileText size={20} className="text-white" />
-                    </div>
-                    <div className="min-w-0">
-                      <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 truncate" title={displayTitle}>
-                        {displayTitle}
-                      </h3>
-                      <p className="text-xs text-slate-400 mt-0.5">
-                        {questionsCount} câu hỏi &bull; {fileItem.parsedQuiz?.durationMinutes || 45} phút
-                      </p>
-                    </div>
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-blue-600 dark:bg-blue-500 text-white flex items-center justify-center shrink-0 shadow-sm">
+                    <FileText size={20} className="text-white" />
+                  </div>
+                  <div className="min-w-0">
+                    <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 truncate" title={displayTitle}>
+                      {displayTitle}
+                    </h3>
+                    <p className="text-xs text-slate-400 mt-0.5">
+                      {questionsCount} câu hỏi &bull; {fileItem.parsedQuiz?.durationMinutes || 45} phút
+                    </p>
                   </div>
                 </div>
 
