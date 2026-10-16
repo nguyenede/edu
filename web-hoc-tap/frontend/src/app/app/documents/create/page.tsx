@@ -701,32 +701,15 @@ function DocumentCreateContent() {
 
             {/* AI Exam Generated Success Box */}
             {createdExamResult && (
-              <div className="mt-4 p-5 bg-emerald-50/90 dark:bg-emerald-950/40 rounded-2xl border border-emerald-300 dark:border-emerald-800 space-y-3 shadow-xs">
+              <div className="mt-4 p-4 bg-emerald-50/70 dark:bg-emerald-950/30 rounded-2xl border border-emerald-200 dark:border-emerald-900/50 space-y-3">
                 <div className="flex items-center gap-3">
-                  <CheckCircle2 size={26} className="text-google-green shrink-0" />
+                  <CheckCircle2 size={22} className="text-google-green shrink-0" />
                   <div className="text-left flex-1 min-w-0">
-                    <div className="flex flex-wrap items-center gap-1.5 mb-1">
-                      {createdExamResult.method === 'algorithm' ? (
-                        <span className="px-2 py-0.5 rounded-md text-[11px] font-bold bg-blue-100 dark:bg-blue-900/60 text-blue-800 dark:text-blue-200 flex items-center gap-1">
-                          ⚡ Thuật toán bóc tách file ({createdExamResult.parserUsed || '100% dữ liệu gốc'})
-                        </span>
-                      ) : (
-                        <span className="px-2 py-0.5 rounded-md text-[11px] font-bold bg-purple-100 dark:bg-purple-900/60 text-purple-800 dark:text-purple-200 flex items-center gap-1">
-                          ✨ Nhận diện qua SI
-                        </span>
-                      )}
-                      <span className="px-2 py-0.5 rounded-md text-[11px] font-bold bg-emerald-200/80 dark:bg-emerald-900/60 text-emerald-900 dark:text-emerald-100">
-                        {createdExamResult.subject || 'Kiến thức tổng hợp'}
-                      </span>
-                      <span className="px-2 py-0.5 rounded-md text-[11px] font-semibold bg-slate-200/70 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
-                        {createdExamResult.grade || 'Tự do'}
-                      </span>
-                    </div>
-                    <h4 className="text-sm font-bold text-slate-900 dark:text-white truncate">
+                    <h4 className="text-sm font-semibold text-slate-900 dark:text-white truncate">
                       {createdExamResult.title}
                     </h4>
-                    <p className="text-xs text-emerald-700 dark:text-emerald-300 font-medium">
-                      Đã nhận diện thành công {createdExamResult.questionCount} câu hỏi chuẩn xác từ tài liệu!
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                      {createdExamResult.questionCount} câu hỏi
                     </p>
                   </div>
                 </div>
@@ -745,14 +728,14 @@ function DocumentCreateContent() {
                   <Button
                     size="sm"
                     variant="outline"
-                    className="border-emerald-300 dark:border-emerald-700 text-emerald-800 dark:text-emerald-200 font-bold hover:bg-emerald-100/50"
+                    className="text-xs font-medium"
                     onClick={() => setIsPreviewModalOpen(true)}
                   >
-                    Xem trước {createdExamResult.questionCount} câu
+                    Xem trước ({createdExamResult.questionCount} câu)
                   </Button>
                   <Button
                     size="sm"
-                    className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold"
+                    className="bg-google-blue hover:bg-[#1557b0] text-white text-xs font-medium"
                     onClick={() => router.push(createdExamResult.examUrl)}
                   >
                     Vào xem đề
@@ -868,7 +851,7 @@ function DocumentCreateContent() {
             onClose={() => setIsPreviewModalOpen(false)}
             maxWidth="3xl"
             title={parsedExamData.title || 'Xem trước & Chỉnh sửa câu hỏi'}
-            description={`Đã trích xuất ${parsedExamData.questions.length} câu hỏi • Thời gian làm bài: ${parsedExamData.durationMinutes || 45} phút`}
+            description={`Đã trích xuất ${parsedExamData.questions.length} câu hỏi, thời gian làm bài: ${parsedExamData.durationMinutes || 45} phút`}
           >
             {/* Top Toolbar */}
             <div className="flex flex-wrap items-center justify-between gap-3 pb-3 pt-1">
