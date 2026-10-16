@@ -1,30 +1,45 @@
 'use client';
 
-import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useState, useEffect, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { AppShell } from '@/components/AppShell';
 import { BreadcrumbChevron } from '@/components/BreadcrumbChevron';
 import { useAuthStore } from '@/store/useAuthStore';
 import { Button } from '@/components/Button';
 import { Input } from '@/components/Input';
-import { ArrowLeft, Users, Check, ChevronRight, PlusCircle, LogIn } from 'lucide-react';
+import { Users, Check, PlusCircle, LogIn } from 'lucide-react';
 import { joinClass } from '@/lib/classesApi';
 
-export default function JoinClassPage() {
+function JoinClassContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { token } = useAuthStore();
-  const [joinCode, setJoinCode] = useState('');
+  const codeParam = searchParams.get('code') || '';
+  const [joinCode, setJoinCode] = useState(codeParam.replace(/\D/g, ''));
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [toast, setToast] = useState(false);
 
+  useEffect(() => {
+    if (codeParam) {
+      setJoinCode(codeParam.replace(/\D/g, ''));
+    }
+  }, [codeParam]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!joinCode.trim()) return;
+
+    const activeToken = token || (typeof window !== 'undefined' ? localStorage.getItem('token') : null);
+    if (!activeToken) {
+      router.push(`/login?returnUrl=${encodeURIComponent(`/app/classes/join?code=${joinCode.trim()}`)}`);
+      return;
+    }
+
     setErrorMsg(null);
     setLoading(true);
     try {
-      await joinClass(token, joinCode.trim().toUpperCase());
+      await joinClass(activeToken, joinCode.trim().toUpperCase());
       setToast(true);
       setTimeout(() => {
         router.push('/app/classes');
@@ -99,5 +114,13 @@ export default function JoinClassPage() {
         </div>
       </div>
     </AppShell>
+  );
+}
+
+export default function JoinClassPage() {
+  return (
+    <Suspense fallback={null}>
+      <JoinClassContent />
+    </Suspense>
   );
 }

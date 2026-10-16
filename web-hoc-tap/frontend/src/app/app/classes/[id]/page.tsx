@@ -304,7 +304,7 @@ export default function ClassDetailPage() {
 
       if (detail?.code) {
         const joinUrl = typeof window !== 'undefined' ? `${window.location.origin}/app/classes/join?code=${detail.code}` : detail.code;
-        QRCode.toDataURL(joinUrl, { width: 220, margin: 1 }).then((url) => setQrDataUrl(url)).catch(() => {});
+        QRCode.toDataURL(joinUrl, { width: 320, margin: 2 }).then((url) => setQrDataUrl(url)).catch(() => {});
       }
     } catch (err) {
       console.error('Error fetching class data:', err);
@@ -326,6 +326,14 @@ export default function ClassDetailPage() {
     navigator.clipboard.writeText(url);
     setCopiedLink(true);
     setTimeout(() => setCopiedLink(false), 2000);
+  };
+
+  const handleDownloadQr = () => {
+    if (!qrDataUrl) return;
+    const a = document.createElement('a');
+    a.href = qrDataUrl;
+    a.download = `QR_Lop_${clazz?.code || 'Class'}_${(clazz?.name || '').slice(0, 20)}.png`;
+    a.click();
   };
 
   // ==================== ASSIGNMENT HANDLERS ====================
@@ -921,37 +929,77 @@ export default function ClassDetailPage() {
         maxWidth="md"
       >
         <div className="space-y-4 pt-1 text-center">
-          <p className="text-xs text-slate-500">
-            Học sinh có thể quét mã QR hoặc dùng mã lớp để tham gia.
-          </p>
+          {/* Mã tham gia lớp học box - Đã chuyển lên đầu & bấm để sao chép như giao bài tập */}
+          <div
+            onClick={handleCopyCode}
+            className="p-3.5 rounded-2xl bg-blue-50/90 dark:bg-blue-950/40 border border-blue-200/70 dark:border-blue-900/60 text-center cursor-pointer hover:bg-blue-100/70 dark:hover:bg-blue-900/40 transition-colors select-none"
+            title="Bấm để sao chép mã lớp"
+          >
+            <span className="text-[10px] text-blue-600 dark:text-blue-400 font-bold uppercase tracking-wider block">
+              Mã tham gia lớp học
+            </span>
+            <div className="text-3xl sm:text-4xl font-mono font-black text-blue-700 dark:text-blue-300 tracking-widest mt-0.5">
+              {clazz?.code}
+            </div>
+            {copiedCode && (
+              <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 mt-1 inline-block animate-pulse">
+                ✓ Đã sao chép mã lớp
+              </span>
+            )}
+          </div>
 
-          {qrDataUrl && (
-            <div className="p-3 bg-white rounded-xl inline-block border border-slate-100 mx-auto">
-              <img src={qrDataUrl} alt="Mã QR" className="w-44 h-44 mx-auto" />
+          {qrDataUrl ? (
+            <div className="p-4 bg-white rounded-3xl inline-block mx-auto shadow-md border border-slate-200/80">
+              <img src={qrDataUrl} alt="Mã QR tham gia lớp" className="w-56 h-56 mx-auto object-contain" />
+            </div>
+          ) : (
+            <div className="w-56 h-56 bg-slate-100 dark:bg-slate-800 rounded-2xl flex items-center justify-center mx-auto text-xs text-slate-400">
+              Đang tạo mã QR...
             </div>
           )}
 
-          <div className="flex items-center justify-between p-3 rounded-lg bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800">
-            <div className="text-left">
-              <span className="text-[10px] text-slate-400 font-semibold uppercase">Mã lớp</span>
-              <div className="text-sm font-mono font-bold text-blue-600">{clazz.code}</div>
+          {/* Link box */}
+          <div className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/70 dark:border-white/10">
+            <div className="text-left truncate mr-2">
+              <span className="text-[10px] text-slate-400 font-semibold uppercase block">
+                Đường dẫn tham gia
+              </span>
+              <div className="text-xs text-slate-600 dark:text-zinc-300 font-medium truncate">
+                {typeof window !== 'undefined' ? `${window.location.origin}/app/classes/join?code=${clazz?.code}` : ''}
+              </div>
             </div>
-            <Button size="sm" onClick={handleCopyCode} className="gap-1.5">
-              {copiedCode ? <Check size={13} /> : <Copy size={13} />}
-              <span>{copiedCode ? 'Đã chép' : 'Sao chép mã'}</span>
+            <Button variant="secondary" size="sm" onClick={handleCopyLink} className="gap-1 shrink-0 rounded-xl">
+              {copiedLink ? <Check size={14} /> : <Copy size={14} />}
+              <span>{copiedLink ? 'Đã chép' : 'Chép link'}</span>
             </Button>
           </div>
 
-          <div className="flex items-center justify-between p-3 rounded-lg bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800">
-            <div className="text-left truncate mr-2">
-              <span className="text-[10px] text-slate-400 font-semibold uppercase">Link tham gia</span>
-              <div className="text-xs text-slate-500 truncate">
-                {typeof window !== 'undefined' ? `${window.location.origin}/app/classes/join?code=${clazz.code}` : ''}
-              </div>
-            </div>
-            <Button variant="secondary" size="sm" onClick={handleCopyLink} className="gap-1 shrink-0">
-              {copiedLink ? <Check size={13} /> : <Copy size={13} />}
-              <span>{copiedLink ? 'Đã chép' : 'Chép link'}</span>
+          {/* Action buttons */}
+          <div className="flex items-center justify-center gap-2 pt-1 flex-wrap">
+            {qrDataUrl && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleDownloadQr}
+                className="rounded-xl text-xs gap-1.5"
+                title="Tải ảnh QR về máy để in hoặc chia sẻ"
+              >
+                <Download size={14} />
+                <span>Tải ảnh QR về máy</span>
+              </Button>
+            )}
+
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={() => {
+                const url = `/app/classes/join?code=${clazz?.code}`;
+                window.open(url, '_blank');
+              }}
+              className="rounded-xl text-xs gap-1.5 bg-google-blue hover:bg-[#1557b0] text-white"
+            >
+              <ExternalLink size={14} />
+              <span>Mở thử liên kết</span>
             </Button>
           </div>
         </div>
