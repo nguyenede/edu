@@ -201,8 +201,14 @@ export class ExamParser {
 
     while ((m = questionRegex.exec(text)) !== null) {
       const matchIndex = m.index;
-      // Bỏ qua nếu xuất hiện trong phần tiêu đề bài giảng ở đầu tài liệu
+      // Bỏ qua nếu xuất hiện trong phần tiêu đề bài giảng ở đầu tài liệu hoặc là mục lý thuyết
       if (matchIndex < 250 && /(?:chuyên\s*đề|bài\s*học|chương\s*\d+|lý\s*thuyết\s*trọng\s*tâm)/i.test(m[0])) {
+        continue;
+      }
+
+      // Bỏ qua các tiêu đề mục lý thuyết dạng "1. Bất đẳng thức", "2. Liên hệ...", "3. Định nghĩa..."
+      const isPlainNumberPrefix = !m[1] && !m[2] && !m[3] && !m[5];
+      if (isPlainNumberPrefix && /(?:Bất\s*đẳng\s*thức|Liên\s*hệ|Lý\s*thuyết|Khái\s*niệm|Trọng\s*tâm|Định\s*nghĩa|Tính\s*chất|Quy\s*tắc)\b/i.test(text.substring(matchIndex + m[0].length, matchIndex + m[0].length + 50))) {
         continue;
       }
 
@@ -305,10 +311,19 @@ export class ExamParser {
   ): AzotaQuestion {
     const level = extractCognitiveLevel(rawLabel || '') || extractCognitiveLevel(blockText);
 
+    // Trích xuất lời giải nội bộ trong câu hỏi nếu có (ví dụ: "Lời giải: ...", "Hướng dẫn giải: ...")
+    let inlineExplanation: string | undefined;
+    let workingText = blockText;
+    const expMatch = blockText.match(AZOTA_PATTERNS.INLINE_EXPLANATION);
+    if (expMatch && expMatch.index !== undefined) {
+      inlineExplanation = this.sanitizeContent(expMatch[1]);
+      workingText = blockText.substring(0, expMatch.index).trim();
+    }
+
     // 1. Nhận diện các phương án trắc nghiệm A, B, C, D (UPPERCASE A-H)
     // Hỗ trợ cả định dạng tiêu chuẩn A. / A) và định dạng bảng [*A: ... / [A: ...]
     const optionSplitsRegex = /(?:^|[\s\n|])(\*?[A-H])[\s]*([.)]|:)\s+/g;
-    const allMatches = Array.from(blockText.matchAll(optionSplitsRegex));
+    const allMatches = Array.from(workingText.matchAll(optionSplitsRegex));
 
     // Tìm phương án A đầu tiên (bỏ qua các điểm hình học B, C, D xuất hiện trước A như "vuông tại B.")
     const firstAIdx = allMatches.findIndex((m) => m[1].replace('*', '').toUpperCase() === 'A');
@@ -330,14 +345,14 @@ export class ExamParser {
 
       if (validMatches.length >= 2) {
         const firstOptIndex = validMatches[0].index!;
-        const prompt = blockText.substring(0, firstOptIndex).trim();
+        const prompt = workingText.substring(0, firstOptIndex).trim();
         const options: ParsedOption[] = [];
 
         for (let o = 0; o < validMatches.length; o++) {
           const curOpt = validMatches[o];
           const nextOpt = o < validMatches.length - 1 ? validMatches[o + 1] : null;
-          const endOpt = nextOpt ? nextOpt.index : blockText.length;
-          const optRawContent = blockText.substring(curOpt.index! + curOpt[0].length, endOpt).trim();
+          const endOpt = nextOpt ? nextOpt.index : workingText.length;
+          const optRawContent = workingText.substring(curOpt.index! + curOpt[0].length, endOpt).trim();
 
           const rawMarker = curOpt[1];
           const isStar = rawMarker.startsWith('*');
@@ -359,25 +374,26 @@ export class ExamParser {
           level,
           rawLabel,
           options,
+          explanation: inlineExplanation,
         };
       }
     }
 
     // 2. Kiểm tra xem có phải câu hỏi Đúng / Sai (các ý con a, b, c, d thường)
     const subItemRegex = /(?:^|[\s\n])([a-d])[\.\)]\s+/g;
-    const subMatches = Array.from(blockText.matchAll(subItemRegex));
+    const subMatches = Array.from(workingText.matchAll(subItemRegex));
 
     if (inheritedType === 'true_false' || (subMatches.length >= 3 && subMatches.length <= 4)) {
       const subQuestions: ParsedSubQuestion[] = [];
-      let questionPrompt = blockText;
+      let questionPrompt = workingText;
 
       if (subMatches.length > 0) {
-        questionPrompt = blockText.substring(0, subMatches[0].index).trim();
+        questionPrompt = workingText.substring(0, subMatches[0].index).trim();
         for (let s = 0; s < subMatches.length; s++) {
           const curSub = subMatches[s];
           const nextSub = s < subMatches.length - 1 ? subMatches[s + 1] : null;
-          const endSub = nextSub ? nextSub.index : blockText.length;
-          const subContent = blockText.substring(curSub.index! + curSub[0].length, endSub).trim();
+          const endSub = nextSub ? nextSub.index : workingText.length;
+          const subContent = workingText.substring(curSub.index! + curSub[0].length, endSub).trim();
           const letter = curSub[1].toLowerCase();
 
           // Kiểm tra xem có gắn nhãn Đúng hay Sai ở cuối ý không
@@ -399,15 +415,16 @@ export class ExamParser {
           rawLabel,
           options: [],
           subQuestions,
+          explanation: inlineExplanation,
         };
       }
     }
 
     // 3. Nếu là dạng trả lời ngắn (Short Answer)
-    const answerMatch = blockText.match(/(?:(?:Đáp\s*(?:án|số)|Kết\s*quả|Trả\s*lời|ĐS|Key)[\s:.-]*([^\n]+))/i);
+    const answerMatch = workingText.match(/(?:(?:Đáp\s*(?:án|số)|Kết\s*quả|Trả\s*lời|ĐS|Key)[\s:.-]*([^\n]+))/i);
     if (inheritedType === 'short_answer' || answerMatch) {
       const shortAnswer = answerMatch ? answerMatch[1].trim() : undefined;
-      const cleanPrompt = answerMatch ? blockText.replace(answerMatch[0], '').trim() : blockText;
+      const cleanPrompt = answerMatch ? workingText.replace(answerMatch[0], '').trim() : workingText;
 
       return {
         index: qIndex,
@@ -416,18 +433,20 @@ export class ExamParser {
         level,
         rawLabel,
         options: [],
-        shortAnswer
+        shortAnswer,
+        explanation: inlineExplanation,
       };
     }
 
     // 4. Mặc định là câu Tự luận (Essay)
     return {
       index: qIndex,
-      content: this.sanitizeContent(blockText),
+      content: this.sanitizeContent(workingText),
       type: 'essay',
       level,
       rawLabel,
       options: [],
+      explanation: inlineExplanation,
     };
   }
 
@@ -440,12 +459,12 @@ export class ExamParser {
 
     for (const pattern of AZOTA_PATTERNS.DAPAN_HEADER) {
       const match = fullText.match(pattern);
-      if (match && match.index !== undefined) {
+      if (match && match.index !== undefined && match.index > 200) {
         const headerIndex = match.index;
         const tailBlock = fullText.substring(headerIndex);
 
-        // Bắt các cặp "1.A", "2. B", "3 - C", "4: D", "1.A", "1-A"
-        const pairRegex = /(?:^|[\s,;|])(\d{1,4})[\s:.-]*([A-Ha-h])\b/g;
+        // Bắt các cặp đáp án chuẩn "1. A", "1 - A", "1: A", "Câu 1: A" (tránh ăn nhầm biểu thức đại số 2a, 3b)
+        const pairRegex = /(?:^|[\s,;|])(?:Câu\s*)?(\d{1,4})\s*[.:\)\-]\s*([A-Ha-h])\b/g;
         let pm: RegExpExecArray | null;
         while ((pm = pairRegex.exec(tailBlock)) !== null) {
           const qNum = parseInt(pm[1], 10);
@@ -461,7 +480,7 @@ export class ExamParser {
           for (let r = 0; r < rows.length - 1; r++) {
             const numTokens = rows[r].match(/\b\d+\b/g);
             const letterTokens = rows[r + 1].match(/\b[A-H]\b/gi);
-            if (numTokens && letterTokens && numTokens.length >= 2 && numTokens.length === letterTokens.length) {
+            if (numTokens && letterTokens && numTokens.length >= 3 && numTokens.length === letterTokens.length) {
               for (let k = 0; k < numTokens.length; k++) {
                 const qNum = parseInt(numTokens[k], 10);
                 const letter = letterTokens[k].toUpperCase();
@@ -471,9 +490,12 @@ export class ExamParser {
           }
         }
 
-        if (answerKeyMap.size > 0) {
+        // Bảng đáp án cuối đề hợp lệ phải có ít nhất 2 câu
+        if (answerKeyMap.size >= 2) {
           textWithoutAnswerKeys = fullText.substring(0, headerIndex).trim();
           break;
+        } else {
+          answerKeyMap.clear();
         }
       }
     }
@@ -507,24 +529,27 @@ export class ExamParser {
           }
         }
 
-        for (let j = 0; j < expMatches.length; j++) {
-          const currExp = expMatches[j];
-          const nextExp = j < expMatches.length - 1 ? expMatches[j + 1] : null;
-          const endExpIdx = nextExp ? nextExp.index : expTail.length;
-          const singleExp = expTail.substring(currExp.index + currExp.headerLen, endExpIdx).trim();
+        // Chỉ coi là phân mục giải thích cuối đề nếu có ít nhất 2 câu giải
+        if (expMatches.length >= 2) {
+          for (let j = 0; j < expMatches.length; j++) {
+            const currExp = expMatches[j];
+            const nextExp = j < expMatches.length - 1 ? expMatches[j + 1] : null;
+            const endExpIdx = nextExp ? nextExp.index : expTail.length;
+            const singleExp = expTail.substring(currExp.index + currExp.headerLen, endExpIdx).trim();
 
-          // Trích xuất đáp án đúng qua các mẫu HELP_ANS_PATTERNS chuẩn Azota
-          const cLetter = extractAnswerFromExplanationText(singleExp);
+            // Trích xuất đáp án đúng qua các mẫu HELP_ANS_PATTERNS chuẩn Azota
+            const cLetter = extractAnswerFromExplanationText(singleExp);
 
-          explanationMap.set(currExp.qNum, {
-            explanation: this.sanitizeContent(singleExp),
-            correctLetter: cLetter
-          });
-        }
+            explanationMap.set(currExp.qNum, {
+              explanation: this.sanitizeContent(singleExp),
+              correctLetter: cLetter
+            });
+          }
 
-        if (explanationMap.size > 0) {
-          textWithoutExplanations = fullText.substring(0, expHeaderIndex).trim();
-          break;
+          if (explanationMap.size > 0) {
+            textWithoutExplanations = fullText.substring(0, expHeaderIndex).trim();
+            break;
+          }
         }
       }
     }

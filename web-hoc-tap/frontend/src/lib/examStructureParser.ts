@@ -1936,7 +1936,7 @@ export function validateDeterministicResult(result: DeterministicExamResult | nu
     if (content.length < 6) return false;
 
     // Loại bỏ nếu là tiêu đề phân loại Dạng bài hoặc Lý thuyết thuần túy
-    if (/^(Dạng\s*\d+|[IVXLCDM]+\.|\d+\.\s*(Bất đẳng thức|Lý thuyết|Khái niệm|Trọng tâm))/i.test(content)) {
+    if (/^(Dạng\s*\d+|[IVXLCDM]+\.|\d+\.\s*(?:Bất\s*đẳng\s*thức|Lý\s*thuyết|Khái\s*niệm|Trọng\s*tâm|Liên\s*hệ|Định\s*nghĩa|Tính\s*chất))/i.test(content)) {
       return false;
     }
 

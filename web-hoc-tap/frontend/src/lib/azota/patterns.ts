@@ -60,27 +60,22 @@ export const AZOTA_PATTERNS = {
   GROUP_SHORT_ANSWER: /(trắc\s*nghiệm\s*trả\s*lời\s*ngắn|trả\s*lời\s*ngắn)/i,
   GROUP_ESSAY: /(tự\s*luận)/i,
 
-  // 4. Nhận diện tiêu đề bảng đáp án cuối đề
+  // 4. Nhận diện tiêu đề bảng đáp án cuối đề (phải là tiêu đề phân mục đứng đầu dòng)
   DAPAN_HEADER: [
-    /(bảng\s*đáp\s*án)/i,
-    /(đáp\s*án\s*và\s*hướng)/i,
-    /(đáp\s*án\s*[.:]?\s*$)/i,
-    /(answer\s*keys)/i,
-    /(khóa\s*câu\s*trắc\s*nghiệm)/i,
-    /(áp\s*án[^:])/i
+    /(?:^|\n)\s*(?:BẢNG\s*ĐÁP\s*ÁN|ĐÁP\s*ÁN\s*VÀ\s*HƯỚNG\s*DẪN\s*GIẢI|ANSWER\s*KEYS?|KHÓA\s*CÂU\s*TRẮC\s*NGHIỆM)\b/i,
+    /(?:^|\n)\s*(?:BẢNG\s*TRẢ\s*LỜI\s*TRẮC\s*NGHIỆM)\b/i,
+    /(?:^|\n)\s*ĐÁP\s*ÁN\s*[:.-]?\s*$/i
   ],
 
   // 5. Điểm kết thúc đề
   END_EXAM: /(?:^|\n)\s*(?:hết|hết|het|the\s*end|\-\-ht\-\-)\s*(?:\n|$)/i,
 
-  // 6. Tiêu đề lời giải chi tiết
+  // 6. Tiêu đề lời giải chi tiết ở cuối đề (phải là tiêu đề phân mục lớn, tránh cắt nhầm Lời giải nội bộ câu hỏi)
   EXPLANATION: [
-    /(hướng\s*dẫn\s*giải)/i,
-    /(lời\s*giải)/i,
-    /(giải\s*thích\s*chi\s*tiết)/i,
-    /(hd:)/i,
-    /(hướng\s*dẫn)/i
+    /(?:^|\n)\s*(?:HƯỚNG\s*DẪN\s*GIẢI\s*CHI\s*TIẾT|LỜI\s*GIẢI\s*CHI\s*TIẾT|GIẢI\s*THÍCH\s*CHI\s*TIẾT|HƯỚNG\s*DẪN\s*GIẢI|BẢNG\s*HƯỚNG\s*DẪN\s*GIẢI|ĐÁP\s*ÁN\s*VÀ\s*HƯỚNG\s*DẪN\s*GIẢI)\b/i,
+    /(?:^|\n)\s*(?:HƯỚNG\s*DẪN\s*CHI\s*TIẾT)\b/i
   ],
+  INLINE_EXPLANATION: /(?:^|\n)\s*(?:Lời\s*giải|Hướng\s*dẫn\s*giải|Giải\s*thích\s*chi\s*tiết|HD)[\s:.-]+([\s\S]*)$/i,
 
   // 7. Nhận diện đáp án trong lời giải (HELP_ANS_PATTERN trích từ Azota)
   HELP_ANS_PATTERNS: [

@@ -10,6 +10,9 @@ const MTEF_SYMBOL_MAP: Record<number, string> = {
   0x2264: '\\le ',
   0x2265: '\\ge ',
   0x2260: '\\ne ',
+  0x2212: '-', // Unicode minus sign
+  0x2013: '-', // En dash
+  0x2014: '-', // Em dash
   0x00b1: '\\pm ',
   0x221e: '\\infty ',
   0x2208: '\\in ',
@@ -102,7 +105,17 @@ export function cleanLeakedOleGarbage(str: string): string {
   res = res.replace(/\$?[^\s$]*Equation\.qoKDW[^\s$]*\$?/gi, ' ');
   res = res.replace(/\$?[^\s$]*TimesNewRomanSymbol[^\s$]*\$?/gi, ' ');
 
-  // 3. Dọn sạch dấu $ rỗng do chuỗi rác để lại
+  // 3. Dọn sạch rác KDWin / MTExtra font descriptor và toán tử bị nhân đôi từ OLE
+  res = res.replace(/o[0-9a-zA-Z]?KDWinAllMTExtra[A-Za-z0-9+/=_-]*/gi, '');
+  res = res.replace(/MTExtra[A-Za-z0-9+/=_-]*/gi, '');
+  res = res.replace(/[A-Za-z0-9+/]{16,}={0,2}/g, '');
+  res = res.replace(/<<+/g, ' < ');
+  res = res.replace(/>>+/g, ' > ');
+  res = res.replace(/==+/g, ' = ');
+  res = res.replace(/\+\++/g, ' + ');
+  res = res.replace(/--+/g, ' - ');
+
+  // 4. Dọn sạch dấu $ rỗng do chuỗi rác để lại
   res = res.replace(/\$\s*\$/g, '');
 
   return res.replace(/[ \t]+/g, ' ').trim();
@@ -326,9 +339,20 @@ export function parseMtefBinaryToLatex(buffer: ArrayBuffer | Uint8Array): string
       return extractHeuristicMathFromBytes(bytes);
     }
 
-    // 2. Duyệt qua các Record của MTEF
-    let pos = mtefPos + 5; // Bỏ qua 5 byte MTEF Header (version, platform, product, prod_version, prod_subversion)
-    const resultParts: string[] = [];
+    // 2. Tìm điểm bắt đầu thực sự của biểu thức toán học (Record 1: LINE)
+    // Trong MathType 5/6/7, sau MTEF Header và bảng Font (kết thúc bằng "MT Extra\0" hoặc danh sách font),
+    // biểu thức bắt đầu bằng record LINE [1, 0, ...]
+    let pos = mtefPos + 5;
+    const str = Buffer.from(bytes).toString('binary');
+    const mtExtraIdx = str.indexOf('MT Extra\0');
+    const searchFrom = mtExtraIdx !== -1 ? mtExtraIdx + 9 : mtefPos + 5;
+
+    for (let j = searchFrom; j < bytes.length - 3; j++) {
+      if (bytes[j] === 1 && bytes[j + 1] === 0 && (bytes[j + 2] === 2 || bytes[j + 2] === 3 || bytes[j + 2] === 1 || bytes[j + 2] === 10)) {
+        pos = j;
+        break;
+      }
+    }
 
     const parseContainer = (depth = 0): string => {
       let text = '';
@@ -341,7 +365,7 @@ export function parseMtefBinaryToLatex(buffer: ArrayBuffer | Uint8Array): string
           break;
         } else if (tag === 1) {
           // Record 1: LINE
-          // Tiếp tục đọc các phần tử trong dòng
+          if (pos < bytes.length) pos++; // Bỏ qua line options (0)
           const lineContent = parseContainer(depth + 1);
           text += lineContent;
         } else if (tag === 2) {
@@ -349,32 +373,34 @@ export function parseMtefBinaryToLatex(buffer: ArrayBuffer | Uint8Array): string
           if (pos >= bytes.length) break;
           const options = bytes[pos++];
 
-          // Nếu có custom font
-          if (options & 0x10) {
-            pos++; // Bỏ qua font index
+          // Bỏ qua typeface byte (luôn xuất hiện trong MTEF 5)
+          if (pos < bytes.length) {
+            pos++;
           }
 
           if (pos + 1 < bytes.length) {
             let charCode = bytes[pos] | (bytes[pos + 1] << 8);
             pos += 2;
 
+            // Bỏ qua embellishment byte nếu options có cờ 0x04
+            if (options & 4 && pos < bytes.length) {
+              pos++;
+            }
+
             // Xử lý charCode sang LaTeX
             text += formatMtefCharCode(charCode);
           }
         } else if (tag === 3) {
           // Record 3: TMPL (Template: Phân số, Căn thức, Lũy thừa, Chỉ số dưới...)
-          if (pos + 1 >= bytes.length) break;
+          if (pos + 3 >= bytes.length) break;
+          const _options = bytes[pos++];
           const selector = bytes[pos++];
-          const variation = bytes[pos++];
+          const _variation = bytes[pos++] | (bytes[pos++] << 8);
 
-          text += formatMtefTemplate(selector, variation, depth + 1);
-        } else if (tag === 4) {
-          // Record 4: PILE
-          pos++; // Bỏ qua alignment
-          text += parseContainer(depth + 1);
-        } else if (tag === 5) {
-          // Record 5: MATRIX
-          pos += 2; // Bỏ qua rows, cols
+          text += formatMtefTemplate(selector, _variation, depth + 1);
+        } else if (tag === 4 || tag === 5) {
+          // Record 4: PILE hoặc Record 5: MATRIX
+          pos += 2;
           text += parseContainer(depth + 1);
         } else if (tag === 6) {
           // Record 6: EMBELLISHMENT (dấu gạch ngang, vector, dấu phẩy...)
@@ -389,92 +415,99 @@ export function parseMtefBinaryToLatex(buffer: ArrayBuffer | Uint8Array): string
           // Record 7: RULER
           if (pos < bytes.length) {
             const nStops = bytes[pos++];
-            pos += nStops * 3; // Bỏ qua tab stops
+            pos += nStops * 3;
           }
         } else if (tag === 8) {
           // Record 8: FONT (Định nghĩa font chữ)
           if (pos < bytes.length) {
-            pos++; // Font index
-            // Bỏ qua tên font (chuỗi kết thúc bằng byte 0)
+            pos++;
             while (pos < bytes.length && bytes[pos] !== 0) {
               pos++;
             }
-            pos++; // Bỏ qua byte 0
+            pos++;
           }
         } else if (tag === 9) {
           // Record 9: SIZE
-          pos += 2; // Bỏ qua size params
+          pos += 2;
+        } else if (tag >= 10 && tag <= 14) {
+          // Record 10-14: SIZE records (FULL, SUB, SUB2, SYM, SUBSYM) có độ dài 0 byte
         } else {
-          // Các record khác (COLOR, FULL, SUB...): Bỏ qua an toàn
-          if (tag >= 10 && tag <= 16) {
-            pos++;
-          }
+          pos++;
         }
       }
       return text;
     };
 
+    const parseOneSlot = (depth: number): string => {
+      while (pos < bytes.length) {
+        const tag = bytes[pos++];
+        if (tag === 0) break;
+        if (tag >= 10 && tag <= 14) continue;
+        if (tag === 1) {
+          if (pos < bytes.length) pos++;
+          return parseContainer(depth);
+        }
+        pos--;
+        return parseContainer(depth);
+      }
+      return '';
+    };
+
     const formatMtefTemplate = (selector: number, _variation: number, depth: number): string => {
-      // Bóc tách cấu trúc theo template selector
-      if (selector === 6 || selector === 7) {
-        // PHÂN SỐ: \frac{tử}{mẫu}
-        const numerator = parseContainer(depth);
-        const denominator = parseContainer(depth);
-        return `\\frac{${numerator.trim()}}{${denominator.trim()}}`;
+      // Bóc tách cấu trúc theo template selector với từng slot độc lập
+      if (selector === 28 || selector === 8) {
+        // SỐ MŨ / LŨY THỪA: ^{...}
+        const sup = parseOneSlot(depth);
+        return `^{${sup.trim()}}`;
+      } else if (selector === 29 || selector === 9) {
+        // CHỈ SỐ DƯỚI: _{...}
+        const sub = parseOneSlot(depth);
+        return `_{${sub.trim()}}`;
+      } else if (selector === 30 || selector === 10) {
+        // CHỈ SỐ TRÊN VÀ DƯỚI: _{...}^{...}
+        const sub = parseOneSlot(depth);
+        const sup = parseOneSlot(depth);
+        return `_{${sub.trim()}}^{${sup.trim()}}`;
       } else if (selector === 4) {
         // CĂN BẬC HAI: \sqrt{...}
-        const inner = parseContainer(depth);
+        const inner = parseOneSlot(depth);
         return `\\sqrt{${inner.trim()}}`;
-      } else if (selector === 5) {
-        // CĂN BẬC N: \sqrt[n]{...}
-        const nIndex = parseContainer(depth);
-        const inner = parseContainer(depth);
-        return `\\sqrt[${nIndex.trim()}]{${inner.trim()}}`;
-      } else if (selector === 8) {
-        // SỐ MŨ / LŨY THỪA: ^{...}
-        const sup = parseContainer(depth);
-        return `^{${sup.trim()}}`;
-      } else if (selector === 9) {
-        // CHỈ SỐ DƯỚI: _{...}
-        const sub = parseContainer(depth);
-        return `_{${sub.trim()}}`;
-      } else if (selector === 10) {
-        // CHỈ SỐ TRÊN VÀ DƯỚI: _{...}^{...}
-        const sub = parseContainer(depth);
-        const sup = parseContainer(depth);
-        return `_{${sub.trim()}}^{${sup.trim()}}`;
+      } else if (selector === 5 || selector === 6 || selector === 7) {
+        // PHÂN SỐ: \frac{tử}{mẫu}
+        const num = parseOneSlot(depth);
+        const den = parseOneSlot(depth);
+        return `\\frac{${num.trim()}}{${den.trim()}}`;
       } else if (selector === 0) {
         // DẤU NGOẶC ĐƠN: (...)
-        const inner = parseContainer(depth);
-        return `(${inner.trim()})`;
+        const inner = parseOneSlot(depth);
+        return inner.trim() ? `(${inner.trim()})` : '';
       } else if (selector === 1) {
         // DẤU NGOẶC VUÔNG: [...]
-        const inner = parseContainer(depth);
-        return `[${inner.trim()}]`;
+        const inner = parseOneSlot(depth);
+        return inner.trim() ? `[${inner.trim()}]` : '';
       } else if (selector === 2) {
         // DẤU NGOẶC NHỌN: \{...\}
-        const inner = parseContainer(depth);
-        return `\\{${inner.trim()}\\}`;
+        const inner = parseOneSlot(depth);
+        return inner.trim() ? `\\{${inner.trim()}\\}` : '';
       } else if (selector === 3) {
         // DẤU GIÁ TRỊ TUYỆT ĐỐI: |...|
-        const inner = parseContainer(depth);
-        return `|${inner.trim()}|`;
+        const inner = parseOneSlot(depth);
+        return inner.trim() ? `|${inner.trim()}|` : '';
       } else if (selector === 11) {
         // TÍCH PHÂN: \int
-        const lower = parseContainer(depth);
-        const upper = parseContainer(depth);
-        const integrand = parseContainer(depth);
+        const lower = parseOneSlot(depth);
+        const upper = parseOneSlot(depth);
+        const integrand = parseOneSlot(depth);
         return `\\int_{${lower.trim()}}^{${upper.trim()}} ${integrand.trim()}`;
       } else if (selector === 12) {
         // TỔNG SIGMA: \sum
-        const lower = parseContainer(depth);
-        const upper = parseContainer(depth);
-        const expr = parseContainer(depth);
+        const lower = parseOneSlot(depth);
+        const upper = parseOneSlot(depth);
+        const expr = parseOneSlot(depth);
         return `\\sum_{${lower.trim()}}^{${upper.trim()}} ${expr.trim()}`;
       }
 
-      // Mặc định: parse các container con bên trong
-      return parseContainer(depth);
+      return parseOneSlot(depth);
     };
 
     const parsedLatex = parseContainer(0).trim();
@@ -582,6 +615,14 @@ function extractHeuristicMathFromBytes(bytes: Uint8Array): string {
     .replace(/MathType/gi, '')
     .replace(/Microsoft/gi, '')
     .replace(/Equation/gi, '')
+    .replace(/o[0-9a-zA-Z]?KDWinAllMTExtra[A-Za-z0-9+/=_-]*/gi, '')
+    .replace(/MTExtra[A-Za-z0-9+/=_-]*/gi, '')
+    .replace(/[A-Za-z0-9+/]{14,}={0,2}/g, '')
+    .replace(/<<+/g, ' < ')
+    .replace(/>>+/g, ' > ')
+    .replace(/==+/g, ' = ')
+    .replace(/\+\++/g, ' + ')
+    .replace(/--+/g, ' - ')
     .replace(/[\x00-\x1F]/g, '')
     .trim();
 
@@ -604,6 +645,7 @@ function sanitizeExtractedLatex(expr: string): string {
     .replace(/(?<!\\)<=|≤/g, ' \\le ')
     .replace(/(?<!\\)>=|≥/g, ' \\ge ')
     .replace(/(?<!\\)!=|≠/g, ' \\ne ')
+    .replace(/\[\s*\]|\(\s*\)/g, '')
     .trim();
 
   // Đóng gói công thức trong dấu $...$ nếu có ký hiệu toán

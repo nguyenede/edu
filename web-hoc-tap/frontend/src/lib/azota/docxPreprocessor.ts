@@ -37,8 +37,19 @@ export class DocxPreprocessor {
    * Trích xuất và tiền xử lý toàn diện file Word (.docx) sang văn bản Azota chuẩn hóa
    * Chuyển đổi công thức OMML/MathType sang LaTeX, trích xuất ảnh và bảng
    */
-  public static async preprocessDocx(fileOrBuffer: File | ArrayBuffer): Promise<DocxPreprocessResult> {
-    const zip = await JSZip.loadAsync(fileOrBuffer);
+  public static async preprocessDocx(fileOrBuffer: File | Blob | ArrayBuffer | Uint8Array): Promise<DocxPreprocessResult> {
+    let buffer: ArrayBuffer;
+    if (fileOrBuffer instanceof ArrayBuffer) {
+      buffer = fileOrBuffer;
+    } else if (fileOrBuffer instanceof Uint8Array) {
+      buffer = fileOrBuffer.buffer.slice(fileOrBuffer.byteOffset, fileOrBuffer.byteOffset + fileOrBuffer.byteLength) as ArrayBuffer;
+    } else if (typeof (fileOrBuffer as any).arrayBuffer === 'function') {
+      buffer = await (fileOrBuffer as any).arrayBuffer();
+    } else {
+      buffer = (fileOrBuffer as unknown) as ArrayBuffer;
+    }
+
+    const zip = await JSZip.loadAsync(buffer);
     const images = new Map<string, string>();
     let mathCount = 0;
     let tableCount = 0;
@@ -54,14 +65,30 @@ export class DocxPreprocessor {
       });
     }
 
-    // 2. Trích xuất tất cả hình ảnh từ word/media/
-    const filePaths = Object.keys(zip.files);
-    for (let f = 0; f < filePaths.length; f++) {
-      const path = filePaths[f];
-      if (path.startsWith('word/media/')) {
-        const fileEntry = zip.file(path);
+    // 2. Đọc nội dung chính word/document.xml
+    const docFile = zip.file('word/document.xml');
+    if (!docFile) {
+      return { text: '', images, mathCount, tableCount };
+    }
+
+    let docXml = await docFile.async('text');
+
+    // 3. Trích xuất chỉ những hình ảnh thực sự được nhúng trong tài liệu (qua <a:blip r:embed="..."/>)
+    const referencedImgRIds = new Set<string>();
+    const blipMatches = Array.from(docXml.matchAll(/<a:blip\b[^>]*r:embed="([^"]+)"/g));
+    blipMatches.forEach((m) => {
+      referencedImgRIds.add(m[1]);
+    });
+
+    const imgIdList = Array.from(referencedImgRIds);
+    for (let i = 0; i < imgIdList.length; i++) {
+      const rId = imgIdList[i];
+      const target = relsMap.get(rId);
+      if (target) {
+        const zipPath = target.startsWith('word/') ? target : `word/${target}`;
+        const fileEntry = zip.file(zipPath);
         if (fileEntry) {
-          const lower = path.toLowerCase();
+          const lower = zipPath.toLowerCase();
           let mime = 'image/png';
           if (lower.endsWith('.jpg') || lower.endsWith('.jpeg')) mime = 'image/jpeg';
           else if (lower.endsWith('.gif')) mime = 'image/gif';
@@ -71,56 +98,47 @@ export class DocxPreprocessor {
           try {
             const base64 = await fileEntry.async('base64');
             const dataUri = `data:${mime};base64,${base64}`;
-            const relKey = path.replace('word/', '');
-            images.set(relKey, dataUri);
-
-            // Gán mapping theo rId
-            relsMap.forEach((target, rId) => {
-              if (target.endsWith(relKey) || target === relKey) {
-                images.set(rId, dataUri);
-              }
-            });
+            images.set(rId, dataUri);
           } catch (e) {
-            console.warn('Could not extract image from docx:', path, e);
+            console.warn('Could not extract image from docx:', zipPath, e);
           }
         }
       }
     }
-
-    // 3. Đọc nội dung chính word/document.xml
-    const docFile = zip.file('word/document.xml');
-    if (!docFile) {
-      return { text: '', images, mathCount, tableCount };
-    }
-
-    let docXml = await docFile.async('text');
 
     // 4. Tiền xử lý OLE Objects (MathType Equation binaries)
-    for (let f = 0; f < filePaths.length; f++) {
-      const path = filePaths[f];
-      if (path.startsWith('word/embeddings/') && (path.endsWith('.bin') || path.endsWith('.ole'))) {
+    const oleLatexMap = new Map<string, string>();
+    const relsEntries = Array.from(relsMap.entries());
+    for (let e = 0; e < relsEntries.length; e++) {
+      const [rId, target] = relsEntries[e];
+      const zipPath = target.startsWith('word/') ? target : `word/${target}`;
+      const oleFile = zip.file(zipPath);
+      if (oleFile) {
         try {
-          const oleFile = zip.file(path);
-          if (oleFile) {
-            const buf = await oleFile.async('arraybuffer');
-            const latex = parseMtefBinaryToLatex(buf);
-            if (latex && latex.trim().length > 0) {
-              mathCount++;
-              const embedKey = path.replace('word/', '');
-              relsMap.forEach((target, rId) => {
-                if (target.endsWith(embedKey) || target === embedKey) {
-                  // Thay thế OLE object bằng token LaTeX
-                  const oleRegex = new RegExp(`<w:object\\b[\\s\\S]*?r:id=["']${rId}["'][\\s\\S]*?<\\/w:object>`, 'g');
-                  docXml = docXml.replace(oleRegex, `[!m:${latex}]`);
-                }
-              });
-            }
+          const oleBuf = await oleFile.async('arraybuffer');
+          const latex = parseMtefBinaryToLatex(oleBuf);
+          if (latex && latex.trim().length > 0) {
+            oleLatexMap.set(rId, latex.trim());
           }
-        } catch (e) {
-          console.warn('MathType OLE parsing error:', path, e);
+        } catch (err) {
+          console.warn('MathType OLE parsing error:', zipPath, err);
         }
       }
     }
+
+    // Thay thế toàn bộ <w:object> chính xác theo từng thẻ đối tượng (tránh regex nuốt hàng loạt XML)
+    docXml = docXml.replace(/<w:object\b[\s\S]*?<\/w:object>/g, (objXml) => {
+      const oleMatch = objXml.match(/<o:OLEObject\b[^>]*\br:id=["']([^"']+)["']/);
+      if (oleMatch) {
+        const rId = oleMatch[1];
+        const latex = oleLatexMap.get(rId);
+        if (latex) {
+          mathCount++;
+          return ` [!m:${latex}] `;
+        }
+      }
+      return '';
+    });
 
     // 5. Chuyển đổi công thức OMML (<m:oMath> hoặc <m:oMathPara>) sang [!m:latex]
     docXml = docXml.replace(/<m:oMathPara\b[\s\S]*?<\/m:oMathPara>/g, (omml) => {
@@ -187,44 +205,41 @@ export class DocxPreprocessor {
     for (let pIdx = 0; pIdx < pMatches.length; pIdx++) {
       const p = pMatches[pIdx];
       const pXml = p[0];
-      const rMatches = Array.from(pXml.matchAll(/<w:r\b[\s\S]*?<\/w:r>/g));
       let pText = '';
+      // Bóc tách text, runs và placeholders theo đúng thứ tự xuất hiện trong <w:p>
+      const tokenRegex = /(<w:r\b[\s\S]*?<\/w:r>|\[!m:[^\]]+\]|\[!img:[^\]]+\]|\[!\*[\s\S]*?\*!\]|<w:t\b[^>]*>([\s\S]*?)<\/w:t>)/g;
+      let mToken: RegExpExecArray | null;
+      while ((mToken = tokenRegex.exec(pXml)) !== null) {
+        const token = mToken[1];
+        if (token.startsWith('[!m:') || token.startsWith('[!img:') || token.startsWith('[!*')) {
+          pText += ' ' + token + ' ';
+        } else if (token.startsWith('<w:t')) {
+          pText += mToken[2] || '';
+        } else {
+          // Token là <w:r>...</w:r>
+          const rXml = token;
+          const isUnderlined = /<w:u\b(?![^>]*w:val="(?:none|0)")/i.test(rXml);
+          const colorMatch = rXml.match(/<w:color\b[^>]*w:val="([0-9a-fA-F]{6})"/i);
+          const color = colorMatch ? colorMatch[1].toUpperCase() : null;
 
-      for (let rIdx = 0; rIdx < rMatches.length; rIdx++) {
-        const r = rMatches[rIdx];
-        const rXml = r[0];
+          const tMatches = Array.from(rXml.matchAll(/<w:t\b[^>]*>([\s\S]*?)<\/w:t>/g)).map((m: RegExpMatchArray) => m[1]);
+          let runText = tMatches.join('');
 
-        // Kiểm tra thuộc tính in đậm (<w:b/>), gạch chân (<w:u/>), hoặc màu sắc (<w:color/>)
-        const isBold = /<w:b\b(?![^>]*w:val="(?:0|false|none)")/i.test(rXml);
-        const isUnderlined = /<w:u\b(?![^>]*w:val="(?:none|0)")/i.test(rXml);
-        const colorMatch = rXml.match(/<w:color\b[^>]*w:val="([0-9a-fA-F]{6})"/i);
-        const color = colorMatch ? colorMatch[1].toUpperCase() : null;
+          const placeholders = Array.from(rXml.matchAll(/(\[!m:[^\]]+\]|\[!img:[^\]]+\]|\[!\*[\s\S]*?\*!\])/g)).map((m: RegExpMatchArray) => m[1]);
+          if (placeholders.length > 0) {
+            runText += ' ' + placeholders.join(' ') + ' ';
+          }
 
-        // Bóc tách text trong <w:t>
-        const tMatches = Array.from(rXml.matchAll(/<w:t\b[^>]*>([\s\S]*?)<\/w:t>/g)).map((m: RegExpMatchArray) => m[1]);
-        let runText = tMatches.join('');
+          if (!runText) continue;
 
-        // Giữ lại placeholder ảnh và công thức nếu có
-        const placeholders = Array.from(rXml.matchAll(/(\[!m:[^\]]+\]|\[!img:[^\]]+\]|\[!\*[\s\S]*?\*!\])/g)).map((m: RegExpMatchArray) => m[1]);
-        if (placeholders.length > 0) {
-          runText += placeholders.join(' ');
+          // Nếu run này là nhãn đáp án A, B, C, D và ĐƯỢC IN ĐẬM / GẠCH CHÂN / TÔ MÀU ĐẶC BIỆT (như màu đỏ FF0000)
+          // -> Đánh dấu dấu sao * phía trước để biểu thị đáp án đúng tự động (Azota convention)
+          if (isUnderlined || (color && ['FF0000', '008000', '0000FF'].includes(color))) {
+            runText = runText.replace(/^(\s*)([A-Ha-h])([.)])/g, '$1*$2$3');
+          }
+
+          pText += runText;
         }
-
-        if (!runText) continue;
-
-        // Nếu run này là nhãn đáp án A, B, C, D và ĐƯỢC IN ĐẬM / GẠCH CHÂN / TÔ MÀU ĐẶC BIỆT (như màu đỏ FF0000)
-        // -> Đánh dấu dấu sao * phía trước để biểu thị đáp án đúng tự động (Azota convention)
-        if (isUnderlined || (color && ['FF0000', '008000', '0000FF'].includes(color))) {
-          runText = runText.replace(/^(\s*)([A-Ha-h])([.)])/g, '$1*$2$3');
-        }
-
-        pText += runText;
-      }
-
-      // Xử lý các thẻ text rơi ra ngoài w:r nếu có
-      if (!pText) {
-        const directT = Array.from(pXml.matchAll(/<w:t\b[^>]*>([\s\S]*?)<\/w:t>/g)).map((m: RegExpMatchArray) => m[1]).join('');
-        pText = directT;
       }
 
       if (pText.trim()) {
