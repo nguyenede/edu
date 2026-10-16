@@ -778,7 +778,7 @@ export default function AssignmentDetailPage() {
                   </p>
                 </div>
               ) : (
-                <div className="divide-y divide-slate-100 dark:divide-slate-800/60">
+                <div className="space-y-6">
                   {normalizedQuestions.map((q, qIdx) => {
                     const cleanContent = (q.content || '').replace(/^Câu\s*\d+\s*[:.]\s*/i, '');
                     return (
@@ -1173,7 +1173,7 @@ export default function AssignmentDetailPage() {
             {selectedSub ? (
               /* Grading Form Panel */
               <div className="p-4 bg-slate-50/70 dark:bg-slate-900/40 rounded-2xl space-y-4 overflow-y-auto max-h-[calc(100vh-10rem)] pr-1 [scrollbar-width:thin]">
-                <div className="space-y-1 pb-2 border-b border-slate-200/60 dark:border-slate-800/60 sticky top-0 bg-slate-50/95 dark:bg-slate-900/95 backdrop-blur-xs z-10 -mt-1 pt-1">
+                <div className="space-y-1 pb-1 sticky top-0 bg-slate-50/95 dark:bg-slate-900/95 backdrop-blur-xs z-10 -mt-1 pt-1">
                   <h3 className="font-semibold text-sm text-slate-950 dark:text-slate-100">
                     Chấm điểm bài nộp
                   </h3>
@@ -1189,7 +1189,7 @@ export default function AssignmentDetailPage() {
                   </span>
                   <div className="max-h-52 overflow-y-auto p-2.5 bg-white/80 dark:bg-[#1a1b1d]/80 rounded-xl text-xs space-y-2">
                     {(selectedSub.answers || []).map((ans: any, idx: number) => (
-                      <div key={ans.id || idx} className="flex items-center justify-between py-1 border-b border-slate-100 dark:border-slate-800/60 last:border-0 font-mono text-slate-800 dark:text-slate-200">
+                      <div key={ans.id || idx} className="flex items-center justify-between py-1.5 font-mono text-slate-800 dark:text-slate-200">
                         <span className="flex items-center gap-1.5 flex-wrap">
                           <strong className="font-bold text-google-blue dark:text-blue-400 shrink-0">
                             Câu {idx + 1}:
@@ -1266,7 +1266,7 @@ export default function AssignmentDetailPage() {
             ) : (
               /* Submissions List */
               <div className="space-y-3 flex-1 flex flex-col min-h-0">
-                <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800 shrink-0">
+                <div className="flex items-center justify-between pb-1 shrink-0">
                   <h3 className="font-semibold text-sm text-slate-950 dark:text-slate-100">
                     Danh sách bài nộp {deduplicatedSubmissions.length}
                   </h3>
@@ -1277,7 +1277,7 @@ export default function AssignmentDetailPage() {
                     Chưa có học sinh nào nộp bài.
                   </p>
                 ) : (
-                  <div className="divide-y divide-slate-100 dark:divide-slate-800/70 overflow-y-auto max-h-[calc(100vh-12rem)] pr-1.5 [scrollbar-width:thin]">
+                  <div className="space-y-1 overflow-y-auto max-h-[calc(100vh-12rem)] pr-1.5 [scrollbar-width:thin]">
                     {deduplicatedSubmissions.map((sub) => {
                       const studentName = sub.student?.profile?.name || sub.student?.name || sub.student?.email || 'Học sinh';
                       return (

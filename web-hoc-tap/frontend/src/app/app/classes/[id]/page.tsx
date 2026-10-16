@@ -849,7 +849,7 @@ export default function ClassDetailPage() {
               ) : (
                 <div className="overflow-x-auto rounded-lg border border-slate-100 dark:border-slate-800">
                   <table className="w-full text-left text-xs">
-                    <thead className="bg-slate-50 dark:bg-slate-900/60 border-b border-slate-100 dark:border-slate-800 text-slate-600 dark:text-slate-300 font-semibold">
+                    <thead className="bg-slate-50/70 dark:bg-slate-900/40 text-slate-600 dark:text-slate-300 font-semibold">
                       <tr>
                         <th className="py-2.5 px-3 w-12 text-center">STT</th>
                         <th className="py-2.5 px-3 min-w-[140px]">{isTeacher ? 'Học sinh' : 'Tên bạn'}</th>

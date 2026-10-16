@@ -2067,7 +2067,7 @@ function DocumentsPageContent() {
                     handlePaste(currentFolderId);
                     setContextMenu((prev) => ({ ...prev, isOpen: false }));
                   }}
-                  className="w-full px-3.5 py-2 flex items-center justify-between gap-6 hover:bg-blue-50 dark:hover:bg-blue-950/40 text-google-blue dark:text-blue-400 transition-colors text-left font-semibold cursor-pointer border-b border-slate-100 dark:border-slate-800"
+                  className="w-full px-3.5 py-2 flex items-center justify-between gap-6 hover:bg-blue-50 dark:hover:bg-blue-950/40 text-google-blue dark:text-blue-400 transition-colors text-left font-semibold cursor-pointer"
                 >
                   <div className="flex items-center gap-2.5 whitespace-nowrap">
                     <ClipboardPaste size={16} className="shrink-0" />

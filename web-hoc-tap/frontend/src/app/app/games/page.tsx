@@ -731,10 +731,7 @@ export default function GamesHubPage() {
                     </div>
                   </div>
 
-                  <div className="mt-4 flex items-center justify-between">
-                    <span className="text-[11px] text-slate-400 truncate max-w-[150px]">
-                      Từ: {trialLesson.examTitle}
-                    </span>
+                  <div className="mt-4 flex items-center justify-end">
                     <button
                       onClick={() => setPlayingLesson(trialLesson)}
                       className="px-5 py-2 rounded-xl bg-google-blue hover:bg-blue-600 text-white text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs active:scale-95"
