@@ -214,31 +214,7 @@ export const ClassroomQuestionCard: React.FC<ClassroomQuestionCardProps> = ({
       </div>
 
       {/* 4. TEACHER ACTION TOOLBAR (BOTTOM BAR) */}
-      <div className="pt-4 flex flex-wrap items-center justify-between gap-3">
-        {/* Left: Quick point award buttons */}
-        <div className="flex items-center gap-2">
-          {onAwardTeamPoint && (
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => onAwardTeamPoint('team1')}
-                className="px-3.5 py-2 rounded-xl bg-blue-100/70 hover:bg-blue-100 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 text-xs sm:text-sm font-bold transition-all cursor-pointer shadow-2xs"
-                title={`Cộng 1 điểm cho ${team1Name}`}
-              >
-                +1 {team1Name}
-              </button>
-              <button
-                type="button"
-                onClick={() => onAwardTeamPoint('team2')}
-                className="px-3.5 py-2 rounded-xl bg-rose-100/70 hover:bg-rose-100 dark:bg-rose-950/50 text-rose-700 dark:text-rose-300 text-xs sm:text-sm font-bold transition-all cursor-pointer shadow-2xs"
-                title={`Cộng 1 điểm cho ${team2Name}`}
-              >
-                +1 {team2Name}
-              </button>
-            </div>
-          )}
-        </div>
-
+      <div className="pt-4 flex flex-wrap items-center justify-end gap-3">
         {/* Right Navigation: Prev Question & Next Question */}
         <div className="flex items-center gap-2.5">
           {onPrevQuestion && (
