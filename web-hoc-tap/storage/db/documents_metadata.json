@@ -3,6 +3,32 @@
   "folders": [],
   "files": [
     {
+      "id": "file_1792250270517_st1n",
+      "name": "Đề thi trắc nghiệm.json",
+      "parentId": null,
+      "fileType": "json",
+      "mimeType": "application/json",
+      "size": 410,
+      "storageKey": "exams/file_1792250270517_st1n.json",
+      "filePath": "../storage/exams/file_1792250270517_st1n.json",
+      "storageType": "local",
+      "createdAt": "2026-10-17T15:17:50.529Z",
+      "updatedAt": "2026-10-17T15:17:50.529Z"
+    },
+    {
+      "id": "file_1792250270516_jx9p",
+      "name": "Đề thi trắc nghiệm.json",
+      "parentId": null,
+      "fileType": "json",
+      "mimeType": "application/json",
+      "size": 410,
+      "storageKey": "exams/file_1792250270516_jx9p.json",
+      "filePath": "../storage/exams/file_1792250270516_jx9p.json",
+      "storageType": "local",
+      "createdAt": "2026-10-17T15:17:50.524Z",
+      "updatedAt": "2026-10-17T15:17:50.524Z"
+    },
+    {
       "id": "file_1791677047535_uj389",
       "name": "Giải bài toán bằng cách lập hệ phương trình - Bản sao - Bản sao.json",
       "parentId": "folder_1791676924626_jnfvi",
@@ -224,5 +250,5 @@
       "updatedAt": "2026-10-17T15:09:24.326Z"
     }
   ],
-  "updatedAt": "2026-10-17T15:13:12.640Z"
+  "updatedAt": "2026-10-17T15:17:50.529Z"
 }
