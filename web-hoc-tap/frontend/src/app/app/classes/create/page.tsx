@@ -65,7 +65,7 @@ export default function CreateClassPage() {
           <button
             type="button"
             onClick={() => router.push('/app/classes')}
-            className="cursor-pointer text-slate-900 dark:text-white font-semibold shrink-0 whitespace-nowrap"
+            className="cursor-pointer text-slate-900 dark:text-white font-normal shrink-0 whitespace-nowrap"
           >
             Lớp học của tôi
           </button>
@@ -77,7 +77,7 @@ export default function CreateClassPage() {
               { label: 'Tham gia lớp học', href: '/app/classes/join', icon: <LogIn size={14} className="text-purple-500 shrink-0" /> },
             ]}
           />
-          <span className="text-slate-900 dark:text-white font-semibold truncate min-w-0 flex-1">
+          <span className="text-slate-900 dark:text-white font-normal truncate min-w-0 flex-1">
             Tạo lớp học mới
           </span>
         </div>

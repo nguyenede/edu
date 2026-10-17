@@ -631,7 +631,7 @@ export default function GamesHubPage() {
                 setIsConfigModalOpen(false);
                 setActiveCategory(null);
               }}
-              className="cursor-pointer text-slate-900 dark:text-white font-semibold shrink-0 whitespace-nowrap"
+              className="cursor-pointer text-slate-900 dark:text-white font-normal shrink-0 whitespace-nowrap"
             >
               Trò chơi lớp học
             </button>
@@ -649,13 +649,13 @@ export default function GamesHubPage() {
             <button
               type="button"
               onClick={() => setIsConfigModalOpen(false)}
-              className="cursor-pointer text-slate-900 dark:text-white font-semibold shrink-0 whitespace-nowrap"
+              className="cursor-pointer text-slate-900 dark:text-white font-normal shrink-0 whitespace-nowrap"
               title={getCategoryMeta(activeCategory).title}
             >
               {getCategoryMeta(activeCategory).title}
             </button>
             <BreadcrumbChevron isStatic={true} />
-            <span className="text-slate-900 dark:text-white font-semibold truncate min-w-0 flex-1">
+            <span className="text-slate-900 dark:text-white font-normal truncate min-w-0 flex-1">
               {editingLessonId ? 'Chỉnh sửa bài chơi' : 'Tạo bài chơi mới'}
             </span>
           </div>
@@ -664,7 +664,7 @@ export default function GamesHubPage() {
             <button
               type="button"
               onClick={() => setActiveCategory(null)}
-              className="cursor-pointer text-slate-900 dark:text-white font-semibold shrink-0 whitespace-nowrap"
+              className="cursor-pointer text-slate-900 dark:text-white font-normal shrink-0 whitespace-nowrap"
             >
               Trò chơi lớp học
             </button>
@@ -676,7 +676,7 @@ export default function GamesHubPage() {
               }))}
               fallbackToStaticChevron={true}
             />
-            <span className="text-slate-900 dark:text-white font-semibold truncate min-w-0 flex-1">
+            <span className="text-slate-900 dark:text-white font-normal truncate min-w-0 flex-1">
               {getCategoryMeta(activeCategory).title}
             </span>
           </div>
@@ -684,7 +684,7 @@ export default function GamesHubPage() {
           <div className="flex items-center gap-1.5 flex-nowrap min-w-0">
             <button
               type="button"
-              className="cursor-pointer text-slate-900 dark:text-white font-semibold shrink-0 whitespace-nowrap"
+              className="cursor-pointer text-slate-900 dark:text-white font-normal shrink-0 whitespace-nowrap"
             >
               Trò chơi lớp học
             </button>

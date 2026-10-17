@@ -179,7 +179,7 @@ export default function CreateAssignmentPage() {
           <button
             type="button"
             onClick={() => router.push('/app/classes')}
-            className="cursor-pointer text-slate-900 dark:text-white font-semibold shrink-0 whitespace-nowrap"
+            className="cursor-pointer text-slate-900 dark:text-white font-normal shrink-0 whitespace-nowrap"
           >
             Lớp học của tôi
           </button>
@@ -190,7 +190,7 @@ export default function CreateAssignmentPage() {
           <button
             type="button"
             onClick={() => router.push(`/app/classes/${classId}`)}
-            className="cursor-pointer text-slate-900 dark:text-white font-semibold shrink-0 whitespace-nowrap"
+            className="cursor-pointer text-slate-900 dark:text-white font-normal shrink-0 whitespace-nowrap"
           >
             {currentClassObj?.name || 'Chi tiết lớp'}
           </button>
@@ -204,7 +204,7 @@ export default function CreateAssignmentPage() {
               },
             ]}
           />
-          <span className="text-slate-900 dark:text-white font-semibold truncate min-w-0 flex-1">
+          <span className="text-slate-900 dark:text-white font-normal truncate min-w-0 flex-1">
             Giao bài tập mới
           </span>
         </div>

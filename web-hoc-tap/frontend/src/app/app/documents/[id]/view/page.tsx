@@ -567,12 +567,12 @@ function DocumentDynamicViewPageContent() {
             <button
               type="button"
               onClick={() => router.push('/documents')}
-              className="cursor-pointer text-slate-900 dark:text-white font-semibold shrink-0 whitespace-nowrap"
+              className="cursor-pointer text-slate-900 dark:text-white font-normal shrink-0 whitespace-nowrap"
             >
               Tài liệu của tôi
             </button>
             <BreadcrumbChevron isStatic={true} />
-            <span className="text-slate-900 dark:text-white font-semibold truncate min-w-0">
+            <span className="text-slate-900 dark:text-white font-normal truncate min-w-0">
               Chi tiết đề thi
             </span>
           </div>
@@ -617,12 +617,12 @@ function DocumentDynamicViewPageContent() {
             <button
               type="button"
               onClick={() => router.push('/documents')}
-              className="cursor-pointer text-slate-900 dark:text-white font-semibold shrink-0 whitespace-nowrap"
+              className="cursor-pointer text-slate-900 dark:text-white font-normal shrink-0 whitespace-nowrap"
             >
               Tài liệu của tôi
             </button>
             <BreadcrumbChevron isStatic={true} />
-            <span className="text-slate-900 dark:text-white font-semibold truncate min-w-0">
+            <span className="text-slate-900 dark:text-white font-normal truncate min-w-0">
               Chi tiết đề thi
             </span>
           </div>
@@ -683,7 +683,7 @@ function DocumentDynamicViewPageContent() {
           <button
             type="button"
             onClick={() => router.push('/documents')}
-            className="cursor-pointer text-slate-900 dark:text-white font-semibold shrink-0 whitespace-nowrap"
+            className="cursor-pointer text-slate-900 dark:text-white font-normal shrink-0 whitespace-nowrap"
           >
             Tài liệu của tôi
           </button>
@@ -707,7 +707,7 @@ function DocumentDynamicViewPageContent() {
                       if (typeof window !== 'undefined') sessionStorage.setItem('app_active_folder_id', folder.id);
                       router.push('/documents');
                     }}
-                    className="cursor-pointer text-slate-900 dark:text-white font-semibold shrink-0 whitespace-nowrap"
+                    className="cursor-pointer text-slate-900 dark:text-white font-normal shrink-0 whitespace-nowrap"
                   >
                     {folder.name}
                   </button>
@@ -726,7 +726,7 @@ function DocumentDynamicViewPageContent() {
             onNavigateFile={(id) => router.push(`/documents/${id}`)}
           />
           <span
-            className="text-slate-900 dark:text-white font-semibold truncate min-w-0 flex-1"
+            className="text-slate-900 dark:text-white font-normal truncate min-w-0 flex-1"
             title={displayTitle}
           >
             {displayTitle}

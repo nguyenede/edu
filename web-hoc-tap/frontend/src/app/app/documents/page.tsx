@@ -1672,7 +1672,7 @@ function DocumentsPageContent() {
                     );
                   }}
                   onDrop={(e) => handleDropOnTarget(e, crumb.id)}
-                  className={`cursor-pointer font-semibold ${
+                  className={`cursor-pointer font-normal ${
                     isLast ? 'truncate min-w-0' : 'shrink-0 whitespace-nowrap'
                   } ${
                     isDropTarget

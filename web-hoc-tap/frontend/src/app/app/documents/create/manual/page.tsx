@@ -288,7 +288,7 @@ function ManualQuizCreateContent() {
           <button
             type="button"
             onClick={() => router.push('/app/documents')}
-            className="cursor-pointer text-slate-900 dark:text-white font-semibold shrink-0 whitespace-nowrap"
+            className="cursor-pointer text-slate-900 dark:text-white font-normal shrink-0 whitespace-nowrap"
           >
             Tài liệu của tôi
           </button>
@@ -302,7 +302,7 @@ function ManualQuizCreateContent() {
               <button
                 type="button"
                 onClick={() => router.push(`/app/documents?folderId=${folderId || ''}`)}
-                className="cursor-pointer text-slate-900 dark:text-white font-semibold shrink-0 whitespace-nowrap"
+                className="cursor-pointer text-slate-900 dark:text-white font-normal shrink-0 whitespace-nowrap"
               >
                 {folderName}
               </button>
@@ -322,7 +322,7 @@ function ManualQuizCreateContent() {
           <button
             type="button"
             onClick={() => router.push('/app/documents/create' + targetQuery)}
-            className="cursor-pointer text-slate-900 dark:text-white font-semibold shrink-0 whitespace-nowrap"
+            className="cursor-pointer text-slate-900 dark:text-white font-normal shrink-0 whitespace-nowrap"
           >
             Tạo đề thi
           </button>
@@ -336,7 +336,7 @@ function ManualQuizCreateContent() {
               { label: 'Nhập thủ công', href: `/app/documents/create/manual${targetQuery}`, icon: <PenTool size={14} className="text-rose-500 shrink-0" /> },
             ]}
           />
-          <span className="text-slate-900 dark:text-white font-semibold truncate min-w-0 flex-1">
+          <span className="text-slate-900 dark:text-white font-normal truncate min-w-0 flex-1">
             Soạn đề thủ công
           </span>
         </div>

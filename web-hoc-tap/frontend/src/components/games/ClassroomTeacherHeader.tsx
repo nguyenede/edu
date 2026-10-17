@@ -113,14 +113,14 @@ export const ClassroomTeacherHeader: React.FC<ClassroomTeacherHeaderProps> = ({
             <button
               type="button"
               onClick={onBack}
-              className="cursor-pointer text-slate-900 dark:text-white font-semibold shrink-0 truncate max-w-[120px] sm:max-w-[180px]"
+              className="cursor-pointer text-slate-900 dark:text-white font-normal shrink-0 truncate max-w-[120px] sm:max-w-[180px]"
               title={`Quay về danh sách bài tập của ${gameShortName}`}
             >
               {gameShortName}
             </button>
             <BreadcrumbChevron isStatic={true} />
             <span
-              className="text-slate-900 dark:text-white font-semibold truncate max-w-[160px] sm:max-w-xs md:max-w-sm lg:max-w-md xl:max-w-lg"
+              className="text-slate-900 dark:text-white font-normal truncate max-w-[160px] sm:max-w-xs md:max-w-sm lg:max-w-md xl:max-w-lg"
               title={title}
             >
               {title}
@@ -128,7 +128,7 @@ export const ClassroomTeacherHeader: React.FC<ClassroomTeacherHeaderProps> = ({
           </>
         ) : (
           <span
-            className="text-slate-900 dark:text-white font-semibold truncate max-w-[150px] sm:max-w-xs md:max-w-sm lg:max-w-md"
+            className="text-slate-900 dark:text-white font-normal truncate max-w-[150px] sm:max-w-xs md:max-w-sm lg:max-w-md"
             title={gameShortName || title}
           >
             {gameShortName || title}

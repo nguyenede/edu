@@ -582,12 +582,12 @@ export default function ClassDetailPage() {
             <button
               type="button"
               onClick={() => router.push('/app/classes')}
-              className="cursor-pointer text-slate-900 dark:text-white font-semibold shrink-0 whitespace-nowrap"
+              className="cursor-pointer text-slate-900 dark:text-white font-normal shrink-0 whitespace-nowrap"
             >
               Lớp học của tôi
             </button>
             <BreadcrumbChevron isStatic={true} />
-            <span className="text-slate-900 dark:text-white font-semibold truncate min-w-0">
+            <span className="text-slate-900 dark:text-white font-normal truncate min-w-0">
               {cachedName || 'Chi tiết lớp học'}
             </span>
           </div>
@@ -619,7 +619,7 @@ export default function ClassDetailPage() {
           <button
             type="button"
             onClick={() => router.push('/app/classes')}
-            className="cursor-pointer text-slate-900 dark:text-white font-semibold shrink-0 whitespace-nowrap"
+            className="cursor-pointer text-slate-900 dark:text-white font-normal shrink-0 whitespace-nowrap"
           >
             Lớp học của tôi
           </button>
@@ -627,7 +627,7 @@ export default function ClassDetailPage() {
             menuTitle="Lớp học của tôi"
             items={classBreadcrumbItems}
           />
-          <span className="text-slate-900 dark:text-white font-semibold truncate min-w-0 flex-1">
+          <span className="text-slate-900 dark:text-white font-normal truncate min-w-0 flex-1">
             {clazz.name}
           </span>
         </div>

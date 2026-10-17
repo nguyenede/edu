@@ -57,7 +57,7 @@ export default function EditPasswordPage() {
           <button
             type="button"
             onClick={() => router.push('/app/settings')}
-            className="cursor-pointer text-slate-900 dark:text-white font-semibold shrink-0 whitespace-nowrap"
+            className="cursor-pointer text-slate-900 dark:text-white font-normal shrink-0 whitespace-nowrap"
           >
             Cài đặt
           </button>
@@ -74,7 +74,7 @@ export default function EditPasswordPage() {
           <button
             type="button"
             onClick={() => router.push('/app/settings')}
-            className="cursor-pointer text-slate-900 dark:text-white font-semibold shrink-0 whitespace-nowrap"
+            className="cursor-pointer text-slate-900 dark:text-white font-normal shrink-0 whitespace-nowrap"
           >
             Bảo mật
           </button>
@@ -85,7 +85,7 @@ export default function EditPasswordPage() {
               { label: 'Quản lý thiết bị', href: '/app/settings/devices' },
             ]}
           />
-          <span className="text-slate-900 dark:text-white font-semibold truncate min-w-0 flex-1">
+          <span className="text-slate-900 dark:text-white font-normal truncate min-w-0 flex-1">
             Đổi mật khẩu
           </span>
         </div>

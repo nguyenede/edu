@@ -280,14 +280,14 @@ export const AppShell: React.FC<AppShellProps> = ({
             {/* Fixed Action / Title Bar Header - Frozen at top, zero layout shift, zero scrollbar interference */}
             {(title || action) && (
               <header className="app-title-bar shrink-0 w-full px-3 sm:px-4 h-14 max-h-14 flex flex-row items-center justify-between gap-3 print:hidden select-none">
-                <div className="min-w-0 flex-1 flex items-center h-full">
+                <div className="app-title-container min-w-0 flex-1 flex items-center h-full">
                   {title &&
                     (typeof title === 'string' ? (
-                      <h1 className="text-xl font-semibold tracking-tight text-slate-900 dark:text-slate-100 leading-tight truncate">
+                      <h1 className="text-xl font-normal tracking-tight text-slate-900 dark:text-slate-100 leading-tight truncate">
                         {title}
                       </h1>
                     ) : (
-                      <div className="text-xl font-semibold tracking-tight text-slate-900 dark:text-slate-100 leading-tight min-w-0 w-full flex items-center">
+                      <div className="text-xl font-normal tracking-tight text-slate-900 dark:text-slate-100 leading-tight min-w-0 w-full flex items-center">
                         {title}
                       </div>
                     ))}

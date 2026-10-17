@@ -57,7 +57,7 @@ export default function EditNamePage() {
           <button
             type="button"
             onClick={() => router.push('/app/settings')}
-            className="cursor-pointer text-slate-900 dark:text-white font-semibold shrink-0 whitespace-nowrap"
+            className="cursor-pointer text-slate-900 dark:text-white font-normal shrink-0 whitespace-nowrap"
           >
             Cài đặt
           </button>
@@ -74,7 +74,7 @@ export default function EditNamePage() {
           <button
             type="button"
             onClick={() => router.push('/app/settings')}
-            className="cursor-pointer text-slate-900 dark:text-white font-semibold shrink-0 whitespace-nowrap"
+            className="cursor-pointer text-slate-900 dark:text-white font-normal shrink-0 whitespace-nowrap"
           >
             Tài khoản
           </button>
@@ -90,7 +90,7 @@ export default function EditNamePage() {
               { label: 'Đổi mật khẩu', href: '/app/settings/edit-password' },
             ]}
           />
-          <span className="text-slate-900 dark:text-white font-semibold truncate min-w-0 flex-1">
+          <span className="text-slate-900 dark:text-white font-normal truncate min-w-0 flex-1">
             Họ và tên & Ảnh hồ sơ
           </span>
         </div>

@@ -354,3 +354,17 @@ html.dark * {
   box-sizing: border-box !important;
 }
 
+/* Tiêu đề tuyệt đối không bị in đậm trên toàn bộ 100% website */
+.app-title-container,
+.app-title-container *,
+.app-title-container h1,
+.app-title-container button,
+.app-title-container span,
+.app-title-container a,
+.app-title-container div,
+.app-title-container strong,
+.app-title-container b,
+.app-title-container p {
+  font-weight: 400 !important;
+}
+

@@ -471,12 +471,12 @@ function AssignPageContent() {
             <button
               type="button"
               onClick={() => router.push('/documents')}
-              className="cursor-pointer text-slate-900 dark:text-white font-semibold shrink-0 whitespace-nowrap"
+              className="cursor-pointer text-slate-900 dark:text-white font-normal shrink-0 whitespace-nowrap"
             >
               Tài liệu của tôi
             </button>
             <BreadcrumbChevron isStatic={true} />
-            <span className="text-slate-900 dark:text-white font-semibold truncate min-w-0">
+            <span className="text-slate-900 dark:text-white font-normal truncate min-w-0">
               Giao bài tập
             </span>
           </div>
@@ -521,12 +521,12 @@ function AssignPageContent() {
             <button
               type="button"
               onClick={() => router.push('/documents')}
-              className="cursor-pointer text-slate-900 dark:text-white font-semibold shrink-0 whitespace-nowrap"
+              className="cursor-pointer text-slate-900 dark:text-white font-normal shrink-0 whitespace-nowrap"
             >
               Tài liệu của tôi
             </button>
             <BreadcrumbChevron isStatic={true} />
-            <span className="text-slate-900 dark:text-white font-semibold truncate min-w-0">
+            <span className="text-slate-900 dark:text-white font-normal truncate min-w-0">
               Giao bài tập
             </span>
           </div>
@@ -562,7 +562,7 @@ function AssignPageContent() {
               if (typeof window !== 'undefined') sessionStorage.removeItem('app_active_folder_id');
               router.push('/documents');
             }}
-            className="cursor-pointer text-slate-900 dark:text-white font-semibold shrink-0 whitespace-nowrap"
+            className="cursor-pointer text-slate-900 dark:text-white font-normal shrink-0 whitespace-nowrap"
           >
             Tài liệu của tôi
           </button>
@@ -583,7 +583,7 @@ function AssignPageContent() {
                   if (typeof window !== 'undefined') sessionStorage.setItem('app_active_folder_id', folder.id);
                   router.push('/documents');
                 }}
-                className="cursor-pointer text-slate-900 dark:text-white font-semibold shrink-0 whitespace-nowrap"
+                className="cursor-pointer text-slate-900 dark:text-white font-normal shrink-0 whitespace-nowrap"
               >
                 {folder.name}
               </button>
@@ -599,13 +599,13 @@ function AssignPageContent() {
           <button
             type="button"
             onClick={() => router.push(`/documents/${encodeURIComponent(fileId)}`)}
-            className="cursor-pointer text-slate-900 dark:text-white font-semibold truncate min-w-0 max-w-[180px] sm:max-w-[320px] text-left shrink-0"
+            className="cursor-pointer text-slate-900 dark:text-white font-normal truncate min-w-0 max-w-[180px] sm:max-w-[320px] text-left shrink-0"
             title={displayTitle}
           >
             {displayTitle}
           </button>
           <BreadcrumbChevron isStatic={true} />
-          <span className="text-slate-900 dark:text-white font-semibold shrink-0 whitespace-nowrap">
+          <span className="text-slate-900 dark:text-white font-normal shrink-0 whitespace-nowrap">
             Giao bài tập
           </span>
         </div>
@@ -1246,12 +1246,12 @@ export default function DocumentAssignPage() {
                 onClick={() => {
                   if (typeof window !== 'undefined') window.location.href = '/documents';
                 }}
-                className="cursor-pointer text-slate-900 dark:text-white font-semibold shrink-0 whitespace-nowrap"
+                className="cursor-pointer text-slate-900 dark:text-white font-normal shrink-0 whitespace-nowrap"
               >
                 Tài liệu của tôi
               </button>
               <BreadcrumbChevron isStatic={true} />
-              <span className="text-slate-900 dark:text-white font-semibold truncate min-w-0">
+              <span className="text-slate-900 dark:text-white font-normal truncate min-w-0">
                 Giao bài tập
               </span>
             </div>

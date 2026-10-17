@@ -493,7 +493,7 @@ function DocumentCreateContent() {
           <button
             type="button"
             onClick={() => router.push('/app/documents')}
-            className="cursor-pointer text-slate-900 dark:text-white font-semibold shrink-0 whitespace-nowrap"
+            className="cursor-pointer text-slate-900 dark:text-white font-normal shrink-0 whitespace-nowrap"
           >
             Tài liệu của tôi
           </button>
@@ -507,7 +507,7 @@ function DocumentCreateContent() {
               <button
                 type="button"
                 onClick={() => router.push(`/app/documents?folderId=${folderId || ''}`)}
-                className="cursor-pointer text-slate-900 dark:text-white font-semibold shrink-0 whitespace-nowrap"
+                className="cursor-pointer text-slate-900 dark:text-white font-normal shrink-0 whitespace-nowrap"
               >
                 {folderName}
               </button>
@@ -524,7 +524,7 @@ function DocumentCreateContent() {
               onNavigateFolder={(id) => router.push(`/app/documents?folderId=${id}`)}
             />
           )}
-          <span className="text-slate-900 dark:text-white font-semibold truncate min-w-0 flex-1">
+          <span className="text-slate-900 dark:text-white font-normal truncate min-w-0 flex-1">
             Tạo đề thi
           </span>
         </div>

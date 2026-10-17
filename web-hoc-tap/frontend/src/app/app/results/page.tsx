@@ -420,7 +420,7 @@ export default function ResultsPage() {
           <button
             type="button"
             onClick={() => setSelectedClassId('')}
-            className="cursor-pointer text-slate-900 dark:text-white font-semibold shrink-0 whitespace-nowrap"
+            className="cursor-pointer text-slate-900 dark:text-white font-normal shrink-0 whitespace-nowrap"
           >
             Báo cáo
           </button>
@@ -435,7 +435,7 @@ export default function ResultsPage() {
                 }))}
               />
               <span
-                className="text-slate-900 dark:text-white font-semibold truncate min-w-0 flex-1"
+                className="text-slate-900 dark:text-white font-normal truncate min-w-0 flex-1"
                 title={selectedClass.name}
               >
                 {selectedClass.name}
