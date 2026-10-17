@@ -972,14 +972,11 @@ export default function SettingsPage(props: any) {
               {(activeTab === 'security' || activeTab === 'password') && (
                 <div className="space-y-6 animate-fadeIn">
                   <section className="space-y-4">
-                    <div className="space-y-0.5">
+                    <div>
                       <h2 className="text-lg font-bold tracking-tight text-slate-900 dark:text-slate-100 flex items-center gap-2">
                         <Lock size={20} className="text-google-green" />
                         Bảo mật và đăng nhập
                       </h2>
-                      <p className="text-xs text-slate-500 dark:text-slate-400">
-                        Cài đặt và đề xuất giúp bạn bảo vệ an toàn cho tài khoản giáo viên
-                      </p>
                     </div>
 
                     <div className="space-y-[2px]">

@@ -3,84 +3,6 @@
   "folders": [],
   "files": [
     {
-      "id": "file_1792240104929_lfql",
-      "name": "Đề thi trắc nghiệm.json",
-      "parentId": null,
-      "fileType": "json",
-      "mimeType": "application/json",
-      "size": 410,
-      "storageKey": "exams/file_1792240104929_lfql.json",
-      "filePath": "../storage/exams/file_1792240104929_lfql.json",
-      "storageType": "local",
-      "createdAt": "2026-10-17T12:28:24.965Z",
-      "updatedAt": "2026-10-17T12:28:24.965Z"
-    },
-    {
-      "id": "file_1792240099285_wm51",
-      "name": "Đề thi trắc nghiệm.json",
-      "parentId": null,
-      "fileType": "json",
-      "mimeType": "application/json",
-      "size": 410,
-      "storageKey": "exams/file_1792240099285_wm51.json",
-      "filePath": "../storage/exams/file_1792240099285_wm51.json",
-      "storageType": "local",
-      "createdAt": "2026-10-17T12:28:19.370Z",
-      "updatedAt": "2026-10-17T12:28:19.370Z"
-    },
-    {
-      "id": "file_1792240099256_ubhx",
-      "name": "Đề thi trắc nghiệm.json",
-      "parentId": null,
-      "fileType": "json",
-      "mimeType": "application/json",
-      "size": 410,
-      "storageKey": "exams/file_1792240099256_ubhx.json",
-      "filePath": "../storage/exams/file_1792240099256_ubhx.json",
-      "storageType": "local",
-      "createdAt": "2026-10-17T12:28:19.274Z",
-      "updatedAt": "2026-10-17T12:28:19.274Z"
-    },
-    {
-      "id": "file_1792240055512_vtmr",
-      "name": "Đề thi trắc nghiệm.json",
-      "parentId": null,
-      "fileType": "json",
-      "mimeType": "application/json",
-      "size": 410,
-      "storageKey": "exams/file_1792240055512_vtmr.json",
-      "filePath": "../storage/exams/file_1792240055512_vtmr.json",
-      "storageType": "local",
-      "createdAt": "2026-10-17T12:27:35.540Z",
-      "updatedAt": "2026-10-17T12:27:35.540Z"
-    },
-    {
-      "id": "file_1792240055511_pfce",
-      "name": "Đề thi trắc nghiệm.json",
-      "parentId": null,
-      "fileType": "json",
-      "mimeType": "application/json",
-      "size": 410,
-      "storageKey": "exams/file_1792240055511_pfce.json",
-      "filePath": "../storage/exams/file_1792240055511_pfce.json",
-      "storageType": "local",
-      "createdAt": "2026-10-17T12:27:35.537Z",
-      "updatedAt": "2026-10-17T12:27:35.537Z"
-    },
-    {
-      "id": "file_1792240055512_yasz",
-      "name": "Đề thi trắc nghiệm.json",
-      "parentId": null,
-      "fileType": "json",
-      "mimeType": "application/json",
-      "size": 410,
-      "storageKey": "exams/file_1792240055512_yasz.json",
-      "filePath": "../storage/exams/file_1792240055512_yasz.json",
-      "storageType": "local",
-      "createdAt": "2026-10-17T12:27:35.532Z",
-      "updatedAt": "2026-10-17T12:27:35.532Z"
-    },
-    {
       "id": "file_1791677047535_uj389",
       "name": "Giải bài toán bằng cách lập hệ phương trình - Bản sao - Bản sao.json",
       "parentId": "folder_1791676924626_jnfvi",
@@ -91,7 +13,7 @@
       "filePath": "../storage/exams/file_1791677047535_uj389.json",
       "storageType": "local",
       "createdAt": "2026-10-11T00:04:07.535Z",
-      "updatedAt": "2026-10-17T12:28:57.314Z"
+      "updatedAt": "2026-10-17T15:09:32.225Z"
     },
     {
       "id": "demvc7f5y9c7p4",
@@ -104,7 +26,7 @@
       "filePath": "../storage/exams/demvc7f5y9c7p4.json",
       "storageType": "local",
       "createdAt": "2026-10-17T09:38:41.510Z",
-      "updatedAt": "2026-10-17T12:28:57.300Z"
+      "updatedAt": "2026-10-17T15:09:32.218Z"
     },
     {
       "id": "demvbuu9rg1or6",
@@ -117,20 +39,7 @@
       "filePath": "../storage/exams/demvbuu9rg1or6.json",
       "storageType": "local",
       "createdAt": "2026-10-17T03:46:31.279Z",
-      "updatedAt": "2026-10-17T12:28:57.299Z"
-    },
-    {
-      "id": "demv7pyrj1r83b",
-      "name": "Đề trắc nghiệm kiểm tra 15 phút môn Tin học lớp 9.json",
-      "parentId": null,
-      "fileType": "json",
-      "mimeType": "application/json",
-      "size": 27286,
-      "storageKey": "exams/demv7pyrj1r83b.json",
-      "filePath": "../storage/exams/demv7pyrj1r83b.json",
-      "storageType": "local",
-      "createdAt": "2026-10-14T06:18:58.149Z",
-      "updatedAt": "2026-10-17T12:28:57.279Z"
+      "updatedAt": "2026-10-17T15:09:32.204Z"
     },
     {
       "id": "demvb2he3u4nv4",
@@ -143,7 +52,20 @@
       "filePath": "../storage/exams/demvb2he3u4nv4.json",
       "storageType": "local",
       "createdAt": "2026-10-16T14:32:41.133Z",
-      "updatedAt": "2026-10-17T12:28:57.282Z"
+      "updatedAt": "2026-10-17T15:09:32.187Z"
+    },
+    {
+      "id": "demv7pyrj1r83b",
+      "name": "Đề trắc nghiệm kiểm tra 15 phút môn Tin học lớp 9.json",
+      "parentId": null,
+      "fileType": "json",
+      "mimeType": "application/json",
+      "size": 27286,
+      "storageKey": "exams/demv7pyrj1r83b.json",
+      "filePath": "../storage/exams/demv7pyrj1r83b.json",
+      "storageType": "local",
+      "createdAt": "2026-10-14T06:18:58.149Z",
+      "updatedAt": "2026-10-17T15:09:32.167Z"
     },
     {
       "id": "c1c8140c6dc1423ca3d159fbee266d04",
@@ -156,7 +78,7 @@
       "filePath": "../storage/exams/c1c8140c6dc1423ca3d159fbee266d04.json",
       "storageType": "local",
       "createdAt": "2026-10-10T09:54:39.303Z",
-      "updatedAt": "2026-10-17T12:28:57.278Z"
+      "updatedAt": "2026-10-17T15:09:32.167Z"
     },
     {
       "id": "c12a3ed12c8343ce9dd643b9182feeb8",
@@ -169,7 +91,7 @@
       "filePath": "../storage/exams/c12a3ed12c8343ce9dd643b9182feeb8.json",
       "storageType": "local",
       "createdAt": "2026-10-10T10:34:47.995Z",
-      "updatedAt": "2026-10-17T12:28:57.277Z"
+      "updatedAt": "2026-10-17T15:09:32.166Z"
     },
     {
       "id": "966c63611497438089a6ef554e17af50",
@@ -182,7 +104,7 @@
       "filePath": "../storage/exams/966c63611497438089a6ef554e17af50.json",
       "storageType": "local",
       "createdAt": "2026-10-10T09:31:59.707Z",
-      "updatedAt": "2026-10-17T12:28:57.161Z"
+      "updatedAt": "2026-10-17T15:09:32.151Z"
     },
     {
       "id": "79ae83d526654c7badd8c9f0eda26d2f",
@@ -195,20 +117,7 @@
       "filePath": "../storage/exams/79ae83d526654c7badd8c9f0eda26d2f.json",
       "storageType": "local",
       "createdAt": "2026-10-11T00:14:03.426Z",
-      "updatedAt": "2026-10-17T12:28:57.162Z"
-    },
-    {
-      "id": "47ef0f9f8f0841019239f52c513522eb",
-      "name": "Đề thi: Thuật ngữ \"kiyovn\" thường được nhắc....json",
-      "parentId": "folder_1791680584468_wj18r",
-      "fileType": "json",
-      "mimeType": "application/json",
-      "size": 2019,
-      "storageKey": "exams/47ef0f9f8f0841019239f52c513522eb.json",
-      "filePath": "../storage/exams/47ef0f9f8f0841019239f52c513522eb.json",
-      "storageType": "local",
-      "createdAt": "2026-10-10T15:15:59.205Z",
-      "updatedAt": "2026-10-17T12:28:57.132Z"
+      "updatedAt": "2026-10-17T15:10:40.013Z"
     },
     {
       "id": "1a7a44a3c02c4a6781624ffc1cd26252",
@@ -221,20 +130,20 @@
       "filePath": "../storage/exams/1a7a44a3c02c4a6781624ffc1cd26252.json",
       "storageType": "local",
       "createdAt": "2026-10-11T02:05:58.398Z",
-      "updatedAt": "2026-10-17T12:28:57.115Z"
+      "updatedAt": "2026-10-17T15:10:40.016Z"
     },
     {
-      "id": "11f27f7e64f040dcbc63c0531f65331d",
-      "name": "Giải bài toán bằng cách lập hệ phương trình.json",
+      "id": "47ef0f9f8f0841019239f52c513522eb",
+      "name": "Đề thi: Thuật ngữ \"kiyovn\" thường được nhắc....json",
       "parentId": "folder_1791680584468_wj18r",
       "fileType": "json",
       "mimeType": "application/json",
-      "size": 3353,
-      "storageKey": "exams/11f27f7e64f040dcbc63c0531f65331d.json",
-      "filePath": "../storage/exams/11f27f7e64f040dcbc63c0531f65331d.json",
+      "size": 2019,
+      "storageKey": "exams/47ef0f9f8f0841019239f52c513522eb.json",
+      "filePath": "../storage/exams/47ef0f9f8f0841019239f52c513522eb.json",
       "storageType": "local",
-      "createdAt": "2026-10-10T15:36:26.726Z",
-      "updatedAt": "2026-10-17T12:28:57.102Z"
+      "createdAt": "2026-10-10T15:15:59.205Z",
+      "updatedAt": "2026-10-17T15:09:32.107Z"
     },
     {
       "id": "169a05fa160543528fc62cfc189b94a6",
@@ -247,7 +156,20 @@
       "filePath": "../storage/exams/169a05fa160543528fc62cfc189b94a6.json",
       "storageType": "local",
       "createdAt": "2026-10-10T09:48:24.333Z",
-      "updatedAt": "2026-10-17T12:28:57.102Z"
+      "updatedAt": "2026-10-17T15:09:32.088Z"
+    },
+    {
+      "id": "11f27f7e64f040dcbc63c0531f65331d",
+      "name": "Giải bài toán bằng cách lập hệ phương trình.json",
+      "parentId": "folder_1791680584468_wj18r",
+      "fileType": "json",
+      "mimeType": "application/json",
+      "size": 3353,
+      "storageKey": "exams/11f27f7e64f040dcbc63c0531f65331d.json",
+      "filePath": "../storage/exams/11f27f7e64f040dcbc63c0531f65331d.json",
+      "storageType": "local",
+      "createdAt": "2026-10-10T15:36:26.726Z",
+      "updatedAt": "2026-10-17T15:09:32.070Z"
     },
     {
       "id": "0cca980818e04310b8b725f7c1aab3a3",
@@ -260,8 +182,47 @@
       "filePath": "../storage/exams/0cca980818e04310b8b725f7c1aab3a3.json",
       "storageType": "local",
       "createdAt": "2026-10-11T02:08:34.899Z",
-      "updatedAt": "2026-10-17T12:28:57.102Z"
+      "updatedAt": "2026-10-17T15:09:32.070Z"
+    },
+    {
+      "id": "file_1792249764250_drlz",
+      "name": "Đề thi trắc nghiệm.json",
+      "parentId": null,
+      "fileType": "json",
+      "mimeType": "application/json",
+      "size": 410,
+      "storageKey": "exams/file_1792249764250_drlz.json",
+      "filePath": "../storage/exams/file_1792249764250_drlz.json",
+      "storageType": "local",
+      "createdAt": "2026-10-17T15:09:24.328Z",
+      "updatedAt": "2026-10-17T15:09:24.328Z"
+    },
+    {
+      "id": "file_1792249764250_0oi6",
+      "name": "Đề thi trắc nghiệm.json",
+      "parentId": null,
+      "fileType": "json",
+      "mimeType": "application/json",
+      "size": 410,
+      "storageKey": "exams/file_1792249764250_0oi6.json",
+      "filePath": "../storage/exams/file_1792249764250_0oi6.json",
+      "storageType": "local",
+      "createdAt": "2026-10-17T15:09:24.327Z",
+      "updatedAt": "2026-10-17T15:09:24.327Z"
+    },
+    {
+      "id": "file_1792249764249_nwdd",
+      "name": "Đề thi trắc nghiệm.json",
+      "parentId": null,
+      "fileType": "json",
+      "mimeType": "application/json",
+      "size": 410,
+      "storageKey": "exams/file_1792249764249_nwdd.json",
+      "filePath": "../storage/exams/file_1792249764249_nwdd.json",
+      "storageType": "local",
+      "createdAt": "2026-10-17T15:09:24.326Z",
+      "updatedAt": "2026-10-17T15:09:24.326Z"
     }
   ],
-  "updatedAt": "2026-10-17T12:28:57.314Z"
+  "updatedAt": "2026-10-17T15:10:40.016Z"
 }

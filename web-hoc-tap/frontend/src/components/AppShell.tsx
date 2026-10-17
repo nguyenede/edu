@@ -129,9 +129,9 @@ export const AppShell: React.FC<AppShellProps> = ({
     <div className="relative h-dvh w-full overflow-hidden bg-google-bg dark:bg-[#131314] text-slate-900 dark:text-slate-100 font-sans">
       {/* Top Header (Navbar) - Fixed 100% Frozen at top:0 */}
       <header
-        className={`fixed top-0 left-0 right-0 h-16 shrink-0 pl-2.5 pr-2 flex items-center justify-between select-none z-50 bg-google-bg dark:bg-[#131314] gap-1 sm:gap-4 transition-[border-color,box-shadow] duration-300 ease-out ${
+        className={`fixed top-0 left-0 right-0 h-16 shrink-0 pl-2.5 pr-2 flex items-center justify-between select-none z-50 bg-google-bg dark:bg-[#131314] gap-1 sm:gap-4 transition-[border-color,box-shadow] duration-200 ease-in-out ${
           isScrolled && !(title || action)
-            ? 'border-b border-slate-200/80 dark:border-white/10 shadow-[0_4px_12px_0_rgba(0,0,0,0.1),0_1px_3px_0_rgba(0,0,0,0.08)] dark:shadow-[0_4px_16px_0_rgba(0,0,0,0.6)]'
+            ? 'border-b border-black/[0.08] dark:border-white/10 shadow-[0_1px_3px_0_rgba(0,0,0,0.06),0_1px_2px_0_rgba(0,0,0,0.04)]'
             : 'border-b border-transparent shadow-none'
         }`}
       >
@@ -307,9 +307,9 @@ export const AppShell: React.FC<AppShellProps> = ({
             {/* Fixed Action / Title Bar Header - Frozen at top, zero layout shift, zero scrollbar interference */}
             {(title || action) && (
               <header
-                className={`app-title-bar shrink-0 w-full px-3 sm:px-4 h-14 max-h-14 flex flex-row items-center justify-between gap-3 print:hidden select-none relative z-10 bg-white dark:bg-[#1e1f20] transition-[border-color,box-shadow] duration-300 ease-out ${
+                className={`app-title-bar shrink-0 w-full px-3 sm:px-4 h-14 max-h-14 flex flex-row items-center justify-between gap-3 print:hidden select-none relative z-10 bg-white dark:bg-[#1e1f20] transition-[border-color,box-shadow] duration-200 ease-in-out ${
                   isScrolled
-                    ? 'border-b border-slate-200/80 dark:border-white/10 shadow-[0_4px_12px_0_rgba(0,0,0,0.1),0_1px_3px_0_rgba(0,0,0,0.08)] dark:shadow-[0_4px_16px_0_rgba(0,0,0,0.6)]'
+                    ? 'border-b border-black/[0.08] dark:border-white/10 shadow-[0_1px_3px_0_rgba(0,0,0,0.06),0_1px_2px_0_rgba(0,0,0,0.04)]'
                     : 'border-b border-transparent shadow-none'
                 }`}
               >
