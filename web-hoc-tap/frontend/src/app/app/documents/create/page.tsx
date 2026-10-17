@@ -757,14 +757,14 @@ function DocumentCreateContent() {
               <button
                 type="button"
                 onClick={() => router.push('/app/documents/create/manual' + targetQuery)}
-                className="w-full p-4 bg-slate-50/70 dark:bg-slate-900/60 hover:bg-blue-50/60 dark:hover:bg-slate-800/80 rounded-2xl transition-all text-left flex items-center justify-between group cursor-pointer"
+                className="w-full p-4 bg-slate-50/70 dark:bg-slate-900/60 hover:bg-slate-100/80 dark:hover:bg-slate-800/80 rounded-2xl transition-all text-left flex items-center justify-between group cursor-pointer"
               >
                 <div className="flex items-center gap-3.5">
                   <div className="w-11 h-11 rounded-xl bg-blue-100 dark:bg-blue-950 text-google-blue flex items-center justify-center shrink-0">
                     <PenTool size={20} />
                   </div>
                   <div>
-                    <span className="text-sm font-bold text-slate-900 dark:text-white block group-hover:text-google-blue transition-colors">
+                    <span className="text-sm font-bold text-slate-900 dark:text-white block">
                       Soạn đề thi thủ công
                     </span>
                     <span className="text-xs text-slate-400 block font-normal">
@@ -772,21 +772,21 @@ function DocumentCreateContent() {
                     </span>
                   </div>
                 </div>
-                <ChevronRight size={18} className="text-slate-400 group-hover:text-google-blue transition-colors" />
+                <ChevronRight size={18} className="text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-200 transition-colors" />
               </button>
 
               {/* DÒNG 2: TẠO ĐỀ THI BẰNG AI */}
               <button
                 type="button"
                 onClick={() => router.push('/app/documents/create/si' + targetQuery)}
-                className="w-full p-4 bg-slate-50/70 dark:bg-slate-900/60 hover:bg-amber-50/60 dark:hover:bg-slate-800/80 rounded-2xl transition-all text-left flex items-center justify-between group cursor-pointer"
+                className="w-full p-4 bg-slate-50/70 dark:bg-slate-900/60 hover:bg-slate-100/80 dark:hover:bg-slate-800/80 rounded-2xl transition-all text-left flex items-center justify-between group cursor-pointer"
               >
                 <div className="flex items-center gap-3.5">
                   <div className="w-11 h-11 rounded-xl bg-amber-100 dark:bg-amber-950 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
                     <Sparkles size={20} />
                   </div>
                   <div>
-                    <span className="text-sm font-bold text-slate-900 dark:text-white block group-hover:text-amber-600 transition-colors">
+                    <span className="text-sm font-bold text-slate-900 dark:text-white block">
                       Tạo đề thi bằng SI
                     </span>
                     <span className="text-xs text-slate-400 block font-normal">
@@ -794,21 +794,21 @@ function DocumentCreateContent() {
                     </span>
                   </div>
                 </div>
-                <ChevronRight size={18} className="text-slate-400 group-hover:text-amber-600 transition-colors" />
+                <ChevronRight size={18} className="text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-200 transition-colors" />
               </button>
 
               {/* DÒNG 3: NHẬP TỪ NGÂN HÀNG CÂU HỎI */}
               <button
                 type="button"
                 onClick={() => router.push('/app/documents/create/bank' + targetQuery)}
-                className="w-full p-4 bg-slate-50/70 dark:bg-slate-900/60 hover:bg-emerald-50/60 dark:hover:bg-slate-800/80 rounded-2xl transition-all text-left flex items-center justify-between group cursor-pointer"
+                className="w-full p-4 bg-slate-50/70 dark:bg-slate-900/60 hover:bg-slate-100/80 dark:hover:bg-slate-800/80 rounded-2xl transition-all text-left flex items-center justify-between group cursor-pointer"
               >
                 <div className="flex items-center gap-3.5">
                   <div className="w-11 h-11 rounded-xl bg-emerald-100 dark:bg-emerald-950 text-google-green flex items-center justify-center shrink-0">
                     <BookOpen size={20} />
                   </div>
                   <div>
-                    <span className="text-sm font-bold text-slate-900 dark:text-white block group-hover:text-google-green transition-colors">
+                    <span className="text-sm font-bold text-slate-900 dark:text-white block">
                       Nhập từ Ngân hàng câu hỏi
                     </span>
                     <span className="text-xs text-slate-400 block font-normal">
@@ -816,21 +816,21 @@ function DocumentCreateContent() {
                     </span>
                   </div>
                 </div>
-                <ChevronRight size={18} className="text-slate-400 group-hover:text-google-green transition-colors" />
+                <ChevronRight size={18} className="text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-200 transition-colors" />
               </button>
 
               {/* DÒNG 4: QUÉT ĐỀ THI TỪ ẢNH CHỤP (OCR) */}
               <button
                 type="button"
                 onClick={() => router.push('/app/documents/create/ocr' + targetQuery)}
-                className="w-full p-4 bg-slate-50/70 dark:bg-slate-900/60 hover:bg-purple-50/60 dark:hover:bg-slate-800/80 rounded-2xl transition-all text-left flex items-center justify-between group cursor-pointer"
+                className="w-full p-4 bg-slate-50/70 dark:bg-slate-900/60 hover:bg-slate-100/80 dark:hover:bg-slate-800/80 rounded-2xl transition-all text-left flex items-center justify-between group cursor-pointer"
               >
                 <div className="flex items-center gap-3.5">
                   <div className="w-11 h-11 rounded-xl bg-purple-100 dark:bg-purple-950 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0">
                     <Camera size={20} />
                   </div>
                   <div>
-                    <span className="text-sm font-bold text-slate-900 dark:text-white block group-hover:text-purple-600 transition-colors">
+                    <span className="text-sm font-bold text-slate-900 dark:text-white block">
                       Quét đề thi từ ảnh chụp (OCR)
                     </span>
                     <span className="text-xs text-slate-400 block font-normal">
@@ -838,7 +838,7 @@ function DocumentCreateContent() {
                     </span>
                   </div>
                 </div>
-                <ChevronRight size={18} className="text-slate-400 group-hover:text-purple-600 transition-colors" />
+                <ChevronRight size={18} className="text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-200 transition-colors" />
               </button>
             </div>
           </div>
