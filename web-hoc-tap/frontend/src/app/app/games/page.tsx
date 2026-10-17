@@ -749,8 +749,8 @@ export default function GamesHubPage() {
           <div className="space-y-4">
             {/* Cards Grid: Trial Run + Saved Custom Lessons */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {/* 1. Trial Run Card (Bản chạy thử có sẵn) */}
-              {trialLesson && (
+              {/* 1. Trial Run Card (Chỉ hiển thị khi chưa có bài chơi nào được tạo) */}
+              {trialLesson && currentCategoryLessons.length === 0 && (
                 <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-[#1a1b1e] border border-slate-200/80 dark:border-white/10 hover:border-blue-400 dark:hover:border-blue-500/50 transition-all duration-150 flex flex-col justify-between shadow-2xs hover:shadow-md">
                   <div>
                     <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-zinc-100 mb-2">
@@ -798,9 +798,6 @@ export default function GamesHubPage() {
                           {count} câu hỏi
                         </span>
                       </div>
-                      <p className="text-xs text-slate-500 dark:text-zinc-400 leading-relaxed line-clamp-1">
-                        Đề thi: {lesson.examTitle}
-                      </p>
                     </div>
 
                     <div className="mt-4 flex items-center justify-between gap-2">
@@ -834,6 +831,23 @@ export default function GamesHubPage() {
               })}
             </div>
 
+            {currentCategoryLessons.length === 0 && !trialLesson && (
+              <div className="py-16 text-center select-none flex flex-col items-center justify-center max-w-sm mx-auto">
+                <div className="w-14 h-14 rounded-2xl bg-blue-50 dark:bg-blue-950/40 text-google-blue flex items-center justify-center mb-3">
+                  <Gamepad2 size={28} />
+                </div>
+                <h4 className="text-sm font-bold text-slate-800 dark:text-zinc-200 mb-1">
+                  Chưa có bài chơi nào
+                </h4>
+                <p className="text-xs text-slate-500 dark:text-zinc-400 mb-4 leading-relaxed">
+                  Tạo bài chơi mới từ đề thi trong kho tài liệu để bắt đầu cùng học sinh.
+                </p>
+                <Button onClick={handleOpenCreateModal} className="rounded-xl gap-2 text-xs font-bold">
+                  <Plus size={15} />
+                  <span>Tạo bài chơi mới</span>
+                </Button>
+              </div>
+            )}
           </div>
         ) : (
           /* LEVEL 1: OVERALL 8 GAMES CATALOG HUB */
