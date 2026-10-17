@@ -283,11 +283,11 @@ export const AppShell: React.FC<AppShellProps> = ({
                 <div className="min-w-0 flex-1 flex items-center h-full">
                   {title &&
                     (typeof title === 'string' ? (
-                      <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100 leading-tight truncate">
+                      <h1 className="text-xl font-semibold tracking-tight text-slate-900 dark:text-slate-100 leading-tight truncate">
                         {title}
                       </h1>
                     ) : (
-                      <div className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100 leading-tight min-w-0 w-full flex items-center">
+                      <div className="text-xl font-semibold tracking-tight text-slate-900 dark:text-slate-100 leading-tight min-w-0 w-full flex items-center">
                         {title}
                       </div>
                     ))}

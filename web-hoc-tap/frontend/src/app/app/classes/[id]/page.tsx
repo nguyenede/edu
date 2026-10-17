@@ -68,8 +68,21 @@ export default function ClassDetailPage() {
   const [clazz, setClazz] = useState<any>(() => {
     if (typeof window !== 'undefined' && classId) {
       try {
+        const activeRaw = sessionStorage.getItem('current_active_class');
+        if (activeRaw) {
+          const parsed = JSON.parse(activeRaw);
+          if (parsed && (String(parsed.id) === String(classId) || parsed.code === String(classId))) {
+            return parsed;
+          }
+        }
+        const cachedName = sessionStorage.getItem('current_active_class_name');
+        const cachedId = sessionStorage.getItem('current_active_class_id');
+        if (cachedName && cachedId && String(cachedId) === String(classId)) {
+          return { id: classId, name: cachedName };
+        }
         const list = getLocalClasses();
-        const found = list.find((c: any) => String(c.id) === String(classId));
+        const cleanClassId = String(classId).replace(/_/g, '');
+        const found = list.find((c: any) => String(c.id) === String(classId) || String(c.id).replace(/_/g, '') === cleanClassId || c.code === String(classId));
         if (found) return found;
       } catch {}
     }
@@ -84,8 +97,21 @@ export default function ClassDetailPage() {
   const [loading, setLoading] = useState(() => {
     if (typeof window !== 'undefined' && classId) {
       try {
+        const activeRaw = sessionStorage.getItem('current_active_class');
+        if (activeRaw) {
+          const parsed = JSON.parse(activeRaw);
+          if (parsed && (String(parsed.id) === String(classId) || parsed.code === String(classId))) {
+            return false;
+          }
+        }
+        const cachedName = sessionStorage.getItem('current_active_class_name');
+        const cachedId = sessionStorage.getItem('current_active_class_id');
+        if (cachedName && cachedId && String(cachedId) === String(classId)) {
+          return false;
+        }
         const list = getLocalClasses();
-        const found = list.find((c: any) => String(c.id) === String(classId));
+        const cleanClassId = String(classId).replace(/_/g, '');
+        const found = list.find((c: any) => String(c.id) === String(classId) || String(c.id).replace(/_/g, '') === cleanClassId || c.code === String(classId));
         if (found) return false;
       } catch {}
     }
@@ -262,6 +288,17 @@ export default function ClassDetailPage() {
   }, [isTeacher, activeTab]);
 
   useEffect(() => {
+    if (classId) {
+      try {
+        const activeRaw = sessionStorage.getItem('current_active_class');
+        if (activeRaw) {
+          const parsed = JSON.parse(activeRaw);
+          if (parsed && (String(parsed.id) === String(classId) || parsed.code === String(classId))) {
+            setClazz(parsed);
+          }
+        }
+      } catch {}
+    }
     const activeToken = token || (typeof window !== 'undefined' ? localStorage.getItem('token') : null);
     if (!activeToken) {
       router.push('/login');
@@ -271,14 +308,21 @@ export default function ClassDetailPage() {
   }, [token, classId]);
 
   const fetchClassData = async () => {
-    setLoading(true);
+    if (!clazz) setLoading(true);
     try {
       const activeToken = token || (typeof window !== 'undefined' ? localStorage.getItem('token') : null);
       const cId = String(classId);
 
       // 1. Class Detail
       const detail = await fetchClassDetail(activeToken, cId);
-      setClazz(detail);
+      if (detail) {
+        setClazz(detail);
+        if (typeof window !== 'undefined') {
+          sessionStorage.setItem('current_active_class', JSON.stringify(detail));
+          sessionStorage.setItem('current_active_class_id', String(detail.id));
+          sessionStorage.setItem('current_active_class_name', detail.name || '');
+        }
+      }
 
       // 2. Assignments
       const asgs = await fetchClassAssignments(activeToken, cId);
@@ -530,6 +574,7 @@ export default function ClassDetailPage() {
   }, [members, studentSearch]);
 
   if (loading && !clazz) {
+    const cachedName = typeof window !== 'undefined' ? sessionStorage.getItem('current_active_class_name') : null;
     return (
       <AppShell
         title={
@@ -543,7 +588,7 @@ export default function ClassDetailPage() {
             </button>
             <BreadcrumbChevron isStatic={true} />
             <span className="text-slate-900 dark:text-white font-semibold truncate min-w-0">
-              Chi tiết lớp học
+              {cachedName || 'Chi tiết lớp học'}
             </span>
           </div>
         }
@@ -686,6 +731,10 @@ export default function ClassDetailPage() {
                     key={assign.id}
                     onClick={() => {
                       if (isTeacher) {
+                        if (typeof window !== 'undefined' && clazz) {
+                          sessionStorage.setItem('current_assignment_class_name', clazz.name || '');
+                          sessionStorage.setItem('current_assignment_class_id', String(clazz.id || classId || ''));
+                        }
                         router.push(`/app/assignments/${assign.id}`);
                       } else {
                         handleOpenExamInNewTab(assign);

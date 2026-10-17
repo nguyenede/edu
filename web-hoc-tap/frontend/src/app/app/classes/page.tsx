@@ -229,7 +229,7 @@ export default function ClassesPage() {
 
   return (
     <AppShell
-      title="Danh sách Lớp học"
+      title="Lớp học của tôi"
       subtitle={
         isTeacher
           ? 'Quản lý toàn bộ các lớp bạn đang phụ trách và mã tham gia'
@@ -325,7 +325,14 @@ export default function ClassesPage() {
             {classes.map((cls) => (
               <div
                 key={cls.id}
-                onClick={() => router.push(`/app/classes/${cls.id}`)}
+                onClick={() => {
+                  if (typeof window !== 'undefined') {
+                    sessionStorage.setItem('current_active_class', JSON.stringify(cls));
+                    sessionStorage.setItem('current_active_class_id', String(cls.id));
+                    sessionStorage.setItem('current_active_class_name', cls.name || '');
+                  }
+                  router.push(`/app/classes/${cls.id}`);
+                }}
                 className="py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 cursor-pointer hover:bg-slate-50/50 dark:hover:bg-slate-900/30 px-2 rounded-lg transition-colors select-none group"
               >
                 <div className="space-y-1">

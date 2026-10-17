@@ -94,7 +94,22 @@ export default function CreateAssignmentPage() {
   }, [allClasses, classId, isTeacher]);
 
   const currentClassObj = React.useMemo(() => {
-    return allClasses.find((c) => String(c.id) === String(classId));
+    const found = allClasses.find((c) => String(c.id) === String(classId));
+    if (found) return found;
+    if (typeof window !== 'undefined') {
+      try {
+        const activeRaw = sessionStorage.getItem('current_active_class');
+        if (activeRaw) {
+          const parsed = JSON.parse(activeRaw);
+          if (parsed && (String(parsed.id) === String(classId) || parsed.code === String(classId))) {
+            return parsed;
+          }
+        }
+        const cachedName = sessionStorage.getItem('current_active_class_name') || sessionStorage.getItem('current_assignment_class_name');
+        if (cachedName) return { id: classId, name: cachedName };
+      } catch {}
+    }
+    return null;
   }, [allClasses, classId]);
 
   const [documentFiles, setDocumentFiles] = useState<any[]>([]);

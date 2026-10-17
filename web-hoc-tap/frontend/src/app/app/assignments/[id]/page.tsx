@@ -637,6 +637,8 @@ export default function AssignmentDetailPage() {
   };
 
   if (loading) {
+    const cachedClassName = typeof window !== 'undefined' ? sessionStorage.getItem('current_assignment_class_name') : null;
+    const cachedClassId = typeof window !== 'undefined' ? sessionStorage.getItem('current_assignment_class_id') : null;
     return (
       <AppShell
         title={
@@ -649,6 +651,18 @@ export default function AssignmentDetailPage() {
               Lớp học của tôi
             </button>
             <BreadcrumbChevron isStatic={true} />
+            {cachedClassName && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => router.push(cachedClassId ? `/app/classes/${cachedClassId}` : '/app/classes')}
+                  className="cursor-pointer text-slate-900 dark:text-white font-semibold shrink-0 whitespace-nowrap"
+                >
+                  {cachedClassName}
+                </button>
+                <BreadcrumbChevron isStatic={true} />
+              </>
+            )}
             <span className="text-slate-900 dark:text-white font-semibold truncate min-w-0">
               Chi tiết bài tập
             </span>
