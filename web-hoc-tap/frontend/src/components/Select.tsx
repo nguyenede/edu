@@ -77,7 +77,7 @@ export function CustomSelect<T extends string | number>({
           disabled
             ? 'opacity-50 cursor-not-allowed bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-400'
             : isOpen
-            ? 'border-google-blue ring-1 ring-google-blue bg-white dark:bg-slate-900 shadow-xs'
+            ? 'border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 shadow-xs'
             : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-slate-300 dark:hover:border-slate-700'
         }`}
       >
@@ -95,7 +95,7 @@ export function CustomSelect<T extends string | number>({
         <ChevronRight
           size={15}
           className={`text-slate-400 shrink-0 transition-transform duration-200 ease-in-out ${
-            isOpen ? 'rotate-90 text-google-blue' : 'rotate-0'
+            isOpen ? 'rotate-90 text-slate-600 dark:text-slate-300' : 'rotate-0'
           }`}
         />
       </button>
@@ -120,7 +120,7 @@ export function CustomSelect<T extends string | number>({
                 }}
                 className={`w-full px-3.5 py-2 text-xs flex items-center justify-between text-left cursor-pointer transition-colors ${
                   isSelected
-                    ? 'bg-blue-50/80 dark:bg-blue-950/40 text-google-blue font-semibold'
+                    ? 'text-slate-900 dark:text-slate-100 font-medium hover:bg-slate-100 dark:hover:bg-slate-800'
                     : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
                 }`}
               >
