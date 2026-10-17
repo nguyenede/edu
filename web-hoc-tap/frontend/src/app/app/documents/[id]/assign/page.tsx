@@ -185,9 +185,63 @@ function AssignPageContent() {
     }
   }, [user, isTeacher, router]);
 
-  const [isLoading, setIsLoading] = useState(true);
-  const [fileItem, setFileItem] = useState<any>(null);
-  const [folders, setFolders] = useState<DocumentFolderItem[]>([]);
+  const [fileItem, setFileItem] = useState<any>(() => {
+    if (typeof window !== 'undefined' && fileId) {
+      try {
+        const cachedAssign = sessionStorage.getItem('current_assign_file_item');
+        if (cachedAssign) {
+          const parsed = JSON.parse(cachedAssign);
+          if (parsed && matchDocId(parsed.id, fileId)) {
+            return parsed;
+          }
+        }
+        const savedFiles = localStorage.getItem('app_documents_files');
+        const customFiles = localStorage.getItem('custom_uploaded_files');
+        const list1 = savedFiles ? JSON.parse(savedFiles) : [];
+        const list2 = customFiles ? JSON.parse(customFiles) : [];
+        const all = [...(Array.isArray(list1) ? list1 : []), ...(Array.isArray(list2) ? list2 : [])];
+        const found = all.find((f: any) => f && matchDocId(f.id, fileId));
+        if (found) {
+          try {
+            return normalizeDocItem(found, fileId);
+          } catch {
+            return found;
+          }
+        }
+      } catch {}
+    }
+    return null;
+  });
+
+  const [isLoading, setIsLoading] = useState<boolean>(() => {
+    if (typeof window !== 'undefined' && fileId) {
+      try {
+        const cachedAssign = sessionStorage.getItem('current_assign_file_item');
+        if (cachedAssign) return false;
+        const savedFiles = localStorage.getItem('app_documents_files');
+        const customFiles = localStorage.getItem('custom_uploaded_files');
+        const list1 = savedFiles ? JSON.parse(savedFiles) : [];
+        const list2 = customFiles ? JSON.parse(customFiles) : [];
+        const all = [...(Array.isArray(list1) ? list1 : []), ...(Array.isArray(list2) ? list2 : [])];
+        const found = all.find((f: any) => f && matchDocId(f.id, fileId));
+        if (found) return false;
+      } catch {}
+    }
+    return true;
+  });
+
+  const [folders, setFolders] = useState<DocumentFolderItem[]>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const savedFolders = localStorage.getItem('app_documents_folders');
+        if (savedFolders) {
+          const parsed = JSON.parse(savedFolders);
+          if (Array.isArray(parsed)) return parsed;
+        }
+      } catch {}
+    }
+    return [];
+  });
 
   // Config States
   const [title, setTitle] = useState('');
@@ -457,13 +511,14 @@ function AssignPageContent() {
   };
 
   const folderPath = getFolderPath();
-  const displayTitle = (fileItem?.name || 'Đề thi')
+  const cachedTitle = typeof window !== 'undefined' ? sessionStorage.getItem('current_assign_doc_title') : null;
+  const displayTitle = (fileItem?.name || cachedTitle || 'Đề thi')
     .replace(/\.[^/.]+$/, '')
     .replace(/\s+/g, ' ')
     .trim();
   const questionsCount = fileItem?.parsedQuiz?.questions?.length || 0;
 
-  if (isLoading) {
+  if (isLoading && !fileItem) {
     return (
       <AppShell
         title={
@@ -476,7 +531,16 @@ function AssignPageContent() {
               Tài liệu của tôi
             </button>
             <BreadcrumbChevron isStatic={true} />
-            <span className="text-slate-900 dark:text-white font-normal truncate min-w-0">
+            <button
+              type="button"
+              onClick={() => router.push(`/documents/${encodeURIComponent(fileId)}`)}
+              className="cursor-pointer text-slate-900 dark:text-white font-normal truncate min-w-0 max-w-[180px] sm:max-w-[320px] text-left shrink-0"
+              title={displayTitle}
+            >
+              {displayTitle}
+            </button>
+            <BreadcrumbChevron isStatic={true} />
+            <span className="text-slate-900 dark:text-white font-normal shrink-0 whitespace-nowrap">
               Giao bài tập
             </span>
           </div>
@@ -1235,6 +1299,14 @@ function AssignPageContent() {
 }
 
 export default function DocumentAssignPage() {
+  const params = useParams();
+  const fileId = (params?.id as string) || '';
+  const cachedTitle = typeof window !== 'undefined' ? sessionStorage.getItem('current_assign_doc_title') : null;
+  const displayTitle = (cachedTitle || 'Đề thi')
+    .replace(/\.[^/.]+$/, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+
   return (
     <Suspense
       fallback={
@@ -1251,7 +1323,18 @@ export default function DocumentAssignPage() {
                 Tài liệu của tôi
               </button>
               <BreadcrumbChevron isStatic={true} />
-              <span className="text-slate-900 dark:text-white font-normal truncate min-w-0">
+              <button
+                type="button"
+                onClick={() => {
+                  if (typeof window !== 'undefined') window.location.href = `/documents/${encodeURIComponent(fileId)}`;
+                }}
+                className="cursor-pointer text-slate-900 dark:text-white font-normal truncate min-w-0 max-w-[180px] sm:max-w-[320px] text-left shrink-0"
+                title={displayTitle}
+              >
+                {displayTitle}
+              </button>
+              <BreadcrumbChevron isStatic={true} />
+              <span className="text-slate-900 dark:text-white font-normal shrink-0 whitespace-nowrap">
                 Giao bài tập
               </span>
             </div>

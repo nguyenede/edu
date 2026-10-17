@@ -53,7 +53,7 @@ html.dark body {
   background-color: #131314 !important;
 }
 
-html, body, button, input, select, textarea {
+*, html, body, button, input, select, textarea {
   font-family: var(--font-inter), 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif !important;
 }
 
@@ -355,6 +355,8 @@ html.dark * {
 }
 
 /* Tiêu đề tuyệt đối không bị in đậm trên toàn bộ 100% website */
+.app-title-bar,
+.app-title-bar *,
 .app-title-container,
 .app-title-container *,
 .app-title-container h1,
@@ -364,7 +366,13 @@ html.dark * {
 .app-title-container div,
 .app-title-container strong,
 .app-title-container b,
-.app-title-container p {
+.app-title-container p,
+[data-breadcrumb],
+[data-breadcrumb] * {
   font-weight: 400 !important;
+  font-synthesis: none !important;
+  -webkit-font-smoothing: antialiased !important;
+  -moz-osx-font-smoothing: grayscale !important;
+  text-rendering: optimizeLegibility !important;
 }
 

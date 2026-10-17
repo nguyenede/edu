@@ -747,7 +747,18 @@ function DocumentDynamicViewPageContent() {
           <Button
             variant="primary"
             size="sm"
-            onClick={() => router.push(`/documents/${encodeURIComponent(fileId)}/assign`)}
+            onClick={() => {
+              if (typeof window !== 'undefined') {
+                sessionStorage.setItem('current_assign_file_id', fileId);
+                sessionStorage.setItem('current_assign_doc_title', displayTitle);
+                if (fileItem) {
+                  try {
+                    sessionStorage.setItem('current_assign_file_item', JSON.stringify(fileItem));
+                  } catch {}
+                }
+              }
+              router.push(`/documents/${encodeURIComponent(fileId)}/assign`);
+            }}
             className="rounded-xl text-xs gap-1.5"
             title="Giao bài tập"
           >
