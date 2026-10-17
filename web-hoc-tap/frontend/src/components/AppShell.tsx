@@ -24,7 +24,6 @@ import {
   BookOpen,
   FileText,
   BarChart2,
-  Bell,
   Gamepad2,
 } from 'lucide-react';
 
@@ -102,7 +101,6 @@ export const AppShell: React.FC<AppShellProps> = ({
       : []),
     { label: 'Trò chơi lớp học', href: '/app/games', icon: Gamepad2 },
     { label: 'Báo cáo', href: '/app/results', icon: BarChart2 },
-    { label: 'Thông báo', href: '/app/notifications', icon: Bell },
     { label: 'Cài đặt', href: '/app/settings', icon: Settings },
   ];
 
