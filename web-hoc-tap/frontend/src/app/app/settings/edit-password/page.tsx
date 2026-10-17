@@ -68,7 +68,7 @@ export default function EditPasswordPage() {
               { label: 'Hồ sơ cá nhân', href: '/app/settings/edit-name' },
               { label: 'Bảo mật', href: '/app/settings' },
               { label: 'Quản lý thiết bị', href: '/app/settings/devices' },
-              { label: 'Gói dịch vụ', href: '/app/settings/plans' },
+              { label: 'Gói', href: '/app/settings/plans' },
             ]}
           />
           <button

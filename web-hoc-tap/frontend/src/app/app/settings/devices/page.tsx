@@ -35,7 +35,7 @@ export default function DevicesPage() {
               { label: 'Hồ sơ cá nhân', href: '/app/settings/edit-name', icon: <User size={14} className="text-blue-500 shrink-0" /> },
               { label: 'Bảo mật', href: '/app/settings', icon: <Shield size={14} className="text-rose-500 shrink-0" /> },
               { label: 'Quản lý thiết bị', href: '/app/settings/devices', icon: <Laptop size={14} className="text-purple-500 shrink-0" /> },
-              { label: 'Gói dịch vụ', href: '/app/settings/plans', icon: <Crown size={14} className="text-amber-500 shrink-0" /> },
+              { label: 'Gói', href: '/app/settings/plans', icon: <Crown size={14} className="text-amber-500 shrink-0" /> },
             ]}
           />
           <button

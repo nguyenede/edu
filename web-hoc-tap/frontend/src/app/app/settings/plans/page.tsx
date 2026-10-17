@@ -126,11 +126,11 @@ export default function PlansPage() {
               { label: 'Hồ sơ cá nhân', href: '/app/settings/edit-name', icon: <User size={14} className="text-blue-500 shrink-0" /> },
               { label: 'Đổi mật khẩu', href: '/app/settings/edit-password', icon: <Lock size={14} className="text-rose-500 shrink-0" /> },
               { label: 'Thiết bị đăng nhập', href: '/app/settings/devices', icon: <Laptop size={14} className="text-purple-500 shrink-0" /> },
-              { label: 'Gói dịch vụ & Nâng cấp', href: '/app/settings/plans', icon: <Crown size={14} className="text-amber-500 shrink-0" /> },
+              { label: 'Gói', href: '/app/settings/plans', icon: <Crown size={14} className="text-amber-500 shrink-0" /> },
             ]}
           />
           <span className="text-slate-900 dark:text-white font-normal truncate min-w-0 flex-1">
-            Ủng hộ nhà phát triển & Gói Pro
+            Gói
           </span>
         </div>
       }
