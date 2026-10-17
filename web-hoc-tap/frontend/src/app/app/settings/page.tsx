@@ -982,18 +982,6 @@ export default function SettingsPage(props: any) {
                       </p>
                     </div>
 
-                    <div className="p-4 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900/60 rounded-2xl flex items-center gap-4">
-                      <ShieldCheck size={28} className="text-google-green shrink-0" />
-                      <div>
-                        <h3 className="text-sm font-bold text-emerald-900 dark:text-emerald-300">
-                          Tài khoản của bạn được bảo vệ an toàn
-                        </h3>
-                        <p className="text-xs text-emerald-700 dark:text-emerald-400">
-                          Kiểm tra bảo mật đã xem xét tài khoản của bạn và không tìm thấy hành động khẩn cấp nào.
-                        </p>
-                      </div>
-                    </div>
-
                     <div className="space-y-[2px]">
                       <button
                         onClick={() => router.push('/app/settings/devices')}
