@@ -209,7 +209,7 @@ function AssignPageContent() {
   const [showAnswersAfterSubmit, setShowAnswersAfterSubmit] = useState(true);
 
   // Anti-cheating State (NÚT BẬT / TẮT & CẤU HÌNH CHI TIẾT)
-  const [antiCheating, setAntiCheating] = useState(true);
+  const [antiCheating, setAntiCheating] = useState(false);
   const [maxViolations, setMaxViolations] = useState<number>(3);
   const [forceFullscreen, setForceFullscreen] = useState(true);
   const [detectTabSwitch, setDetectTabSwitch] = useState(true);

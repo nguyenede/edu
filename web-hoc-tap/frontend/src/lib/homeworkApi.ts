@@ -244,7 +244,7 @@ export async function getHomeworkByPin(pin: string): Promise<HomeworkItem | null
                 return false;
               });
               if (match) {
-                let parsedAntiCheat: boolean = Boolean(match.antiCheat ?? match.antiCheating ?? true);
+                let parsedAntiCheat: boolean = Boolean(match.antiCheat ?? match.antiCheating ?? false);
                 let parsedAntiCheatConfig = match.antiCheatConfig || null;
                 let parsedDuration = match.durationMinutes || 45;
                 let parsedMinSubmitMinutes = Number(match.minSubmitMinutes) || 0;
@@ -408,7 +408,7 @@ export async function getHomeworkByPin(pin: string): Promise<HomeworkItem | null
  * Chuyển đổi dữ liệu bài tập từ máy chủ thành HomeworkItem
  */
 function formatServerAssignmentToHomework(asg: any, pin: string): HomeworkItem {
-  let parsedAntiCheat: boolean = true;
+  let parsedAntiCheat: boolean = false;
   let parsedAntiCheatConfig: any = null;
   let parsedDuration = asg.durationMinutes || 45;
   let parsedMinSubmitMinutes = Number(asg.minSubmitMinutes) || 0;
