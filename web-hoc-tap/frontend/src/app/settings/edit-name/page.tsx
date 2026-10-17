@@ -95,12 +95,12 @@ export default function EditNamePage() {
 
           <div className="flex flex-col items-center justify-center space-y-3 pb-2">
             <div className="relative group">
-              <div className="w-24 h-24 rounded-full bg-google-blue text-white flex items-center justify-center font-bold text-3xl shadow-md">
+              <div className="w-24 h-24 rounded-full bg-google-blue text-white flex items-center justify-center font-bold text-3xl shadow-none">
                 {name ? name[0].toUpperCase() : 'U'}
               </div>
               <button
                 type="button"
-                className="absolute bottom-0 right-0 bg-slate-900 text-white p-2 rounded-full shadow-lg hover:scale-105 transition-all"
+                className="absolute bottom-0 right-0 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 p-2 rounded-full border-2 border-white dark:border-slate-800 shadow-none hover:scale-105 transition-all"
                 title="Tải ảnh mới"
               >
                 <Camera size={14} />

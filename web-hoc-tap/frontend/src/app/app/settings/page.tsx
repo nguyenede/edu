@@ -857,12 +857,12 @@ export default function SettingsPage(props: any) {
                     <div className="p-6 bg-slate-100/90 dark:bg-slate-800/70 border border-transparent dark:border-slate-800/60 rounded-2xl flex items-center justify-between">
                       <div className="flex items-center gap-4">
                         <div className="relative">
-                          <div className="w-16 h-16 rounded-full bg-google-blue text-white flex items-center justify-center text-2xl font-bold uppercase shadow-md">
+                          <div className="w-16 h-16 rounded-full bg-google-blue text-white flex items-center justify-center text-2xl font-bold uppercase shadow-none">
                             {name ? name.charAt(0) : 'A'}
                           </div>
                           <button
                             onClick={() => router.push('/app/settings/edit-name')}
-                            className="absolute bottom-0 right-0 p-1.5 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 rounded-full shadow-md hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700"
+                            className="absolute bottom-0 right-0 p-1.5 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 rounded-full shadow-none hover:bg-slate-100 dark:hover:bg-slate-800 border-2 border-white dark:border-slate-800"
                             title="Đổi ảnh đại diện"
                           >
                             <Camera size={14} />
