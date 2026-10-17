@@ -768,7 +768,7 @@ export default function ResultsPage() {
                                 {item.count} bài
                               </span>
                               <span className="text-[11px] text-slate-400 font-mono">
-                                ({pct}%)
+                                {pct}%
                               </span>
                             </div>
                           </div>
@@ -808,12 +808,6 @@ export default function ResultsPage() {
                       <span className="text-slate-500">Bài cần chấm:</span>
                       <span className="font-bold text-blue-600 dark:text-blue-400 font-mono">
                         {classStats.pendingGradingCount} bài
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between pt-1">
-                      <span className="text-slate-500">Mã lớp:</span>
-                      <span className="font-mono font-bold text-slate-800 dark:text-slate-200">
-                        {selectedClass?.code}
                       </span>
                     </div>
                   </div>
@@ -964,7 +958,7 @@ export default function ResultsPage() {
                         className="text-xs font-bold gap-1.5"
                       >
                         <Copy size={13} />
-                        Sao chép mã lớp ({selectedClass?.code})
+                        Sao chép mã lớp
                       </Button>
                       <Button
                         variant="ghost"
