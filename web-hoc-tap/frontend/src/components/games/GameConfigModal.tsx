@@ -708,7 +708,7 @@ export const GameConfigModal: React.FC<GameConfigModalProps> = ({
               {/* Tiêu đề trò chơi */}
               <div>
                 <label className="block text-xs font-bold text-slate-700 dark:text-zinc-300 mb-1.5">
-                  Tiêu đề trò chơi / Buổi học
+                  Tiêu đề trò chơi
                 </label>
                 <input
                   type="text"
