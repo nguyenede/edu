@@ -602,7 +602,6 @@ export default function GamesHubPage() {
               Trò chơi lớp học
             </button>
             <BreadcrumbChevron
-              menuTitle="Trò chơi lớp học"
               items={GAME_LIST.map((g) => ({
                 label: g.title,
                 icon: getGameCustomIcon(g.id, 18),
@@ -636,7 +635,6 @@ export default function GamesHubPage() {
               Trò chơi lớp học
             </button>
             <BreadcrumbChevron
-              menuTitle="Trò chơi lớp học"
               items={GAME_LIST.map((g) => ({
                 label: g.title,
                 icon: getGameCustomIcon(g.id, 18),
