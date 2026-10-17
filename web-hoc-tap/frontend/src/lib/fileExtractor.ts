@@ -257,12 +257,21 @@ export async function extractFileForAi(file: File): Promise<ExtractedFileResult>
   // 5. File PDF (.pdf)
   if (ext === '.pdf') {
     const pdfText = await extractTextFromPdf(file);
+    const isCleanText = Boolean(
+      pdfText &&
+      !pdfText.includes('\uFFFD') &&
+      pdfText.trim().length > 100 &&
+      !/(?:\n[^\n]{1,6}){4,}/.test(pdfText)
+    );
+
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = () => {
         resolve({
-          type: pdfText && pdfText.trim().length > 30 ? 'text' : 'image',
-          text: pdfText || undefined,
+          // Khi text PDF không hoàn toàn nguyên vẹn, luôn trả về type: 'image' với PDF base64
+          // để Gemini Multimodal API nhận trực tiếp file PDF và bóc tách chuẩn xác 100%
+          type: isCleanText ? 'text' : 'image',
+          text: isCleanText ? pdfText : undefined,
           imageBase64: reader.result as string,
           fileName,
           fileExt: ext,

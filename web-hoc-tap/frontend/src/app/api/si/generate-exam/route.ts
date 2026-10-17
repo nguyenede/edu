@@ -379,40 +379,40 @@ export async function POST(req: NextRequest) {
     let systemPrompt = '';
     let userContent: any = '';
 
-    if (mode === 'ocr' && imageBase64) {
-      // 1. Chế độ bóc tách ảnh đề thi qua Vision AI
-      systemPrompt = `BẠN LÀ CHUYÊN GIA AI OCR BÓC TÁCH ĐỀ THI TỪ HÌNH ẢNH CHUẨN XÁC 100%.
-Nhiệm vụ: Trích xuất trung thực và chính xác toàn bộ câu hỏi, bài tập, công thức toán học và đáp án từ hình ảnh đề thi.
+    if ((mode === 'ocr' || mode === 'image') && imageBase64) {
+      // 1. Chế độ bóc tách ảnh đề thi hoặc file PDF qua Vision/Document AI
+      systemPrompt = `BẠN LÀ CHUYÊN GIA AI OCR BÓC TÁCH ĐỀ THI TỪ HÌNH ẢNH / TÀI LIỆU PDF CHUẨN XÁC 100%.
+Nhiệm vụ: Trích xuất trung thực và chính xác toàn bộ câu hỏi, bài tập, công thức toán học và đáp án từ hình ảnh hoặc tài liệu PDF đề thi.
 
 QUY TẮC BẮT BUỘC TUÂN THỦ:
 1. TUYỆT ĐỐI 100% KHÔNG TẠO DỮ LIỆU GIẢ:
    - TUYỆT ĐỐI KHÔNG BAO GIỜ tự bịa ra "Phương án A", "Phương án B", "Phương án C", "Phương án D" hoặc các placeholder vô nghĩa.
    - TUYỆT ĐỐI KHÔNG BAO GIỜ trả về các token nội bộ như [!m:$mathtype_X$], mathtype_X, [img:$img_X$]. Mọi công thức toán học BẮT BUỘC phục hồi sang LaTeX chuẩn ($v \\ge 60$, $x < 5$, $a \\le b$).
-   - Bắt buộc trích xuất đúng từng chữ, số, công thức toán có trong ảnh.
-   - Nếu trong ảnh là câu hỏi trắc nghiệm: trích xuất đúng nội dung từng phương án lựa chọn và đáp án đúng.
-   - Nếu trong ảnh là câu hỏi tự luận (Bài 1, Bài 2...): Giữ nguyên câu hỏi tự luận và lời giải (nếu có trên ảnh), KHÔNG tự ý chế ra các phương án A/B/C/D giả.
+   - Bắt buộc trích xuất đúng từng chữ, số, công thức toán có trong ảnh/tài liệu.
+   - Nếu trong ảnh/tài liệu là câu hỏi trắc nghiệm: trích xuất đúng nội dung từng phương án lựa chọn và đáp án đúng.
+   - Nếu trong ảnh/tài liệu là câu hỏi tự luận (Bài 1, Bài 2...): Giữ nguyên câu hỏi tự luận và lời giải (nếu có trên tài liệu), KHÔNG tự ý chế ra các phương án A/B/C/D giả.
    - QUY TẮC PHÂN TÍCH SÂU: Lời giải (explanation) BẮT BUỘC phân tích chi tiết từng bước, giải thích vì sao đáp án đúng và vì sao các phương án còn lại sai.
 2. TỰ ĐỘNG NHẬN DIỆN MÔN HỌC & KHỐI LỚP:
-   - "subject": Xác định đúng môn học từ nội dung câu hỏi trong ảnh (Toán, Vật lý, Hóa học, Tiếng Anh...).
-   - "title": Đặt tiêu đề phản ánh đúng nội dung bài học / đề thi trong ảnh.
+   - "subject": Xác định đúng môn học từ nội dung câu hỏi trong ảnh/tài liệu (Toán, Vật lý, Hóa học, Tiếng Anh...).
+   - "title": Đặt tiêu đề phản ánh đúng nội dung bài học / đề thi trong ảnh/tài liệu.
    - "grade": Khối lớp chuẩn xác (Lớp 1 đến Lớp 12).
-4. PHÁT HIỆN HÌNH ẢNH KHÔNG HỢP LỆ (BẮT BUỘC):
-   - Nếu bức ảnh KHÔNG PHẢI là đề thi, bài tập hoặc bài học giáo dục (ví dụ: ảnh cá nhân, ảnh phong cảnh, hóa đơn, danh sách điểm danh, ảnh mờ không đọc được chữ hoặc ảnh vô nghĩa):
+4. PHÁT HIỆN HÌNH ẢNH / TÀI LIỆU KHÔNG HỢP LỆ (BẮT BUỘC):
+   - Nếu bức ảnh/tài liệu KHÔNG PHẢI là đề thi, bài tập hoặc bài học giáo dục (ví dụ: ảnh cá nhân, ảnh phong cảnh, hóa đơn, danh sách điểm danh, ảnh mờ không đọc được chữ hoặc tài liệu vô nghĩa):
    - TUYỆT ĐỐI 100% KHÔNG ĐƯỢC TỰ BỊA RA CÂU HỎI HAY ĐỀ THI GIẢ!
    - BẮT BUỘC trả về JSON:
    {
      "error": "INVALID_DOCUMENT",
-     "message": "Hình ảnh không chứa câu hỏi đề thi hoặc nội dung học tập hợp lệ."
+     "message": "Hình ảnh hoặc tài liệu không chứa câu hỏi đề thi hoặc nội dung học tập hợp lệ."
    }
 3. CHỈ TRẢ VỀ JSON DUY NHẤT HỢP LỆ THEO CẤU TRÚC:
 {
-  "title": "${resolvedTitle || (fileName ? fileName.replace(/\.[^/.]+$/, '') : 'Đề thi trích xuất từ ảnh')}",
+  "title": "${resolvedTitle || (fileName ? fileName.replace(/\.[^/.]+$/, '') : 'Đề thi trích xuất từ tài liệu')}",
   "subject": "${resolvedSubject ? resolvedSubject : 'Tên môn học chuẩn xác'}",
   "grade": "${resolvedGrade ? (resolvedGrade.startsWith('Lớp') ? resolvedGrade : `Lớp ${resolvedGrade}`) : 'Khối lớp chuẩn xác'}",
   "durationMinutes": 45,
   "questions": [
     {
-      "content": "Nội dung câu hỏi trích xuất từ ảnh...",
+      "content": "Nội dung câu hỏi trích xuất từ tài liệu...",
       "explanation": "Lời giải chi tiết và phân tích sâu...",
       "options": [
         {"content": "Đáp án A thực tế", "isCorrect": false},
@@ -427,7 +427,7 @@ QUY TẮC BẮT BUỘC TUÂN THỦ:
       userContent = [
         {
           type: 'text',
-          text: `Hãy đọc kỹ bức ảnh đề thi được cung cấp:\n- Trích xuất toàn bộ câu hỏi và bài tập có trong ảnh với 100% nội dung thật, bảo toàn công thức toán LaTeX ($...$).\n- Tuyệt đối không sinh dữ liệu giả hay tự bịa "Phương án A/B/C/D".\n- Trả về JSON đúng cấu trúc yêu cầu.`,
+          text: `Hãy đọc kỹ tài liệu/hình ảnh đề thi được cung cấp:\n- Trích xuất toàn bộ câu hỏi và bài tập có trong tài liệu với 100% nội dung thật, bảo toàn công thức toán LaTeX ($...$).\n- Nhận diện đúng phương án A, B, C, D và đáp án đúng.\n- Tuyệt đối không sinh dữ liệu giả hay tự bịa "Phương án A/B/C/D".\n- Trả về JSON đúng cấu trúc yêu cầu.`,
         },
         {
           type: 'image_url',

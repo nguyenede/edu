@@ -1685,6 +1685,8 @@ export function parseLatexFileStructure(rawText: string, fileName: string): Dete
 
 /**
  * Trích xuất text từ file PDF sử dụng giải nén stream pako
+ * Tự động kiểm tra tính toàn vẹn và font encoding: Nếu phát hiện ký tự hỏng \uFFFD hoặc văn bản bị cắt nát,
+ * sẽ lập tức trả về chuỗi rỗng '' để chuyển sang Gemini Multimodal AI xử lý trực tiếp file PDF với độ chính xác 100%.
  */
 export async function extractTextFromPdf(file: File): Promise<string> {
   try {
@@ -1694,7 +1696,7 @@ export async function extractTextFromPdf(file: File): Promise<string> {
     for (let i = 0; i < bytes.length; i++) {
       latin1Str += String.fromCharCode(bytes[i]);
     }
-    const textPieces: string[] = [];
+    const lines: string[] = [];
 
     const streamRegex = /stream\r?\n([\s\S]*?)\r?\nendstream/g;
     let match: RegExpExecArray | null;
@@ -1714,33 +1716,78 @@ export async function extractTextFromPdf(file: File): Promise<string> {
         decompressedText = rawStreamStr;
       }
 
+      // Nếu stream giải nén chứa ký tự hỏng \uFFFD (do font encoding là Identity/CID/WinAnsi không phải UTF-8)
+      if (decompressedText.includes('\uFFFD')) {
+        continue;
+      }
+
       const btRegex = /BT[\s\S]*?ET/g;
       let btMatch: RegExpExecArray | null;
       while ((btMatch = btRegex.exec(decompressedText)) !== null) {
         const btBlock = btMatch[0];
+        const textInBlock: string[] = [];
 
+        // 1. Array TJ: [(text) offset (text2)] TJ
         const tjRegex = /\[([\s\S]*?)\]\s*TJ/g;
         let tjMatch: RegExpExecArray | null;
         while ((tjMatch = tjRegex.exec(btBlock)) !== null) {
           const inner = tjMatch[1];
-          const strMatches = inner.match(/\(([^()]*)\)/g);
-          if (strMatches) {
-            const joined = strMatches.map((s) => s.slice(1, -1)).join('');
-            if (joined.trim()) textPieces.push(joined);
+          const tokens = inner.match(/\(([^()]*)\)|(-?\d+(?:\.\d+)?)/g);
+          if (tokens) {
+            let linePart = '';
+            for (const tok of tokens) {
+              if (tok.startsWith('(') && tok.endsWith(')')) {
+                linePart += tok.slice(1, -1);
+              } else {
+                const offset = parseFloat(tok);
+                if (!isNaN(offset) && offset < -120) {
+                  linePart += ' ';
+                }
+              }
+            }
+            if (linePart.trim()) textInBlock.push(linePart.trim());
           }
         }
 
+        // 2. Simple Tj: (text) Tj
         const sTjRegex = /\(([^()]*)\)\s*Tj/g;
         let sTjMatch: RegExpExecArray | null;
         while ((sTjMatch = sTjRegex.exec(btBlock)) !== null) {
-          if (sTjMatch[1].trim()) textPieces.push(sTjMatch[1]);
+          const text = sTjMatch[1].trim();
+          if (text) textInBlock.push(text);
+        }
+
+        if (textInBlock.length > 0) {
+          lines.push(textInBlock.join(' '));
         }
       }
     }
 
-    if (textPieces.length > 0) {
-      return textPieces.join('\n');
+    if (lines.length === 0) return '';
+
+    const fullText = lines.join('\n');
+
+    // KIỂM TRA ĐỘ TIN CẬY CỦA VĂN BẢN PDF ĐƯỢC BÓC TÁCH:
+    // 1. Tuyệt đối không chấp nhận văn bản có ký tự lỗi \uFFFD (dấu hình thoi đen)
+    if (fullText.includes('\uFFFD')) return '';
+
+    // 2. Không chấp nhận văn bản bị cắt nát thành các dòng siêu ngắn (< 10 ký tự) chiếm đa số
+    const validLines = lines.map((l) => l.trim()).filter((l) => l.length > 0);
+    if (validLines.length >= 5) {
+      const veryShortLines = validLines.filter((l) => l.length < 8);
+      if (veryShortLines.length / validLines.length > 0.4) {
+        return '';
+      }
     }
+
+    // 3. Nếu là tài liệu tiếng Việt, kiểm tra xem có dấu tiếng Việt hợp lệ không
+    const hasVietnameseAccents = /[àáảãạâầấẩẫậăằắẳẵặđèéẻẽẹêềếểễệìíỉĩịòóỏõọôồốổỗộơờớởỡợùúủũụưừứửữựỳýỷỹỵ]/i.test(fullText);
+    const hasVietnameseMarkers = /(?:câu|bài|đáp\s*án|chọn|đúng|sai)/i.test(fullText);
+    if (hasVietnameseMarkers && !hasVietnameseAccents) {
+      return '';
+    }
+
+    return fullText;
   } catch (err) {
     console.warn('PDF text extraction error:', err);
   }
@@ -1926,10 +1973,24 @@ export function validateDeterministicResult(result: DeterministicExamResult | nu
     return false;
   }
 
+  // 1. Kiểm tra toàn cục: Tuyệt đối không chấp nhận đề thi chứa ký tự hỏng \uFFFD (black diamond)
+  const hasCorruptedChar = result.questions.some(
+    (q) =>
+      (q.content || '').includes('\uFFFD') ||
+      (q.options && q.options.some((o) => (o.content || '').includes('\uFFFD'))) ||
+      (q.explanation || '').includes('\uFFFD')
+  );
+  if (hasCorruptedChar) {
+    console.warn('validateDeterministicResult: Phát hiện ký tự hỏng \\uFFFD (lỗi font/encoding). Từ chối thuật toán để chuyển sang AI.');
+    return false;
+  }
+
+  let essayDowngradeCount = 0;
+  let multipleChoiceCount = 0;
+
   // Lọc và kiểm tra từng câu hỏi
   const validQuestions = result.questions.filter((q) => {
     q.content = cleanAndEnrichMathFormulas(q.content || '');
-    // Làm sạch token nội bộ nếu còn sót
     q.content = q.content.replace(/\[!m:[^\]]*\]/gi, '').replace(/\bmathtype_\d+\b/gi, '').trim();
 
     const content = q.content.trim();
@@ -1940,13 +2001,32 @@ export function validateDeterministicResult(result: DeterministicExamResult | nu
       return false;
     }
 
+    // Kiểm tra dòng bị cắt vụn (mỗi dòng vài ký tự như "p s\nsau:\n; v C")
+    const lines = content.split('\n').map((l) => l.trim()).filter(Boolean);
+    if (lines.length >= 4) {
+      const veryShortLines = lines.filter((l) => l.length < 8);
+      if (veryShortLines.length / lines.length > 0.45) {
+        return false; // Nội dung bị cắt vụn dòng bất thường
+      }
+    }
+
     // Nếu là câu hỏi trắc nghiệm hoặc có phương án:
     if (q.type === 'multiple_choice' || (q.options && q.options.length > 0)) {
+      multipleChoiceCount++;
+
       if (!q.options || q.options.length < 2) {
-        // Nếu không đủ phương án nhưng nội dung câu hỏi có ý nghĩa bài tập -> giữ lại làm câu Tự luận
-        if (content.length >= 15) {
+        // Kiểm tra xem trong thân câu hỏi có dấu hiệu phương án A. B. C. D bị dính không
+        const optionsInText = (content.match(/(?:^|\s)[A-D][.:)]/gi) || []).length;
+        if (optionsInText >= 2) {
+          essayDowngradeCount++;
+          return false;
+        }
+
+        // Nếu nội dung câu hỏi thực sự là một bài toán tự luận độc lập
+        if (content.length >= 25 && !/(?:chọn|phương án|đáp án đúng)/i.test(content)) {
           q.type = 'essay';
           q.options = [];
+          essayDowngradeCount++;
           return true;
         }
         return false;
@@ -1969,22 +2049,14 @@ export function validateDeterministicResult(result: DeterministicExamResult | nu
       });
 
       if (hasInvalidOption) {
-        if (content.length >= 15) {
-          q.type = 'essay';
-          q.options = [];
-          return true;
-        }
+        essayDowngradeCount++;
         return false;
       }
 
       // Đảm bảo các phương án phân biệt (không bị trùng lặp nội dung)
       const uniqueContents = new Set(q.options.map((o) => o.content.trim().toLowerCase()));
       if (uniqueContents.size !== q.options.length) {
-        if (content.length >= 15) {
-          q.type = 'essay';
-          q.options = [];
-          return true;
-        }
+        essayDowngradeCount++;
         return false;
       }
     }
@@ -1993,6 +2065,17 @@ export function validateDeterministicResult(result: DeterministicExamResult | nu
   });
 
   if (validQuestions.length === 0) {
+    return false;
+  }
+
+  // Nếu tỷ lệ câu hỏi bị hỏng phương án hoặc chuyển sang tự luận bất thường > 25% tổng số câu
+  if (multipleChoiceCount > 0 && essayDowngradeCount / (multipleChoiceCount + essayDowngradeCount) > 0.25) {
+    console.warn('validateDeterministicResult: Tỷ lệ câu hỏi lỗi phương án quá cao (>25%). Từ chối thuật toán để kích hoạt SI/AI.');
+    return false;
+  }
+
+  // Đảm bảo giữ lại ít nhất 60% số câu hỏi ban đầu
+  if (validQuestions.length < Math.max(2, Math.floor(result.questions.length * 0.6))) {
     return false;
   }
 
