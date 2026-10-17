@@ -79,6 +79,16 @@ export async function listDocuments(token: string, folderId?: string | null) {
       const idbData = await idbSyncAndGetAll();
       const validFiles = idbData.documents.filter((f) => f && !isDocumentTombstoned(f.id, f.name, f.parsedQuiz?.title));
       if (validFiles.length > 0 || idbData.folders.length > 0) {
+        // Tự động đồng bộ các đề thi từ IndexedDB thành file vật lý .json trên ổ đĩa
+        for (const vf of validFiles) {
+          if (vf && vf.parsedQuiz) {
+            safeApiFetch(`${API_BASE}/files`, {
+              method: 'POST',
+              headers: authHeaders(token),
+              body: JSON.stringify(vf),
+            }, 800).catch(() => null);
+          }
+        }
         return {
           folders: idbData.folders,
           files: validFiles,
@@ -301,7 +311,16 @@ export async function getDocumentFile(token: string, id: string): Promise<Docume
     try {
       // 1a. Tìm trực tiếp trong IndexedDB theo ID chính xác
       const idbDoc = await idbGetDocument(id);
-      if (idbDoc) return idbDoc;
+      if (idbDoc) {
+        if (idbDoc.parsedQuiz) {
+          safeApiFetch(`${API_BASE}/files`, {
+            method: 'POST',
+            headers: authHeaders(token),
+            body: JSON.stringify(idbDoc),
+          }, 800).catch(() => null);
+        }
+        return idbDoc;
+      }
 
       // 1b. Quét toàn bộ IndexedDB với matchDocId (chống sai lệch encoding / typo)
       const allIdb = await idbGetAllDocuments();

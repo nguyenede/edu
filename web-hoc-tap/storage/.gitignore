@@ -1,0 +1,7 @@
+# Ignore uploaded files and exams in local storage to keep git repository clean
+exams/*
+!exams/.gitkeep
+images/*
+!images/.gitkeep
+documents/*
+!documents/.gitkeep

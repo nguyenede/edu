@@ -1,21 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { unifiedStorage } from '@/lib/storage/unifiedStorage';
+import { documentDb } from '@/lib/storage/documentDb';
 
-interface StandardExamPayload {
-  id: string;
-  name: string;
-  parentId: string | null;
-  fileType: 'json';
-  mimeType: 'application/json';
-  storageKey: string;
-  size?: number | null;
-  parsedQuiz: {
-    title: string;
-    description: string;
-    durationMinutes: number;
-    questions: any[];
-  };
-  createdAt: string;
-  updatedAt: string;
+export const dynamic = 'force-dynamic';
+
+export async function GET(req: NextRequest) {
+  try {
+    const { searchParams } = new URL(req.url);
+    const parentId = searchParams.get('parentId') || searchParams.get('folderId');
+    const files = await documentDb.listFiles(parentId !== null ? parentId : undefined);
+    return NextResponse.json({ success: true, files });
+  } catch (error: any) {
+    return NextResponse.json({ success: false, message: error.message }, { status: 500 });
+  }
 }
 
 export async function POST(req: NextRequest) {
@@ -26,7 +23,7 @@ export async function POST(req: NextRequest) {
       .trim();
     const targetId = body.id || `file_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
     const jsonName = `${rawTitle}.json`;
-    const storageKey = body.storageKey || `exams/teacher/${targetId}.json`;
+    const storageKey = `exams/${targetId}.json`;
 
     const rawParsed = body.parsedQuiz || {};
     const questions: any[] = Array.isArray(rawParsed.questions)
@@ -38,74 +35,65 @@ export async function POST(req: NextRequest) {
     const durationMinutes = Number(rawParsed.durationMinutes || body.durationMinutes) || 45;
     const description = String(rawParsed.description || body.description || '').trim();
 
-    const standardExam: StandardExamPayload = {
+    // Standard Clean Exam JSON Payload to store on disk or S3
+    const examPayload = {
       id: targetId,
-      name: jsonName,
-      parentId: body.parentId || null,
-      fileType: 'json',
-      mimeType: 'application/json',
-      storageKey,
+      title: rawTitle,
+      description,
+      durationMinutes,
+      questionsCount: questions.length,
+      questions,
       parsedQuiz: {
         title: rawTitle,
         description,
         durationMinutes,
         questions,
       },
-      createdAt: body.createdAt || new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      metadata: {
+        createdAt: body.createdAt || new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      },
     };
 
-    const jsonBuffer = Buffer.from(JSON.stringify(standardExam, null, 2), 'utf-8');
-    standardExam.size = jsonBuffer.length;
+    // 1. LƯU THÀNH FILE .JSON THỰC TẾ TRÊN Ổ ĐĨA / S3
+    const jsonBuffer = Buffer.from(JSON.stringify(examPayload, null, 2), 'utf-8');
+    const storageResult = await unifiedStorage.saveFile(storageKey, jsonBuffer, 'application/json');
 
-    // Optional direct S3 sync if S3 credentials are configured in frontend env
-    const s3Bucket = process.env.S3_BUCKET || 'appbaitap-exams';
-    const s3Endpoint = process.env.S3_ENDPOINT;
-    const s3AccessKey = process.env.S3_ACCESS_KEY_ID;
-    const s3SecretKey = process.env.S3_SECRET_ACCESS_KEY;
-    const s3Region = process.env.S3_REGION || 'us-east-1';
+    // 2. LƯU VÀO DB: CHỈ LƯU METADATA & ĐƯỜNG DẪN FILE (filePath, storageKey)
+    // TUYỆT ĐỐI KHÔNG LƯU CỤC JSON / parsedQuiz TRONG DB
+    const fileRecord = await documentDb.saveFileRecord({
+      id: targetId,
+      name: jsonName,
+      parentId: body.parentId || body.folderId || null,
+      fileType: 'json',
+      mimeType: 'application/json',
+      size: storageResult.size,
+      storageKey: storageResult.storageKey,
+      filePath: storageResult.filePath,
+      storageType: storageResult.storageType,
+      createdAt: body.createdAt,
+    });
 
-    let s3Synced = false;
-    if (s3AccessKey && s3SecretKey) {
-      try {
-        // Can perform S3 PUT or forward to backend S3 service
-        const backendUrl = process.env.BACKEND_URL || 'http://127.0.0.1:3001';
-        await fetch(`${backendUrl}/api/documents/files`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            ...(req.headers.get('authorization') ? { Authorization: req.headers.get('authorization')! } : {}),
-          },
-          body: JSON.stringify(standardExam),
-        }).then((res) => {
-          if (res.ok) s3Synced = true;
-        }).catch(() => null);
-      } catch (err) {
-        console.warn('S3 backend sync notice:', err);
-      }
-    }
+    console.log(`[Files API] Saved exam JSON to ${storageResult.storageType.toUpperCase()} file: ${storageResult.filePath} (${storageResult.size} bytes). Recorded path in DB.`);
 
     return NextResponse.json({
       success: true,
-      file: standardExam,
-      s3Storage: {
-        bucket: s3Bucket,
-        key: storageKey,
-        synced: s3Synced,
+      file: {
+        ...fileRecord,
+        parsedQuiz: examPayload.parsedQuiz, // Return to caller for immediate UI rendering
       },
-    });
+      storage: {
+        storageKey: storageResult.storageKey,
+        filePath: storageResult.filePath,
+        storageType: storageResult.storageType,
+        url: storageResult.url,
+      },
+    }, { status: 201 });
   } catch (error: any) {
-    console.error('Error handling /api/documents/files:', error);
+    console.error('[Files API] Error saving document:', error);
     return NextResponse.json(
-      { success: false, message: error.message || 'Lỗi lưu trữ tài liệu đề thi' },
-      { status: 500 },
+      { success: false, message: error.message || 'Lỗi lưu trữ tệp đề thi' },
+      { status: 500 }
     );
   }
-}
-
-export async function GET() {
-  return NextResponse.json({
-    success: true,
-    files: [],
-  });
 }

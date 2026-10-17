@@ -60,12 +60,13 @@ export class DocumentsService {
     const jsonName = `${baseName}.json`;
     const targetId = dto.id ? String(dto.id) : randomUUID();
 
-    // Đồng bộ trực tiếp lên S3 API
-    const { storageKey, size, examJson } = await this.s3Storage.uploadExamJson(ownerId, targetId, {
+    // Lưu vào file vật lý cục bộ hoặc S3 API
+    const { storageKey, filePath, size, examJson } = await this.s3Storage.uploadExamJson(ownerId, targetId, {
       ...dto,
       name: jsonName,
     });
 
+    // Chỉ lưu thông tin tệp & đường dẫn vào DB, KHÔNG lưu toàn bộ JSON vào DB
     const file = await this.prisma.documentFile.create({
       data: {
         id: targetId,
@@ -76,10 +77,15 @@ export class DocumentsService {
         mimeType: 'application/json',
         size,
         storageKey,
-        parsedQuiz: (examJson.parsedQuiz as any) || dto.parsedQuiz || null,
+        parsedQuiz: undefined,
       },
     });
-    return this.serializeFile(file);
+
+    return {
+      ...this.serializeFile(file),
+      filePath,
+      parsedQuiz: examJson.parsedQuiz,
+    };
   }
 
   async getFile(ownerId: string, id: string) {
