@@ -132,18 +132,10 @@ export default function CreateClassPage() {
                 Hủy
               </Button>
               <Button
-                type="button"
-                variant="secondary"
-                disabled={classLoading || !newClassName.trim()}
-                onClick={() => handleSave(false)}
-              >
-                Lưu
-              </Button>
-              <Button
                 type="submit"
                 disabled={classLoading || !newClassName.trim()}
               >
-                {classLoading ? 'Đang tạo' : 'Lưu và đóng'}
+                {classLoading ? 'Đang tạo' : 'Lưu'}
               </Button>
             </div>
           </form>

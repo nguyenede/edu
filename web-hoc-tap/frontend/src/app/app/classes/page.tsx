@@ -413,20 +413,11 @@ export default function ClassesPage() {
             </Button>
             <Button
               type="button"
-              variant="secondary"
-              size="sm"
-              disabled={createLoading || !classNameInput.trim()}
-              onClick={() => handleSaveClass(false)}
-            >
-              Lưu
-            </Button>
-            <Button
-              type="button"
               size="sm"
               disabled={createLoading || !classNameInput.trim()}
               onClick={() => handleSaveClass(true)}
             >
-              Lưu và đóng
+              Lưu
             </Button>
           </div>
         </div>
