@@ -624,14 +624,14 @@ export default function GamesHubPage() {
     <AppShell
       title={
         isConfigModalOpen && activeCategory ? (
-          <div className="flex items-center gap-1 text-2xl tracking-tight text-slate-900 dark:text-slate-100 flex-wrap -ml-2">
+          <div className="flex items-center gap-1.5 flex-wrap">
             <button
               type="button"
               onClick={() => {
                 setIsConfigModalOpen(false);
                 setActiveCategory(null);
               }}
-              className="transition-all cursor-pointer px-2 py-0.5 rounded-xl text-slate-900 dark:text-white font-semibold hover:bg-slate-200/70 dark:hover:bg-slate-800"
+              className="cursor-pointer text-slate-900 dark:text-white font-semibold"
             >
               Trò chơi lớp học
             </button>
@@ -655,16 +655,16 @@ export default function GamesHubPage() {
               {getCategoryMeta(activeCategory).title}
             </button>
             <BreadcrumbChevron isStatic={true} />
-            <span className="px-2 py-0.5 rounded-xl text-slate-900 dark:text-white font-normal">
+            <span className="text-slate-900 dark:text-white font-semibold">
               {editingLessonId ? 'Chỉnh sửa bài chơi' : 'Tạo bài chơi mới'}
             </span>
           </div>
         ) : activeCategory ? (
-          <div className="flex items-center gap-1 text-2xl tracking-tight text-slate-900 dark:text-slate-100 flex-wrap -ml-2">
+          <div className="flex items-center gap-1.5 flex-wrap">
             <button
               type="button"
               onClick={() => setActiveCategory(null)}
-              className="transition-all cursor-pointer px-2 py-0.5 rounded-xl text-slate-900 dark:text-white font-semibold hover:bg-slate-200/70 dark:hover:bg-slate-800"
+              className="cursor-pointer text-slate-900 dark:text-white font-semibold"
             >
               Trò chơi lớp học
             </button>
@@ -676,15 +676,15 @@ export default function GamesHubPage() {
               }))}
               fallbackToStaticChevron={true}
             />
-            <span className="px-2 py-0.5 rounded-xl text-slate-900 dark:text-white font-normal">
+            <span className="text-slate-900 dark:text-white font-semibold">
               {getCategoryMeta(activeCategory).title}
             </span>
           </div>
         ) : (
-          <div className="flex items-center gap-1 text-2xl tracking-tight text-slate-900 dark:text-slate-100 flex-wrap -ml-2">
+          <div className="flex items-center gap-1.5 flex-wrap">
             <button
               type="button"
-              className="transition-all cursor-pointer px-2 py-0.5 rounded-xl text-slate-900 dark:text-white font-semibold hover:bg-slate-200/70 dark:hover:bg-slate-800"
+              className="cursor-pointer text-slate-900 dark:text-white font-semibold"
             >
               Trò chơi lớp học
             </button>

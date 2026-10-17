@@ -523,16 +523,16 @@ function DocumentDynamicViewPageContent() {
     return (
       <AppShell
         title={
-          <div className="flex items-center gap-1 text-2xl font-normal tracking-tight text-slate-900 dark:text-slate-100 flex-wrap -ml-2">
+          <div className="flex items-center gap-1.5 flex-wrap">
             <button
               type="button"
               onClick={() => router.push('/documents')}
-              className="transition-colors cursor-pointer px-2 py-0.5 rounded-xl hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-normal"
+              className="cursor-pointer text-slate-900 dark:text-white font-semibold"
             >
               Tài liệu của tôi
             </button>
-            <ChevronRight size={20} className="text-slate-400 dark:text-slate-500 shrink-0 stroke-[1.75]" />
-            <span className="px-2 py-0.5 rounded-xl text-slate-900 dark:text-white font-normal">
+            <BreadcrumbChevron isStatic={true} />
+            <span className="text-slate-900 dark:text-white font-semibold">
               Đang tải đề thi...
             </span>
           </div>
@@ -573,16 +573,16 @@ function DocumentDynamicViewPageContent() {
     return (
       <AppShell
         title={
-          <div className="flex items-center gap-1 text-2xl font-normal tracking-tight text-slate-900 dark:text-slate-100 flex-wrap -ml-2">
+          <div className="flex items-center gap-1.5 flex-wrap">
             <button
               type="button"
               onClick={() => router.push('/documents')}
-              className="transition-colors cursor-pointer px-2 py-0.5 rounded-xl hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-normal"
+              className="cursor-pointer text-slate-900 dark:text-white font-semibold"
             >
               Tài liệu của tôi
             </button>
-            <ChevronRight size={20} className="text-slate-400 dark:text-slate-500 shrink-0 stroke-[1.75]" />
-            <span className="px-2 py-0.5 rounded-xl text-slate-900 dark:text-white font-normal">
+            <BreadcrumbChevron isStatic={true} />
+            <span className="text-slate-900 dark:text-white font-semibold">
               Chi tiết đề thi
             </span>
           </div>
@@ -639,11 +639,11 @@ function DocumentDynamicViewPageContent() {
   return (
     <AppShell
       title={
-        <div className="flex items-center gap-1 text-2xl tracking-tight text-slate-900 dark:text-slate-100 flex-wrap -ml-2">
+        <div className="flex items-center gap-1.5 flex-wrap">
           <button
             type="button"
             onClick={() => router.push('/documents')}
-            className="transition-colors cursor-pointer px-2 py-0.5 rounded-xl hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-900 dark:text-white font-semibold"
+            className="cursor-pointer text-slate-900 dark:text-white font-semibold"
           >
             Tài liệu của tôi
           </button>
@@ -667,7 +667,7 @@ function DocumentDynamicViewPageContent() {
                       if (typeof window !== 'undefined') sessionStorage.setItem('app_active_folder_id', folder.id);
                       router.push('/documents');
                     }}
-                    className="transition-colors cursor-pointer px-2 py-0.5 rounded-xl hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-900 dark:text-white font-normal"
+                    className="cursor-pointer text-slate-900 dark:text-white font-semibold"
                   >
                     {folder.name}
                   </button>
@@ -686,7 +686,7 @@ function DocumentDynamicViewPageContent() {
             onNavigateFile={(id) => router.push(`/documents/${id}`)}
           />
           <span
-            className="px-2 py-0.5 rounded-xl text-slate-900 dark:text-white font-normal truncate-tight max-w-xs sm:max-w-md md:max-w-xl lg:max-w-3xl xl:max-w-5xl"
+            className="text-slate-900 dark:text-white font-semibold truncate-tight max-w-xs sm:max-w-md md:max-w-xl lg:max-w-3xl xl:max-w-5xl"
             title={displayTitle}
           >
             {displayTitle}

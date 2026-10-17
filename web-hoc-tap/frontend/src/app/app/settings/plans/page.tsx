@@ -111,11 +111,11 @@ export default function PlansPage() {
   return (
     <AppShell
       title={
-        <div className="flex items-center gap-1 text-2xl tracking-tight text-slate-900 dark:text-slate-100 flex-wrap -ml-2">
+        <div className="flex items-center gap-1.5 flex-wrap">
           <button
             type="button"
             onClick={() => router.push('/app/settings')}
-            className="transition-colors cursor-pointer px-2 py-0.5 rounded-xl hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-900 dark:text-white font-semibold"
+            className="cursor-pointer text-slate-900 dark:text-white font-semibold"
           >
             Cài đặt
           </button>
@@ -129,7 +129,7 @@ export default function PlansPage() {
               { label: 'Gói dịch vụ & Nâng cấp', href: '/app/settings/plans', icon: <Crown size={14} className="text-amber-500 shrink-0" /> },
             ]}
           />
-          <span className="px-2 py-0.5 rounded-xl text-slate-900 dark:text-white font-normal">
+          <span className="text-slate-900 dark:text-white font-semibold">
             Ủng hộ nhà phát triển & Gói Pro
           </span>
         </div>

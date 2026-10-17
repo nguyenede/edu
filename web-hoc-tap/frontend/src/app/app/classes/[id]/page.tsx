@@ -513,7 +513,23 @@ export default function ClassDetailPage() {
 
   if (loading && !clazz) {
     return (
-      <AppShell>
+      <AppShell
+        title={
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <button
+              type="button"
+              onClick={() => router.push('/app/classes')}
+              className="cursor-pointer text-slate-900 dark:text-white font-semibold"
+            >
+              Lớp học của tôi
+            </button>
+            <BreadcrumbChevron isStatic={true} />
+            <span className="text-slate-900 dark:text-white font-semibold">
+              Đang tải...
+            </span>
+          </div>
+        }
+      >
         <div className="flex flex-col items-center justify-center p-16 gap-3">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-google-blue"></div>
           <p className="text-xs text-slate-400">Đang tải thông tin lớp học...</p>
@@ -536,11 +552,11 @@ export default function ClassDetailPage() {
   return (
     <AppShell
       title={
-        <div className="flex items-center gap-1 text-2xl tracking-tight text-slate-900 dark:text-slate-100 flex-wrap -ml-2">
+        <div className="flex items-center gap-1.5 flex-wrap">
           <button
             type="button"
             onClick={() => router.push('/app/classes')}
-            className="transition-colors cursor-pointer px-2 py-0.5 rounded-xl hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-900 dark:text-white font-semibold"
+            className="cursor-pointer text-slate-900 dark:text-white font-semibold"
           >
             Lớp học của tôi
           </button>
@@ -548,7 +564,7 @@ export default function ClassDetailPage() {
             menuTitle="Lớp học của tôi"
             items={classBreadcrumbItems}
           />
-          <span className="px-2 py-0.5 rounded-xl text-slate-900 dark:text-white font-normal">
+          <span className="text-slate-900 dark:text-white font-semibold">
             {clazz.name}
           </span>
         </div>

@@ -322,3 +322,19 @@ html.dark * {
   }
 }
 
+/* Tiêu đề tuyệt đối không có bất kỳ hiệu ứng chuyển động, phóng to thu nhỏ, animation trên 100% website */
+.app-title-bar,
+.app-title-bar *,
+.app-title-bar button,
+.app-title-bar a,
+.app-title-bar span,
+.app-title-bar div,
+.app-title-bar h1,
+#app-main-viewport h1:first-of-type,
+[data-breadcrumb],
+[data-breadcrumb] * {
+  transition: none !important;
+  animation: none !important;
+  transform: none !important;
+}
+

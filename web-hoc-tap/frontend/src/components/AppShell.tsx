@@ -270,7 +270,7 @@ export const AppShell: React.FC<AppShellProps> = ({
       <div
         id="main-scroll"
         suppressHydrationWarning
-        className={`absolute inset-0 pt-16 overflow-hidden transition-[padding-left] duration-200 ease-in-out ${
+        className={`absolute inset-0 pt-16 overflow-hidden ${
           sidebarCollapsed ? 'md:pl-[64px]' : 'md:pl-[220px]'
         }`}
       >
@@ -289,15 +289,17 @@ export const AppShell: React.FC<AppShellProps> = ({
             >
               {/* Action / Title Bar Header */}
               {(title || action) && (
-                <div className="pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 print:hidden">
+                <div className="app-title-bar pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 print:hidden">
                   <div className="min-w-0">
                     {title &&
                       (typeof title === 'string' ? (
-                        <h1 className="text-xl sm:text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100 leading-tight break-words">
+                        <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100 leading-tight break-words">
                           {title}
                         </h1>
                       ) : (
-                        <div className="text-slate-900 dark:text-slate-100">{title}</div>
+                        <div className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100 leading-tight">
+                          {title}
+                        </div>
                       ))}
                   </div>
                   {action && <div className="flex w-full sm:w-auto min-w-0 items-center gap-2 [&>*]:min-w-0 [&>*]:flex-wrap">{action}</div>}

@@ -1634,7 +1634,7 @@ function DocumentsPageContent() {
   return (
     <AppShell
       title={
-        <div className="flex items-center gap-1 text-2xl tracking-tight text-slate-900 dark:text-slate-100 flex-wrap -ml-2">
+        <div className="flex items-center gap-1.5 flex-wrap">
           {getBreadcrumbs().map((crumb, idx, arr) => {
             const isDropTarget =
               draggedItem &&
@@ -1662,10 +1662,10 @@ function DocumentsPageContent() {
                     );
                   }}
                   onDrop={(e) => handleDropOnTarget(e, crumb.id)}
-                  className={`transition-all cursor-pointer px-2 py-0.5 rounded-xl ${
+                  className={`cursor-pointer font-semibold ${
                     isDropTarget
-                      ? 'bg-blue-100 text-google-blue dark:bg-blue-900/60 ring-2 ring-google-blue font-semibold scale-105 shadow-xs'
-                      : 'text-slate-900 dark:text-white font-semibold hover:bg-slate-200/70 dark:hover:bg-slate-800'
+                      ? 'text-google-blue underline'
+                      : 'text-slate-900 dark:text-white'
                   }`}
                 >
                   {crumb.name}

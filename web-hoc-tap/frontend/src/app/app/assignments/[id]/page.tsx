@@ -638,7 +638,23 @@ export default function AssignmentDetailPage() {
 
   if (loading) {
     return (
-      <AppShell>
+      <AppShell
+        title={
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <button
+              type="button"
+              onClick={() => router.push('/app/classes')}
+              className="cursor-pointer text-slate-900 dark:text-white font-semibold"
+            >
+              Lớp học của tôi
+            </button>
+            <BreadcrumbChevron isStatic={true} />
+            <span className="text-slate-900 dark:text-white font-semibold">
+              Đang tải...
+            </span>
+          </div>
+        }
+      >
         <div className="flex flex-col items-center justify-center py-24 space-y-3">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
           <p className="text-xs text-slate-500">Đang tải thông tin bài tập...</p>
@@ -649,7 +665,7 @@ export default function AssignmentDetailPage() {
 
   if (!assignment) {
     return (
-      <AppShell>
+      <AppShell title="Không tìm thấy bài tập">
         <div className="p-8 text-center space-y-4">
           <p className="text-sm text-slate-500">Không tìm thấy bài tập hoặc bài tập đã bị xóa.</p>
           <Button variant="secondary" onClick={() => router.push('/app/classes')}>
@@ -663,11 +679,11 @@ export default function AssignmentDetailPage() {
   return (
     <AppShell
       title={
-        <div className="flex items-center gap-1 text-2xl font-[450] tracking-tight text-slate-900 dark:text-slate-100 flex-wrap -ml-2">
+        <div className="flex items-center gap-1.5 flex-wrap">
           <button
             type="button"
             onClick={() => router.push('/app/classes')}
-            className="transition-colors cursor-pointer px-2 py-0.5 rounded-xl hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-900 dark:text-white font-[450]"
+            className="cursor-pointer text-slate-900 dark:text-white font-semibold"
           >
             Lớp học của tôi
           </button>
@@ -679,12 +695,12 @@ export default function AssignmentDetailPage() {
             <button
               type="button"
               onClick={() => router.push(`/app/classes/${assignment.classId}`)}
-              className="transition-colors cursor-pointer px-2 py-0.5 rounded-xl hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-900 dark:text-white font-[450]"
+              className="cursor-pointer text-slate-900 dark:text-white font-semibold"
             >
               {classNameDisplay}
             </button>
           ) : (
-            <span className="px-2 py-0.5 rounded-xl text-slate-900 dark:text-white font-[450]">
+            <span className="text-slate-900 dark:text-white font-semibold">
               {classNameDisplay}
             </span>
           )}
@@ -692,7 +708,7 @@ export default function AssignmentDetailPage() {
             menuTitle={classNameDisplay}
             items={assignmentBreadcrumbItems}
           />
-          <span className="px-2 py-0.5 rounded-xl text-slate-900 dark:text-white font-normal truncate-tight max-w-xs sm:max-w-md md:max-w-xl lg:max-w-3xl xl:max-w-5xl">
+          <span className="text-slate-900 dark:text-white font-semibold truncate-tight max-w-xs sm:max-w-md md:max-w-xl lg:max-w-3xl xl:max-w-5xl">
             {assignment.title}
           </span>
         </div>

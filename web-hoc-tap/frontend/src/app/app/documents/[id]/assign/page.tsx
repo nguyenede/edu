@@ -523,14 +523,14 @@ function AssignPageContent() {
   return (
     <AppShell
       title={
-        <div className="flex items-center gap-1 text-2xl tracking-tight text-slate-900 dark:text-slate-100 flex-wrap -ml-2">
+        <div className="flex items-center gap-1.5 flex-wrap">
           <button
             type="button"
             onClick={() => {
               if (typeof window !== 'undefined') sessionStorage.removeItem('app_active_folder_id');
               router.push('/documents');
             }}
-            className="transition-colors cursor-pointer px-2 py-0.5 rounded-xl hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-900 dark:text-white font-semibold"
+            className="cursor-pointer text-slate-900 dark:text-white font-semibold"
           >
             Tài liệu của tôi
           </button>
@@ -551,7 +551,7 @@ function AssignPageContent() {
                   if (typeof window !== 'undefined') sessionStorage.setItem('app_active_folder_id', folder.id);
                   router.push('/documents');
                 }}
-                className="transition-colors cursor-pointer px-2 py-0.5 rounded-xl hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-900 dark:text-white font-normal"
+                className="cursor-pointer text-slate-900 dark:text-white font-semibold"
               >
                 {folder.name}
               </button>
@@ -573,7 +573,7 @@ function AssignPageContent() {
             {displayTitle}
           </button>
           <BreadcrumbChevron isStatic={true} />
-          <span className="px-2 py-0.5 rounded-xl text-slate-900 dark:text-white font-normal">
+          <span className="text-slate-900 dark:text-white font-semibold">
             Giao bài tập
           </span>
         </div>

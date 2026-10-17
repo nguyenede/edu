@@ -416,7 +416,7 @@ export default function ResultsPage() {
   return (
     <AppShell
       title={
-        <div className="flex items-center gap-1 text-2xl tracking-tight text-slate-900 dark:text-slate-100 flex-wrap -ml-2">
+        <div className="flex items-center gap-1.5 flex-wrap">
           <button
             type="button"
             onClick={() => setSelectedClassId('')}
@@ -435,7 +435,7 @@ export default function ResultsPage() {
                 }))}
               />
               <span
-                className="px-2 py-0.5 rounded-xl text-slate-900 dark:text-white font-normal truncate-tight max-w-xs sm:max-w-md md:max-w-xl lg:max-w-3xl xl:max-w-5xl"
+                className="text-slate-900 dark:text-white font-semibold truncate-tight max-w-xs sm:max-w-md md:max-w-xl lg:max-w-3xl xl:max-w-5xl"
                 title={selectedClass.name}
               >
                 {selectedClass.name}

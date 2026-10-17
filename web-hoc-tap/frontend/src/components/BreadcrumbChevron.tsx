@@ -182,7 +182,7 @@ export function BreadcrumbChevron({
           setIsOpen((prev) => !prev);
         }}
         title={menuTitle || 'Mở danh sách'}
-        className={`w-6 h-6 rounded flex items-center justify-center cursor-pointer select-none transition-colors ${
+        className={`w-6 h-6 rounded flex items-center justify-center cursor-pointer select-none ${
           isOpen
             ? 'bg-slate-200/90 dark:bg-[#333333] text-slate-900 dark:text-slate-100'
             : 'text-slate-400 dark:text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-[#2a2a2a]'
@@ -190,14 +190,14 @@ export function BreadcrumbChevron({
       >
         <ChevronRight
           size={14}
-          className={`transition-transform duration-150 stroke-[2] ${isOpen ? 'rotate-90 text-slate-800 dark:text-slate-200' : ''}`}
+          className={`stroke-[2] ${isOpen ? 'rotate-90 text-slate-800 dark:text-slate-200' : ''}`}
         />
       </button>
 
       {/* Windows 11 Address Bar Dropdown Menu (Acrylic Frosted Glass Blur) */}
       {isOpen && (
         <div
-          className="absolute left-0 top-full mt-1 z-50 min-w-[200px] max-w-[320px] max-h-[360px] flex flex-col bg-white/95 dark:bg-[#202020]/95 backdrop-blur-xl rounded-xl shadow-[0_8px_28px_rgba(0,0,0,0.22)] dark:shadow-[0_12px_36px_rgba(0,0,0,0.7)] border border-slate-200/80 dark:border-white/10 py-1.5 text-xs select-none overflow-hidden animate-in fade-in-0 duration-100"
+          className="absolute left-0 top-full mt-1 z-50 min-w-[200px] max-w-[320px] max-h-[360px] flex flex-col bg-white/95 dark:bg-[#202020]/95 backdrop-blur-xl rounded-xl shadow-[0_8px_28px_rgba(0,0,0,0.22)] dark:shadow-[0_12px_36px_rgba(0,0,0,0.7)] border border-slate-200/80 dark:border-white/10 py-1.5 text-xs select-none overflow-hidden"
           onClick={(e) => e.stopPropagation()}
         >
           {menuTitle && (
