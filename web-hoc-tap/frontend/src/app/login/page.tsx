@@ -224,7 +224,7 @@ function LoginFormContent() {
               size="lg"
             >
               <LogIn size={18} />
-              {loading ? 'Đang xác thực...' : 'Đăng nhập'}
+              {loading ? 'Đang xác thực' : 'Đăng nhập'}
             </Button>
           </form>
 

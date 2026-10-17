@@ -379,7 +379,7 @@ export const LuckyWheelGame: React.FC<LuckyWheelGameProps> = ({
               className="w-full py-2.5 px-4 rounded-xl bg-google-blue hover:bg-blue-600 text-white font-bold text-sm shadow-xs transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
             >
               <RotateCw size={15} className={isSpinning ? 'animate-spin' : ''} />
-              <span>{isSpinning ? 'Đang quay...' : 'Quay ngẫu nhiên'}</span>
+              <span>{isSpinning ? 'Đang quay' : 'Quay ngẫu nhiên'}</span>
             </button>
           </div>
         </div>

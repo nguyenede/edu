@@ -93,7 +93,7 @@ function JoinClassContent() {
             )}
 
             <Input
-              label="Mã lớp (6 chữ số)"
+              label="Mã lớp gồm 6 chữ số"
               placeholder="Ví dụ: 123456"
               maxLength={6}
               value={joinCode}
@@ -107,7 +107,7 @@ function JoinClassContent() {
                 Hủy
               </Button>
               <Button type="submit" disabled={loading}>
-                {loading ? 'Đang xử lý...' : 'Tham gia ngay'}
+                {loading ? 'Đang xử lý' : 'Tham gia ngay'}
               </Button>
             </div>
           </form>

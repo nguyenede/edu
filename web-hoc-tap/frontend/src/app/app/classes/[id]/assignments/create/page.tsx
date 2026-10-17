@@ -282,7 +282,7 @@ export default function CreateAssignmentPage() {
                     { value: 0, label: 'Không giới hạn thời gian' },
                     { value: 15, label: '15 phút' },
                     { value: 30, label: '30 phút' },
-                    { value: 45, label: '45 phút (Mặc định)' },
+                    { value: 45, label: '45 phút' },
                     { value: 60, label: '60 phút' },
                     { value: 90, label: '90 phút' },
                   ]}
@@ -298,7 +298,7 @@ export default function CreateAssignmentPage() {
                   value={minSubmitMinutes}
                   onChange={(val) => setMinSubmitMinutes(Number(val))}
                   options={[
-                    { value: 0, label: 'Không yêu cầu (Nộp bất kỳ lúc nào)' },
+                    { value: 0, label: 'Không yêu cầu thời gian' },
                     { value: 5, label: 'Sau tối thiểu 5 phút' },
                     { value: 10, label: 'Sau tối thiểu 10 phút' },
                     { value: 15, label: 'Sau tối thiểu 15 phút' },
@@ -321,7 +321,7 @@ export default function CreateAssignmentPage() {
                   { value: '', label: '-- Không đính kèm đề thi --' },
                   ...documentFiles.map((doc) => ({
                     value: doc.id,
-                    label: `${doc.parsedQuiz?.title || doc.name} (${doc.parsedQuiz?.questions?.length || 0} câu)`,
+                    label: `${doc.parsedQuiz?.title || doc.name} - ${doc.parsedQuiz?.questions?.length || 0} câu`,
                   })),
                 ]}
                 placeholder="-- Không đính kèm đề thi --"
@@ -337,7 +337,7 @@ export default function CreateAssignmentPage() {
                 Hủy
               </Button>
               <Button type="submit" disabled={loading}>
-                {loading ? 'Đang giao...' : 'Giao bài tập ngay'}
+                {loading ? 'Đang giao' : 'Giao bài tập ngay'}
               </Button>
             </div>
           </form>

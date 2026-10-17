@@ -468,13 +468,12 @@ export default function AssignmentDetailPage() {
         const newLog = {
           type: 'tab_switch',
           timestamp: new Date().toLocaleTimeString('vi-VN'),
-          message: `${message} (Lần ${nextCount}/${maxAllowed})`,
+          message: `${message} - Lần ${nextCount}/${maxAllowed}`,
         };
         setStudentViolations((prevLogs) => {
           const updated = [...prevLogs, newLog];
           if (nextCount >= maxAllowed) {
             setTimeout(() => {
-              alert(`Bạn đã vi phạm quy chế chống gian lận ${nextCount}/${maxAllowed} lần! Hệ thống tự động nộp bài.`);
               handleStudentSubmit({
                 violationCount: nextCount,
                 violationLogs: updated,
@@ -484,7 +483,7 @@ export default function AssignmentDetailPage() {
           return updated;
         });
 
-        setAntiCheatWarning(`⚠️ ${message}! (Vi phạm lần ${nextCount}/${maxAllowed})`);
+        setAntiCheatWarning(`⚠️ ${message}! Vi phạm lần ${nextCount}/${maxAllowed}`);
         return nextCount;
       });
     };
@@ -567,7 +566,7 @@ export default function AssignmentDetailPage() {
 
   const handleStudentSubmit = async (overrideMeta?: any) => {
     if (!hasMetMinTime && !overrideMeta) {
-      alert(`Chưa đủ thời gian làm bài tối thiểu (${minSubmitMinutes} phút)!`);
+      setAntiCheatWarning(`Chưa đủ thời gian làm bài tối thiểu ${minSubmitMinutes} phút!`);
       setIsSubmitConfirmOpen(false);
       return;
     }
@@ -671,7 +670,7 @@ export default function AssignmentDetailPage() {
       >
         <div className="flex flex-col items-center justify-center py-24 space-y-3">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
-          <p className="text-xs text-slate-500">Đang tải thông tin bài tập...</p>
+          <p className="text-xs text-slate-500">Đang tải thông tin bài tập</p>
         </div>
       </AppShell>
     );
@@ -895,7 +894,7 @@ export default function AssignmentDetailPage() {
                         className="gap-1.5 text-xs text-blue-600 cursor-pointer"
                       >
                         <Play size={13} className="fill-current" />
-                        <span>Xem trong phòng thi (Tab mới)</span>
+                        <span>Xem trong phòng thi</span>
                         <ExternalLink size={12} className="opacity-80" />
                       </Button>
                       <Badge variant={mySubmission.status === 'GRADED' ? 'success' : 'warning'}>
@@ -991,7 +990,7 @@ export default function AssignmentDetailPage() {
                       className="w-full sm:w-auto px-8 py-3.5 text-sm font-bold bg-google-blue hover:bg-[#1557b0] active:scale-95 text-white rounded-xl shadow-md gap-2.5 transition-all cursor-pointer"
                     >
                       <Play size={18} className="fill-current" />
-                      <span>VÀO PHÒNG THI LÀM BÀI (MỞ TAB MỚI)</span>
+                      <span>VÀO PHÒNG THI LÀM BÀI</span>
                       <ExternalLink size={16} className="opacity-80" />
                     </Button>
                   </div>
@@ -1038,12 +1037,12 @@ export default function AssignmentDetailPage() {
                   <div className="flex items-center justify-between">
                     <div className="space-y-0.5">
                       <h3 className="font-bold text-sm text-slate-950 dark:text-slate-100">
-                        Làm bài tập (Dự phòng)
+                        Làm bài tập dự phòng
                       </h3>
                       {assignment.antiCheat && (
                         <div className="flex items-center gap-1.5 text-xs text-purple-600 dark:text-purple-400 font-semibold">
                           <ShieldCheck size={13} />
-                          <span>Chống gian lận đang bật (Vi phạm: {studentViolationCount}/{assignment.antiCheatConfig?.maxViolations || 3})</span>
+                          <span>Chống gian lận đang bật — Vi phạm {studentViolationCount}/{assignment.antiCheatConfig?.maxViolations || 3}</span>
                         </div>
                       )}
                     </div>
@@ -1173,11 +1172,11 @@ export default function AssignmentDetailPage() {
                     )}
                     <span>
                       {submitting
-                        ? 'Đang nộp bài...'
+                        ? 'Đang nộp bài'
                         : totalAnswered === 0
-                        ? 'Nộp bài tập ngay (chưa làm)'
+                        ? 'Nộp bài tập ngay - chưa làm'
                         : !hasMetMinTime
-                        ? `Nộp bài tập (khóa: còn ${Math.floor(remainingLockSeconds / 60)}p${remainingLockSeconds % 60 < 10 ? '0' : ''}${remainingLockSeconds % 60}s)`
+                        ? `Nộp bài tập: khóa còn ${Math.floor(remainingLockSeconds / 60)}p${remainingLockSeconds % 60 < 10 ? '0' : ''}${remainingLockSeconds % 60}s`
                         : 'Nộp bài tập ngay'}
                     </span>
                   </Button>
@@ -1255,7 +1254,7 @@ export default function AssignmentDetailPage() {
 
                 <form onSubmit={handleSaveGrade} className="space-y-3">
                   <Input
-                    label={`Điểm số (Tối đa ${assignment.maxScore || 10})`}
+                    label={`Điểm số - Tối đa ${assignment.maxScore || 10}`}
                     type="number"
                     step="0.1"
                     min="0"
@@ -1288,7 +1287,7 @@ export default function AssignmentDetailPage() {
                       Hủy
                     </Button>
                     <Button type="submit" size="sm" disabled={savingGrade} className="w-1/2">
-                      {savingGrade ? 'Đang lưu...' : 'Lưu điểm'}
+                      {savingGrade ? 'Đang lưu' : 'Lưu điểm'}
                     </Button>
                   </div>
                 </form>

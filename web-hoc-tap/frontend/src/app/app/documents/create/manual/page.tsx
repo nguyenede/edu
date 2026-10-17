@@ -225,7 +225,7 @@ function ManualQuizCreateContent() {
         const snippet = questions[0].content.trim().slice(0, 35);
         finalTitle = `Đề thi: ${snippet}`;
       } else {
-        finalTitle = `Đề thi trắc nghiệm (${docSubject && docSubject !== 'Không chọn' ? docSubject : 'Tổng hợp'}) - ${new Date().toLocaleDateString('vi-VN')}`;
+        finalTitle = `Đề thi trắc nghiệm môn ${docSubject && docSubject !== 'Không chọn' ? docSubject : 'Tổng hợp'} - ${new Date().toLocaleDateString('vi-VN')}`;
       }
     }
 

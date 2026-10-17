@@ -512,7 +512,7 @@ function OcrQuizCreateContent() {
                   <CheckCircle2 size={18} />
                   <span className="text-xs font-bold">
                     {(scannedExamData as any).method === 'algorithm'
-                      ? `⚡ Thuật toán bóc tách thành công ${scannedExamData.questions.length} câu hỏi thật từ file (0ms, không dùng SI)`
+                      ? `⚡ Thuật toán bóc tách thành công ${scannedExamData.questions.length} câu hỏi thật từ file - 0ms tốc độ cao`
                       : `✨ SI Vision đã bóc tách thành công ${scannedExamData.questions.length} câu hỏi thật từ ảnh`}
                   </span>
                 </div>

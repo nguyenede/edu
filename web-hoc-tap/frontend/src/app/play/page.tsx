@@ -211,7 +211,7 @@ function BlooketPlayContent() {
         return;
       }
       if (classCheckStatus !== 'allowed') {
-        setLobbyError('Đang kiểm tra quyền truy cập lớp học, vui lòng đợi trong giây lát...');
+        setLobbyError('Đang kiểm tra quyền truy cập lớp học, vui lòng đợi trong giây lát');
         return;
       }
     }
@@ -299,13 +299,13 @@ function BlooketPlayContent() {
         const newLog: HomeworkViolationLog = {
           type,
           timestamp: new Date().toLocaleTimeString('vi-VN'),
-          message: `${message} (Lần ${nextCount}/${maxAllowed})`,
+          message: `${message} - Lần ${nextCount}/${maxAllowed}`,
         };
         setViolationLogs((prevLogs) => [...prevLogs, newLog]);
 
         setLatestWarningMessage(
           nextCount >= maxAllowed && !autoSubmit
-            ? `${message}. Bạn đã vi phạm ${nextCount} lần (vượt mức cho phép ${maxAllowed} lần). Hệ thống đã ghi nhận đầy đủ vi phạm để báo cáo cho giáo viên!`
+            ? `${message}. Bạn đã vi phạm ${nextCount} lần, vượt mức cho phép ${maxAllowed} lần. Hệ thống đã ghi nhận đầy đủ vi phạm để báo cáo cho giáo viên!`
             : newLog.message
         );
         warningModalOpenRef.current = true;
@@ -315,7 +315,7 @@ function BlooketPlayContent() {
         if (nextCount >= maxAllowed && autoSubmit) {
           setTimeout(() => {
             handleFinalSubmit(
-              `Bài thi đã tự động nộp do vi phạm quy chế chống gian lận (${nextCount}/${maxAllowed} lần)!`
+              `Bài thi đã tự động nộp do vi phạm quy chế chống gian lận: ${nextCount}/${maxAllowed} lần!`
             );
           }, 1500);
         }
@@ -638,7 +638,7 @@ function BlooketPlayContent() {
                 classCheckStatus === 'checking' ? (
                   <div className="p-4 text-center space-y-2 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800">
                     <Loader2 size={20} className="animate-spin text-google-blue mx-auto" />
-                    <p className="text-xs text-slate-500 font-medium">Đang kiểm tra tài khoản lớp học...</p>
+                    <p className="text-xs text-slate-500 font-medium">Đang kiểm tra tài khoản lớp học</p>
                   </div>
                 ) : classCheckStatus === 'not_logged_in' ? (
                   /* 1. CHƯA ĐĂNG NHẬP */
@@ -789,7 +789,7 @@ function BlooketPlayContent() {
             {homework?.antiCheatConfig?.preventCopyPaste !== false && (
               <div className="flex items-start gap-2">
                 <span className="text-google-blue font-bold shrink-0">•</span>
-                <span><strong>Chống sao chép:</strong> Vô hiệu hóa chuột phải, sao chép câu hỏi và phím tắt DevTools (F12).</span>
+                <span><strong>Chống sao chép:</strong> Vô hiệu hóa chuột phải, sao chép câu hỏi và phím tắt DevTools F12.</span>
               </div>
             )}
           </div>
@@ -929,7 +929,7 @@ function BlooketPlayContent() {
                     <div className="p-2.5 bg-slate-50 dark:bg-slate-900 rounded-xl space-y-1">
                       <div>
                         <span className="text-slate-400">Bạn chọn: </span>
-                        <strong>{userAns || '(Chưa chọn)'}</strong>
+                        <strong>{userAns || 'Chưa chọn'}</strong>
                       </div>
                       {correctOpt && (
                         <div>
@@ -1058,7 +1058,7 @@ function BlooketPlayContent() {
         <div className="space-y-4 pt-1">
           <p className="text-sm text-slate-600 dark:text-slate-300">
             {totalQ - answeredCount > 0
-              ? `Bạn đã hoàn thành ${answeredCount}/${totalQ} câu hỏi (còn ${totalQ - answeredCount} câu chưa trả lời). Bạn có chắc chắn muốn nộp bài ngay bây giờ không?`
+              ? `Bạn đã hoàn thành ${answeredCount}/${totalQ} câu hỏi, còn ${totalQ - answeredCount} câu chưa trả lời. Bạn có chắc chắn muốn nộp bài ngay bây giờ không?`
               : `Bạn đã trả lời đầy đủ tất cả ${totalQ} câu hỏi. Bạn có chắc chắn muốn nộp bài ngay bây giờ không?`}
           </p>
           <div className="flex justify-end gap-2.5 pt-2">
@@ -1171,7 +1171,7 @@ function BlooketPlayContent() {
               } font-bold text-xs sm:text-sm px-4 py-2 sm:px-5 sm:py-2.5 rounded-xl disabled:opacity-50 transition-colors flex items-center gap-1.5 shadow-xs cursor-pointer`}
               title={
                 !hasMetMinTime
-                  ? `Chưa đến thời gian nộp bài (còn ${formatTimer(remainingLockSeconds)})`
+                  ? `Chưa đến thời gian nộp bài: còn ${formatTimer(remainingLockSeconds)}`
                   : 'Nộp bài ngay'
               }
             >
@@ -1180,9 +1180,9 @@ function BlooketPlayContent() {
               ) : null}
               <span>
                 {isSubmitting
-                  ? 'Đang nộp...'
+                  ? 'Đang nộp'
                   : !hasMetMinTime
-                  ? `Nộp bài (${formatTimer(remainingLockSeconds)})`
+                  ? `Nộp bài: còn ${formatTimer(remainingLockSeconds)}`
                   : 'Nộp bài'}
               </span>
             </Button>

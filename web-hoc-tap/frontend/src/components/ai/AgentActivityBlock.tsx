@@ -135,7 +135,7 @@ export function AgentActivityBlock({
             className="flex items-center gap-1 text-slate-500 dark:text-[#8e8e8e] hover:text-slate-800 dark:hover:text-slate-200 transition-colors cursor-pointer select-none font-normal"
           >
             <span>
-              Thinking{isGenerating ? '...' : '.'}
+              Thinking
             </span>
             {isThinkingOpen ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
           </button>
@@ -150,7 +150,7 @@ export function AgentActivityBlock({
               )}
 
               <div className="whitespace-pre-wrap font-normal text-slate-600 dark:text-slate-300">
-                {renderFormattedThought(thoughtBody || (isGenerating ? 'Đang phân tích cấu trúc yêu cầu và lập kế hoạch thực hiện...' : ''))}
+                {renderFormattedThought(thoughtBody || (isGenerating ? 'Đang phân tích cấu trúc yêu cầu và lập kế hoạch thực hiện' : ''))}
                 {isGenerating && (
                   <span className="inline-block w-1.5 h-3.5 ml-1 bg-amber-500 animate-pulse align-middle" />
                 )}

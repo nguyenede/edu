@@ -209,7 +209,7 @@ export default function GamesHubPage() {
       id: 'tug_of_war' as const,
       title: 'Kéo co kiến thức',
       shortName: 'Kéo co',
-      subtitle: 'Đối kháng 2 đội (Đội Xanh vs Đội Đỏ)',
+      subtitle: 'Đối kháng 2 đội Đội Xanh và Đội Đỏ',
       description: 'Chia lớp làm 2 đội. Trả lời đúng và nhanh hơn sẽ giật sợi dây về phía mình để giành chiến thắng.',
       badge: 'Đối kháng',
       badgeColor: 'bg-amber-100 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300',

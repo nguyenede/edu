@@ -95,7 +95,7 @@ export function AgentProgressPanel({
           <div className="p-3 rounded-xl border border-amber-200 dark:border-amber-900/50 bg-amber-50/50 dark:bg-amber-950/20">
             <div className="flex items-center gap-1.5 text-xs font-bold text-amber-700 dark:text-amber-400 mb-1">
               <Cpu size={14} />
-              <span>Lập luận & Quyết định (Reasoning)</span>
+              <span>Lập luận và Quyết định</span>
             </div>
             <p className="text-[11px] text-slate-600 dark:text-slate-300 line-clamp-4 leading-relaxed italic">
               &ldquo;{thoughtText}&rdquo;

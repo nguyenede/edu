@@ -134,7 +134,7 @@ export default function SettingsPage(props: any) {
   const [email, setEmail] = useState(user?.email || '');
   const [phone, setPhone] = useState(user?.phone || 'Chưa đặt');
   const [birthday, setBirthday] = useState(user?.birthday || 'Chưa đặt');
-  const [language, setLanguage] = useState(user?.language || 'Tiếng Việt (Việt Nam)');
+  const [language, setLanguage] = useState(user?.language || 'Tiếng Việt');
   const [homeAddress, setHomeAddress] = useState(user?.homeAddress || 'Chưa đặt');
   const [workAddress, setWorkAddress] = useState(user?.workAddress || 'Chưa đặt');
 
@@ -420,7 +420,7 @@ export default function SettingsPage(props: any) {
     setGender(user?.gender || 'Chưa đặt');
     setPhone(user?.phone || 'Chưa đặt');
     setBirthday(user?.birthday || 'Chưa đặt');
-    setLanguage(user?.language || 'Tiếng Việt (Việt Nam)');
+    setLanguage(user?.language || 'Tiếng Việt');
     setHomeAddress(user?.homeAddress || 'Chưa đặt');
     setWorkAddress(user?.workAddress || 'Chưa đặt');
   }, [user]);
@@ -791,7 +791,7 @@ export default function SettingsPage(props: any) {
                             Chủ đề: {themeMode === 'system' ? 'Theo hệ thống' : themeMode === 'dark' ? 'Giao diện Tối' : 'Giao diện Sáng'}
                           </p>
                           <p className="text-slate-500">
-                            Cỡ chữ đề thi: {fontSize === 'medium' ? 'Tiêu chuẩn (14px)' : fontSize === 'large' ? 'Lớn (16px)' : fontSize === 'xlarge' ? 'Rất lớn (18px)' : 'Nhỏ (13px)'}
+                            Cỡ chữ đề thi: {fontSize === 'medium' ? 'Tiêu chuẩn 14px' : fontSize === 'large' ? 'Lớn 16px' : fontSize === 'xlarge' ? 'Rất lớn 18px' : 'Nhỏ 13px'}
                           </p>
                           <p className="text-slate-500">Hiệu ứng động: {animationsEnabled ? 'Mượt mà' : 'Tiết kiệm pin'}</p>
                         </div>
@@ -812,10 +812,10 @@ export default function SettingsPage(props: any) {
                         </div>
                         <div className="space-y-1 text-xs">
                           <p className="text-slate-700 dark:text-slate-300 font-medium">
-                            Đã dùng: {formatStorageSize(storageData.totalUsedBytes)} / 1.0 GB ({formatStoragePercent(storageData.totalUsedBytes)})
+                            Đã dùng: {formatStorageSize(storageData.totalUsedBytes)} trên 1.0 GB - {formatStoragePercent(storageData.totalUsedBytes)}
                           </p>
                           <p className="text-slate-500">Đề thi & Bài làm: {storageData.fileCount} tệp đã lưu</p>
-                          <p className="text-slate-500">Tự động nén tệp: {autoCompress ? 'Bật (Tiết kiệm)' : 'Tắt'}</p>
+                          <p className="text-slate-500">Tự động nén tệp: {autoCompress ? 'Bật tiết kiệm dung lượng' : 'Tắt'}</p>
                         </div>
                       </div>
 
@@ -1087,7 +1087,7 @@ export default function SettingsPage(props: any) {
                                 setNewPassword(e.target.value);
                                 if (passwordError) setPasswordError(null);
                               }}
-                              placeholder="Nhập mật khẩu mới (tối thiểu 8 ký tự)"
+                              placeholder="Nhập mật khẩu mới tối thiểu 8 ký tự"
                               className="w-full px-4 py-2.5 pr-10 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-xl text-sm outline-none focus:border-google-blue dark:focus:border-google-blue transition-colors placeholder-slate-400 dark:placeholder-slate-500"
                               required
                             />
@@ -1187,16 +1187,16 @@ export default function SettingsPage(props: any) {
                       <div className="p-4 bg-slate-100/90 dark:bg-slate-800/70 border border-transparent dark:border-slate-800/60 rounded-t-xl rounded-b-[4px] flex items-center justify-between">
                         <div>
                           <span className="text-xs text-slate-400 block font-medium">Hệ đơn vị độ dài / khoảng cách</span>
-                          <span className="text-sm font-medium text-slate-900 dark:text-slate-100">Mét / Kilômét (Hệ mét - SI)</span>
+                          <span className="text-sm font-medium text-slate-900 dark:text-slate-100">Mét / Kilômét - Hệ mét SI</span>
                         </div>
-                        <Badge variant="primary">Mặc định (m, km)</Badge>
+                        <Badge variant="primary">Mặc định m, km</Badge>
                       </div>
 
                       {/* 2. Đơn vị nhiệt độ */}
                       <div className="p-4 bg-slate-100/90 dark:bg-slate-800/70 border border-transparent dark:border-slate-800/60 rounded-[4px] flex items-center justify-between">
                         <div>
                           <span className="text-xs text-slate-400 block font-medium">Đơn vị đo nhiệt độ</span>
-                          <span className="text-sm font-medium text-slate-900 dark:text-slate-100">Độ C (°C - Celsius)</span>
+                          <span className="text-sm font-medium text-slate-900 dark:text-slate-100">Độ C - Celsius</span>
                         </div>
                         <span className="text-xs text-slate-500 font-medium font-mono">°C</span>
                       </div>
@@ -1205,7 +1205,7 @@ export default function SettingsPage(props: any) {
                       <div className="p-4 bg-slate-100/90 dark:bg-slate-800/70 border border-transparent dark:border-slate-800/60 rounded-[4px] flex items-center justify-between">
                         <div>
                           <span className="text-xs text-slate-400 block font-medium">Đơn vị lưu trữ dữ liệu</span>
-                          <span className="text-sm font-medium text-slate-900 dark:text-slate-100">MB / GB (Thập phân - Base 1000)</span>
+                          <span className="text-sm font-medium text-slate-900 dark:text-slate-100">MB / GB - Thập phân Base 1000</span>
                         </div>
                         <span className="text-xs text-slate-500 font-medium">1000 MB = 1 GB</span>
                       </div>
@@ -1466,7 +1466,7 @@ export default function SettingsPage(props: any) {
                         <div>
                           <span className="text-xs text-slate-400 block font-medium">Cỡ chữ khi đọc đề thi & làm bài</span>
                           <span className="text-sm font-medium text-slate-900 dark:text-slate-100">
-                            {fontSize === 'small' ? 'Nhỏ (13px)' : fontSize === 'medium' ? 'Tiêu chuẩn (14px)' : fontSize === 'large' ? 'Lớn (16px)' : 'Rất lớn (18px)'}
+                            {fontSize === 'small' ? 'Nhỏ 13px' : fontSize === 'medium' ? 'Tiêu chuẩn 14px' : fontSize === 'large' ? 'Lớn 16px' : 'Rất lớn 18px'}
                           </span>
                         </div>
                         <div className="flex items-center gap-1.5 bg-slate-200/70 dark:bg-slate-700/60 p-1 rounded-xl">
@@ -1595,7 +1595,7 @@ export default function SettingsPage(props: any) {
                     <div className="p-6 bg-slate-100/90 dark:bg-slate-800/70 border border-transparent dark:border-slate-800/60 rounded-2xl space-y-4">
                       <div className="flex items-center justify-between">
                         <div>
-                          <span className="text-xs text-slate-400 block font-medium">Bộ nhớ đám mây của bạn (Gói thường)</span>
+                          <span className="text-xs text-slate-400 block font-medium">Bộ nhớ đám mây của bạn</span>
                           <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">
                             {formatStorageSize(storageData.totalUsedBytes)}{' '}
                             <span className="text-xs font-normal text-slate-500">trên 1.0 GB khả dụng</span>

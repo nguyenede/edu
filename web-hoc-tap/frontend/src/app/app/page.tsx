@@ -245,7 +245,7 @@ export default function DashboardPage() {
           </div>
 
           {loading ? (
-            <p className="text-xs text-slate-400 py-12 text-center">Đang nạp dữ liệu lớp học...</p>
+            <p className="text-xs text-slate-400 py-12 text-center">Đang nạp dữ liệu lớp học</p>
           ) : classes.length === 0 ? (
             <div className="p-12 text-center space-y-3">
               <Folder size={48} className="mx-auto text-slate-300 dark:text-slate-700" />

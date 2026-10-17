@@ -524,28 +524,28 @@ export default function AiChatView({ initialSessionId }: { initialSessionId?: st
       {
         id: 's1',
         title: 'Phân tích yêu cầu & Ngữ cảnh',
-        description: `Ý định: "${textToSend.slice(0, 40)}..."`,
+        description: `Ý định: "${textToSend.slice(0, 40)}"`,
         status: 'running',
         timestamp: new Date().toLocaleTimeString(),
       },
       {
         id: 's2',
-        title: 'Lập kế hoạch & Quyết định công cụ (Thinking)',
-        description: 'Đang xây dựng chiến lược xử lý...',
+        title: 'Lập kế hoạch và lựa chọn công cụ',
+        description: 'Đang xây dựng chiến lược xử lý',
         status: 'pending',
         timestamp: new Date().toLocaleTimeString(),
       },
       {
         id: 's3',
         title: 'Thực thi hành động trên hệ thống',
-        description: 'Tương tác & khởi tạo dữ liệu...',
+        description: 'Tương tác & khởi tạo dữ liệu',
         status: 'pending',
         timestamp: new Date().toLocaleTimeString(),
       },
       {
         id: 's4',
         title: 'Hoàn tất & Hiển thị thẻ tương tác',
-        description: 'Xuất kết quả trực quan...',
+        description: 'Xuất kết quả trực quan',
         status: 'pending',
         timestamp: new Date().toLocaleTimeString(),
       },
@@ -1100,7 +1100,7 @@ export default function AiChatView({ initialSessionId }: { initialSessionId?: st
                                     <span className="w-0.5 h-2.5 bg-google-blue rounded-full animate-[pulse_0.8s_ease-in-out_infinite]" />
                                     <span className="w-0.5 h-1.5 bg-google-blue rounded-full animate-[pulse_0.5s_ease-in-out_infinite]" />
                                   </div>
-                                  <span className="text-[11px] font-medium">Đang phát...</span>
+                                  <span className="text-[11px] font-medium">Đang phát</span>
                                   <button
                                     type="button"
                                     onClick={stopAllSpeech}

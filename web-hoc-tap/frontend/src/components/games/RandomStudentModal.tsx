@@ -134,7 +134,7 @@ export const RandomStudentModal: React.FC<RandomStudentModalProps> = ({
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
             }`}
           >
-            Theo số thứ tự (Sĩ số)
+            Theo số thứ tự
           </button>
           <button
             type="button"
@@ -211,7 +211,7 @@ export const RandomStudentModal: React.FC<RandomStudentModalProps> = ({
             className="flex-1 py-3 px-5 rounded-2xl bg-google-blue hover:bg-blue-600 text-white font-bold text-base shadow-sm hover:shadow transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 active:scale-98"
           >
             <Shuffle size={19} className={isSpinning ? 'animate-spin' : ''} />
-            <span>{isSpinning ? 'Đang chọn...' : 'Quay ngẫu nhiên'}</span>
+            <span>{isSpinning ? 'Đang chọn' : 'Quay ngẫu nhiên'}</span>
           </button>
 
           {selectedStudent && (

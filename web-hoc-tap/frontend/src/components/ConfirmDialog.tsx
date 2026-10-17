@@ -41,7 +41,7 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
             onClick={onConfirm}
             disabled={loading}
           >
-            {loading ? 'Đang xử lý...' : confirmText}
+            {loading ? 'Đang xử lý' : confirmText}
           </Button>
         </div>
       </div>

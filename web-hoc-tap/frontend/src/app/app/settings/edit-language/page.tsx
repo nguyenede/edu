@@ -12,7 +12,7 @@ import { ArrowLeft, Check, ChevronRight } from 'lucide-react';
 export default function EditLanguagePage() {
   const router = useRouter();
   const { token, user, updateUser } = useAuthStore();
-  const [language, setLanguage] = useState(user?.language || 'Tiếng Việt (Việt Nam)');
+  const [language, setLanguage] = useState(user?.language || 'Tiếng Việt');
   const [toast, setToast] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -100,10 +100,10 @@ export default function EditLanguagePage() {
             </div>
           )}
           {[
-            'Tiếng Việt (Việt Nam)',
-            'English (United States)',
-            'Français (France)',
-            '日本語 (Japanese)',
+            'Tiếng Việt',
+            'English',
+            'Français',
+            '日本語',
           ].map((lang) => (
             <button
               key={lang}

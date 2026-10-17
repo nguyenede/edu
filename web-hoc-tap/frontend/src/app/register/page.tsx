@@ -229,7 +229,7 @@ function RegisterFormContent() {
               size="lg"
             >
               <UserPlus size={18} />
-              {loading ? 'Đang đăng ký...' : 'Tạo tài khoản ngay'}
+              {loading ? 'Đang đăng ký' : 'Tạo tài khoản ngay'}
             </Button>
           </form>
 

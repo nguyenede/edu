@@ -108,7 +108,7 @@ export default function AdminPage() {
   return (
     <AppShell
       title="Bảng điều khiển Quản trị Hệ thống"
-      subtitle="Quản lý toàn bộ người dùng, xem thống kê hệ thống và theo dõi nhật ký bảo mật (Audit Logs)"
+      subtitle="Quản lý toàn bộ người dùng, xem thống kê hệ thống và theo dõi nhật ký bảo mật Audit Logs"
     >
       <div className="space-y-6">
         {/* Metric Summary Counters */}
@@ -206,7 +206,7 @@ export default function AdminPage() {
 
             {/* Users List */}
             {loading ? (
-              <p className="text-xs text-slate-400 py-12 text-center">Đang tải danh sách người dùng...</p>
+              <p className="text-xs text-slate-400 py-12 text-center">Đang tải danh sách người dùng</p>
             ) : (
               <div className="divide-y divide-slate-100 dark:divide-slate-800">
                 {usersList.map((u) => (

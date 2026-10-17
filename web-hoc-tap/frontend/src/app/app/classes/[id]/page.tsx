@@ -596,7 +596,7 @@ export default function ClassDetailPage() {
       >
         <div className="flex flex-col items-center justify-center p-16 gap-3">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-google-blue"></div>
-          <p className="text-xs text-slate-400">Đang tải thông tin lớp học...</p>
+          <p className="text-xs text-slate-400">Đang tải thông tin lớp học</p>
         </div>
       </AppShell>
     );
@@ -920,7 +920,7 @@ export default function ClassDetailPage() {
                         {assignments.map((asg) => (
                           <th key={asg.id} className="py-2.5 px-3 text-center min-w-[100px]">
                             <div className="truncate-tight max-w-[120px] mx-auto" title={asg.title}>{asg.title}</div>
-                            <span className="text-[10px] text-slate-400 font-normal">({asg.maxScore}đ)</span>
+                            <span className="text-[10px] text-slate-400 font-normal"> - {asg.maxScore}đ</span>
                           </th>
                         ))}
                         <th className="py-2.5 px-3 text-center font-bold text-blue-600">ĐTB</th>
@@ -1089,7 +1089,7 @@ export default function ClassDetailPage() {
           <div className="grid grid-cols-2 gap-3">
             <Input
               label="Mã học sinh"
-              placeholder="HS001 (tùy chọn)"
+              placeholder="HS001"
               value={studentForm.studentCode}
               onChange={(e) => setStudentForm({ ...studentForm, studentCode: e.target.value })}
             />
@@ -1205,7 +1205,7 @@ export default function ClassDetailPage() {
               className="gap-1.5"
             >
               <Check size={14} />
-              {excelImporting ? 'Đang thêm...' : `Xác nhận thêm ${excelStudentsPreview.length}`}
+              {excelImporting ? 'Đang thêm' : `Xác nhận thêm ${excelStudentsPreview.length}`}
             </Button>
           </div>
         </div>
@@ -1261,7 +1261,7 @@ export default function ClassDetailPage() {
                 { value: '', label: '-- Tự nhập / Không đính kèm đề trắc nghiệm --' },
                 ...documentFiles.map((doc) => ({
                   value: doc.id,
-                  label: `${doc.parsedQuiz?.title || doc.name} (${doc.parsedQuiz?.questions?.length || 0} câu)`,
+                  label: `${doc.parsedQuiz?.title || doc.name} - ${doc.parsedQuiz?.questions?.length || 0} câu`,
                 })),
               ]}
               placeholder="-- Tự nhập / Không đính kèm đề trắc nghiệm --"

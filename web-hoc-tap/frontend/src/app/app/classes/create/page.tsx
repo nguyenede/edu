@@ -143,7 +143,7 @@ export default function CreateClassPage() {
                 type="submit"
                 disabled={classLoading || !newClassName.trim()}
               >
-                {classLoading ? 'Đang tạo...' : 'Lưu và đóng'}
+                {classLoading ? 'Đang tạo' : 'Lưu và đóng'}
               </Button>
             </div>
           </form>

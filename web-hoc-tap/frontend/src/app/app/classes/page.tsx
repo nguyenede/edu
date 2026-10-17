@@ -308,7 +308,7 @@ export default function ClassesPage() {
       <div className="space-y-6">
         {/* Classes List (100% Original Minimal Clean UI, no group chips) */}
         {loading ? (
-          <p className="text-xs text-slate-400 py-12 text-center">Đang tải danh sách lớp...</p>
+          <p className="text-xs text-slate-400 py-12 text-center">Đang tải danh sách lớp</p>
         ) : classes.length === 0 ? (
           <div className="p-12 text-center space-y-3">
             <GraduationCap size={40} className="mx-auto text-slate-300 dark:text-slate-700" />
@@ -503,7 +503,7 @@ export default function ClassesPage() {
               className="gap-1.5"
             >
               <Check size={14} />
-              {excelImportLoading ? 'Đang nhập...' : `Xác nhận nhập ${excelPreview.length}`}
+              {excelImportLoading ? 'Đang nhập' : `Xác nhận nhập ${excelPreview.length}`}
             </Button>
           </div>
         </div>

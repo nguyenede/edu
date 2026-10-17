@@ -199,7 +199,7 @@ export const ClassroomTeacherHeader: React.FC<ClassroomTeacherHeaderProps> = ({
               onChangeFontSize(next);
             }}
             className="p-2 sm:p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-700 dark:text-zinc-300 transition-colors cursor-pointer"
-            title={`Cỡ chữ: ${fontSize || 'large'} (Bấm để đổi)`}
+            title={`Cỡ chữ: ${fontSize || 'large'}`}
           >
             <Type size={16} />
           </button>

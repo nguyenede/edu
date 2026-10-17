@@ -126,7 +126,7 @@ export default function EditNamePage() {
                 Hủy
               </Button>
               <Button type="submit" disabled={saving}>
-                {saving ? 'Đang lưu...' : 'Lưu thay đổi'}
+                {saving ? 'Đang lưu' : 'Lưu thay đổi'}
               </Button>
             </div>
           </form>

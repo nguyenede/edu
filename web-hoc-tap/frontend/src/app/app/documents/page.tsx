@@ -368,12 +368,12 @@ function DocumentsPageContent() {
 
   const handleCopy = (type: 'file' | 'folder', item: DocumentFileItem | DocumentFolderItem) => {
     setClipboard({ mode: 'copy', type, item });
-    showToast(`Đã sao chép ${type === 'folder' ? 'thư mục' : 'tệp'} "${item.name}" (Ctrl+C)`);
+    showToast(`Đã sao chép ${type === 'folder' ? 'thư mục' : 'tệp'} "${item.name}"`);
   };
 
   const handleCut = (type: 'file' | 'folder', item: DocumentFileItem | DocumentFolderItem) => {
     setClipboard({ mode: 'cut', type, item });
-    showToast(`Đã cắt ${type === 'folder' ? 'thư mục' : 'tệp'} "${item.name}" (Ctrl+X)`);
+    showToast(`Đã cắt ${type === 'folder' ? 'thư mục' : 'tệp'} "${item.name}"`);
   };
 
   const handlePaste = async (targetFolderId: string | null) => {
@@ -2081,7 +2081,7 @@ function DocumentsPageContent() {
                 >
                   <div className="flex items-center gap-2.5 whitespace-nowrap">
                     <ClipboardPaste size={16} className="shrink-0" />
-                    <span>Dán ({clipboard.mode === 'cut' ? 'Di chuyển' : 'Tạo bản sao'})</span>
+                    <span>Dán {clipboard.mode === 'cut' ? 'di chuyển' : 'tạo bản sao'}</span>
                   </div>
                   <span className="text-[11px] text-slate-400 dark:text-slate-500 font-mono tracking-wider ml-auto pl-4 shrink-0">Ctrl+V</span>
                 </button>
@@ -2470,7 +2470,7 @@ function DocumentsPageContent() {
         } mục đã chọn?`}
         message={`Bạn có chắc chắn muốn xóa ${
           batchDeleteModal?.folderIds.length
-            ? `${batchDeleteModal.folderIds.length} thư mục (kèm toàn bộ tài liệu con bên trong)`
+            ? `${batchDeleteModal.folderIds.length} thư mục kèm toàn bộ tài liệu con bên trong`
             : ''
         }${
           batchDeleteModal?.folderIds.length && batchDeleteModal?.fileIds.length ? ' và ' : ''

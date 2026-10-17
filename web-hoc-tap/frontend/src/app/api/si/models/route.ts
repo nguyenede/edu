@@ -23,12 +23,12 @@ export async function GET() {
       },
       {
         id: '5bf011840784117a',
-        name: 'Cấp độ tư duy (Tiêu chuẩn)',
+        name: 'Cấp độ tư duy Tiêu chuẩn',
         description: 'Phù hợp nhất cho hầu hết các câu hỏi',
       },
       {
         id: 'e051ce1aa80aa576',
-        name: 'Cấp độ tư duy (Mở rộng)',
+        name: 'Cấp độ tư duy Mở rộng',
         description: 'Giải quyết vấn đề phức tạp',
       },
     ],

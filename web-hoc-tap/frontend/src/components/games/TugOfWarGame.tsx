@@ -393,7 +393,7 @@ export const TugOfWarGame: React.FC<TugOfWarGameProps> = ({
                 {/* Step scale below rope */}
                 <div className="w-full flex items-center justify-between mt-4 px-1">
                   <span className="text-xs font-black text-blue-600 dark:text-blue-400 flex items-center gap-1">
-                    🏆 THẮNG (-{maxPullLimit})
+                    🏆 MỐC THẮNG
                   </span>
                   <div className="flex items-center gap-2 sm:gap-3">
                     {Array.from({ length: maxPullLimit * 2 + 1 }).map((_, i) => {
@@ -417,7 +417,7 @@ export const TugOfWarGame: React.FC<TugOfWarGameProps> = ({
                     })}
                   </div>
                   <span className="text-xs font-black text-rose-600 dark:text-rose-400 flex items-center gap-1">
-                    (+{maxPullLimit}) THẮNG 🏆
+                    MỐC THẮNG 🏆
                   </span>
                 </div>
               </div>

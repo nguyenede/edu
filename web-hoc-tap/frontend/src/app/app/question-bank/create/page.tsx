@@ -245,9 +245,9 @@ export default function CreateQuestionPage() {
                   value={qDifficulty}
                   onChange={(val) => setQDifficulty(String(val))}
                   options={[
-                    { value: 'EASY', label: 'Dễ (Nhận biết)' },
-                    { value: 'MEDIUM', label: 'Trung bình (Thông hiểu)' },
-                    { value: 'HARD', label: 'Khó (Vận dụng cao)' },
+                    { value: 'EASY', label: 'Dễ - Nhận biết' },
+                    { value: 'MEDIUM', label: 'Trung bình - Thông hiểu' },
+                    { value: 'HARD', label: 'Khó - Vận dụng cao' },
                   ]}
                   size="sm"
                 />
@@ -264,7 +264,7 @@ export default function CreateQuestionPage() {
               />
 
               <Input
-                label="Thời gian (giây)"
+                label="Thời gian tính bằng giây"
                 type="number"
                 value={qTimeLimit}
                 onChange={(e) => setQTimeLimit(Number(e.target.value))}

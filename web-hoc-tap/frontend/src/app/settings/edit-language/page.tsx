@@ -8,7 +8,7 @@ import { ArrowLeft, Check } from 'lucide-react';
 
 export default function EditLanguagePage() {
   const router = useRouter();
-  const [language, setLanguage] = useState('Tiếng Việt (Việt Nam)');
+  const [language, setLanguage] = useState('Tiếng Việt');
   const [toast, setToast] = useState(false);
 
   const handleSelect = (lang: string) => {
@@ -46,10 +46,10 @@ export default function EditLanguagePage() {
 
         <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-xs space-y-3">
           {[
-            'Tiếng Việt (Việt Nam)',
-            'English (United States)',
-            'Français (France)',
-            '日本語 (Japanese)',
+            'Tiếng Việt',
+            'English',
+            'Français',
+            '日本語',
           ].map((lang) => (
             <button
               key={lang}

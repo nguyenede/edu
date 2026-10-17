@@ -220,7 +220,7 @@ export class AiToolRegistry {
       return {
         toolName: 'create_class',
         status: 'success',
-        message: `Đã tạo thành công lớp học "${name}" (Mã tham gia: ${code}) với ${studentList.length} học sinh!`,
+        message: `Đã tạo thành công lớp học "${name}" - Mã tham gia ${code} với ${studentList.length} học sinh!`,
         actionType: 'class',
         data: {
           classId,

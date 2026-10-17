@@ -739,10 +739,10 @@ export const GameConfigModal: React.FC<GameConfigModalProps> = ({
                     value={config.timeLimit}
                     onChange={(val) => updateConfig('timeLimit', Number(val))}
                     options={[
-                      { value: 30, label: '30 giây (Rất nhanh)' },
-                      { value: 60, label: '60 giây (Tiêu chuẩn)' },
+                      { value: 30, label: '30 giây' },
+                      { value: 60, label: '60 giây' },
                       { value: 90, label: '90 giây' },
-                      { value: 120, label: '120 giây (2 phút)' },
+                      { value: 120, label: '120 giây' },
                       { value: 0, label: 'Không giới hạn thời gian' },
                     ]}
                     size="sm"
@@ -778,10 +778,10 @@ export const GameConfigModal: React.FC<GameConfigModalProps> = ({
                     value={config.freezeTime}
                     onChange={(val) => updateConfig('freezeTime', Number(val))}
                     options={[
-                      { value: 0, label: 'Không đóng băng (0s)' },
+                      { value: 0, label: 'Không đóng băng' },
                       { value: 2, label: '2 giây' },
-                      { value: 3, label: '3 giây (Tiêu chuẩn)' },
-                      { value: 5, label: '5 giây (Phạt nặng)' },
+                      { value: 3, label: '3 giây' },
+                      { value: 5, label: '5 giây' },
                     ]}
                     size="sm"
                   />
@@ -825,7 +825,7 @@ export const GameConfigModal: React.FC<GameConfigModalProps> = ({
                       <Keyboard size={16} />
                     </div>
                     <div>
-                      <div className="text-xs font-bold">Bàn phím chia đôi (2 Đội)</div>
+                      <div className="text-xs font-bold">Bàn phím chia đôi cho 2 đội</div>
                       <p className="text-[11px] text-slate-500 dark:text-zinc-400 mt-0.5 leading-snug">
                         Đội 1 dùng phím <b>Q, W, A, S</b> — Đội 2 dùng phím <b>O, P, K, L</b> trên cùng 1 máy tính.
                       </p>

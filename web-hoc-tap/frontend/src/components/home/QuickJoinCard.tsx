@@ -37,7 +37,7 @@ export const QuickJoinCard: React.FC = () => {
             </div>
             <input
               type="text"
-              placeholder="MÃ LỚP (VD: KY-8821)"
+              placeholder="MÃ LỚP: VÍ DỤ KY-8821"
               maxLength={12}
               value={classCode}
               onChange={(e) => setClassCode(e.target.value.toUpperCase())}

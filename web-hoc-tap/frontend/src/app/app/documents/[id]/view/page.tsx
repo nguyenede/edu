@@ -1014,7 +1014,7 @@ function DocumentDynamicViewPageContent() {
               {displayTitle}
             </p>
             <p className="font-semibold text-[11pt] mt-0.5">NĂM HỌC 2025 - 2026</p>
-            <p className="italic text-[10pt] mt-0.5">Thời gian làm bài: {fileItem.parsedQuiz?.durationMinutes || 45} phút (không kể phát đề)</p>
+            <p className="italic text-[10pt] mt-0.5">Thời gian làm bài: {fileItem.parsedQuiz?.durationMinutes || 45} phút - không kể phát đề</p>
           </div>
         </div>
 
@@ -1068,7 +1068,7 @@ function DocumentDynamicViewPageContent() {
         {/* End marker */}
         <div className="text-center text-[11pt] italic mt-6 pt-3 print-break-avoid">
           <p className="font-bold tracking-widest uppercase">--------- HẾT ---------</p>
-          <p className="text-[10pt] mt-0.5">(Thí sinh không được sử dụng tài liệu. Cán bộ coi thi không giải thích gì thêm)</p>
+          <p className="text-[10pt] mt-0.5">Thí sinh không được sử dụng tài liệu. Cán bộ coi thi không giải thích gì thêm</p>
         </div>
       </div>
     </AppShell>

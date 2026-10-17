@@ -324,7 +324,7 @@ export default function PlansPage() {
                 onClick={handleSelectFreePlan}
               >
                 {activatingFree
-                  ? 'Đang kích hoạt...'
+                  ? 'Đang kích hoạt'
                   : (user?.hasSelectedPlan
                     ? 'Gói hiện tại của bạn'
                     : 'Bắt đầu với Gói Miễn phí')}

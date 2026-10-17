@@ -228,7 +228,7 @@ export default function DashboardPage() {
           </div>
 
           {loading ? (
-            <p className="text-xs text-slate-400 py-8 text-center">Đang tải lớp học...</p>
+            <p className="text-xs text-slate-400 py-8 text-center">Đang tải lớp học</p>
           ) : classes.length === 0 ? (
             <div className="py-8 text-center space-y-3">
               <p className="text-xs text-slate-500">

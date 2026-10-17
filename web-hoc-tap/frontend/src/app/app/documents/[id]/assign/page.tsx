@@ -961,7 +961,7 @@ function AssignPageContent() {
                         { value: 0, label: 'Không giới hạn thời gian' },
                         { value: 15, label: '15 phút' },
                         { value: 30, label: '30 phút' },
-                        { value: 45, label: '45 phút (Mặc định)' },
+                        { value: 45, label: '45 phút' },
                         { value: 60, label: '60 phút' },
                         { value: 90, label: '90 phút' },
                       ]}
@@ -1251,7 +1251,7 @@ function AssignPageContent() {
                   <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
                     <span>Hình thức giao</span>
                     <strong className="text-slate-900 dark:text-slate-100 break-words text-right">
-                      {assignMode === 'public' ? 'Tự do (Mã PIN / QR)' : (classes.find(c => c.id === selectedClassId)?.name || 'Chưa chọn lớp')}
+                      {assignMode === 'public' ? 'Tự do qua Mã PIN hoặc QR' : (classes.find(c => c.id === selectedClassId)?.name || 'Chưa chọn lớp')}
                     </strong>
                   </div>
                   <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">

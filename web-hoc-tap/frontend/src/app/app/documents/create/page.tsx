@@ -997,7 +997,7 @@ function DocumentCreateContent() {
                     <AutoGrowingTextarea
                       value={q.explanation || ''}
                       onChange={(val) => handleUpdateParsedExplanation(qIdx, val)}
-                      placeholder="Nhập hướng dẫn giải hoặc lời giải chi tiết (không bắt buộc)"
+                      placeholder="Nhập hướng dẫn giải hoặc lời giải chi tiết"
                       className="p-2.5 bg-amber-50/30 dark:bg-amber-950/20 border-0 rounded-xl text-slate-800 dark:text-slate-200 text-xs font-normal focus:outline-none focus:ring-1 focus:ring-amber-500/30 leading-relaxed shadow-none"
                     />
                   </div>
