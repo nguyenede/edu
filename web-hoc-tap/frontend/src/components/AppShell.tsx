@@ -4,8 +4,8 @@ import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuthStore, getStoredUser } from '../store/useAuthStore';
 import { ThemeToggle } from './ThemeToggle';
-import { NotificationDrawer } from './NotificationDrawer';
 import { Modal } from './Modal';
+
 import { Button } from './Button';
 import { Input } from './Input';
 import { Sidebar } from './Sidebar';
@@ -225,7 +225,6 @@ export const AppShell: React.FC<AppShellProps> = ({
             <HelpCircle size={20} />
           </button>
 
-          {effectiveUser && <NotificationDrawer />}
 
           {effectiveUser && (
             <button
