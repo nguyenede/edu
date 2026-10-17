@@ -718,8 +718,8 @@ export default function GamesHubPage() {
           <div className="space-y-4">
             {/* Cards Grid: Trial Run + Saved Custom Lessons */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {/* 1. Trial Run Card (Chỉ hiển thị khi chưa có bài chơi nào được tạo) */}
-              {trialLesson && currentCategoryLessons.length === 0 && (
+              {/* 1. Trial Run Card (Bản chạy thử có sẵn) */}
+              {trialLesson && (
                 <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-[#1a1b1e] border border-slate-200/80 dark:border-white/10 hover:border-blue-400 dark:hover:border-blue-500/50 transition-all duration-150 flex flex-col justify-between shadow-2xs hover:shadow-md">
                   <div>
                     <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-zinc-100 mb-2">
