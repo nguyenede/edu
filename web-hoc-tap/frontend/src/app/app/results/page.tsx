@@ -793,19 +793,19 @@ export default function ResultsPage() {
 
                   <div className="pt-2 space-y-2 text-xs">
                     <div className="flex items-center justify-between">
-                      <span className="text-slate-500">Điểm cao nhất:</span>
+                      <span className="text-slate-500">Điểm cao nhất</span>
                       <span className="font-bold text-emerald-600 dark:text-emerald-400 font-mono">
                         {classStats.maxScore !== null ? `${classStats.maxScore}` : '--'}
                       </span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-slate-500">Điểm thấp nhất:</span>
+                      <span className="text-slate-500">Điểm thấp nhất</span>
                       <span className="font-bold text-amber-600 dark:text-amber-400 font-mono">
                         {classStats.minScore !== null ? `${classStats.minScore}` : '--'}
                       </span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-slate-500">Bài cần chấm:</span>
+                      <span className="text-slate-500">Bài cần chấm</span>
                       <span className="font-bold text-blue-600 dark:text-blue-400 font-mono">
                         {classStats.pendingGradingCount} bài
                       </span>
