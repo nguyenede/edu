@@ -6,6 +6,7 @@ import { Button } from '@/components/Button';
 import { Input } from '@/components/Input';
 import { Badge } from '@/components/Badge';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { Modal } from '@/components/Modal';
 import {
   Shield,
   ShieldAlert,
@@ -118,6 +119,9 @@ function BlooketPlayContent() {
   const [resultScore, setResultScore] = useState<number>(0);
   const [resultCorrectCount, setResultCorrectCount] = useState<number>(0);
   const [showReview, setShowReview] = useState(false);
+  const [submissionNotice, setSubmissionNotice] = useState<string | null>(null);
+  const [isConfirmSubmitOpen, setIsConfirmSubmitOpen] = useState(false);
+  const [minTimeWarning, setMinTimeWarning] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const isSubmittingRef = useRef(false);
 
@@ -468,7 +472,7 @@ function BlooketPlayContent() {
     }
 
     if (reasonNotice) {
-      alert(reasonNotice);
+      setSubmissionNotice(reasonNotice);
     }
 
     // Chấm điểm trắc nghiệm
@@ -841,6 +845,15 @@ function BlooketPlayContent() {
               </p>
             </div>
 
+            {submissionNotice && (
+              <div className="p-3.5 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/60 rounded-2xl flex items-center gap-3 text-left">
+                <AlertTriangle className="text-amber-600 dark:text-amber-400 shrink-0" size={18} />
+                <p className="text-xs text-amber-800 dark:text-amber-200 font-medium leading-relaxed">
+                  {submissionNotice}
+                </p>
+              </div>
+            )}
+
             {/* Score Display */}
             <div className="p-6 bg-slate-50 dark:bg-slate-900/60 rounded-2xl border border-slate-200/60 dark:border-slate-800 space-y-1">
               <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">
@@ -981,22 +994,14 @@ function BlooketPlayContent() {
       const remMin = Math.floor(remainingLockSeconds / 60);
       const remSec = remainingLockSeconds % 60;
       const timeStr = remMin > 0 ? `${remMin} phút ${remSec < 10 ? '0' : ''}${remSec} giây` : `${remSec} giây`;
-      alert(
-        `CHƯA ĐẾN THỜI GIAN ĐƯỢC PHÉP NỘP BÀI!\n\nBài thi quy định học sinh chỉ được nộp bài sau tối thiểu ${minSubmitMinutes} phút kể từ khi bắt đầu.\n\nBạn cần tiếp tục làm bài thêm: ${timeStr} nữa mới có thể nộp bài.`
+      setMinTimeWarning(
+        `Bài thi quy định học sinh chỉ được nộp bài sau tối thiểu ${minSubmitMinutes} phút kể từ khi bắt đầu. Bạn cần tiếp tục làm bài thêm: ${timeStr} nữa mới có thể nộp bài.`
       );
       return;
     }
 
-    // 3. Xác nhận nộp bài
-    const unAnsweredCount = totalQ - answeredCount;
-    const confirmMsg =
-      unAnsweredCount > 0
-        ? `Bạn đã làm ${answeredCount}/${totalQ} câu (còn ${unAnsweredCount} câu chưa trả lời).\n\nBạn có chắc chắn muốn nộp bài ngay bây giờ?`
-        : `Bạn đã hoàn thành tất cả ${totalQ} câu hỏi!\n\nBạn có chắc chắn muốn nộp bài ngay bây giờ?`;
-
-    if (confirm(confirmMsg)) {
-      handleFinalSubmit();
-    }
+    // 2. Mở modal xác nhận nộp bài
+    setIsConfirmSubmitOpen(true);
   };
 
   return (
@@ -1042,6 +1047,70 @@ function BlooketPlayContent() {
           </div>
         </div>
       )}
+
+      {/* Modal xác nhận nộp bài (thay thế confirm mặc định của trình duyệt) */}
+      <Modal
+        isOpen={isConfirmSubmitOpen}
+        onClose={() => setIsConfirmSubmitOpen(false)}
+        title="Xác nhận nộp bài thi"
+        maxWidth="md"
+      >
+        <div className="space-y-4 pt-1">
+          <p className="text-sm text-slate-600 dark:text-slate-300">
+            {totalQ - answeredCount > 0
+              ? `Bạn đã hoàn thành ${answeredCount}/${totalQ} câu hỏi (còn ${totalQ - answeredCount} câu chưa trả lời). Bạn có chắc chắn muốn nộp bài ngay bây giờ không?`
+              : `Bạn đã trả lời đầy đủ tất cả ${totalQ} câu hỏi. Bạn có chắc chắn muốn nộp bài ngay bây giờ không?`}
+          </p>
+          <div className="flex justify-end gap-2.5 pt-2">
+            <Button
+              type="button"
+              variant="secondary"
+              size="md"
+              onClick={() => setIsConfirmSubmitOpen(false)}
+            >
+              Hủy
+            </Button>
+            <Button
+              type="button"
+              variant="primary"
+              size="md"
+              onClick={() => {
+                setIsConfirmSubmitOpen(false);
+                handleFinalSubmit();
+              }}
+            >
+              Nộp bài ngay
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Modal cảnh báo chưa đủ thời gian nộp bài (thay thế alert mặc định của trình duyệt) */}
+      <Modal
+        isOpen={Boolean(minTimeWarning)}
+        onClose={() => setMinTimeWarning(null)}
+        title="Chưa đến giờ nộp bài"
+        maxWidth="md"
+      >
+        <div className="space-y-4 pt-1">
+          <div className="p-3.5 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/60 rounded-xl flex items-start gap-2.5">
+            <Clock size={18} className="text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+            <p className="text-xs text-amber-900 dark:text-amber-200 leading-relaxed">
+              {minTimeWarning}
+            </p>
+          </div>
+          <div className="flex justify-end pt-2">
+            <Button
+              type="button"
+              variant="primary"
+              size="md"
+              onClick={() => setMinTimeWarning(null)}
+            >
+              Tiếp tục làm bài
+            </Button>
+          </div>
+        </div>
+      </Modal>
 
       {/* 🍞 FLOATING TOAST THÔNG BÁO NHẸ (KHÔNG PHẠT THẺ ĐỎ) */}
       {floatingToast && (
