@@ -17,6 +17,9 @@ export interface DocumentFileItem {
   fileType: string;
   createdAt: string;
   parsedQuiz: any;
+  mimeType?: string | null;
+  size?: number | null;
+  storageKey?: string | null;
 }
 
 export interface DocumentFolderItem {

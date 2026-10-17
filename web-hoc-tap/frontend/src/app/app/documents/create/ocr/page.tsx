@@ -244,9 +244,10 @@ function OcrQuizCreateContent() {
       if (result.data?.examId) {
         await idbSaveDocument({
           id: result.data.examId,
-          name: `${scannedExamData.title}.docx`,
+          name: `${scannedExamData.title}.json`,
           parentId: folderId || null,
-          fileType: 'docx',
+          fileType: 'json',
+          storageKey: `exams/teacher/${result.data.examId}.json`,
           createdAt: new Date().toISOString(),
           parsedQuiz: {
             title: scannedExamData.title,

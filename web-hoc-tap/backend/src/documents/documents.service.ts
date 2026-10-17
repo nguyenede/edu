@@ -1,9 +1,14 @@
 import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { randomUUID } from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
+import { S3StorageService } from './s3-storage.service';
 
 @Injectable()
 export class DocumentsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private s3Storage: S3StorageService,
+  ) {}
 
   async list(ownerId: string, folderId?: string | null) {
     const parentId = folderId || null;
@@ -45,21 +50,33 @@ export class DocumentsService {
   }
 
   async createFile(ownerId: string, dto: any) {
-    const name = String(dto.name || '').trim();
+    const rawName = String(dto.name || '').trim();
     const folderId = dto.parentId || dto.folderId ? String(dto.parentId || dto.folderId) : null;
-    if (!name) throw new BadRequestException('File name is required');
+    if (!rawName) throw new BadRequestException('File name is required');
     if (folderId) await this.assertFolderOwner(ownerId, folderId);
+
+    // Chuẩn hóa 100% đề thi thành file .json
+    const baseName = rawName.replace(/\.[^/.]+$/, '');
+    const jsonName = `${baseName}.json`;
+    const targetId = dto.id ? String(dto.id) : randomUUID();
+
+    // Đồng bộ trực tiếp lên S3 API
+    const { storageKey, size, examJson } = await this.s3Storage.uploadExamJson(ownerId, targetId, {
+      ...dto,
+      name: jsonName,
+    });
 
     const file = await this.prisma.documentFile.create({
       data: {
+        id: targetId,
         ownerId,
         folderId,
-        name,
-        fileType: String(dto.fileType || 'other'),
-        mimeType: dto.mimeType ? String(dto.mimeType) : null,
-        size: Number.isFinite(dto.size) ? Number(dto.size) : null,
-        storageKey: dto.storageKey ? String(dto.storageKey) : null,
-        parsedQuiz: dto.parsedQuiz || null,
+        name: jsonName,
+        fileType: 'json',
+        mimeType: 'application/json',
+        size,
+        storageKey,
+        parsedQuiz: (examJson.parsedQuiz as any) || dto.parsedQuiz || null,
       },
     });
     return this.serializeFile(file);
@@ -67,7 +84,27 @@ export class DocumentsService {
 
   async getFile(ownerId: string, id: string) {
     const file = await this.assertFileOwner(ownerId, id);
+    if (file.storageKey) {
+      try {
+        const s3Data = await this.s3Storage.getExamJson(file.storageKey);
+        if (s3Data && s3Data.parsedQuiz) {
+          return {
+            ...this.serializeFile(file),
+            parsedQuiz: s3Data.parsedQuiz,
+          };
+        }
+      } catch {}
+    }
     return this.serializeFile(file);
+  }
+
+  async getRawFileJson(ownerId: string, id: string) {
+    const file = await this.assertFileOwner(ownerId, id);
+    if (file.storageKey) {
+      const s3Data = await this.s3Storage.getExamJson(file.storageKey);
+      if (s3Data) return s3Data;
+    }
+    return this.s3Storage.formatExamJson(ownerId, file.id, file);
   }
 
   async renameFolder(ownerId: string, id: string, name: string) {
@@ -80,12 +117,20 @@ export class DocumentsService {
   }
 
   async renameFile(ownerId: string, id: string, name: string) {
-    await this.assertFileOwner(ownerId, id);
-    const file = await this.prisma.documentFile.update({
+    const file = await this.assertFileOwner(ownerId, id);
+    const cleanBase = name.trim().replace(/\.[^/.]+$/, '');
+    const newName = `${cleanBase}.json`;
+    const updated = await this.prisma.documentFile.update({
       where: { id },
-      data: { name: name.trim() },
+      data: { name: newName },
     });
-    return this.serializeFile(file);
+    if (updated.storageKey) {
+      await this.s3Storage.uploadExamJson(ownerId, id, {
+        ...updated,
+        name: newName,
+      });
+    }
+    return this.serializeFile(updated);
   }
 
   async moveFile(ownerId: string, id: string, folderId?: string | null) {
@@ -123,6 +168,10 @@ export class DocumentsService {
     const file = await this.prisma.documentFile.findUnique({ where: { id } });
     if (!file) return { success: true };
     if (file.ownerId !== ownerId) throw new ForbiddenException('Access denied');
+
+    if (file.storageKey) {
+      await this.s3Storage.deleteExamJson(file.storageKey);
+    }
 
     // Safe unlink assignments before deletion
     await this.prisma.assignment.updateMany({

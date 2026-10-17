@@ -56,9 +56,11 @@ export class AiToolRegistry {
 
       const examFileItem = {
         id: examId,
-        name: `${title}.docx`,
+        name: `${title}.json`,
         parentId: null,
-        fileType: 'docx' as const,
+        fileType: 'json' as const,
+        mimeType: 'application/json',
+        storageKey: `exams/teacher/${examId}.json`,
         createdAt: new Date().toISOString(),
         parsedQuiz: {
           title,

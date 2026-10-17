@@ -79,9 +79,9 @@ function matchDocId(targetId: string, searchId: string): boolean {
 
 function normalizeDocItem(raw: any, fallbackId: string): any {
   const id = raw?.id || fallbackId;
-  const name = raw?.name || (raw?.parsedQuiz?.title ? `${raw.parsedQuiz.title}.docx` : 'Đề thi trắc nghiệm.docx');
+  const name = raw?.name || (raw?.parsedQuiz?.title ? `${raw.parsedQuiz.title}.json` : 'Đề thi trắc nghiệm.json');
   const parentId = raw?.parentId || null;
-  const fileType = raw?.fileType || 'docx';
+  const fileType = raw?.fileType || 'json';
   const createdAt = raw?.createdAt || new Date().toISOString();
 
   const title = raw?.parsedQuiz?.title || raw?.name?.replace(/\.[^/.]+$/, '') || 'Đề thi trắc nghiệm';

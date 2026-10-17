@@ -18,9 +18,11 @@ export async function syncExamActionToDocument(
   try {
     const savePromise = createDocumentFile(token, {
       id: existingExamId,
-      name: `${title}.docx`,
+      name: `${title}.json`,
       parentId: action.data.folderId || null,
-      fileType: 'docx',
+      fileType: 'json',
+      mimeType: 'application/json',
+      storageKey: `exams/teacher/${existingExamId}.json`,
       parsedQuiz: {
         title,
         description: action.data.description || '',

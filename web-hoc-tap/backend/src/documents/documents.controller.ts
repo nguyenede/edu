@@ -48,6 +48,12 @@ export class DocumentsController {
     return this.documentsService.getFile(req.user.id, id);
   }
 
+  @Get('files/:id/json')
+  @Get('files/:id/raw')
+  async getRawJson(@Request() req: any, @Param('id') id: string) {
+    return this.documentsService.getRawFileJson(req.user.id, id);
+  }
+
   @Patch('files/:id')
   async renameFile(@Request() req: any, @Param('id') id: string, @Body() dto: any) {
     return this.documentsService.renameFile(req.user.id, id, String(dto.name || ''));

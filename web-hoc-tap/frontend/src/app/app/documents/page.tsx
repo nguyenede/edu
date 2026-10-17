@@ -77,6 +77,8 @@ interface DocumentFileItem {
   name: string;
   parentId: string | null;
   fileType: string;
+  mimeType?: string | null;
+  storageKey?: string | null;
   parsedQuiz: ParsedQuiz;
   createdAt: string;
 }
@@ -387,12 +389,13 @@ function DocumentsPageContent() {
       if (clipboard.type === 'file') {
         const srcFile = clipboard.item as DocumentFileItem;
         const cleanName = srcFile.name.replace(/\.[^/.]+$/, '');
-        const ext = srcFile.name.endsWith('.docx') ? '.docx' : srcFile.name.endsWith('.pdf') ? '.pdf' : '.txt';
+        const ext = '.json';
         const newFile: DocumentFileItem = {
           id: `file_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
           name: `${cleanName} - Bản sao${ext}`,
           parentId: targetFolderId || null,
-          fileType: srcFile.fileType,
+          fileType: 'json',
+          storageKey: `exams/teacher/file_${Date.now()}.json`,
           parsedQuiz: JSON.parse(JSON.stringify(srcFile.parsedQuiz || { title: cleanName, questions: [] })),
           createdAt: new Date().toISOString(),
         };
@@ -1321,9 +1324,10 @@ function DocumentsPageContent() {
             };
             uploadedFiles.push({
               id: `file_${Date.now()}_${i}`,
-              name: file.name,
+              name: `${file.name.replace(/\.[^/.]+$/, '')}.json`,
               parentId: newFolder.id,
-              fileType: file.name.endsWith('.docx') ? 'docx' : file.name.endsWith('.pdf') ? 'pdf' : 'txt',
+              fileType: 'json',
+              storageKey: `exams/teacher/file_${Date.now()}_${i}.json`,
               createdAt: new Date().toISOString(),
               parsedQuiz: parsed,
             });
@@ -1356,9 +1360,10 @@ function DocumentsPageContent() {
             };
             uploadedFiles.push({
               id: `file_${Date.now()}_${i}`,
-              name: file.name,
+              name: `${file.name.replace(/\.[^/.]+$/, '')}.json`,
               parentId: newFolder.id,
-              fileType: file.name.endsWith('.docx') ? 'docx' : file.name.endsWith('.pdf') ? 'pdf' : 'txt',
+              fileType: 'json',
+              storageKey: `exams/teacher/file_${Date.now()}_${i}.json`,
               createdAt: new Date().toISOString(),
               parsedQuiz: parsed,
             });
@@ -1413,15 +1418,18 @@ function DocumentsPageContent() {
   const handleConfirmUpload = async () => {
     if (!parsedPreview) return;
 
+    const finalTitle = (uploadTitle.trim() || selectedFile?.name || 'Tài liệu đề thi').replace(/\.[^/.]+$/, '');
     let newDocFile: DocumentFileItem = {
       id: `file_${Date.now()}`,
-      name: (uploadTitle.trim() || selectedFile?.name || 'Tài liệu đề thi') + (selectedFile?.name.endsWith('.docx') ? '.docx' : '.txt'),
+      name: `${finalTitle}.json`,
       parentId: currentFolderId,
-      fileType: selectedFile?.name.endsWith('.docx') ? 'docx' : 'txt',
+      fileType: 'json',
+      mimeType: 'application/json',
+      storageKey: `exams/teacher/file_${Date.now()}.json`,
       createdAt: new Date().toISOString(),
       parsedQuiz: {
         ...parsedPreview,
-        title: uploadTitle.trim() || parsedPreview.title,
+        title: finalTitle,
       },
     };
 

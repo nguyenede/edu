@@ -204,13 +204,26 @@ export async function deleteDocumentFolder(token: string, id: string) {
 }
 
 export async function createDocumentFile(token: string, payload: any): Promise<any> {
+  const targetId = payload.id || ('file' + Date.now() + Math.random().toString(36).slice(2, 7));
+  const rawTitle = (payload.name || payload.parsedQuiz?.title || 'Đề thi trắc nghiệm').replace(/\.[^/.]+$/, '').trim();
+  const jsonName = `${rawTitle}.json`;
+  const storageKey = payload.storageKey || `exams/teacher/${targetId}.json`;
+
   const newFile: DocumentFileItem = {
-    id: payload.id || ('file' + Date.now() + Math.random().toString(36).slice(2, 7)),
-    name: payload.name,
+    id: targetId,
+    name: jsonName,
     parentId: payload.parentId || null,
-    fileType: payload.fileType || 'docx',
-    parsedQuiz: payload.parsedQuiz,
-    createdAt: new Date().toISOString(),
+    fileType: 'json',
+    mimeType: 'application/json',
+    size: payload.size || (payload.parsedQuiz ? JSON.stringify(payload.parsedQuiz).length : null),
+    storageKey,
+    parsedQuiz: payload.parsedQuiz || {
+      title: rawTitle,
+      description: payload.description || '',
+      durationMinutes: payload.durationMinutes || 45,
+      questions: payload.questions || [],
+    },
+    createdAt: payload.createdAt || new Date().toISOString(),
   };
 
   // 1. LƯU NGAY LẬP TỨC VÀO INDEXEDDB & LOCALSTORAGE (Tốc độ 0ms, không phụ thuộc mạng/backend)

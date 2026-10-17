@@ -135,6 +135,8 @@ interface DocumentFileItem {
   name: string;
   parentId: string | null;
   fileType: string;
+  mimeType?: string | null;
+  storageKey?: string | null;
   parsedQuiz: {
     title: string;
     description?: string;
@@ -149,9 +151,9 @@ const DEFAULT_FOLDERS: DocumentFolderItem[] = [];
 
 function normalizeDocItem(raw: any, fallbackId: string): DocumentFileItem {
   const id = raw?.id || fallbackId;
-  const name = raw?.name || (raw?.parsedQuiz?.title ? `${raw.parsedQuiz.title}.docx` : 'Đề thi trắc nghiệm.docx');
+  const name = raw?.name || (raw?.parsedQuiz?.title ? `${raw.parsedQuiz.title}.json` : 'Đề thi trắc nghiệm.json');
   const parentId = raw?.parentId || null;
-  const fileType = raw?.fileType || 'docx';
+  const fileType = raw?.fileType || 'json';
   const createdAt = raw?.createdAt || new Date().toISOString();
 
   const title = raw?.parsedQuiz?.title || raw?.name?.replace(/\.[^/.]+$/, '') || 'Đề thi trắc nghiệm';
@@ -435,9 +437,10 @@ function DocumentDynamicViewPageContent() {
                       if (questionsList.length > 0) {
                         const recoveredDoc: DocumentFileItem = {
                           id: fileId,
-                          name: `${examData.title || 'Đề thi trắc nghiệm'}.docx`,
+                          name: `${examData.title || 'Đề thi trắc nghiệm'}.json`,
                           parentId: null,
-                          fileType: 'docx',
+                          fileType: 'json',
+                          storageKey: `exams/teacher/${fileId}.json`,
                           createdAt: new Date().toISOString(),
                           parsedQuiz: {
                             title: examData.title || 'Đề thi trắc nghiệm',

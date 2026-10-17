@@ -27,7 +27,7 @@ async function bootstrap() {
     }),
   );
 
-  const port = configService.get<number>('PORT') || 3001;
+  const port = Number(configService.get('PORT')) || 3001;
   // Bind to 0.0.0.0 to support both IPv4 (127.0.0.1) and IPv6 (::1)
   await app.listen(port, '0.0.0.0');
   console.log(`Application is running on: http://127.0.0.1:${port}/api`);
