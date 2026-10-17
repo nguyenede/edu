@@ -23,6 +23,7 @@ interface FruitSlashGameProps {
   onBack: () => void;
   config?: GameSettingsConfig;
   onOpenSettings?: () => void;
+  onSwitchGame?: (gameType: string) => void;
 }
 
 interface FruitItem {
@@ -38,6 +39,7 @@ export const FruitSlashGame: React.FC<FruitSlashGameProps> = ({
   onBack,
   config = DEFAULT_GAME_CONFIG,
   onOpenSettings,
+  onSwitchGame,
 }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [team1Score, setTeam1Score] = useState(0);
@@ -243,6 +245,7 @@ export const FruitSlashGame: React.FC<FruitSlashGameProps> = ({
         onBack={onBack}
         onRestart={handleRestart}
         onOpenSettings={onOpenSettings}
+        onSwitchGame={onSwitchGame}
       />
 
       {/* 2. RESPONSIVE WEB GRID LAYOUT */}

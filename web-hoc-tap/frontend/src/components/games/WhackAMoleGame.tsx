@@ -23,6 +23,7 @@ interface WhackAMoleGameProps {
   onBack: () => void;
   config?: GameSettingsConfig;
   onOpenSettings?: () => void;
+  onSwitchGame?: (gameType: string) => void;
 }
 
 interface MoleHole {
@@ -37,6 +38,7 @@ export const WhackAMoleGame: React.FC<WhackAMoleGameProps> = ({
   onBack,
   config = DEFAULT_GAME_CONFIG,
   onOpenSettings,
+  onSwitchGame,
 }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [team1Score, setTeam1Score] = useState(0);
@@ -230,6 +232,7 @@ export const WhackAMoleGame: React.FC<WhackAMoleGameProps> = ({
         onBack={onBack}
         onRestart={handleRestart}
         onOpenSettings={onOpenSettings}
+        onSwitchGame={onSwitchGame}
       />
 
       {/* 2. RESPONSIVE WEB GRID LAYOUT */}

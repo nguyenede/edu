@@ -11,9 +11,9 @@ import {
   Sparkles,
   Shuffle,
   Type,
-  ArrowLeft,
-  ChevronRight,
 } from 'lucide-react';
+import { BreadcrumbChevron } from '@/components/BreadcrumbChevron';
+import { getGameCustomIcon } from '@/components/games/GameCustomIcons';
 
 export interface ClassroomTeam {
   id: string;
@@ -24,9 +24,21 @@ export interface ClassroomTeam {
   bgLight: string;
 }
 
+export const GAME_NAV_ITEMS = [
+  { id: 'tug_of_war', title: 'Kéo co kiến thức' },
+  { id: 'boat_race', title: 'Đua thuyền kiến thức' },
+  { id: 'lucky_wheel', title: 'Vòng quay may mắn' },
+  { id: 'zombie', title: 'Chặn Zombie bảo vệ thành' },
+  { id: 'gold_miner', title: 'Đào vàng kiến thức' },
+  { id: 'fruit_slash', title: 'Vườn quả tri thức' },
+  { id: 'whack_a_mole', title: 'Đập chuột chũi kiến thức' },
+  { id: 'bubble_pop', title: 'Bắt bong bóng đại dương' },
+];
+
 interface ClassroomTeacherHeaderProps {
   title: string;
   gameShortName?: string;
+  onSwitchGame?: (gameType: string) => void;
   teams: ClassroomTeam[];
   activeTeamId: string | null;
   onSelectActiveTeam?: (teamId: string) => void;
@@ -53,6 +65,7 @@ interface ClassroomTeacherHeaderProps {
 export const ClassroomTeacherHeader: React.FC<ClassroomTeacherHeaderProps> = ({
   title,
   gameShortName,
+  onSwitchGame,
   teams,
   activeTeamId,
   onSelectActiveTeam,
@@ -67,27 +80,33 @@ export const ClassroomTeacherHeader: React.FC<ClassroomTeacherHeaderProps> = ({
   onRestart,
 }) => {
   return (
-    <div className="w-full bg-white dark:bg-[#1a1b1e] rounded-2xl px-3.5 sm:px-5 py-2.5 flex items-center justify-between gap-3 select-none transition-colors border border-slate-100 dark:border-white/5 shadow-2xs">
-      {/* 1. LEFT: BACK & TITLE */}
-      <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-        {onBack && (
-          <button
-            type="button"
-            onClick={onBack}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-200 shadow-2xs transition-colors cursor-pointer shrink-0"
-            title="Thoát trò chơi về danh sách"
-          >
-            <ArrowLeft size={14} />
-            <span>Thoát</span>
-          </button>
-        )}
-        <div className="flex items-center gap-1.5 text-xs sm:text-sm font-medium text-slate-500 dark:text-slate-400 truncate">
-          <span className="hidden sm:inline">Trò chơi lớp học</span>
-          <ChevronRight size={13} className="hidden sm:inline text-slate-400 shrink-0" />
-          <span className="font-semibold text-slate-800 dark:text-slate-200 truncate">
-            {gameShortName || title}
-          </span>
-        </div>
+    <div className="w-full bg-white dark:bg-[#1a1b1e] rounded-2xl px-3.5 sm:px-5 py-2.5 flex items-center justify-between gap-3 select-none transition-colors border border-slate-100 dark:border-white/5 shadow-2xs relative z-20">
+      {/* 1. LEFT: SYNCHRONIZED BREADCRUMB */}
+      <div className="flex items-center gap-1 text-lg sm:text-xl lg:text-2xl tracking-tight text-slate-900 dark:text-slate-100 min-w-0 -ml-2">
+        <button
+          type="button"
+          onClick={onBack}
+          className="transition-all cursor-pointer px-2 py-0.5 rounded-xl text-slate-900 dark:text-white font-semibold hover:bg-slate-200/70 dark:hover:bg-slate-800 shrink-0"
+          title="Quay lại danh mục trò chơi lớp học"
+        >
+          Trò chơi lớp học
+        </button>
+        <BreadcrumbChevron
+          items={GAME_NAV_ITEMS.map((g) => ({
+            id: g.id,
+            label: g.title,
+            icon: getGameCustomIcon(g.id, 18),
+            isActive: (gameShortName || title) === g.title,
+            onClick: onSwitchGame ? () => onSwitchGame(g.id) : undefined,
+          }))}
+          fallbackToStaticChevron={true}
+        />
+        <span
+          className="px-2 py-0.5 rounded-xl text-slate-900 dark:text-white font-normal truncate max-w-[150px] sm:max-w-xs md:max-w-sm lg:max-w-md"
+          title={gameShortName || title}
+        >
+          {gameShortName || title}
+        </span>
       </div>
 
       {/* 2. CENTER: TEAM SCORES WITH QUICK (+1 / -1) CONTROLS */}

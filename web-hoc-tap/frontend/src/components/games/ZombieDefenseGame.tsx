@@ -23,6 +23,7 @@ interface ZombieDefenseGameProps {
   onBack: () => void;
   config?: GameSettingsConfig;
   onOpenSettings?: () => void;
+  onSwitchGame?: (gameType: string) => void;
 }
 
 export const ZombieDefenseGame: React.FC<ZombieDefenseGameProps> = ({
@@ -31,6 +32,7 @@ export const ZombieDefenseGame: React.FC<ZombieDefenseGameProps> = ({
   onBack,
   config = DEFAULT_GAME_CONFIG,
   onOpenSettings,
+  onSwitchGame,
 }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [castleHp, setCastleHp] = useState(100);
@@ -221,6 +223,7 @@ export const ZombieDefenseGame: React.FC<ZombieDefenseGameProps> = ({
         onBack={onBack}
         onRestart={handleRestart}
         onOpenSettings={onOpenSettings}
+        onSwitchGame={onSwitchGame}
       />
 
       {/* 2. RESPONSIVE WEB GRID LAYOUT */}

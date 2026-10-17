@@ -23,6 +23,7 @@ interface BubblePopGameProps {
   onBack: () => void;
   config?: GameSettingsConfig;
   onOpenSettings?: () => void;
+  onSwitchGame?: (gameType: string) => void;
 }
 
 interface BubbleItem {
@@ -38,6 +39,7 @@ export const BubblePopGame: React.FC<BubblePopGameProps> = ({
   onBack,
   config = DEFAULT_GAME_CONFIG,
   onOpenSettings,
+  onSwitchGame,
 }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [team1Score, setTeam1Score] = useState(0);
@@ -235,6 +237,7 @@ export const BubblePopGame: React.FC<BubblePopGameProps> = ({
         onBack={onBack}
         onRestart={handleRestart}
         onOpenSettings={onOpenSettings}
+        onSwitchGame={onSwitchGame}
       />
 
       {/* 2. RESPONSIVE WEB GRID LAYOUT */}

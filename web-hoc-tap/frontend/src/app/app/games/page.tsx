@@ -485,6 +485,18 @@ export default function GamesHubPage() {
     return list;
   }, [playingLesson]);
 
+  // Chuyển đổi nhanh trò chơi khi đang trình chiếu
+  const handleSwitchGameInPlay = (newGameType: string) => {
+    setActiveCategory(newGameType as ActiveGameMode);
+    setPlayingLesson((prev) => {
+      if (!prev) return null;
+      return {
+        ...prev,
+        gameType: newGameType as any,
+      };
+    });
+  };
+
   // Khi đang chơi trò chơi (giảng dạy trên lớp): Chế độ Full màn hình (Classroom Presentation Mode)
   if (playingLesson) {
     const meta = getCategoryMeta(playingLesson.gameType);
@@ -498,6 +510,7 @@ export default function GamesHubPage() {
               onBack={() => setPlayingLesson(null)}
               config={playingLesson.config}
               onOpenSettings={() => handleOpenEditModal(playingLesson)}
+              onSwitchGame={handleSwitchGameInPlay}
             />
           )}
           {playingLesson.gameType === 'lucky_wheel' && (
@@ -507,6 +520,7 @@ export default function GamesHubPage() {
               onBack={() => setPlayingLesson(null)}
               config={playingLesson.config}
               onOpenSettings={() => handleOpenEditModal(playingLesson)}
+              onSwitchGame={handleSwitchGameInPlay}
             />
           )}
           {playingLesson.gameType === 'boat_race' && (
@@ -516,6 +530,7 @@ export default function GamesHubPage() {
               onBack={() => setPlayingLesson(null)}
               config={playingLesson.config}
               onOpenSettings={() => handleOpenEditModal(playingLesson)}
+              onSwitchGame={handleSwitchGameInPlay}
             />
           )}
           {playingLesson.gameType === 'zombie' && (
@@ -525,6 +540,7 @@ export default function GamesHubPage() {
               onBack={() => setPlayingLesson(null)}
               config={playingLesson.config}
               onOpenSettings={() => handleOpenEditModal(playingLesson)}
+              onSwitchGame={handleSwitchGameInPlay}
             />
           )}
           {playingLesson.gameType === 'gold_miner' && (
@@ -534,6 +550,7 @@ export default function GamesHubPage() {
               onBack={() => setPlayingLesson(null)}
               config={playingLesson.config}
               onOpenSettings={() => handleOpenEditModal(playingLesson)}
+              onSwitchGame={handleSwitchGameInPlay}
             />
           )}
           {playingLesson.gameType === 'fruit_slash' && (
@@ -543,6 +560,7 @@ export default function GamesHubPage() {
               onBack={() => setPlayingLesson(null)}
               config={playingLesson.config}
               onOpenSettings={() => handleOpenEditModal(playingLesson)}
+              onSwitchGame={handleSwitchGameInPlay}
             />
           )}
           {playingLesson.gameType === 'whack_a_mole' && (
@@ -552,6 +570,7 @@ export default function GamesHubPage() {
               onBack={() => setPlayingLesson(null)}
               config={playingLesson.config}
               onOpenSettings={() => handleOpenEditModal(playingLesson)}
+              onSwitchGame={handleSwitchGameInPlay}
             />
           )}
           {playingLesson.gameType === 'bubble_pop' && (
@@ -561,6 +580,7 @@ export default function GamesHubPage() {
               onBack={() => setPlayingLesson(null)}
               config={playingLesson.config}
               onOpenSettings={() => handleOpenEditModal(playingLesson)}
+              onSwitchGame={handleSwitchGameInPlay}
             />
           )}
 
