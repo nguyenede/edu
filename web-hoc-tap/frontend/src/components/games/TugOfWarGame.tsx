@@ -272,61 +272,164 @@ export const TugOfWarGame: React.FC<TugOfWarGameProps> = ({
       {/* 2. RESPONSIVE WEB GRID LAYOUT */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch flex-1 min-h-0">
         {/* LEFT COLUMN: TUG OF WAR ARENA (lg:col-span-5) */}
-        <div className="lg:col-span-5 flex flex-col justify-between space-y-4 h-full min-h-0">
-          {/* Minimalist Rope Arena */}
-          <div className="bg-white dark:bg-[#1a1b1e] rounded-2xl p-4 sm:p-5 flex flex-col justify-between space-y-4 flex-1 border border-slate-100 dark:border-white/5 shadow-2xs">
+        <div className="lg:col-span-5 flex flex-col h-full min-h-0">
+          {/* Main Rope Arena Card */}
+          <div className="bg-white dark:bg-[#1a1b1e] rounded-2xl p-4 sm:p-6 flex flex-col justify-between space-y-4 flex-1 border border-slate-100 dark:border-white/5 shadow-2xs">
             {/* Arena Header */}
-            <div className="flex items-center justify-between text-xs font-bold pb-2">
-              <span className="text-blue-600 dark:text-blue-400 font-extrabold flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-full bg-blue-600" />
-                {team1Name}
-              </span>
-              <span className="text-rose-600 dark:text-rose-400 font-extrabold flex items-center gap-1.5">
-                {team2Name}
-                <span className="w-2.5 h-2.5 rounded-full bg-rose-600" />
-              </span>
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-white/5">
+              <div className="flex items-center gap-2">
+                <span className="w-3.5 h-3.5 rounded-full bg-blue-600 shadow-sm" />
+                <span className="text-base sm:text-lg font-black text-blue-600 dark:text-blue-400">
+                  {team1Name}
+                </span>
+              </div>
+              <div className="px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-slate-300">
+                Đấu trường kéo co
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-base sm:text-lg font-black text-rose-600 dark:text-rose-400">
+                  {team2Name}
+                </span>
+                <span className="w-3.5 h-3.5 rounded-full bg-rose-600 shadow-sm" />
+              </div>
             </div>
 
-            {/* Visual Rope Track */}
-            <div className="py-8 px-2 flex flex-col items-center justify-center relative">
-              {/* Center Line Marker */}
-              <div className="absolute top-2 bottom-2 left-1/2 -translate-x-1/2 w-0.5 bg-slate-300 dark:bg-zinc-700 dashed border-r border-dashed border-slate-400 z-0" />
+            {/* Central Battle Stage */}
+            <div className="flex-1 flex flex-col justify-center items-center py-4 sm:py-6 space-y-6 sm:space-y-8 w-full">
+              {/* Dynamic Status / Momentum Banner */}
+              <div className="flex items-center justify-center">
+                {ropePosition === 0 ? (
+                  <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-slate-100 dark:bg-white/10 border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-200 text-sm font-bold shadow-2xs">
+                    <span className="text-base">⚖️</span>
+                    <span>Thế trận đang cân bằng</span>
+                  </div>
+                ) : ropePosition < 0 ? (
+                  <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300 text-sm font-bold shadow-2xs animate-pulse">
+                    <span className="text-base">🔥</span>
+                    <span>
+                      {team1Name} đang dẫn trước {Math.abs(ropePosition)} điểm!
+                    </span>
+                  </div>
+                ) : (
+                  <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 text-sm font-bold shadow-2xs animate-pulse">
+                    <span className="text-base">🔥</span>
+                    <span>
+                      {team2Name} đang dẫn trước {ropePosition} điểm!
+                    </span>
+                  </div>
+                )}
+              </div>
 
-              {/* Rope line */}
-              <div className="w-full h-3 bg-amber-700/80 rounded-full relative shadow-inner flex items-center">
-                {/* Grip marks */}
-                <div className="absolute inset-0 bg-[repeating-linear-gradient(45deg,#b45309,#b45309_8px,#92400e_8px,#92400e_16px)] rounded-full opacity-60" />
+              {/* Wrestlers & Scores Stage */}
+              <div className="w-full flex items-end justify-between px-2 sm:px-4 select-none">
+                {/* Team 1 (Blue) Puller & Score */}
+                <div className="flex flex-col items-start gap-2">
+                  <div className="px-3.5 py-1.5 rounded-xl bg-blue-600 text-white font-black text-base sm:text-xl shadow-md flex items-center gap-1.5">
+                    <span>+{Math.max(0, -ropePosition)}</span>
+                    <span className="text-xs font-semibold opacity-90">điểm</span>
+                  </div>
+                  <div
+                    className={`text-5xl sm:text-6xl md:text-7xl transition-transform duration-300 ${
+                      ropePosition < 0
+                        ? 'scale-125 -translate-x-2'
+                        : ropePosition > 0
+                        ? 'scale-90 opacity-80'
+                        : 'scale-100'
+                    }`}
+                  >
+                    🤼
+                  </div>
+                </div>
 
-                {/* Center Red Ribbon / Flag */}
-                <div
-                  className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 transition-all duration-500 ease-out z-10 flex flex-col items-center"
-                  style={{ left: `${ropePercentage}%` }}
-                >
-                  <div className="w-4 h-7 bg-red-600 rounded-sm shadow-md flex items-center justify-center border border-white">
-                    <span className="text-[9px] text-white font-black">🚩</span>
+                {/* Team 2 (Red) Puller & Score */}
+                <div className="flex flex-col items-end gap-2">
+                  <div className="px-3.5 py-1.5 rounded-xl bg-rose-600 text-white font-black text-base sm:text-xl shadow-md flex items-center gap-1.5">
+                    <span className="text-xs font-semibold opacity-90">điểm</span>
+                    <span>+{Math.max(0, ropePosition)}</span>
+                  </div>
+                  <div
+                    className={`text-5xl sm:text-6xl md:text-7xl transition-transform duration-300 ${
+                      ropePosition > 0
+                        ? 'scale-125 translate-x-2'
+                        : ropePosition < 0
+                        ? 'scale-90 opacity-80'
+                        : 'scale-100'
+                    }`}
+                  >
+                    🤼‍♂️
                   </div>
                 </div>
               </div>
 
-              {/* Character Avatars pulling */}
-              <div className="w-full flex items-center justify-between mt-4 px-1 text-2xl sm:text-3xl select-none">
-                <div className="flex items-center gap-1">
-                  <span className={`transition-transform duration-300 ${ropePosition < 0 ? 'scale-125' : ''}`}>
-                    🤼
+              {/* Visual Rope Track */}
+              <div className="w-full px-2 py-4 relative flex flex-col items-center">
+                {/* Center Line Marker */}
+                <div className="absolute top-0 bottom-6 left-1/2 -translate-x-1/2 w-0.5 border-l-2 border-dashed border-slate-300 dark:border-zinc-600 z-0 flex flex-col justify-between items-center pointer-events-none">
+                  <span className="text-[10px] font-bold text-slate-400 dark:text-zinc-500 bg-white dark:bg-[#1a1b1e] px-1 -mt-2">
+                    MỐC
                   </span>
-                  <span className="text-xs font-bold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/40 px-2 py-0.5 rounded-md">
-                    +{Math.max(0, -ropePosition)}
+                  <span className="text-[10px] font-bold text-slate-400 dark:text-zinc-500 bg-white dark:bg-[#1a1b1e] px-1 -mb-2">
+                    GIỮA
                   </span>
                 </div>
-                <div className="flex items-center gap-1">
-                  <span className="text-xs font-bold text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/40 px-2 py-0.5 rounded-md">
-                    +{Math.max(0, ropePosition)}
+
+                {/* Rope line */}
+                <div className="w-full h-8 sm:h-10 bg-amber-700 rounded-full relative shadow-inner flex items-center border-2 border-amber-900/30 overflow-visible">
+                  {/* Grip marks */}
+                  <div className="absolute inset-0 bg-[repeating-linear-gradient(45deg,#b45309,#b45309_12px,#92400e_12px,#92400e_24px)] rounded-full opacity-80" />
+
+                  {/* Center Red Ribbon / Flag */}
+                  <div
+                    className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 transition-all duration-500 ease-out z-10 flex flex-col items-center pointer-events-none"
+                    style={{ left: `${ropePercentage}%` }}
+                  >
+                    <div className="w-9 sm:w-11 h-12 sm:h-14 bg-gradient-to-b from-red-500 to-red-700 rounded-lg shadow-xl flex items-center justify-center border-2 border-white ring-2 ring-red-500/30">
+                      <span className="text-lg sm:text-xl select-none">🚩</span>
+                    </div>
+                    <div className="w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[8px] border-t-red-700 -mt-0.5" />
+                  </div>
+                </div>
+
+                {/* Step scale below rope */}
+                <div className="w-full flex items-center justify-between mt-4 px-1">
+                  <span className="text-xs font-black text-blue-600 dark:text-blue-400 flex items-center gap-1">
+                    🏆 THẮNG (-{maxPullLimit})
                   </span>
-                  <span className={`transition-transform duration-300 ${ropePosition > 0 ? 'scale-125' : ''}`}>
-                    🤼‍♂️
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    {Array.from({ length: maxPullLimit * 2 + 1 }).map((_, i) => {
+                      const step = i - maxPullLimit;
+                      const isCurrent = step === ropePosition;
+                      return (
+                        <div
+                          key={step}
+                          className={`w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full transition-all duration-300 ${
+                            isCurrent
+                              ? 'bg-red-500 scale-125 ring-4 ring-red-500/30 shadow-xs'
+                              : step === 0
+                              ? 'bg-slate-400 dark:bg-zinc-500 scale-110'
+                              : step < 0
+                              ? 'bg-blue-300 dark:bg-blue-800'
+                              : 'bg-rose-300 dark:bg-rose-800'
+                          }`}
+                          title={`Vị trí: ${step}`}
+                        />
+                      );
+                    })}
+                  </div>
+                  <span className="text-xs font-black text-rose-600 dark:text-rose-400 flex items-center gap-1">
+                    (+{maxPullLimit}) THẮNG 🏆
                   </span>
                 </div>
               </div>
+            </div>
+
+            {/* Bottom info note */}
+            <div className="text-center text-xs text-slate-500 dark:text-zinc-400 font-medium pt-3 border-t border-slate-100 dark:border-white/5">
+              Đội đầu tiên kéo mốc cờ chạm mức{' '}
+              <span className="font-bold text-slate-700 dark:text-zinc-200">
+                {maxPullLimit} điểm
+              </span>{' '}
+              sẽ chiến thắng
             </div>
           </div>
         </div>
