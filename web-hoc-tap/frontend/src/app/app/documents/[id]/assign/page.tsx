@@ -710,7 +710,7 @@ function AssignPageContent() {
 
                   {/* 2. MÃ QR SCANNABLE */}
                   <div className="flex flex-col items-center justify-center space-y-1.5">
-                    <div className="p-2.5 bg-white rounded-xl shadow-xs inline-block">
+                    <div className="p-2.5 bg-white rounded-xl inline-block">
                       {qrCodeUrl ? (
                         <img
                           src={qrCodeUrl}

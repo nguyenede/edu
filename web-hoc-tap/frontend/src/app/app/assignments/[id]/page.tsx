@@ -1371,12 +1371,12 @@ export default function AssignmentDetailPage() {
           </div>
 
           {qrCodeUrl ? (
-            <div className="p-4 bg-white rounded-3xl inline-block mx-auto shadow-md border border-slate-200/80">
+            <div className="p-4 bg-white rounded-3xl inline-block mx-auto">
               <img src={qrCodeUrl} alt="Mã QR làm bài" className="w-56 h-56 mx-auto object-contain" />
             </div>
           ) : (
             <div className="w-56 h-56 bg-slate-100 dark:bg-slate-800 rounded-2xl flex items-center justify-center mx-auto text-xs text-slate-400">
-              Đang tạo mã QR...
+              Đang tạo mã QR
             </div>
           )}
 
