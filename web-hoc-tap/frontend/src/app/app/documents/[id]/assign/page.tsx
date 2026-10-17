@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { useState, useEffect, useMemo, Suspense } from 'react';
 import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import { AppShell } from '@/components/AppShell';
 import { BreadcrumbChevron } from '@/components/BreadcrumbChevron';
@@ -389,14 +389,31 @@ function AssignPageContent() {
     return `http://localhost:3000/play?pin=${pin}`;
   };
 
-  const handleCopyPin = (pin: string) => {
-    navigator.clipboard.writeText(pin);
+  const displayPin = useMemo(() => {
+    if (!createdHomework?.pin) return '';
+    const clean = createdHomework.pin.replace(/\s+/g, '');
+    if (clean.length === 6) {
+      return `${clean.slice(0, 3)} ${clean.slice(3)}`;
+    }
+    return createdHomework.pin;
+  }, [createdHomework?.pin]);
+
+  const playUrl = useMemo(() => {
+    if (!createdHomework?.pin) return '';
+    return getPlayUrl(createdHomework.pin);
+  }, [createdHomework?.pin]);
+
+  const handleCopyPin = (pinToCopy: string) => {
+    const clean = pinToCopy.replace(/\s+/g, '');
+    navigator.clipboard.writeText(clean);
     setCopiedPin(true);
     setTimeout(() => setCopiedPin(false), 2000);
   };
 
-  const handleCopyLink = (pin: string) => {
-    navigator.clipboard.writeText(getPlayUrl(pin));
+  const handleCopyLink = (pin?: string) => {
+    const url = pin ? getPlayUrl(pin) : playUrl;
+    if (!url) return;
+    navigator.clipboard.writeText(url);
     setCopiedLink(true);
     setTimeout(() => setCopiedLink(false), 2000);
   };
@@ -405,7 +422,7 @@ function AssignPageContent() {
     if (!qrCodeUrl || !createdHomework) return;
     const a = document.createElement('a');
     a.href = qrCodeUrl;
-    a.download = `QR_${createdHomework.pin}_${createdHomework.title.slice(0, 20)}.png`;
+    a.download = `QR_${createdHomework.pin.replace(/\s+/g, '')}_${createdHomework.title.slice(0, 20)}.png`;
     a.click();
   };
 
@@ -680,7 +697,7 @@ function AssignPageContent() {
           /* TRANG THÀNH CÔNG: TÙY THEO HÌNH THỨC GIAO BÀI */
           <div className="space-y-4 animate-in fade-in duration-300 max-w-md mx-auto">
             {(!createdHomework.classId || createdHomework.classId === 'public') ? (
-              /* GIAO DIỆN CÔNG KHAI: MÃ PIN & MÃ QR GỌN GÀNG */
+              /* GIAO DIỆN CÔNG KHAI: ĐỒNG BỘ VỚI ASSIGNMENTS & CLASSES */
               <>
                 {/* Header gọn gàng */}
                 <div className="text-center space-y-1">
@@ -688,7 +705,7 @@ function AssignPageContent() {
                     <Check size={14} className="stroke-[2.5]" />
                     <span>Giao bài tập thành công</span>
                   </div>
-                  <h1 className="text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100 truncate px-2" title={createdHomework.title}>
+                  <h1 className="text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100 px-2 break-words" title={createdHomework.title}>
                     {createdHomework.title}
                   </h1>
                   <p className="text-xs text-slate-500 dark:text-slate-400">
@@ -696,61 +713,86 @@ function AssignPageContent() {
                   </p>
                 </div>
 
-                {/* Showcase Box: PIN & QR Code gọn đẹp */}
-                <div className="p-5 bg-slate-50/80 dark:bg-slate-900/60 rounded-2xl text-center space-y-3.5 border border-slate-100 dark:border-white/5 shadow-2xs">
-                  {/* 1. MÃ PIN */}
-                  <div className="space-y-0.5">
-                    <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
+                <div className="space-y-4 pt-1 text-center">
+                  {/* PIN box - Đồng bộ với assignments & classes */}
+                  <div
+                    onClick={() => handleCopyPin(createdHomework.pin)}
+                    className="p-3.5 rounded-2xl bg-blue-50/90 dark:bg-blue-950/40 border border-blue-200/70 dark:border-blue-900/60 text-center cursor-pointer hover:bg-blue-100/70 dark:hover:bg-blue-900/40 transition-colors select-none"
+                    title="Bấm để sao chép mã PIN"
+                  >
+                    <span className="text-[10px] text-blue-600 dark:text-blue-400 font-bold uppercase tracking-wider block">
                       Mã PIN làm bài
                     </span>
-                    <div className="font-mono text-3xl font-black tracking-widest text-google-blue select-all">
-                      {createdHomework.pin.slice(0, 3)} {createdHomework.pin.slice(3)}
+                    <div className="text-3xl sm:text-4xl font-mono font-black text-blue-700 dark:text-blue-300 tracking-widest mt-0.5">
+                      {displayPin}
                     </div>
+                    {copiedPin && (
+                      <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 mt-1 inline-block animate-pulse">
+                        ✓ Đã sao chép mã PIN
+                      </span>
+                    )}
                   </div>
 
-                  {/* 2. MÃ QR SCANNABLE */}
-                  <div className="flex flex-col items-center justify-center space-y-1.5">
-                    <div className="p-2.5 bg-white rounded-xl inline-block">
-                      {qrCodeUrl ? (
-                        <img
-                          src={qrCodeUrl}
-                          alt="Mã QR làm bài"
-                          className="w-36 h-36 rounded-lg object-contain mx-auto"
-                        />
-                      ) : (
-                        <div className="w-36 h-36 flex items-center justify-center text-xs text-slate-400">
-                          Đang tạo mã QR
-                        </div>
-                      )}
+                  {/* QR Code */}
+                  {qrCodeUrl ? (
+                    <div className="p-4 bg-white rounded-3xl inline-block mx-auto">
+                      <img src={qrCodeUrl} alt="Mã QR làm bài" className="w-56 h-56 mx-auto object-contain" />
                     </div>
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1 justify-center">
-                      <QrCode size={13} className="text-google-blue shrink-0" />
-                      Quét mã QR hoặc nhập PIN để vào làm bài
-                    </p>
-                  </div>
+                  ) : (
+                    <div className="w-56 h-56 bg-slate-100 dark:bg-slate-800 rounded-2xl flex items-center justify-center mx-auto text-xs text-slate-400">
+                      Đang tạo mã QR
+                    </div>
+                  )}
 
-                  {/* Quick Share Buttons */}
-                  <div className="flex items-center justify-center gap-2 pt-0.5 flex-wrap">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleCopyLink(createdHomework.pin)}
-                      className="gap-1.5 text-xs rounded-xl"
-                    >
-                      {copiedLink ? <Check size={14} className="text-emerald-500" /> : <Copy size={14} />}
-                      {copiedLink ? 'Đã sao chép link' : 'Sao chép liên kết'}
+                  {/* Link box */}
+                  <div className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/70 dark:border-white/10">
+                    <div className="text-left truncate mr-2">
+                      <span className="text-[10px] text-slate-400 font-semibold uppercase block">
+                        Đường dẫn trực tiếp
+                      </span>
+                      <div className="text-xs text-slate-600 dark:text-zinc-300 font-medium truncate">
+                        {playUrl}
+                      </div>
+                    </div>
+                    <Button variant="secondary" size="sm" onClick={() => handleCopyLink()} className="gap-1 shrink-0 rounded-xl">
+                      {copiedLink ? <Check size={14} /> : <Copy size={14} />}
+                      <span>{copiedLink ? 'Đã chép' : 'Chép link'}</span>
                     </Button>
+                  </div>
+
+                  {/* Action buttons */}
+                  <div className="flex items-center justify-center gap-2 pt-1 flex-wrap">
                     {qrCodeUrl && (
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={handleDownloadQr}
-                        className="gap-1.5 text-xs rounded-xl"
+                        className="rounded-xl text-xs gap-1.5"
                         title="Tải ảnh QR về máy để in hoặc chia sẻ"
                       >
-                        <Download size={14} /> Tải ảnh QR
+                        <Download size={14} />
+                        <span>Tải ảnh QR về máy</span>
                       </Button>
                     )}
+
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => router.push(`/app/assignments/${createdHomework.id}`)}
+                      className="rounded-xl text-xs gap-1.5"
+                    >
+                      <span>Xem kết quả bài nộp</span>
+                    </Button>
+
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      onClick={() => window.open(playUrl, '_blank')}
+                      className="rounded-xl text-xs gap-1.5 bg-google-blue hover:bg-[#1557b0] text-white"
+                    >
+                      <ExternalLink size={14} />
+                      <span>Mở làm thử ngay</span>
+                    </Button>
                   </div>
                 </div>
               </>
@@ -762,7 +804,7 @@ function AssignPageContent() {
                     <Check size={14} className="stroke-[2.5]" />
                     <span>Đã giao cho lớp {createdHomework.className}</span>
                   </div>
-                  <h1 className="text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100 truncate px-2" title={createdHomework.title}>
+                  <h1 className="text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100 px-2 break-words" title={createdHomework.title}>
                     {createdHomework.title}
                   </h1>
                   <p className="text-xs text-slate-500 dark:text-slate-400">
@@ -784,11 +826,11 @@ function AssignPageContent() {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => handleCopyLink(createdHomework.pin)}
+                      onClick={() => handleCopyLink()}
                       className="gap-1.5 text-xs rounded-xl"
                     >
                       {copiedLink ? <Check size={14} className="text-emerald-500" /> : <Copy size={14} />}
-                      {copiedLink ? 'Đã sao chép link' : 'Sao chép link làm bài'}
+                      {copiedLink ? 'Đã chép' : 'Chép link'}
                     </Button>
                     <Button
                       variant="primary"
@@ -800,28 +842,28 @@ function AssignPageContent() {
                     </Button>
                   </div>
                 </div>
+
+                <div className="flex items-center justify-center gap-2 pt-1 flex-wrap">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => router.push(`/app/assignments/${createdHomework.id}`)}
+                    className="rounded-xl text-xs gap-1.5"
+                  >
+                    <span>Xem kết quả bài nộp</span>
+                  </Button>
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    onClick={() => window.open(playUrl, '_blank')}
+                    className="rounded-xl text-xs gap-1.5 bg-google-blue hover:bg-[#1557b0] text-white"
+                  >
+                    <ExternalLink size={14} />
+                    <span>Mở làm thử ngay</span>
+                  </Button>
+                </div>
               </>
             )}
-
-            {/* Actions Footer */}
-            <div className="flex items-center justify-center gap-2 pt-1 flex-wrap">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => router.push(`/app/assignments/${createdHomework.id}`)}
-                className="rounded-xl text-xs gap-1.5"
-              >
-                Xem kết quả bài nộp
-              </Button>
-              <Button
-                variant="primary"
-                size="sm"
-                onClick={() => window.open(getPlayUrl(createdHomework.pin), '_blank')}
-                className="rounded-xl text-xs gap-1.5 bg-google-blue hover:bg-[#1557b0] text-white"
-              >
-                <ExternalLink size={14} /> Mở làm thử ngay
-              </Button>
-            </div>
           </div>
         ) : (
           /* TRANG CẤU HÌNH GIAO BÀI TẬP (MỞ RỘNG HAI BÊN, KHÔNG KHUNG HỘP) */
