@@ -120,16 +120,16 @@ export const NotificationDrawer: React.FC = () => {
 
       {/* Popover */}
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white dark:bg-slate-950 rounded-[6px] ring-1 ring-slate-200/20 z-50 overflow-hidden flex flex-col">
+        <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white dark:bg-[#1e1f20] rounded-2xl border border-black/[0.08] dark:border-white/10 shadow-xl shadow-slate-900/10 dark:shadow-black/50 z-50 overflow-hidden flex flex-col p-1.5 animate-in fade-in zoom-in-95 duration-150">
           {/* Header */}
-          <div className="p-3 bg-slate-50 dark:bg-slate-900/50 flex justify-between items-center">
-            <span className="text-xs font-bold text-slate-900 dark:text-slate-100 uppercase tracking-wider">
-              Thông báo {unreadCount}
+          <div className="px-3.5 pt-3 pb-2 flex justify-between items-center bg-transparent">
+            <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+              Thông báo {unreadCount > 0 ? `(${unreadCount})` : ''}
             </span>
             {unreadCount > 0 && (
               <button
                 onClick={handleMarkAllRead}
-                className="text-xs text-blue-600 dark:text-blue-400 font-semibold flex items-center gap-1"
+                className="text-xs text-google-blue dark:text-blue-400 font-medium hover:underline flex items-center gap-1 cursor-pointer"
               >
                 <CheckCheck size={14} /> Đọc tất cả
               </button>
@@ -137,27 +137,27 @@ export const NotificationDrawer: React.FC = () => {
           </div>
 
           {/* List */}
-          <div className="max-h-80 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-900">
+          <div className="max-h-80 overflow-y-auto win-scrollbar px-1 py-1 space-y-1">
             {loading ? (
-              <p className="text-xs text-slate-400 py-6 text-center">Đang tải...</p>
+              <p className="text-xs text-slate-400 py-6 text-center">Đang tải thông báo</p>
             ) : notifications.length === 0 ? (
-              <div className="py-8 text-center text-slate-400 space-y-1">
-                <Inbox size={24} className="mx-auto text-slate-300 dark:text-slate-700" />
-                <p className="text-xs">Không có thông báo mới</p>
+              <div className="py-8 text-center text-slate-400 space-y-2">
+                <Inbox size={26} className="mx-auto text-slate-300 dark:text-slate-600" />
+                <p className="text-xs text-slate-500 dark:text-slate-400">Không có thông báo mới</p>
               </div>
             ) : (
               notifications.map((n) => (
                 <div
                   key={n.id}
                   onClick={() => !n.isRead && handleMarkAsRead(n.id)}
-                  className={`p-3 text-left cursor-pointer flex flex-col gap-1 ${
+                  className={`p-3 text-left cursor-pointer flex flex-col gap-1 rounded-xl transition-colors ${
                     n.isRead
-                      ? 'bg-transparent text-slate-600 dark:text-slate-400'
-                      : 'bg-blue-50/40 dark:bg-blue-950/20 text-slate-900 dark:text-slate-100 font-medium'
+                      ? 'bg-transparent text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/60'
+                      : 'bg-blue-50/50 dark:bg-blue-950/20 text-slate-900 dark:text-slate-100 font-medium hover:bg-blue-50/80 dark:hover:bg-blue-950/40'
                   }`}
                 >
                   <div className="flex justify-between items-start gap-2">
-                    <span className="text-xs font-bold">{n.title}</span>
+                    <span className="text-xs font-semibold">{n.title}</span>
                     <span className="text-[10px] text-slate-400 shrink-0">
                       {new Date(n.createdAt).toLocaleDateString('vi-VN')}
                     </span>
@@ -171,13 +171,13 @@ export const NotificationDrawer: React.FC = () => {
           </div>
 
           {/* Footer link to full notification page */}
-          <div className="p-2 bg-slate-50 dark:bg-slate-900/50 text-center border-t border-slate-100 dark:border-slate-900">
+          <div className="px-3.5 py-2.5 text-center bg-transparent">
             <button
               onClick={() => {
                 setIsOpen(false);
                 router.push('/app/notifications');
               }}
-              className="text-xs text-blue-600 dark:text-blue-400 font-semibold"
+              className="text-xs text-google-blue dark:text-blue-400 font-medium hover:underline cursor-pointer"
             >
               Xem tất cả thông báo
             </button>
