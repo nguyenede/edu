@@ -582,63 +582,59 @@ function AssignPageContent() {
       <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20 pt-2 space-y-8">
         {createdHomework ? (
           /* TRANG THÀNH CÔNG: TÙY THEO HÌNH THỨC GIAO BÀI */
-          /* 1. NẾU LÀ GIAO CÔNG KHAI (BẤT KỲ AI CŨNG VÀO ĐƯỢC): HIỆN GIAO DIỆN MÃ PIN & MÃ QR */
-          /* 2. NẾU LÀ GIAO CHO LỚP (BẮT BUỘC ĐĂNG NHẬP ĐÚNG TK LỚP): HIỆN GIAO DIỆN BẢO MẬT LỚP HỌC */
-          <div className="space-y-8 animate-in fade-in duration-300 max-w-3xl mx-auto">
+          <div className="space-y-4 animate-in fade-in duration-300 max-w-md mx-auto">
             {(!createdHomework.classId || createdHomework.classId === 'public') ? (
-              /* GIAO DIỆN CÔNG KHAI: MÃ PIN & MÃ QR SCANNABLE */
+              /* GIAO DIỆN CÔNG KHAI: MÃ PIN & MÃ QR GỌN GÀNG */
               <>
-                {/* Header */}
-                <div className="text-center space-y-3">
-                  <div className="w-14 h-14 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 flex items-center justify-center mx-auto">
-                    <Check size={32} className="stroke-[2.5]" />
+                {/* Header gọn gàng */}
+                <div className="text-center space-y-1">
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 text-xs font-semibold">
+                    <Check size={14} className="stroke-[2.5]" />
+                    <span>Giao bài tập thành công</span>
                   </div>
-
-                  <div className="space-y-1">
-                    <h1 className="text-2xl font-normal tracking-tight text-slate-900 dark:text-slate-100">
-                      Giao bài tập tự do thành công!
-                    </h1>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">
-                      Bất cứ ai có mã PIN hoặc quét mã QR đều có thể vào làm bài ngay mà không cần tài khoản.
-                    </p>
-                  </div>
+                  <h1 className="text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100 truncate px-2" title={createdHomework.title}>
+                    {createdHomework.title}
+                  </h1>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    {questionsCount} câu • {createdHomework.durationMinutes > 0 ? `${createdHomework.durationMinutes} phút` : 'Không giới hạn thời gian'}
+                  </p>
                 </div>
 
-                {/* Showcase Box: PIN & QR Code */}
-                <div className="p-8 bg-slate-50/80 dark:bg-slate-900/60 rounded-3xl text-center space-y-6">
+                {/* Showcase Box: PIN & QR Code gọn đẹp */}
+                <div className="p-5 bg-slate-50/80 dark:bg-slate-900/60 rounded-2xl text-center space-y-3.5 border border-slate-100 dark:border-white/5 shadow-2xs">
                   {/* 1. MÃ PIN */}
-                  <div className="space-y-1">
-                    <span className="text-xs font-bold text-slate-400 uppercase tracking-widest block">
+                  <div className="space-y-0.5">
+                    <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
                       Mã PIN làm bài
                     </span>
-                    <div className="font-mono text-4xl sm:text-5xl font-extrabold tracking-wider text-google-blue select-all">
+                    <div className="font-mono text-3xl font-black tracking-widest text-google-blue select-all">
                       {createdHomework.pin.slice(0, 3)} {createdHomework.pin.slice(3)}
                     </div>
                   </div>
 
                   {/* 2. MÃ QR SCANNABLE */}
-                  <div className="flex flex-col items-center justify-center space-y-2">
-                    <div className="p-3 bg-white rounded-2xl shadow-xs inline-block">
+                  <div className="flex flex-col items-center justify-center space-y-1.5">
+                    <div className="p-2.5 bg-white rounded-xl shadow-xs inline-block">
                       {qrCodeUrl ? (
                         <img
                           src={qrCodeUrl}
                           alt="Mã QR làm bài"
-                          className="w-56 h-56 rounded-xl object-contain mx-auto"
+                          className="w-36 h-36 rounded-lg object-contain mx-auto"
                         />
                       ) : (
-                        <div className="w-56 h-56 flex items-center justify-center text-xs text-slate-400">
+                        <div className="w-36 h-36 flex items-center justify-center text-xs text-slate-400">
                           Đang tạo mã QR...
                         </div>
                       )}
                     </div>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1.5 justify-center">
-                      <QrCode size={14} className="text-google-blue shrink-0" />
-                      Quét bằng Camera điện thoại hoặc Zalo để vào làm bài ngay
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1 justify-center">
+                      <QrCode size={13} className="text-google-blue shrink-0" />
+                      Quét mã QR hoặc nhập PIN để vào làm bài
                     </p>
                   </div>
 
                   {/* Quick Share Buttons */}
-                  <div className="flex items-center justify-center gap-2.5 flex-wrap pt-1">
+                  <div className="flex items-center justify-center gap-2 pt-0.5 flex-wrap">
                     <Button
                       variant="outline"
                       size="sm"
@@ -663,42 +659,32 @@ function AssignPageContent() {
                 </div>
               </>
             ) : (
-              /* GIAO DIỆN GIAO CHO LỚP: BẢO MẬT & BẮT BUỘC ĐĂNG NHẬP ĐÚNG TÀI KHOẢN LỚP */
+              /* GIAO DIỆN GIAO CHO LỚP: GỌN GÀNG */
               <>
-                {/* Header */}
-                <div className="text-center space-y-3">
-                  <div className="w-14 h-14 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 flex items-center justify-center mx-auto">
-                    <GraduationCap size={32} className="stroke-[2.2]" />
+                <div className="text-center space-y-1">
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 text-xs font-semibold">
+                    <Check size={14} className="stroke-[2.5]" />
+                    <span>Đã giao cho lớp {createdHomework.className}</span>
                   </div>
-
-                  <div className="space-y-1">
-                    <h1 className="text-2xl font-normal tracking-tight text-slate-900 dark:text-slate-100">
-                      Đã giao bài tập thành công cho lớp {createdHomework.className}!
-                    </h1>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 max-w-lg mx-auto">
-                      Bài tập đã được đăng trực tiếp vào lớp học. Học sinh cần <strong>đăng nhập đúng tài khoản trong danh sách lớp</strong> để vào làm bài.
-                    </p>
-                  </div>
+                  <h1 className="text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100 truncate px-2" title={createdHomework.title}>
+                    {createdHomework.title}
+                  </h1>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    {questionsCount} câu • {createdHomework.durationMinutes > 0 ? `${createdHomework.durationMinutes} phút` : 'Không giới hạn thời gian'}
+                  </p>
                 </div>
 
-                {/* Class Security Notice Box */}
-                <div className="p-6 sm:p-8 bg-slate-50/80 dark:bg-slate-900/60 rounded-3xl border border-emerald-200/60 dark:border-emerald-900/40 text-center space-y-5">
-                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 text-xs font-bold">
-                    <Lock size={13} />
-                    <span>Chế độ bảo mật lớp học: Đã kích hoạt</span>
+                <div className="p-5 bg-slate-50/80 dark:bg-slate-900/60 rounded-2xl border border-emerald-200/60 dark:border-emerald-900/40 text-center space-y-3 shadow-2xs">
+                  <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 text-xs font-bold">
+                    <Lock size={12} />
+                    <span>Bảo mật lớp học</span>
                   </div>
 
-                  <div className="space-y-2 max-w-lg mx-auto text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-                    <p>
-                      🔒 Học sinh ngoài lớp hoặc chưa đăng nhập tài khoản <strong>sẽ không thể vào làm bài</strong>.
-                    </p>
-                    <p>
-                      Học sinh chỉ cần đăng nhập tài khoản của lớp là có thể làm bài ngay từ danh sách bài tập lớp hoặc qua đường dẫn trực tiếp.
-                    </p>
-                  </div>
+                  <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed max-w-sm mx-auto">
+                    Học sinh trong lớp chỉ cần đăng nhập tài khoản là có thể làm bài ngay từ danh sách lớp.
+                  </p>
 
-                  {/* Share Link Button for Class */}
-                  <div className="pt-2 flex items-center justify-center gap-3 flex-wrap">
+                  <div className="pt-0.5 flex items-center justify-center gap-2 flex-wrap">
                     <Button
                       variant="outline"
                       size="sm"
@@ -706,7 +692,7 @@ function AssignPageContent() {
                       className="gap-1.5 text-xs rounded-xl"
                     >
                       {copiedLink ? <Check size={14} className="text-emerald-500" /> : <Copy size={14} />}
-                      {copiedLink ? 'Đã sao chép link' : 'Sao chép link làm bài của lớp'}
+                      {copiedLink ? 'Đã sao chép link' : 'Sao chép link làm bài'}
                     </Button>
                     <Button
                       variant="primary"
@@ -714,87 +700,28 @@ function AssignPageContent() {
                       onClick={() => router.push(`/app/classes/${createdHomework.classId}`)}
                       className="gap-1.5 text-xs rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold"
                     >
-                      <ArrowLeft size={14} /> Về trang lớp {createdHomework.className}
+                      <ArrowLeft size={14} /> Về trang lớp
                     </Button>
                   </div>
                 </div>
               </>
             )}
 
-            {/* Assignment Overview */}
-            <div className="p-5 bg-slate-50/50 dark:bg-slate-900/30 rounded-2xl space-y-2 text-xs">
-              <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
-                <span>Tiêu đề bài tập</span>
-                <strong className="text-slate-900 dark:text-slate-100">{createdHomework.title}</strong>
-              </div>
-              <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
-                <span>Hình thức giao</span>
-                <strong className="text-slate-900 dark:text-slate-100">
-                  {createdHomework.classId && createdHomework.classId !== 'public'
-                    ? `Lớp ${createdHomework.className} (Đăng nhập tài khoản lớp)`
-                    : 'Bất cứ ai có mã PIN/QR (Tự do)'}
-                </strong>
-              </div>
-              <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
-                <span>Số lượng câu hỏi</span>
-                <strong className="text-slate-900 dark:text-slate-100">{questionsCount} câu</strong>
-              </div>
-              <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
-                <span>Thời gian làm bài</span>
-                <strong className="text-slate-900 dark:text-slate-100">
-                  {createdHomework.durationMinutes > 0 ? `${createdHomework.durationMinutes} phút` : 'Không giới hạn'}
-                </strong>
-              </div>
-              <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
-                <span>Nộp bài tối thiểu</span>
-                <strong className="text-slate-900 dark:text-slate-100">
-                  {createdHomework.minSubmitMinutes && createdHomework.minSubmitMinutes > 0
-                    ? `Sau ${createdHomework.minSubmitMinutes} phút`
-                    : 'Không yêu cầu (Nộp bài bất kỳ lúc nào)'}
-                </strong>
-              </div>
-              <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
-                <span>Quy tắc nộp bài</span>
-                <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
-                  Bắt buộc làm ít nhất 1 câu (Chặn nộp bài trống)
-                </span>
-              </div>
-              <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
-                <span>Chống gian lận</span>
-                {createdHomework.antiCheating ? (
-                  <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-blue-50 text-google-blue dark:bg-blue-950/60 dark:text-blue-300">
-                    Đang BẬT (Tối đa 3 lần)
-                  </span>
-                ) : (
-                  <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400">
-                    Đang TẮT
-                  </span>
-                )}
-              </div>
-            </div>
-
             {/* Actions Footer */}
-            <div className="flex items-center justify-center gap-3 pt-2 flex-wrap">
-              {createdHomework.classId && createdHomework.classId !== 'public' && (
-                <Button
-                  variant="primary"
-                  onClick={() => router.push(`/app/classes/${createdHomework.classId}`)}
-                  className="rounded-2xl text-xs gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white"
-                >
-                  <ArrowLeft size={14} /> Về trang lớp học
-                </Button>
-              )}
+            <div className="flex items-center justify-center gap-2 pt-1 flex-wrap">
               <Button
                 variant="outline"
+                size="sm"
                 onClick={() => router.push(`/app/assignments/${createdHomework.id}`)}
-                className="rounded-2xl text-xs gap-1.5"
+                className="rounded-xl text-xs gap-1.5"
               >
-                Xem trang kết quả bài nộp
+                Xem kết quả bài nộp
               </Button>
               <Button
                 variant="primary"
+                size="sm"
                 onClick={() => window.open(getPlayUrl(createdHomework.pin), '_blank')}
-                className="rounded-2xl text-xs gap-1.5 bg-google-blue hover:bg-[#1557b0] text-white"
+                className="rounded-xl text-xs gap-1.5 bg-google-blue hover:bg-[#1557b0] text-white"
               >
                 <ExternalLink size={14} /> Mở làm thử ngay
               </Button>
