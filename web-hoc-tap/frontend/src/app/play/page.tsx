@@ -1060,25 +1060,11 @@ function BlooketPlayContent() {
             </h1>
             <div className="flex items-center gap-3 text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">
               <span>Học sinh: <strong className="text-slate-800 dark:text-slate-200 font-semibold">{studentName}</strong></span>
-              {homework?.antiCheating && (
-                <span className="flex items-center gap-1 text-google-blue font-semibold">
-                  <ShieldCheck size={14} /> Chống gian lận (Lỗi: {violationCount}/{homework.antiCheatConfig?.maxViolations || 3})
-                </span>
-              )}
             </div>
           </div>
 
-          {/* Right: Fullscreen, Timer & Submit Button */}
+          {/* Right: Timer & Submit Button */}
           <div className="flex items-center gap-2.5 sm:gap-3 shrink-0">
-            <button
-              type="button"
-              onClick={toggleFullscreen}
-              className="p-2 sm:px-3 sm:py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
-              title="Bật/Tắt Toàn màn hình"
-            >
-              <Maximize2 size={15} />
-              <span className="hidden md:inline">Toàn màn hình</span>
-            </button>
 
             {secondsLeft !== null && (
               <div
@@ -1265,11 +1251,8 @@ function BlooketPlayContent() {
       </main>
 
       {/* Footer info */}
-      <footer className="w-full max-w-[1680px] mx-auto text-center text-xs text-slate-400 py-3.5 border-t border-slate-200/50 dark:border-slate-800/50 space-y-1 px-4">
-        <div>
-          HocRealtime Play &bull; Đã hoàn thành {answeredCount} / {totalQ} câu
-        </div>
-        {minSubmitMinutes > 0 && (
+      {minSubmitMinutes > 0 && (
+        <footer className="w-full max-w-[1680px] mx-auto text-center text-xs text-slate-400 py-3.5 border-t border-slate-200/50 dark:border-slate-800/50 space-y-1 px-4">
           <div className="text-[11px]">
             {hasMetMinTime ? (
               <span className="text-emerald-600 dark:text-emerald-400 font-medium">
@@ -1281,8 +1264,8 @@ function BlooketPlayContent() {
               </span>
             )}
           </div>
-        )}
-      </footer>
+        </footer>
+      )}
     </div>
   );
 }
