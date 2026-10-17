@@ -600,21 +600,10 @@ export default function ResultsPage() {
                               <Users size={12} />
                               {cls._count?.members ?? 0} học sinh
                             </span>
-                            <span>•</span>
-                            <span className="font-mono">Mã: {cls.code}</span>
                           </div>
                         </div>
 
                         <div className="flex items-center gap-3">
-                          <button
-                            type="button"
-                            onClick={(e) => handleCopyClassCode(cls.code, e)}
-                            className="text-xs text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 p-1.5"
-                            title="Sao chép mã lớp"
-                          >
-                            {copiedCodeId === cls.code ? <Check size={14} className="text-emerald-500" /> : <Copy size={14} />}
-                          </button>
-
                           <span className="text-xs font-bold text-blue-600 dark:text-blue-400 flex items-center gap-1">
                             Xem báo cáo
                             <ChevronRight size={14} className="group-hover:translate-x-0.5 transition-transform" />
