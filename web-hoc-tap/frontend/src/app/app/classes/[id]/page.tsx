@@ -681,12 +681,6 @@ export default function ClassDetailPage() {
                     </div>
 
                     <div className="flex items-center gap-3">
-                      <div className="text-right hidden sm:block">
-                        <span className="text-xs font-semibold text-slate-600 dark:text-slate-400 block">
-                          Thang điểm: {assign.maxScore}
-                        </span>
-                      </div>
-
                       {!isTeacher ? (
                         <button
                           type="button"
@@ -703,20 +697,6 @@ export default function ClassDetailPage() {
                         </button>
                       ) : (
                         <div className="flex items-center gap-2">
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleOpenExamInNewTab(assign);
-                            }}
-                            className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-950/40 rounded-lg transition-colors cursor-pointer"
-                            title="Xem đề thi trong tab mới"
-                          >
-                            <Play size={12} />
-                            <span>Xem đề</span>
-                            <ExternalLink size={11} className="opacity-70" />
-                          </button>
-
                           <button
                             type="button"
                             onClick={(e) => {
