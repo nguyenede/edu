@@ -1133,30 +1133,6 @@ export default function SettingsPage(props: any) {
                           </div>
                         </div>
 
-                        {/* Password rules indicator */}
-                        <div className="p-3 bg-slate-200/50 dark:bg-slate-900/60 rounded-xl space-y-1.5 text-xs text-slate-500 dark:text-slate-400">
-                          <div className="flex items-center gap-2">
-                            <span className={`w-3.5 h-3.5 rounded-full flex items-center justify-center text-[10px] ${
-                              newPassword.length >= 8 ? 'bg-emerald-500 text-white' : 'bg-slate-300 dark:bg-slate-700 text-slate-500'
-                            }`}>
-                              ✓
-                            </span>
-                            <span className={newPassword.length >= 8 ? 'text-emerald-600 dark:text-emerald-400 font-medium' : ''}>
-                              Tối thiểu 8 ký tự
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span className={`w-3.5 h-3.5 rounded-full flex items-center justify-center text-[10px] ${
-                              confirmPassword && confirmPassword === newPassword ? 'bg-emerald-500 text-white' : 'bg-slate-300 dark:bg-slate-700 text-slate-500'
-                            }`}>
-                              ✓
-                            </span>
-                            <span className={confirmPassword && confirmPassword === newPassword ? 'text-emerald-600 dark:text-emerald-400 font-medium' : ''}>
-                              Mật khẩu xác nhận trùng khớp
-                            </span>
-                          </div>
-                        </div>
-
                         {/* Buttons */}
                         <div className="flex items-center gap-3 pt-2">
                           <Button
