@@ -287,9 +287,46 @@ function DocumentDynamicViewPageContent() {
   const searchFolderId = searchParams?.get('folderId') || null;
   const searchFolderName = searchParams?.get('folderName') || null;
 
-  const [isLoading, setIsLoading] = useState(true);
-  const [fileItem, setFileItem] = useState<DocumentFileItem | null>(null);
-  const [folders, setFolders] = useState<DocumentFolderItem[]>([]);
+  const [fileItem, setFileItem] = useState<DocumentFileItem | null>(() => {
+    if (typeof window !== 'undefined' && fileId) {
+      try {
+        const savedFiles = localStorage.getItem('app_documents_files');
+        const customFiles = localStorage.getItem('custom_uploaded_files');
+        const list1 = savedFiles ? JSON.parse(savedFiles) : [];
+        const list2 = customFiles ? JSON.parse(customFiles) : [];
+        const all = [...(Array.isArray(list1) ? list1 : []), ...(Array.isArray(list2) ? list2 : [])];
+        const found = all.find((f: any) => f && matchDocId(f.id, fileId));
+        if (found) return found;
+      } catch {}
+    }
+    return null;
+  });
+  const [folders, setFolders] = useState<DocumentFolderItem[]>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const savedFolders = localStorage.getItem('app_documents_folders');
+        if (savedFolders) {
+          const parsed = JSON.parse(savedFolders);
+          if (Array.isArray(parsed)) return parsed;
+        }
+      } catch {}
+    }
+    return [];
+  });
+  const [isLoading, setIsLoading] = useState<boolean>(() => {
+    if (typeof window !== 'undefined' && fileId) {
+      try {
+        const savedFiles = localStorage.getItem('app_documents_files');
+        const customFiles = localStorage.getItem('custom_uploaded_files');
+        const list1 = savedFiles ? JSON.parse(savedFiles) : [];
+        const list2 = customFiles ? JSON.parse(customFiles) : [];
+        const all = [...(Array.isArray(list1) ? list1 : []), ...(Array.isArray(list2) ? list2 : [])];
+        const found = all.find((f: any) => f && matchDocId(f.id, fileId));
+        if (found) return false;
+      } catch {}
+    }
+    return true;
+  });
   const [showAnswers, setShowAnswers] = useState(true);
 
   // Auto clean up address bar: remove redundant query params (?folderId=...&folderName=...), /view suffix, and /app/ prefix
@@ -519,21 +556,21 @@ function DocumentDynamicViewPageContent() {
     }
   };
 
-  if (isLoading) {
+  if (isLoading && !fileItem) {
     return (
       <AppShell
         title={
-          <div className="flex items-center gap-1.5 flex-wrap">
+          <div className="flex items-center gap-1.5 flex-nowrap min-w-0">
             <button
               type="button"
               onClick={() => router.push('/documents')}
-              className="cursor-pointer text-slate-900 dark:text-white font-semibold"
+              className="cursor-pointer text-slate-900 dark:text-white font-semibold shrink-0 whitespace-nowrap"
             >
               Tài liệu của tôi
             </button>
             <BreadcrumbChevron isStatic={true} />
-            <span className="text-slate-900 dark:text-white font-semibold">
-              Đang tải đề thi...
+            <span className="text-slate-900 dark:text-white font-semibold truncate min-w-0">
+              Chi tiết đề thi
             </span>
           </div>
         }
@@ -573,16 +610,16 @@ function DocumentDynamicViewPageContent() {
     return (
       <AppShell
         title={
-          <div className="flex items-center gap-1.5 flex-wrap">
+          <div className="flex items-center gap-1.5 flex-nowrap min-w-0">
             <button
               type="button"
               onClick={() => router.push('/documents')}
-              className="cursor-pointer text-slate-900 dark:text-white font-semibold"
+              className="cursor-pointer text-slate-900 dark:text-white font-semibold shrink-0 whitespace-nowrap"
             >
               Tài liệu của tôi
             </button>
             <BreadcrumbChevron isStatic={true} />
-            <span className="text-slate-900 dark:text-white font-semibold">
+            <span className="text-slate-900 dark:text-white font-semibold truncate min-w-0">
               Chi tiết đề thi
             </span>
           </div>
@@ -639,11 +676,11 @@ function DocumentDynamicViewPageContent() {
   return (
     <AppShell
       title={
-        <div className="flex items-center gap-1.5 flex-wrap">
+        <div className="flex items-center gap-1.5 flex-nowrap min-w-0">
           <button
             type="button"
             onClick={() => router.push('/documents')}
-            className="cursor-pointer text-slate-900 dark:text-white font-semibold"
+            className="cursor-pointer text-slate-900 dark:text-white font-semibold shrink-0 whitespace-nowrap"
           >
             Tài liệu của tôi
           </button>
@@ -667,7 +704,7 @@ function DocumentDynamicViewPageContent() {
                       if (typeof window !== 'undefined') sessionStorage.setItem('app_active_folder_id', folder.id);
                       router.push('/documents');
                     }}
-                    className="cursor-pointer text-slate-900 dark:text-white font-semibold"
+                    className="cursor-pointer text-slate-900 dark:text-white font-semibold shrink-0 whitespace-nowrap"
                   >
                     {folder.name}
                   </button>
@@ -686,7 +723,7 @@ function DocumentDynamicViewPageContent() {
             onNavigateFile={(id) => router.push(`/documents/${id}`)}
           />
           <span
-            className="text-slate-900 dark:text-white font-semibold truncate-tight max-w-xs sm:max-w-md md:max-w-xl lg:max-w-3xl xl:max-w-5xl"
+            className="text-slate-900 dark:text-white font-semibold truncate min-w-0 flex-1"
             title={displayTitle}
           >
             {displayTitle}

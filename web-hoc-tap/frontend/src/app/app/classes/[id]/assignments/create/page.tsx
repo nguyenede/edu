@@ -160,11 +160,11 @@ export default function CreateAssignmentPage() {
   return (
     <AppShell
       title={
-        <div className="flex items-center gap-1.5 flex-wrap">
+        <div className="flex items-center gap-1.5 flex-nowrap min-w-0">
           <button
             type="button"
             onClick={() => router.push('/app/classes')}
-            className="cursor-pointer text-slate-900 dark:text-white font-semibold"
+            className="cursor-pointer text-slate-900 dark:text-white font-semibold shrink-0 whitespace-nowrap"
           >
             Lớp học của tôi
           </button>
@@ -175,7 +175,7 @@ export default function CreateAssignmentPage() {
           <button
             type="button"
             onClick={() => router.push(`/app/classes/${classId}`)}
-            className="cursor-pointer text-slate-900 dark:text-white font-semibold"
+            className="cursor-pointer text-slate-900 dark:text-white font-semibold shrink-0 whitespace-nowrap"
           >
             {currentClassObj?.name || 'Chi tiết lớp'}
           </button>
@@ -189,7 +189,7 @@ export default function CreateAssignmentPage() {
               },
             ]}
           />
-          <span className="text-slate-900 dark:text-white font-semibold">
+          <span className="text-slate-900 dark:text-white font-semibold truncate min-w-0 flex-1">
             Giao bài tập mới
           </span>
         </div>

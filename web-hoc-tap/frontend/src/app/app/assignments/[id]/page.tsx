@@ -640,17 +640,17 @@ export default function AssignmentDetailPage() {
     return (
       <AppShell
         title={
-          <div className="flex items-center gap-1.5 flex-wrap">
+          <div className="flex items-center gap-1.5 flex-nowrap min-w-0">
             <button
               type="button"
               onClick={() => router.push('/app/classes')}
-              className="cursor-pointer text-slate-900 dark:text-white font-semibold"
+              className="cursor-pointer text-slate-900 dark:text-white font-semibold shrink-0 whitespace-nowrap"
             >
               Lớp học của tôi
             </button>
             <BreadcrumbChevron isStatic={true} />
-            <span className="text-slate-900 dark:text-white font-semibold">
-              Đang tải...
+            <span className="text-slate-900 dark:text-white font-semibold truncate min-w-0">
+              Chi tiết bài tập
             </span>
           </div>
         }
@@ -679,11 +679,11 @@ export default function AssignmentDetailPage() {
   return (
     <AppShell
       title={
-        <div className="flex items-center gap-1.5 flex-wrap">
+        <div className="flex items-center gap-1.5 flex-nowrap min-w-0">
           <button
             type="button"
             onClick={() => router.push('/app/classes')}
-            className="cursor-pointer text-slate-900 dark:text-white font-semibold"
+            className="cursor-pointer text-slate-900 dark:text-white font-semibold shrink-0 whitespace-nowrap"
           >
             Lớp học của tôi
           </button>
@@ -695,12 +695,12 @@ export default function AssignmentDetailPage() {
             <button
               type="button"
               onClick={() => router.push(`/app/classes/${assignment.classId}`)}
-              className="cursor-pointer text-slate-900 dark:text-white font-semibold"
+              className="cursor-pointer text-slate-900 dark:text-white font-semibold shrink-0 whitespace-nowrap"
             >
               {classNameDisplay}
             </button>
           ) : (
-            <span className="text-slate-900 dark:text-white font-semibold">
+            <span className="text-slate-900 dark:text-white font-semibold shrink-0 whitespace-nowrap">
               {classNameDisplay}
             </span>
           )}
@@ -708,7 +708,7 @@ export default function AssignmentDetailPage() {
             menuTitle={classNameDisplay}
             items={assignmentBreadcrumbItems}
           />
-          <span className="text-slate-900 dark:text-white font-semibold truncate-tight max-w-xs sm:max-w-md md:max-w-xl lg:max-w-3xl xl:max-w-5xl">
+          <span className="text-slate-900 dark:text-white font-semibold truncate min-w-0 flex-1" title={assignment.title}>
             {assignment.title}
           </span>
         </div>

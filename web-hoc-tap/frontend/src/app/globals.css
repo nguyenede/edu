@@ -336,5 +336,11 @@ html.dark * {
   transition: none !important;
   animation: none !important;
   transform: none !important;
+  box-sizing: border-box !important;
+}
+
+.app-title-bar {
+  flex-shrink: 0 !important;
+  line-height: 1.25 !important;
 }
 

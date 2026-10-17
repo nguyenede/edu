@@ -20,11 +20,11 @@ export default function DevicesPage() {
   return (
     <AppShell
       title={
-        <div className="flex items-center gap-1.5 flex-wrap">
+        <div className="flex items-center gap-1.5 flex-nowrap min-w-0">
           <button
             type="button"
             onClick={() => router.push('/app/settings')}
-            className="cursor-pointer text-slate-900 dark:text-white font-semibold"
+            className="cursor-pointer text-slate-900 dark:text-white font-semibold shrink-0 whitespace-nowrap"
           >
             Cài đặt
           </button>
@@ -41,7 +41,7 @@ export default function DevicesPage() {
           <button
             type="button"
             onClick={() => router.push('/app/settings')}
-            className="cursor-pointer text-slate-900 dark:text-white font-semibold"
+            className="cursor-pointer text-slate-900 dark:text-white font-semibold shrink-0 whitespace-nowrap"
           >
             Bảo mật
           </button>
@@ -52,7 +52,7 @@ export default function DevicesPage() {
               { label: 'Quản lý thiết bị', href: '/app/settings/devices', icon: <Laptop size={14} className="text-purple-500 shrink-0" /> },
             ]}
           />
-          <span className="text-slate-900 dark:text-white font-semibold">
+          <span className="text-slate-900 dark:text-white font-semibold truncate min-w-0 flex-1">
             Quản lý thiết bị
           </span>
         </div>

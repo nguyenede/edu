@@ -295,11 +295,11 @@ function OcrQuizCreateContent() {
   return (
     <AppShell
       title={
-        <div className="flex items-center gap-1.5 flex-wrap">
+        <div className="flex items-center gap-1.5 flex-nowrap min-w-0">
           <button
             type="button"
             onClick={() => router.push('/app/documents')}
-            className="cursor-pointer text-slate-900 dark:text-white font-semibold"
+            className="cursor-pointer text-slate-900 dark:text-white font-semibold shrink-0 whitespace-nowrap"
           >
             Tài liệu của tôi
           </button>
@@ -313,7 +313,7 @@ function OcrQuizCreateContent() {
               <button
                 type="button"
                 onClick={() => router.push(`/app/documents?folderId=${folderId || ''}`)}
-                className="cursor-pointer text-slate-900 dark:text-white font-semibold"
+                className="cursor-pointer text-slate-900 dark:text-white font-semibold shrink-0 whitespace-nowrap"
               >
                 {folderName}
               </button>
@@ -333,7 +333,7 @@ function OcrQuizCreateContent() {
           <button
             type="button"
             onClick={() => router.push('/app/documents/create' + targetQuery)}
-            className="cursor-pointer text-slate-900 dark:text-white font-semibold"
+            className="cursor-pointer text-slate-900 dark:text-white font-semibold shrink-0 whitespace-nowrap"
           >
             Tạo đề thi
           </button>
@@ -347,7 +347,7 @@ function OcrQuizCreateContent() {
               { label: 'Nhập thủ công', href: `/app/documents/create/manual${targetQuery}`, icon: <PenTool size={14} className="text-rose-500 shrink-0" /> },
             ]}
           />
-          <span className="text-slate-900 dark:text-white font-semibold">
+          <span className="text-slate-900 dark:text-white font-semibold truncate min-w-0 flex-1">
             Nhận diện từ ảnh (SI OCR)
           </span>
         </div>

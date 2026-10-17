@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -42,11 +42,11 @@ export default function EditLanguagePage() {
   return (
     <AppShell
       title={
-        <div className="flex items-center gap-1.5 flex-wrap">
+        <div className="flex items-center gap-1.5 flex-nowrap min-w-0">
           <button
             type="button"
             onClick={() => router.push('/app/settings')}
-            className="cursor-pointer text-slate-900 dark:text-white font-semibold"
+            className="cursor-pointer text-slate-900 dark:text-white font-semibold shrink-0 whitespace-nowrap"
           >
             Cài đặt
           </button>
@@ -63,7 +63,7 @@ export default function EditLanguagePage() {
           <button
             type="button"
             onClick={() => router.push('/app/settings')}
-            className="cursor-pointer text-slate-900 dark:text-white font-semibold"
+            className="cursor-pointer text-slate-900 dark:text-white font-semibold shrink-0 whitespace-nowrap"
           >
             Tài khoản
           </button>
@@ -79,7 +79,7 @@ export default function EditLanguagePage() {
               { label: 'Đổi mật khẩu', href: '/app/settings/edit-password' },
             ]}
           />
-          <span className="text-slate-900 dark:text-white font-semibold">
+          <span className="text-slate-900 dark:text-white font-semibold truncate min-w-0 flex-1">
             Ngôn ngữ hệ thống
           </span>
         </div>

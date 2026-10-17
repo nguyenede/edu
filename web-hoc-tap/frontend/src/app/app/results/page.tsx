@@ -416,11 +416,11 @@ export default function ResultsPage() {
   return (
     <AppShell
       title={
-        <div className="flex items-center gap-1.5 flex-wrap">
+        <div className="flex items-center gap-1.5 flex-nowrap min-w-0">
           <button
             type="button"
             onClick={() => setSelectedClassId('')}
-            className="transition-colors cursor-pointer px-2 py-0.5 rounded-xl hover:bg-slate-200/70 dark:hover:bg-slate-800 font-semibold text-slate-900 dark:text-white"
+            className="cursor-pointer text-slate-900 dark:text-white font-semibold shrink-0 whitespace-nowrap"
           >
             Báo cáo
           </button>
@@ -435,7 +435,7 @@ export default function ResultsPage() {
                 }))}
               />
               <span
-                className="text-slate-900 dark:text-white font-semibold truncate-tight max-w-xs sm:max-w-md md:max-w-xl lg:max-w-3xl xl:max-w-5xl"
+                className="text-slate-900 dark:text-white font-semibold truncate min-w-0 flex-1"
                 title={selectedClass.name}
               >
                 {selectedClass.name}

@@ -523,14 +523,14 @@ function AssignPageContent() {
   return (
     <AppShell
       title={
-        <div className="flex items-center gap-1.5 flex-wrap">
+        <div className="flex items-center gap-1.5 flex-nowrap min-w-0">
           <button
             type="button"
             onClick={() => {
               if (typeof window !== 'undefined') sessionStorage.removeItem('app_active_folder_id');
               router.push('/documents');
             }}
-            className="cursor-pointer text-slate-900 dark:text-white font-semibold"
+            className="cursor-pointer text-slate-900 dark:text-white font-semibold shrink-0 whitespace-nowrap"
           >
             Tài liệu của tôi
           </button>
@@ -551,7 +551,7 @@ function AssignPageContent() {
                   if (typeof window !== 'undefined') sessionStorage.setItem('app_active_folder_id', folder.id);
                   router.push('/documents');
                 }}
-                className="cursor-pointer text-slate-900 dark:text-white font-semibold"
+                className="cursor-pointer text-slate-900 dark:text-white font-semibold shrink-0 whitespace-nowrap"
               >
                 {folder.name}
               </button>
@@ -567,13 +567,13 @@ function AssignPageContent() {
           <button
             type="button"
             onClick={() => router.push(`/documents/${encodeURIComponent(fileId)}`)}
-            className="transition-colors cursor-pointer px-2 py-0.5 rounded-xl hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-900 dark:text-white font-normal truncate-tight max-w-xs sm:max-w-md md:max-w-xl lg:max-w-3xl xl:max-w-5xl text-left"
+            className="cursor-pointer text-slate-900 dark:text-white font-semibold truncate min-w-0 max-w-[180px] sm:max-w-[320px] text-left shrink-0"
             title={displayTitle}
           >
             {displayTitle}
           </button>
           <BreadcrumbChevron isStatic={true} />
-          <span className="text-slate-900 dark:text-white font-semibold">
+          <span className="text-slate-900 dark:text-white font-semibold shrink-0 whitespace-nowrap">
             Giao bài tập
           </span>
         </div>

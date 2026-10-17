@@ -86,11 +86,11 @@ export default function ImportQuestionPage() {
   return (
     <AppShell
       title={
-        <div className="flex items-center gap-1.5 flex-wrap">
+        <div className="flex items-center gap-1.5 flex-nowrap min-w-0">
           <button
             type="button"
             onClick={() => router.push('/app/question-bank')}
-            className="cursor-pointer text-slate-900 dark:text-white font-semibold"
+            className="cursor-pointer text-slate-900 dark:text-white font-semibold shrink-0 whitespace-nowrap"
           >
             Ngân hàng câu hỏi
           </button>
@@ -102,7 +102,7 @@ export default function ImportQuestionPage() {
               { label: 'Nhập câu hỏi từ file', href: '/app/question-bank/import', icon: <FileUp size={14} className="text-purple-500 shrink-0" /> },
             ]}
           />
-          <span className="text-slate-900 dark:text-white font-semibold">
+          <span className="text-slate-900 dark:text-white font-semibold truncate min-w-0 flex-1">
             Nhập câu hỏi hàng loạt
           </span>
         </div>

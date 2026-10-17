@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -53,11 +53,11 @@ export default function EditPasswordPage() {
   return (
     <AppShell
       title={
-        <div className="flex items-center gap-1.5 flex-wrap">
+        <div className="flex items-center gap-1.5 flex-nowrap min-w-0">
           <button
             type="button"
             onClick={() => router.push('/app/settings')}
-            className="cursor-pointer text-slate-900 dark:text-white font-semibold"
+            className="cursor-pointer text-slate-900 dark:text-white font-semibold shrink-0 whitespace-nowrap"
           >
             Cài đặt
           </button>
@@ -74,7 +74,7 @@ export default function EditPasswordPage() {
           <button
             type="button"
             onClick={() => router.push('/app/settings')}
-            className="cursor-pointer text-slate-900 dark:text-white font-semibold"
+            className="cursor-pointer text-slate-900 dark:text-white font-semibold shrink-0 whitespace-nowrap"
           >
             Bảo mật
           </button>
@@ -85,7 +85,7 @@ export default function EditPasswordPage() {
               { label: 'Quản lý thiết bị', href: '/app/settings/devices' },
             ]}
           />
-          <span className="text-slate-900 dark:text-white font-semibold">
+          <span className="text-slate-900 dark:text-white font-semibold truncate min-w-0 flex-1">
             Đổi mật khẩu
           </span>
         </div>

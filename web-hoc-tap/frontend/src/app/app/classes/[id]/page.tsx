@@ -65,14 +65,32 @@ export default function ClassDetailPage() {
   const router = useRouter();
   const { user, token } = useAuthStore();
 
-  const [clazz, setClazz] = useState<any>(null);
+  const [clazz, setClazz] = useState<any>(() => {
+    if (typeof window !== 'undefined' && classId) {
+      try {
+        const list = getLocalClasses();
+        const found = list.find((c: any) => String(c.id) === String(classId));
+        if (found) return found;
+      } catch {}
+    }
+    return null;
+  });
   const [members, setMembers] = useState<any[]>([]);
   const [assignments, setAssignments] = useState<any[]>([]);
   const [submissionsMap, setSubmissionsMap] = useState<Record<string, any[]>>({});
   const [posts, setPosts] = useState<ClassPost[]>([]);
 
   const [activeTab, setActiveTab] = useState<TabKey>('assignments');
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => {
+    if (typeof window !== 'undefined' && classId) {
+      try {
+        const list = getLocalClasses();
+        const found = list.find((c: any) => String(c.id) === String(classId));
+        if (found) return false;
+      } catch {}
+    }
+    return true;
+  });
 
   // Search in Students
   const [studentSearch, setStudentSearch] = useState('');
@@ -515,17 +533,17 @@ export default function ClassDetailPage() {
     return (
       <AppShell
         title={
-          <div className="flex items-center gap-1.5 flex-wrap">
+          <div className="flex items-center gap-1.5 flex-nowrap min-w-0">
             <button
               type="button"
               onClick={() => router.push('/app/classes')}
-              className="cursor-pointer text-slate-900 dark:text-white font-semibold"
+              className="cursor-pointer text-slate-900 dark:text-white font-semibold shrink-0 whitespace-nowrap"
             >
               Lớp học của tôi
             </button>
             <BreadcrumbChevron isStatic={true} />
-            <span className="text-slate-900 dark:text-white font-semibold">
-              Đang tải...
+            <span className="text-slate-900 dark:text-white font-semibold truncate min-w-0">
+              Chi tiết lớp học
             </span>
           </div>
         }
@@ -552,11 +570,11 @@ export default function ClassDetailPage() {
   return (
     <AppShell
       title={
-        <div className="flex items-center gap-1.5 flex-wrap">
+        <div className="flex items-center gap-1.5 flex-nowrap min-w-0">
           <button
             type="button"
             onClick={() => router.push('/app/classes')}
-            className="cursor-pointer text-slate-900 dark:text-white font-semibold"
+            className="cursor-pointer text-slate-900 dark:text-white font-semibold shrink-0 whitespace-nowrap"
           >
             Lớp học của tôi
           </button>
@@ -564,7 +582,7 @@ export default function ClassDetailPage() {
             menuTitle="Lớp học của tôi"
             items={classBreadcrumbItems}
           />
-          <span className="text-slate-900 dark:text-white font-semibold">
+          <span className="text-slate-900 dark:text-white font-semibold truncate min-w-0 flex-1">
             {clazz.name}
           </span>
         </div>

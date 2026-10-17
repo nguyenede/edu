@@ -1634,12 +1634,14 @@ function DocumentsPageContent() {
   return (
     <AppShell
       title={
-        <div className="flex items-center gap-1.5 flex-wrap">
+        <div className="flex items-center gap-1.5 flex-nowrap min-w-0">
           {getBreadcrumbs().map((crumb, idx, arr) => {
             const isDropTarget =
               draggedItem &&
               dragOverTargetId === (crumb.id || '__root__') &&
               !(draggedItem.type === 'folder' && draggedItem.id === crumb.id);
+
+            const isLast = idx === arr.length - 1;
 
             return (
               <React.Fragment key={crumb.id || 'root'}>
@@ -1663,6 +1665,8 @@ function DocumentsPageContent() {
                   }}
                   onDrop={(e) => handleDropOnTarget(e, crumb.id)}
                   className={`cursor-pointer font-semibold ${
+                    isLast ? 'truncate min-w-0' : 'shrink-0 whitespace-nowrap'
+                  } ${
                     isDropTarget
                       ? 'text-google-blue underline'
                       : 'text-slate-900 dark:text-white'

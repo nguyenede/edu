@@ -164,7 +164,7 @@ export function BreadcrumbChevron({
     }
     if (isStatic || fallbackToStaticChevron) {
       return (
-        <span className={`inline-flex items-center justify-center text-slate-400 dark:text-slate-500 shrink-0 select-none px-0.5 ${className}`}>
+        <span className={`w-6 h-6 flex items-center justify-center text-slate-400 dark:text-slate-500 shrink-0 select-none ${className}`}>
           <ChevronRight size={14} className="stroke-[2]" />
         </span>
       );
@@ -173,7 +173,7 @@ export function BreadcrumbChevron({
   }
 
   return (
-    <div ref={containerRef} className={`relative inline-flex items-center shrink-0 ${className}`}>
+    <div ref={containerRef} className={`relative inline-flex items-center justify-center w-6 h-6 shrink-0 ${className}`}>
       {/* Google Style Chevron Dropdown Trigger */}
       <button
         type="button"

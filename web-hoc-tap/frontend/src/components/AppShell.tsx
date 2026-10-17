@@ -277,34 +277,39 @@ export const AppShell: React.FC<AppShellProps> = ({
         <div className="mr-0 h-full flex flex-col">
           {/* Inner Google White Sheet Canvas */}
           <div className="bg-white dark:bg-[#1e1f20] rounded-none md:rounded-tl-3xl md:rounded-tr-none md:rounded-b-none shadow-none flex-1 flex flex-col overflow-hidden">
-            {/* Page Body Viewport - Title and content scroll together smoothly */}
+            {/* Fixed Action / Title Bar Header - Frozen at top, zero layout shift, zero scrollbar interference */}
+            {(title || action) && (
+              <header className="app-title-bar shrink-0 w-full px-3 sm:px-4 pt-4 pb-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 min-h-[56px] print:hidden select-none">
+                <div className="min-w-0 flex-1 flex items-center">
+                  {title &&
+                    (typeof title === 'string' ? (
+                      <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100 leading-tight truncate">
+                        {title}
+                      </h1>
+                    ) : (
+                      <div className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100 leading-tight min-w-0 w-full">
+                        {title}
+                      </div>
+                    ))}
+                </div>
+                {action && (
+                  <div className="flex w-full sm:w-auto min-w-0 items-center gap-2 shrink-0 [&>*]:min-w-0">
+                    {action}
+                  </div>
+                )}
+              </header>
+            )}
+
+            {/* Page Body Viewport - ONLY inner content scrolls */}
             <main
               id="app-main-viewport"
               className={`flex-1 w-full ${
                 pathname?.startsWith('/app/si') || pathname?.startsWith('/si') || pathname?.startsWith('/app/ai') || pathname?.startsWith('/ai')
                   ? 'p-0 flex flex-col overflow-hidden no-scrollbar'
-                  : 'overflow-y-auto overflow-x-hidden px-3 sm:px-4 pb-3.5 pt-4'
+                  : `overflow-y-auto overflow-x-hidden px-3 sm:px-4 pb-3.5 ${(title || action) ? 'pt-1' : 'pt-4'}`
               }`}
               style={pathname?.startsWith('/app/si') || pathname?.startsWith('/si') || pathname?.startsWith('/app/ai') || pathname?.startsWith('/ai') ? undefined : { scrollbarGutter: 'stable' }}
             >
-              {/* Action / Title Bar Header */}
-              {(title || action) && (
-                <div className="app-title-bar pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 print:hidden">
-                  <div className="min-w-0">
-                    {title &&
-                      (typeof title === 'string' ? (
-                        <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100 leading-tight break-words">
-                          {title}
-                        </h1>
-                      ) : (
-                        <div className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100 leading-tight">
-                          {title}
-                        </div>
-                      ))}
-                  </div>
-                  {action && <div className="flex w-full sm:w-auto min-w-0 items-center gap-2 [&>*]:min-w-0 [&>*]:flex-wrap">{action}</div>}
-                </div>
-              )}
               {children}
             </main>
           </div>
