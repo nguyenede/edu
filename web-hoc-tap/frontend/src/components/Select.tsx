@@ -104,7 +104,7 @@ export function CustomSelect<T extends string | number>({
       {isOpen && (
         <div
           role="listbox"
-          className="absolute z-50 left-0 right-0 mt-1 max-h-60 overflow-y-auto rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#1a1b1d] shadow-lg py-1 animate-in fade-in zoom-in-95 duration-150"
+          className="absolute z-50 left-0 right-0 mt-1 max-h-80 overflow-y-auto no-scrollbar rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#1a1b1d] shadow-lg py-1 animate-in fade-in zoom-in-95 duration-150"
         >
           {options.map((option) => {
             const isSelected = option.value === value;
