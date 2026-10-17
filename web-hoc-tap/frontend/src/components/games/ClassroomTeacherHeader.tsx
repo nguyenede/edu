@@ -67,23 +67,27 @@ export const ClassroomTeacherHeader: React.FC<ClassroomTeacherHeaderProps> = ({
   onRestart,
 }) => {
   return (
-    <div className="w-full bg-slate-50 dark:bg-white/5 rounded-2xl px-3.5 sm:px-5 py-2.5 flex items-center justify-between gap-3 select-none transition-colors">
+    <div className="w-full bg-white dark:bg-[#1a1b1e] rounded-2xl px-3.5 sm:px-5 py-2.5 flex items-center justify-between gap-3 select-none transition-colors border border-slate-100 dark:border-white/5 shadow-2xs">
       {/* 1. LEFT: BACK & TITLE */}
       <div className="flex items-center gap-2 sm:gap-3 min-w-0">
         {onBack && (
           <button
             type="button"
             onClick={onBack}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-200 shadow-2xs transition-colors cursor-pointer shrink-0"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-200 shadow-2xs transition-colors cursor-pointer shrink-0"
             title="Thoát trò chơi về danh sách"
           >
             <ArrowLeft size={14} />
             <span>Thoát</span>
           </button>
         )}
-        <span className="font-semibold text-xs sm:text-sm text-slate-800 dark:text-slate-200 truncate">
-          {gameShortName || title}
-        </span>
+        <div className="flex items-center gap-1.5 text-xs sm:text-sm font-medium text-slate-500 dark:text-slate-400 truncate">
+          <span className="hidden sm:inline">Trò chơi lớp học</span>
+          <ChevronRight size={13} className="hidden sm:inline text-slate-400 shrink-0" />
+          <span className="font-semibold text-slate-800 dark:text-slate-200 truncate">
+            {gameShortName || title}
+          </span>
+        </div>
       </div>
 
       {/* 2. CENTER: TEAM SCORES WITH QUICK (+1 / -1) CONTROLS */}

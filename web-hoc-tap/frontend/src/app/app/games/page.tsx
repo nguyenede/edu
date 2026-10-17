@@ -485,43 +485,12 @@ export default function GamesHubPage() {
     return list;
   }, [playingLesson]);
 
-  // Khi đang chơi trò chơi (giảng dạy trên lớp):
-  // Hiển thị đồng bộ trong giao diện AppShell chuẩn web như ở Kho tài liệu
+  // Khi đang chơi trò chơi (giảng dạy trên lớp): Chế độ Full màn hình (Classroom Presentation Mode)
   if (playingLesson) {
     const meta = getCategoryMeta(playingLesson.gameType);
     return (
-      <AppShell
-        title={
-          <div className="flex items-center gap-1 text-2xl tracking-tight text-slate-900 dark:text-slate-100 flex-wrap -ml-2">
-            <button
-              type="button"
-              onClick={() => {
-                setPlayingLesson(null);
-                setActiveCategory(null);
-              }}
-              className="transition-all cursor-pointer px-2 py-0.5 rounded-xl text-slate-900 dark:text-white font-semibold hover:bg-slate-200/70 dark:hover:bg-slate-800"
-            >
-              Trò chơi lớp học
-            </button>
-            <BreadcrumbChevron
-              menuTitle="Trò chơi lớp học"
-              items={GAME_LIST.map((g) => ({
-                label: g.title,
-                icon: getGameCustomIcon(g.id, 18),
-                onClick: () => {
-                  setPlayingLesson(null);
-                  setActiveCategory(g.id);
-                },
-              }))}
-              fallbackToStaticChevron={true}
-            />
-            <span className="px-2 py-0.5 rounded-xl text-slate-900 dark:text-white font-normal truncate-tight max-w-xs sm:max-w-md">
-              {meta.title}
-            </span>
-          </div>
-        }
-      >
-        <div className="space-y-4 select-none pb-8">
+      <div className="fixed inset-0 z-50 w-screen h-screen overflow-hidden bg-slate-100/90 dark:bg-[#111215] flex flex-col p-3 sm:p-4 select-none">
+        <div className="w-full h-full flex-1 flex flex-col min-h-0">
           {playingLesson.gameType === 'tug_of_war' && (
             <TugOfWarGame
               examTitle={playingLesson.title}
@@ -613,7 +582,7 @@ export default function GamesHubPage() {
             onStartGame={() => setIsConfigModalOpen(false)}
           />
         </div>
-      </AppShell>
+      </div>
     );
   }
 

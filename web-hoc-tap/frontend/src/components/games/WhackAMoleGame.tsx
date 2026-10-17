@@ -204,7 +204,7 @@ export const WhackAMoleGame: React.FC<WhackAMoleGameProps> = ({
   ];
 
   return (
-    <div className="w-full flex-1 flex flex-col space-y-4 transition-all">
+    <div className="w-full h-full flex-1 flex flex-col space-y-3 sm:space-y-4 transition-all min-h-0">
       {/* 1. TEACHER CLASSROOM HEADER */}
       <ClassroomTeacherHeader
         title={examTitle}
@@ -233,9 +233,9 @@ export const WhackAMoleGame: React.FC<WhackAMoleGameProps> = ({
       />
 
       {/* 2. RESPONSIVE WEB GRID LAYOUT */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch flex-1">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch flex-1 min-h-0">
         {/* LEFT COLUMN: MINIMALIST MOLE BURROWS STAGE (lg:col-span-5) */}
-        <div className="lg:col-span-5 flex flex-col justify-between space-y-3">
+        <div className="lg:col-span-5 flex flex-col justify-between space-y-3 h-full min-h-0">
           <div className="bg-white dark:bg-[#1a1b1e] rounded-2xl p-4 sm:p-5 flex flex-col justify-between space-y-4 flex-1 border border-slate-100 dark:border-white/5 shadow-2xs">
             {/* Header info */}
             <div className="flex items-center justify-between text-xs font-bold pb-2">
@@ -301,7 +301,7 @@ export const WhackAMoleGame: React.FC<WhackAMoleGameProps> = ({
         </div>
 
         {/* RIGHT COLUMN: CLASSROOM QUESTION & TEACHING BOARD (lg:col-span-7) */}
-        <div className="lg:col-span-7 flex flex-col">
+        <div className="lg:col-span-7 flex flex-col h-full min-h-0">
           {currentQ ? (
             <ClassroomQuestionCard
               question={currentQ}

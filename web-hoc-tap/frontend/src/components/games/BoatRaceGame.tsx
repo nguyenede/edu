@@ -233,7 +233,7 @@ export const BoatRaceGame: React.FC<BoatRaceGameProps> = ({
   ];
 
   return (
-    <div className="w-full flex-1 flex flex-col space-y-4 transition-all">
+    <div className="w-full h-full flex-1 flex flex-col space-y-3 sm:space-y-4 transition-all min-h-0">
       {/* 1. TEACHER CLASSROOM HEADER */}
       <ClassroomTeacherHeader
         title={examTitle}
@@ -262,9 +262,9 @@ export const BoatRaceGame: React.FC<BoatRaceGameProps> = ({
       />
 
       {/* 2. RESPONSIVE WEB GRID LAYOUT */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch flex-1">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch flex-1 min-h-0">
         {/* LEFT COLUMN: BOAT RACE STAGE (lg:col-span-5) */}
-        <div className="lg:col-span-5 flex flex-col justify-between space-y-4 bg-white dark:bg-[#1a1b1e] rounded-2xl p-4 sm:p-5 border border-slate-100 dark:border-white/5 shadow-2xs">
+        <div className="lg:col-span-5 flex flex-col justify-between space-y-4 bg-white dark:bg-[#1a1b1e] rounded-2xl p-4 sm:p-5 border border-slate-100 dark:border-white/5 shadow-2xs h-full min-h-0">
           {/* Header info */}
           <div className="flex items-center justify-between text-xs sm:text-sm font-bold text-slate-500 dark:text-slate-400">
             <span className="flex items-center gap-1.5 text-blue-600 dark:text-blue-400">
@@ -345,7 +345,7 @@ export const BoatRaceGame: React.FC<BoatRaceGameProps> = ({
         </div>
 
         {/* RIGHT COLUMN: CLASSROOM QUESTION & TEACHING BOARD (lg:col-span-7) */}
-        <div className="lg:col-span-7 flex flex-col h-full">
+        <div className="lg:col-span-7 flex flex-col h-full min-h-0">
           {currentQ ? (
             <ClassroomQuestionCard
               question={currentQ}

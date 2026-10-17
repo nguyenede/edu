@@ -235,7 +235,7 @@ export const TugOfWarGame: React.FC<TugOfWarGameProps> = ({
   const ropePercentage = 50 + (ropePosition / maxPullLimit) * 38;
 
   return (
-    <div className="w-full flex-1 flex flex-col space-y-4 transition-all">
+    <div className="w-full h-full flex-1 flex flex-col space-y-3 sm:space-y-4 transition-all min-h-0">
       {/* 1. TEACHER HEADER BAR */}
       <ClassroomTeacherHeader
         title={examTitle}
@@ -264,9 +264,9 @@ export const TugOfWarGame: React.FC<TugOfWarGameProps> = ({
       />
 
       {/* 2. RESPONSIVE WEB GRID LAYOUT */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch flex-1">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch flex-1 min-h-0">
         {/* LEFT COLUMN: TUG OF WAR ARENA (lg:col-span-5) */}
-        <div className="lg:col-span-5 flex flex-col justify-between space-y-4">
+        <div className="lg:col-span-5 flex flex-col justify-between space-y-4 h-full min-h-0">
           {/* Minimalist Rope Arena */}
           <div className="bg-white dark:bg-[#1a1b1e] rounded-2xl p-4 sm:p-5 flex flex-col justify-between space-y-4 flex-1 border border-slate-100 dark:border-white/5 shadow-2xs">
             {/* Arena Header */}
@@ -326,7 +326,7 @@ export const TugOfWarGame: React.FC<TugOfWarGameProps> = ({
         </div>
 
         {/* RIGHT COLUMN: CLASSROOM QUESTION & TEACHING BOARD (lg:col-span-7) */}
-        <div className="lg:col-span-7 flex flex-col">
+        <div className="lg:col-span-7 flex flex-col h-full min-h-0">
           {currentQ ? (
             <ClassroomQuestionCard
               question={currentQ}
