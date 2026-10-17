@@ -49,6 +49,29 @@ export const AppShell: React.FC<AppShellProps> = ({
   const { sidebarCollapsed, setSidebarCollapsed, toggleSidebar } = useSidebarStore();
   const [searchQuery, setSearchQuery] = useState('');
   const [isNewMenuOpen, setIsNewMenuOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+  const mainViewportRef = useRef<HTMLElement>(null);
+
+  const handleViewportScroll = (e: React.UIEvent<HTMLElement>) => {
+    const scrolled = e.currentTarget.scrollTop > 2;
+    setIsScrolled((prev) => (prev !== scrolled ? scrolled : prev));
+  };
+
+  useEffect(() => {
+    setIsScrolled(false);
+    if (mainViewportRef.current) {
+      setIsScrolled(mainViewportRef.current.scrollTop > 2);
+    }
+  }, [pathname]);
+
+  useEffect(() => {
+    const handleWindowScroll = () => {
+      const scrolled = window.scrollY > 2;
+      setIsScrolled((prev) => (prev !== scrolled ? scrolled : prev));
+    };
+    window.addEventListener('scroll', handleWindowScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleWindowScroll);
+  }, []);
 
   useEffect(() => {
     const handleEscape = (event: KeyboardEvent) => {
@@ -107,7 +130,13 @@ export const AppShell: React.FC<AppShellProps> = ({
   return (
     <div className="relative h-dvh w-full overflow-hidden bg-google-bg dark:bg-[#131314] text-slate-900 dark:text-slate-100 font-sans">
       {/* Top Header (Navbar) - Fixed 100% Frozen at top:0 */}
-      <header className="fixed top-0 left-0 right-0 h-16 shrink-0 pl-2.5 pr-2 flex items-center justify-between select-none z-50 bg-google-bg dark:bg-[#131314] gap-1 sm:gap-4">
+      <header
+        className={`fixed top-0 left-0 right-0 h-16 shrink-0 pl-2.5 pr-2 flex items-center justify-between select-none z-50 bg-google-bg dark:bg-[#131314] gap-1 sm:gap-4 transition-[border-color,box-shadow] duration-200 ease-in-out ${
+          isScrolled && !(title || action)
+            ? 'border-b border-black/[0.08] dark:border-white/10 shadow-[0_1px_3px_0_rgba(0,0,0,0.06),0_1px_2px_0_rgba(0,0,0,0.04)]'
+            : 'border-b border-transparent shadow-none'
+        }`}
+      >
         {/* Left: Menu & Brand Logo */}
         <div className="flex items-center gap-1 shrink min-w-0 w-auto sm:w-[200px] relative z-10">
           <button
@@ -154,8 +183,8 @@ export const AppShell: React.FC<AppShellProps> = ({
                 type="text"
                 placeholder={
                   isTeacher
-                    ? 'Tìm kiếm câu hỏi, đề thi, bài tập và lớp học...'
-                    : 'Tìm kiếm lớp học và bài tập...'
+                    ? 'Tìm kiếm câu hỏi, đề thi, bài tập và lớp học'
+                    : 'Tìm kiếm lớp học và bài tập'
                 }
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -279,7 +308,13 @@ export const AppShell: React.FC<AppShellProps> = ({
           <div className="bg-white dark:bg-[#1e1f20] rounded-none md:rounded-tl-3xl md:rounded-tr-none md:rounded-b-none shadow-none flex-1 flex flex-col overflow-hidden">
             {/* Fixed Action / Title Bar Header - Frozen at top, zero layout shift, zero scrollbar interference */}
             {(title || action) && (
-              <header className="app-title-bar shrink-0 w-full px-3 sm:px-4 h-14 max-h-14 flex flex-row items-center justify-between gap-3 print:hidden select-none">
+              <header
+                className={`app-title-bar shrink-0 w-full px-3 sm:px-4 h-14 max-h-14 flex flex-row items-center justify-between gap-3 print:hidden select-none relative z-10 bg-white dark:bg-[#1e1f20] transition-[border-color,box-shadow] duration-200 ease-in-out ${
+                  isScrolled
+                    ? 'border-b border-black/[0.08] dark:border-white/10 shadow-[0_1px_3px_0_rgba(0,0,0,0.06),0_1px_2px_0_rgba(0,0,0,0.04)]'
+                    : 'border-b border-transparent shadow-none'
+                }`}
+              >
                 <div className="app-title-container min-w-0 flex-1 flex items-center h-full">
                   {title &&
                     (typeof title === 'string' ? (
@@ -303,6 +338,8 @@ export const AppShell: React.FC<AppShellProps> = ({
             {/* Page Body Viewport - ONLY inner content scrolls */}
             <main
               id="app-main-viewport"
+              ref={mainViewportRef}
+              onScroll={handleViewportScroll}
               className={`flex-1 w-full ${
                 pathname?.startsWith('/app/si') || pathname?.startsWith('/si') || pathname?.startsWith('/app/ai') || pathname?.startsWith('/ai')
                   ? 'p-0 flex flex-col overflow-hidden no-scrollbar'
