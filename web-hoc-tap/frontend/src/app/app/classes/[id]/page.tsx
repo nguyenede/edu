@@ -605,7 +605,7 @@ export default function ClassDetailPage() {
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/60 font-medium'
             }`}
           >
-            Bài tập và Đề thi ({assignments.length})
+            Bài tập và Đề thi
           </button>
 
           {isTeacher && (
@@ -618,7 +618,7 @@ export default function ClassDetailPage() {
                   : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/60 font-medium'
               }`}
             >
-              Danh sách Học sinh ({members.length})
+              Danh sách Học sinh
             </button>
           )}
 
