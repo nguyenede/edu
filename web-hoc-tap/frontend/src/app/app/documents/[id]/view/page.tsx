@@ -747,23 +747,23 @@ function DocumentDynamicViewPageContent() {
           </Button>
 
           {/* Synchronized Web-native Assign & Host Combo */}
-          <div className="flex items-center bg-white dark:bg-[#1f2023] border border-slate-200 dark:border-slate-700/80 rounded-xl p-1 shadow-2xs">
+          <div className="flex items-center h-8 sm:h-9 max-h-9 bg-white dark:bg-[#1f2023] border border-slate-200 dark:border-slate-700/80 rounded-xl p-0.5 sm:p-1 shadow-2xs">
             <button
               type="button"
               onClick={() => router.push(`/documents/${encodeURIComponent(fileId)}/assign`)}
-              className="px-3.5 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-semibold text-xs sm:text-sm flex items-center gap-1.5 transition-colors cursor-pointer select-none"
+              className="px-3 sm:px-3.5 py-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-semibold text-xs sm:text-sm flex items-center gap-1.5 transition-colors cursor-pointer select-none h-full"
               title="Giao bài tập về nhà"
             >
-              <FileText size={16} className="text-slate-500 dark:text-slate-400" />
+              <FileText size={15} className="text-slate-500 dark:text-slate-400" />
               <span>Giao bài</span>
             </button>
 
-            <div className="h-5 w-[1px] bg-slate-200 dark:bg-slate-700 mx-1" />
+            <div className="h-4 w-[1px] bg-slate-200 dark:bg-slate-700 mx-1" />
 
             <button
               type="button"
               onClick={() => router.push(`/app/games?examId=${encodeURIComponent(fileId)}`)}
-              className="px-4 py-1.5 rounded-lg bg-google-blue hover:bg-blue-600 active:bg-blue-700 text-white font-semibold text-xs sm:text-sm flex items-center gap-1.5 shadow-xs hover:shadow-sm active:scale-[0.98] transition-all cursor-pointer select-none"
+              className="px-3 sm:px-4 py-1 rounded-lg bg-google-blue hover:bg-blue-600 active:bg-blue-700 text-white font-semibold text-xs sm:text-sm flex items-center gap-1.5 shadow-xs hover:shadow-sm active:scale-[0.98] transition-all cursor-pointer select-none h-full"
               title="Tổ chức trò chơi trực tiếp"
             >
               <Play size={14} className="fill-white text-white ml-0.5" />

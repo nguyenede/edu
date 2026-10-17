@@ -340,7 +340,17 @@ html.dark * {
 }
 
 .app-title-bar {
+  height: 56px !important;
+  min-height: 56px !important;
+  max-height: 56px !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
   flex-shrink: 0 !important;
   line-height: 1.25 !important;
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  box-sizing: border-box !important;
 }
 

@@ -465,7 +465,23 @@ function AssignPageContent() {
 
   if (isLoading) {
     return (
-      <AppShell>
+      <AppShell
+        title={
+          <div className="flex items-center gap-1.5 flex-nowrap min-w-0">
+            <button
+              type="button"
+              onClick={() => router.push('/documents')}
+              className="cursor-pointer text-slate-900 dark:text-white font-semibold shrink-0 whitespace-nowrap"
+            >
+              Tài liệu của tôi
+            </button>
+            <BreadcrumbChevron isStatic={true} />
+            <span className="text-slate-900 dark:text-white font-semibold truncate min-w-0">
+              Giao bài tập
+            </span>
+          </div>
+        }
+      >
         <div className="p-16 text-center space-y-3">
           <Loader2 size={36} className="animate-spin text-google-blue mx-auto" />
           <p className="text-xs text-slate-500 font-medium">Đang tải thông tin tài liệu...</p>
@@ -499,7 +515,23 @@ function AssignPageContent() {
 
   if (!fileItem) {
     return (
-      <AppShell>
+      <AppShell
+        title={
+          <div className="flex items-center gap-1.5 flex-nowrap min-w-0">
+            <button
+              type="button"
+              onClick={() => router.push('/documents')}
+              className="cursor-pointer text-slate-900 dark:text-white font-semibold shrink-0 whitespace-nowrap"
+            >
+              Tài liệu của tôi
+            </button>
+            <BreadcrumbChevron isStatic={true} />
+            <span className="text-slate-900 dark:text-white font-semibold truncate min-w-0">
+              Giao bài tập
+            </span>
+          </div>
+        }
+      >
         <div className="max-w-md mx-auto my-16 p-8 bg-white dark:bg-[#1e1f20] rounded-3xl border border-slate-200/80 dark:border-slate-800 text-center space-y-4">
           <AlertTriangle size={36} className="text-amber-500 mx-auto" />
           <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">
@@ -1206,7 +1238,25 @@ export default function DocumentAssignPage() {
   return (
     <Suspense
       fallback={
-        <AppShell>
+        <AppShell
+          title={
+            <div className="flex items-center gap-1.5 flex-nowrap min-w-0">
+              <button
+                type="button"
+                onClick={() => {
+                  if (typeof window !== 'undefined') window.location.href = '/documents';
+                }}
+                className="cursor-pointer text-slate-900 dark:text-white font-semibold shrink-0 whitespace-nowrap"
+              >
+                Tài liệu của tôi
+              </button>
+              <BreadcrumbChevron isStatic={true} />
+              <span className="text-slate-900 dark:text-white font-semibold truncate min-w-0">
+                Giao bài tập
+              </span>
+            </div>
+          }
+        >
           <div className="p-16 text-center space-y-3">
             <Loader2 size={36} className="animate-spin text-google-blue mx-auto" />
             <p className="text-xs text-slate-500 font-medium">Đang tải...</p>
