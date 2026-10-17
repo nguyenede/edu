@@ -485,6 +485,12 @@ export default function GamesHubPage() {
     return list;
   }, [playingLesson]);
 
+  // Quay về danh mục trò chơi chính
+  const handleBackToHub = () => {
+    setPlayingLesson(null);
+    setActiveCategory(null);
+  };
+
   // Chuyển đổi nhanh trò chơi khi đang trình chiếu
   const handleSwitchGameInPlay = (newGameType: string) => {
     setActiveCategory(newGameType as ActiveGameMode);
@@ -511,6 +517,7 @@ export default function GamesHubPage() {
               config={playingLesson.config}
               onOpenSettings={() => handleOpenEditModal(playingLesson)}
               onSwitchGame={handleSwitchGameInPlay}
+              onBackToHub={handleBackToHub}
             />
           )}
           {playingLesson.gameType === 'lucky_wheel' && (
@@ -521,6 +528,7 @@ export default function GamesHubPage() {
               config={playingLesson.config}
               onOpenSettings={() => handleOpenEditModal(playingLesson)}
               onSwitchGame={handleSwitchGameInPlay}
+              onBackToHub={handleBackToHub}
             />
           )}
           {playingLesson.gameType === 'boat_race' && (
@@ -531,6 +539,7 @@ export default function GamesHubPage() {
               config={playingLesson.config}
               onOpenSettings={() => handleOpenEditModal(playingLesson)}
               onSwitchGame={handleSwitchGameInPlay}
+              onBackToHub={handleBackToHub}
             />
           )}
           {playingLesson.gameType === 'zombie' && (
@@ -541,6 +550,7 @@ export default function GamesHubPage() {
               config={playingLesson.config}
               onOpenSettings={() => handleOpenEditModal(playingLesson)}
               onSwitchGame={handleSwitchGameInPlay}
+              onBackToHub={handleBackToHub}
             />
           )}
           {playingLesson.gameType === 'gold_miner' && (
@@ -551,6 +561,7 @@ export default function GamesHubPage() {
               config={playingLesson.config}
               onOpenSettings={() => handleOpenEditModal(playingLesson)}
               onSwitchGame={handleSwitchGameInPlay}
+              onBackToHub={handleBackToHub}
             />
           )}
           {playingLesson.gameType === 'fruit_slash' && (
@@ -561,6 +572,7 @@ export default function GamesHubPage() {
               config={playingLesson.config}
               onOpenSettings={() => handleOpenEditModal(playingLesson)}
               onSwitchGame={handleSwitchGameInPlay}
+              onBackToHub={handleBackToHub}
             />
           )}
           {playingLesson.gameType === 'whack_a_mole' && (
@@ -571,6 +583,7 @@ export default function GamesHubPage() {
               config={playingLesson.config}
               onOpenSettings={() => handleOpenEditModal(playingLesson)}
               onSwitchGame={handleSwitchGameInPlay}
+              onBackToHub={handleBackToHub}
             />
           )}
           {playingLesson.gameType === 'bubble_pop' && (
@@ -581,6 +594,7 @@ export default function GamesHubPage() {
               config={playingLesson.config}
               onOpenSettings={() => handleOpenEditModal(playingLesson)}
               onSwitchGame={handleSwitchGameInPlay}
+              onBackToHub={handleBackToHub}
             />
           )}
 

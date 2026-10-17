@@ -24,6 +24,7 @@ interface BoatRaceGameProps {
   config?: GameSettingsConfig;
   onOpenSettings?: () => void;
   onSwitchGame?: (gameType: string) => void;
+  onBackToHub?: () => void;
 }
 
 export const BoatRaceGame: React.FC<BoatRaceGameProps> = ({
@@ -33,6 +34,7 @@ export const BoatRaceGame: React.FC<BoatRaceGameProps> = ({
   config = DEFAULT_GAME_CONFIG,
   onOpenSettings,
   onSwitchGame,
+  onBackToHub,
 }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [team1Score, setTeam1Score] = useState(0);
@@ -262,6 +264,7 @@ export const BoatRaceGame: React.FC<BoatRaceGameProps> = ({
         onRestart={handleRestart}
         onOpenSettings={onOpenSettings}
         onSwitchGame={onSwitchGame}
+        onBackToHub={onBackToHub}
       />
 
       {/* 2. RESPONSIVE WEB GRID LAYOUT */}

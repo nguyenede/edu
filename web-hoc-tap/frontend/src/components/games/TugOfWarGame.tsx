@@ -25,6 +25,7 @@ interface TugOfWarGameProps {
   config?: GameSettingsConfig;
   onOpenSettings?: () => void;
   onSwitchGame?: (gameType: string) => void;
+  onBackToHub?: () => void;
 }
 
 export const TugOfWarGame: React.FC<TugOfWarGameProps> = ({
@@ -34,6 +35,7 @@ export const TugOfWarGame: React.FC<TugOfWarGameProps> = ({
   config = DEFAULT_GAME_CONFIG,
   onOpenSettings,
   onSwitchGame,
+  onBackToHub,
 }) => {
   const maxPullLimit = Math.min(Math.max(config.winDifference || 3, 2), 5);
   const [ropePosition, setRopePosition] = useState(0); // -maxPullLimit (Blue wins) to +maxPullLimit (Red wins)
@@ -264,6 +266,7 @@ export const TugOfWarGame: React.FC<TugOfWarGameProps> = ({
         onRestart={handleRestart}
         onOpenSettings={onOpenSettings}
         onSwitchGame={onSwitchGame}
+        onBackToHub={onBackToHub}
       />
 
       {/* 2. RESPONSIVE WEB GRID LAYOUT */}

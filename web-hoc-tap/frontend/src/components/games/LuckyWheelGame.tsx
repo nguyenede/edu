@@ -24,6 +24,7 @@ interface LuckyWheelGameProps {
   config?: GameSettingsConfig;
   onOpenSettings?: () => void;
   onSwitchGame?: (gameType: string) => void;
+  onBackToHub?: () => void;
 }
 
 const WHEEL_COLORS = [
@@ -39,6 +40,7 @@ export const LuckyWheelGame: React.FC<LuckyWheelGameProps> = ({
   config = DEFAULT_GAME_CONFIG,
   onOpenSettings,
   onSwitchGame,
+  onBackToHub,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -338,6 +340,7 @@ export const LuckyWheelGame: React.FC<LuckyWheelGameProps> = ({
         onRestart={handleRestart}
         onOpenSettings={onOpenSettings}
         onSwitchGame={onSwitchGame}
+        onBackToHub={onBackToHub}
       />
 
       {/* 2. RESPONSIVE WEB GRID LAYOUT */}

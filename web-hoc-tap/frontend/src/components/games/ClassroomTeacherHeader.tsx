@@ -39,6 +39,7 @@ interface ClassroomTeacherHeaderProps {
   title: string;
   gameShortName?: string;
   onSwitchGame?: (gameType: string) => void;
+  onBackToHub?: () => void;
   teams: ClassroomTeam[];
   activeTeamId: string | null;
   onSelectActiveTeam?: (teamId: string) => void;
@@ -66,6 +67,7 @@ export const ClassroomTeacherHeader: React.FC<ClassroomTeacherHeaderProps> = ({
   title,
   gameShortName,
   onSwitchGame,
+  onBackToHub,
   teams,
   activeTeamId,
   onSelectActiveTeam,
@@ -81,32 +83,57 @@ export const ClassroomTeacherHeader: React.FC<ClassroomTeacherHeaderProps> = ({
 }) => {
   return (
     <div className="w-full bg-white dark:bg-[#1a1b1e] rounded-2xl px-3.5 sm:px-5 py-2.5 flex items-center justify-between gap-3 select-none transition-colors border border-slate-100 dark:border-white/5 shadow-2xs relative z-20">
-      {/* 1. LEFT: SYNCHRONIZED BREADCRUMB */}
-      <div className="flex items-center gap-1 text-lg sm:text-xl lg:text-2xl tracking-tight text-slate-900 dark:text-slate-100 min-w-0 -ml-2">
+      {/* 1. LEFT: 3-LEVEL SYNCHRONIZED BREADCRUMB */}
+      <div className="flex items-center gap-1 text-base sm:text-lg lg:text-xl tracking-tight text-slate-900 dark:text-slate-100 min-w-0 -ml-2">
+        {/* Cấp 1: Danh mục trò chơi chính */}
         <button
           type="button"
-          onClick={onBack}
+          onClick={onBackToHub || onBack}
           className="transition-all cursor-pointer px-2 py-0.5 rounded-xl text-slate-900 dark:text-white font-semibold hover:bg-slate-200/70 dark:hover:bg-slate-800 shrink-0"
-          title="Quay lại danh mục trò chơi lớp học"
+          title="Quay lại danh mục tất cả trò chơi"
         >
           Trò chơi lớp học
         </button>
+
+        {/* Mũi tên 1: Dropdown đổi trò chơi */}
         <BreadcrumbChevron
           items={GAME_NAV_ITEMS.map((g) => ({
             id: g.id,
             label: g.title,
             icon: getGameCustomIcon(g.id, 18),
-            isActive: (gameShortName || title) === g.title,
+            isActive: (gameShortName || '') === g.title || (gameShortName || '').includes(g.title),
             onClick: onSwitchGame ? () => onSwitchGame(g.id) : undefined,
           }))}
           fallbackToStaticChevron={true}
         />
-        <span
-          className="px-2 py-0.5 rounded-xl text-slate-900 dark:text-white font-normal truncate max-w-[150px] sm:max-w-xs md:max-w-sm lg:max-w-md"
-          title={gameShortName || title}
-        >
-          {gameShortName || title}
-        </span>
+
+        {/* Cấp 2: Thể loại trò chơi & Cấp 3: Tên đề thi/buổi học */}
+        {title && gameShortName && title !== gameShortName ? (
+          <>
+            <button
+              type="button"
+              onClick={onBack}
+              className="transition-all cursor-pointer px-2 py-0.5 rounded-xl text-slate-900 dark:text-white font-normal hover:bg-slate-200/70 dark:hover:bg-slate-800 shrink-0 truncate max-w-[120px] sm:max-w-[180px]"
+              title={`Quay về danh sách bài tập của ${gameShortName}`}
+            >
+              {gameShortName}
+            </button>
+            <BreadcrumbChevron isStatic={true} />
+            <span
+              className="px-2 py-0.5 rounded-xl text-slate-900 dark:text-white font-normal truncate max-w-[160px] sm:max-w-xs md:max-w-sm lg:max-w-md xl:max-w-lg"
+              title={title}
+            >
+              {title}
+            </span>
+          </>
+        ) : (
+          <span
+            className="px-2 py-0.5 rounded-xl text-slate-900 dark:text-white font-normal truncate max-w-[150px] sm:max-w-xs md:max-w-sm lg:max-w-md"
+            title={gameShortName || title}
+          >
+            {gameShortName || title}
+          </span>
+        )}
       </div>
 
       {/* 2. CENTER: TEAM SCORES WITH QUICK (+1 / -1) CONTROLS */}
