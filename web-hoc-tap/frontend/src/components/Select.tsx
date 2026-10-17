@@ -164,8 +164,8 @@ export function CustomSelect<T extends string | number>({
                     isOptDisabled
                       ? 'opacity-40 cursor-not-allowed text-slate-400'
                       : isSelected
-                      ? 'text-slate-900 dark:text-slate-100 font-normal bg-slate-100/70 dark:bg-slate-800/70 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer'
-                      : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100/80 dark:hover:bg-slate-800/60 cursor-pointer'
+                      ? 'text-slate-900 dark:text-slate-100 font-normal bg-slate-100/80 dark:bg-slate-800/80 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer'
+                      : 'text-slate-900 dark:text-slate-100 hover:bg-slate-100/80 dark:hover:bg-slate-800/60 cursor-pointer'
                   }`}
                 >
                   <span className="pr-2 break-words text-left flex items-center gap-2 min-w-0">
