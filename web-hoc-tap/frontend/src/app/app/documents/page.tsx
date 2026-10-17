@@ -2322,9 +2322,9 @@ function DocumentsPageContent() {
         isOpen={isCreateFolderOpen}
         onClose={() => setIsCreateFolderOpen(false)}
         title="Tạo thư mục tài liệu mới"
-        description="Nhập tên thư mục để lưu trữ và phân loại các tệp đề thi"
+        maxWidth="lg"
       >
-        <form onSubmit={handleCreateFolder} className="space-y-4">
+        <form onSubmit={handleCreateFolder} className="space-y-5 pt-1">
           <Input
             label="Tên thư mục"
             placeholder="Ví dụ: Đề thi thử Toán 12, Đề kiểm tra Tiếng Anh"
@@ -2332,11 +2332,11 @@ function DocumentsPageContent() {
             onChange={(e) => setNewFolderName(e.target.value)}
             required
           />
-          <div className="flex justify-end gap-2 pt-2">
-            <Button type="button" variant="ghost" size="sm" onClick={() => setIsCreateFolderOpen(false)}>
+          <div className="flex justify-end gap-3 pt-2">
+            <Button type="button" variant="ghost" size="md" onClick={() => setIsCreateFolderOpen(false)}>
               Hủy
             </Button>
-            <Button type="submit" size="sm">
+            <Button type="submit" size="md">
               Tạo thư mục
             </Button>
           </div>
