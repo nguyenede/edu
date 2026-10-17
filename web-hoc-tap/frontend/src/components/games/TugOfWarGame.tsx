@@ -45,7 +45,7 @@ export const TugOfWarGame: React.FC<TugOfWarGameProps> = ({
   // Controls & Modals
   const [soundEnabled, setSoundEnabled] = useState(config.soundEnabled ?? true);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [fontSize, setFontSize] = useState<'normal' | 'large' | 'xlarge'>(config.fontSize || 'large');
+  const [fontSize, setFontSize] = useState<'normal' | 'large' | 'xlarge'>(config.fontSize || 'normal');
   const [winnerTeamId, setWinnerTeamId] = useState<string | null>(null);
   const [isVictoryModalOpen, setIsVictoryModalOpen] = useState(false);
   const [isGridOpen, setIsGridOpen] = useState(false);
@@ -235,7 +235,7 @@ export const TugOfWarGame: React.FC<TugOfWarGameProps> = ({
   const ropePercentage = 50 + (ropePosition / maxPullLimit) * 38;
 
   return (
-    <div className="w-full min-h-screen flex-1 bg-[#f8fafc] dark:bg-[#131416] flex flex-col transition-all">
+    <div className="w-full flex-1 flex flex-col space-y-4 transition-all">
       {/* 1. TEACHER HEADER BAR */}
       <ClassroomTeacherHeader
         title={examTitle}
@@ -263,12 +263,12 @@ export const TugOfWarGame: React.FC<TugOfWarGameProps> = ({
         onOpenSettings={onOpenSettings}
       />
 
-      {/* 2. WIDESCREEN FULL VIEWPORT 16:9 GRID LAYOUT */}
-      <div className="p-3 sm:p-5 lg:p-6 grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 items-stretch flex-1">
+      {/* 2. RESPONSIVE WEB GRID LAYOUT */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch flex-1">
         {/* LEFT COLUMN: TUG OF WAR ARENA (lg:col-span-5) */}
         <div className="lg:col-span-5 flex flex-col justify-between space-y-4">
           {/* Minimalist Rope Arena */}
-          <div className="bg-white dark:bg-[#1a1b1e] rounded-3xl p-5 sm:p-6 flex flex-col justify-between space-y-5 flex-1">
+          <div className="bg-white dark:bg-[#1a1b1e] rounded-2xl p-4 sm:p-5 flex flex-col justify-between space-y-4 flex-1 border border-slate-100 dark:border-white/5 shadow-2xs">
             {/* Arena Header */}
             <div className="flex items-center justify-between text-xs font-bold pb-2">
               <span className="text-blue-600 dark:text-blue-400 font-extrabold flex items-center gap-1.5">

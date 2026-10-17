@@ -46,7 +46,7 @@ export const WhackAMoleGame: React.FC<WhackAMoleGameProps> = ({
   const [isAnswerRevealed, setIsAnswerRevealed] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(config.soundEnabled ?? true);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [fontSize, setFontSize] = useState<'normal' | 'large' | 'xlarge'>(config.fontSize || 'large');
+  const [fontSize, setFontSize] = useState<'normal' | 'large' | 'xlarge'>(config.fontSize || 'normal');
   const [isGridOpen, setIsGridOpen] = useState(false);
   const [isStudentModalOpen, setIsStudentModalOpen] = useState(false);
   const [questionStatuses, setQuestionStatuses] = useState<Record<number, 'unopened' | 'correct' | 'incorrect'>>({});
@@ -204,7 +204,7 @@ export const WhackAMoleGame: React.FC<WhackAMoleGameProps> = ({
   ];
 
   return (
-    <div className="w-full min-h-screen flex-1 bg-[#f8fafc] dark:bg-[#131416] flex flex-col transition-all">
+    <div className="w-full flex-1 flex flex-col space-y-4 transition-all">
       {/* 1. TEACHER CLASSROOM HEADER */}
       <ClassroomTeacherHeader
         title={examTitle}
@@ -232,11 +232,11 @@ export const WhackAMoleGame: React.FC<WhackAMoleGameProps> = ({
         onOpenSettings={onOpenSettings}
       />
 
-      {/* 2. WIDESCREEN 16:9 GRID LAYOUT */}
-      <div className="p-3 sm:p-5 grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-5 items-stretch">
+      {/* 2. RESPONSIVE WEB GRID LAYOUT */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch flex-1">
         {/* LEFT COLUMN: MINIMALIST MOLE BURROWS STAGE (lg:col-span-5) */}
         <div className="lg:col-span-5 flex flex-col justify-between space-y-3">
-          <div className="bg-white dark:bg-[#1a1b1e] rounded-3xl p-4 sm:p-5 flex flex-col justify-between space-y-4 flex-1">
+          <div className="bg-white dark:bg-[#1a1b1e] rounded-2xl p-4 sm:p-5 flex flex-col justify-between space-y-4 flex-1 border border-slate-100 dark:border-white/5 shadow-2xs">
             {/* Header info */}
             <div className="flex items-center justify-between text-xs font-bold pb-2">
               <span className="text-orange-700 dark:text-orange-300 font-extrabold flex items-center gap-1.5">

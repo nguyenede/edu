@@ -486,101 +486,134 @@ export default function GamesHubPage() {
   }, [playingLesson]);
 
   // Khi đang chơi trò chơi (giảng dạy trên lớp):
-  // Hiển thị TOÀN MÀN HÌNH (Full Viewport / Không bị thu nhỏ bởi Sidebar & Navbar)
+  // Hiển thị đồng bộ trong giao diện AppShell chuẩn web như ở Kho tài liệu
   if (playingLesson) {
+    const meta = getCategoryMeta(playingLesson.gameType);
     return (
-      <div className="fixed inset-0 z-50 w-screen h-screen bg-[#f8fafc] dark:bg-[#131416] text-slate-900 dark:text-slate-100 flex flex-col overflow-y-auto select-none">
-        {playingLesson.gameType === 'tug_of_war' && (
-          <TugOfWarGame
-            examTitle={playingLesson.title}
-            questions={activeQuestions}
-            onBack={() => setPlayingLesson(null)}
-            config={playingLesson.config}
-            onOpenSettings={() => handleOpenEditModal(playingLesson)}
-          />
-        )}
-        {playingLesson.gameType === 'lucky_wheel' && (
-          <LuckyWheelGame
-            examTitle={playingLesson.title}
-            questions={activeQuestions}
-            onBack={() => setPlayingLesson(null)}
-            config={playingLesson.config}
-            onOpenSettings={() => handleOpenEditModal(playingLesson)}
-          />
-        )}
-        {playingLesson.gameType === 'boat_race' && (
-          <BoatRaceGame
-            examTitle={playingLesson.title}
-            questions={activeQuestions}
-            onBack={() => setPlayingLesson(null)}
-            config={playingLesson.config}
-            onOpenSettings={() => handleOpenEditModal(playingLesson)}
-          />
-        )}
-        {playingLesson.gameType === 'zombie' && (
-          <ZombieDefenseGame
-            examTitle={playingLesson.title}
-            questions={activeQuestions}
-            onBack={() => setPlayingLesson(null)}
-            config={playingLesson.config}
-            onOpenSettings={() => handleOpenEditModal(playingLesson)}
-          />
-        )}
-        {playingLesson.gameType === 'gold_miner' && (
-          <GoldMinerGame
-            examTitle={playingLesson.title}
-            questions={activeQuestions}
-            onBack={() => setPlayingLesson(null)}
-            config={playingLesson.config}
-            onOpenSettings={() => handleOpenEditModal(playingLesson)}
-          />
-        )}
-        {playingLesson.gameType === 'fruit_slash' && (
-          <FruitSlashGame
-            examTitle={playingLesson.title}
-            questions={activeQuestions}
-            onBack={() => setPlayingLesson(null)}
-            config={playingLesson.config}
-            onOpenSettings={() => handleOpenEditModal(playingLesson)}
-          />
-        )}
-        {playingLesson.gameType === 'whack_a_mole' && (
-          <WhackAMoleGame
-            examTitle={playingLesson.title}
-            questions={activeQuestions}
-            onBack={() => setPlayingLesson(null)}
-            config={playingLesson.config}
-            onOpenSettings={() => handleOpenEditModal(playingLesson)}
-          />
-        )}
-        {playingLesson.gameType === 'bubble_pop' && (
-          <BubblePopGame
-            examTitle={playingLesson.title}
-            questions={activeQuestions}
-            onBack={() => setPlayingLesson(null)}
-            config={playingLesson.config}
-            onOpenSettings={() => handleOpenEditModal(playingLesson)}
-          />
-        )}
+      <AppShell
+        title={
+          <div className="flex items-center gap-1 text-2xl tracking-tight text-slate-900 dark:text-slate-100 flex-wrap -ml-2">
+            <button
+              type="button"
+              onClick={() => {
+                setPlayingLesson(null);
+                setActiveCategory(null);
+              }}
+              className="transition-all cursor-pointer px-2 py-0.5 rounded-xl text-slate-900 dark:text-white font-semibold hover:bg-slate-200/70 dark:hover:bg-slate-800"
+            >
+              Trò chơi lớp học
+            </button>
+            <BreadcrumbChevron
+              menuTitle="Trò chơi lớp học"
+              items={GAME_LIST.map((g) => ({
+                label: g.title,
+                icon: getGameCustomIcon(g.id, 18),
+                onClick: () => {
+                  setPlayingLesson(null);
+                  setActiveCategory(g.id);
+                },
+              }))}
+              fallbackToStaticChevron={true}
+            />
+            <span className="px-2 py-0.5 rounded-xl text-slate-900 dark:text-white font-normal truncate-tight max-w-xs sm:max-w-md">
+              {meta.title}
+            </span>
+          </div>
+        }
+      >
+        <div className="space-y-4 select-none pb-8">
+          {playingLesson.gameType === 'tug_of_war' && (
+            <TugOfWarGame
+              examTitle={playingLesson.title}
+              questions={activeQuestions}
+              onBack={() => setPlayingLesson(null)}
+              config={playingLesson.config}
+              onOpenSettings={() => handleOpenEditModal(playingLesson)}
+            />
+          )}
+          {playingLesson.gameType === 'lucky_wheel' && (
+            <LuckyWheelGame
+              examTitle={playingLesson.title}
+              questions={activeQuestions}
+              onBack={() => setPlayingLesson(null)}
+              config={playingLesson.config}
+              onOpenSettings={() => handleOpenEditModal(playingLesson)}
+            />
+          )}
+          {playingLesson.gameType === 'boat_race' && (
+            <BoatRaceGame
+              examTitle={playingLesson.title}
+              questions={activeQuestions}
+              onBack={() => setPlayingLesson(null)}
+              config={playingLesson.config}
+              onOpenSettings={() => handleOpenEditModal(playingLesson)}
+            />
+          )}
+          {playingLesson.gameType === 'zombie' && (
+            <ZombieDefenseGame
+              examTitle={playingLesson.title}
+              questions={activeQuestions}
+              onBack={() => setPlayingLesson(null)}
+              config={playingLesson.config}
+              onOpenSettings={() => handleOpenEditModal(playingLesson)}
+            />
+          )}
+          {playingLesson.gameType === 'gold_miner' && (
+            <GoldMinerGame
+              examTitle={playingLesson.title}
+              questions={activeQuestions}
+              onBack={() => setPlayingLesson(null)}
+              config={playingLesson.config}
+              onOpenSettings={() => handleOpenEditModal(playingLesson)}
+            />
+          )}
+          {playingLesson.gameType === 'fruit_slash' && (
+            <FruitSlashGame
+              examTitle={playingLesson.title}
+              questions={activeQuestions}
+              onBack={() => setPlayingLesson(null)}
+              config={playingLesson.config}
+              onOpenSettings={() => handleOpenEditModal(playingLesson)}
+            />
+          )}
+          {playingLesson.gameType === 'whack_a_mole' && (
+            <WhackAMoleGame
+              examTitle={playingLesson.title}
+              questions={activeQuestions}
+              onBack={() => setPlayingLesson(null)}
+              config={playingLesson.config}
+              onOpenSettings={() => handleOpenEditModal(playingLesson)}
+            />
+          )}
+          {playingLesson.gameType === 'bubble_pop' && (
+            <BubblePopGame
+              examTitle={playingLesson.title}
+              questions={activeQuestions}
+              onBack={() => setPlayingLesson(null)}
+              config={playingLesson.config}
+              onOpenSettings={() => handleOpenEditModal(playingLesson)}
+            />
+          )}
 
-        {/* Modal chỉnh sửa cấu hình nếu mở từ trong game */}
-        <GameConfigModal
-          isOpen={isConfigModalOpen}
-          onClose={() => setIsConfigModalOpen(false)}
-          gameTitle={activeCategory ? getCategoryMeta(activeCategory).title : 'Trò chơi'}
-          gameId={activeCategory || 'tug_of_war'}
-          config={gameConfig}
-          onChangeConfig={setGameConfig}
-          questions={customQuestions}
-          onChangeQuestions={setCustomQuestions}
-          availableExams={exams}
-          selectedExamId={selectedExamId}
-          onSelectExam={handleSelectExamInModal}
-          onSaveGame={handleSaveLesson}
-          initialStep={editingLessonId ? 3 : 1}
-          onStartGame={() => setIsConfigModalOpen(false)}
-        />
-      </div>
+          {/* Modal chỉnh sửa cấu hình nếu mở từ trong game */}
+          <GameConfigModal
+            isOpen={isConfigModalOpen}
+            onClose={() => setIsConfigModalOpen(false)}
+            gameTitle={activeCategory ? getCategoryMeta(activeCategory).title : 'Trò chơi'}
+            gameId={activeCategory || 'tug_of_war'}
+            config={gameConfig}
+            onChangeConfig={setGameConfig}
+            questions={customQuestions}
+            onChangeQuestions={setCustomQuestions}
+            availableExams={exams}
+            selectedExamId={selectedExamId}
+            onSelectExam={handleSelectExamInModal}
+            onSaveGame={handleSaveLesson}
+            initialStep={editingLessonId ? 3 : 1}
+            onStartGame={() => setIsConfigModalOpen(false)}
+          />
+        </div>
+      </AppShell>
     );
   }
 
@@ -595,11 +628,12 @@ export default function GamesHubPage() {
                 setIsConfigModalOpen(false);
                 setActiveCategory(null);
               }}
-              className="transition-all cursor-pointer px-2 py-0.5 rounded-xl text-slate-900 dark:text-white font-normal hover:bg-slate-200/70 dark:hover:bg-slate-800"
+              className="transition-all cursor-pointer px-2 py-0.5 rounded-xl text-slate-900 dark:text-white font-semibold hover:bg-slate-200/70 dark:hover:bg-slate-800"
             >
               Trò chơi lớp học
             </button>
             <BreadcrumbChevron
+              menuTitle="Trò chơi lớp học"
               items={GAME_LIST.map((g) => ({
                 label: g.title,
                 icon: getGameCustomIcon(g.id, 18),
@@ -628,11 +662,12 @@ export default function GamesHubPage() {
             <button
               type="button"
               onClick={() => setActiveCategory(null)}
-              className="transition-all cursor-pointer px-2 py-0.5 rounded-xl text-slate-900 dark:text-white font-normal hover:bg-slate-200/70 dark:hover:bg-slate-800"
+              className="transition-all cursor-pointer px-2 py-0.5 rounded-xl text-slate-900 dark:text-white font-semibold hover:bg-slate-200/70 dark:hover:bg-slate-800"
             >
               Trò chơi lớp học
             </button>
             <BreadcrumbChevron
+              menuTitle="Trò chơi lớp học"
               items={GAME_LIST.map((g) => ({
                 label: g.title,
                 icon: getGameCustomIcon(g.id, 18),
@@ -648,7 +683,7 @@ export default function GamesHubPage() {
           <div className="flex items-center gap-1 text-2xl tracking-tight text-slate-900 dark:text-slate-100 flex-wrap -ml-2">
             <button
               type="button"
-              className="transition-all cursor-pointer px-2 py-0.5 rounded-xl text-slate-900 dark:text-white font-normal hover:bg-slate-200/70 dark:hover:bg-slate-800"
+              className="transition-all cursor-pointer px-2 py-0.5 rounded-xl text-slate-900 dark:text-white font-semibold hover:bg-slate-200/70 dark:hover:bg-slate-800"
             >
               Trò chơi lớp học
             </button>

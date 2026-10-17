@@ -67,17 +67,17 @@ export const ClassroomQuestionCard: React.FC<ClassroomQuestionCardProps> = ({
 }) => {
   const questionTextSize =
     fontSize === 'xlarge'
-      ? 'text-2xl sm:text-3xl md:text-4xl'
-      : fontSize === 'large'
       ? 'text-xl sm:text-2xl md:text-3xl'
-      : 'text-lg sm:text-xl md:text-2xl';
+      : fontSize === 'large'
+      ? 'text-lg sm:text-xl md:text-2xl'
+      : 'text-base sm:text-lg font-semibold';
 
   const optionTextSize =
     fontSize === 'xlarge'
-      ? 'text-lg sm:text-xl md:text-2xl'
-      : fontSize === 'large'
       ? 'text-base sm:text-lg md:text-xl'
-      : 'text-sm sm:text-base md:text-lg';
+      : fontSize === 'large'
+      ? 'text-sm sm:text-base md:text-lg'
+      : 'text-xs sm:text-sm';
 
   // Đảm bảo không bao giờ có lỗi hiển thị 2 câu cùng xanh (chỉ duy nhất 1 đáp án đúng)
   const sanitizedOptions = React.useMemo(() => {
@@ -106,11 +106,11 @@ export const ClassroomQuestionCard: React.FC<ClassroomQuestionCardProps> = ({
     answeredOptionIdx !== null && Boolean(sanitizedOptions[answeredOptionIdx]?.isCorrect);
 
   return (
-    <div className="w-full bg-white dark:bg-[#1a1b1e] rounded-3xl p-6 sm:p-8 lg:p-10 flex flex-col justify-between space-y-6 sm:space-y-8 transition-all h-full flex-1">
+    <div className="w-full bg-white dark:bg-[#1a1b1e] rounded-2xl p-4 sm:p-6 flex flex-col justify-between space-y-4 sm:space-y-5 transition-all h-full flex-1 border border-slate-100 dark:border-white/5 shadow-2xs">
       {/* 1. TOP STATUS BAR: QUESTION INDEX, ACTIVE TURN & FEEDBACK */}
       <div className="flex flex-wrap items-center justify-between gap-2 pb-2">
         <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
-          <span className="px-3.5 py-1.5 rounded-xl bg-slate-100 dark:bg-white/10 text-slate-800 dark:text-zinc-200 font-bold text-xs sm:text-sm">
+          <span className="px-3 py-1 rounded-xl bg-slate-100 dark:bg-white/10 text-slate-800 dark:text-zinc-200 font-bold text-xs">
             Câu {questionNumber} / {totalQuestions}
           </span>
 
@@ -186,11 +186,11 @@ export const ClassroomQuestionCard: React.FC<ClassroomQuestionCardProps> = ({
                 key={idx}
                 type="button"
                 onClick={() => onSelectOption(idx)}
-                className={`w-full p-5 sm:p-6 lg:p-7 rounded-2xl text-left font-medium transition-all flex items-center gap-4 sm:gap-5 cursor-pointer min-h-[72px] sm:min-h-[84px] ${itemClass}`}
+                className={`w-full p-3.5 sm:p-4 rounded-xl text-left font-medium transition-all flex items-center gap-3 sm:gap-3.5 cursor-pointer min-h-[52px] sm:min-h-[58px] ${itemClass}`}
               >
                 {/* Minimalist Letter Badge */}
                 <div
-                  className={`w-10 h-10 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center font-black text-sm sm:text-base md:text-lg shrink-0 ${badgeClass}`}
+                  className={`w-8 h-8 sm:w-9 sm:h-9 rounded-lg flex items-center justify-center font-bold text-xs sm:text-sm shrink-0 ${badgeClass}`}
                 >
                   {label}
                 </div>
@@ -202,10 +202,10 @@ export const ClassroomQuestionCard: React.FC<ClassroomQuestionCardProps> = ({
 
                 {/* Status indicator icon on revealed */}
                 {isRevealed && isCorrect && (
-                  <CheckCircle2 size={24} className="text-white shrink-0" />
+                  <CheckCircle2 size={18} className="text-white shrink-0" />
                 )}
                 {isRevealed && isSelected && !isCorrect && (
-                  <XCircle size={24} className="text-white shrink-0" />
+                  <XCircle size={18} className="text-white shrink-0" />
                 )}
               </button>
             );

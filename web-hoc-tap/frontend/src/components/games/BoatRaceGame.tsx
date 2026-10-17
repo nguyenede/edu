@@ -42,7 +42,7 @@ export const BoatRaceGame: React.FC<BoatRaceGameProps> = ({
   const [isAnswerRevealed, setIsAnswerRevealed] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(config.soundEnabled ?? true);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [fontSize, setFontSize] = useState<'normal' | 'large' | 'xlarge'>(config.fontSize || 'large');
+  const [fontSize, setFontSize] = useState<'normal' | 'large' | 'xlarge'>(config.fontSize || 'normal');
   const [isGridOpen, setIsGridOpen] = useState(false);
   const [isStudentModalOpen, setIsStudentModalOpen] = useState(false);
   const [questionStatuses, setQuestionStatuses] = useState<Record<number, 'unopened' | 'correct' | 'incorrect'>>({});
@@ -233,7 +233,7 @@ export const BoatRaceGame: React.FC<BoatRaceGameProps> = ({
   ];
 
   return (
-    <div className="w-full min-h-screen flex-1 bg-[#f8fafc] dark:bg-[#131416] flex flex-col transition-all">
+    <div className="w-full flex-1 flex flex-col space-y-4 transition-all">
       {/* 1. TEACHER CLASSROOM HEADER */}
       <ClassroomTeacherHeader
         title={examTitle}
@@ -261,10 +261,10 @@ export const BoatRaceGame: React.FC<BoatRaceGameProps> = ({
         onOpenSettings={onOpenSettings}
       />
 
-      {/* 2. WIDESCREEN FULL VIEWPORT 16:9 GRID LAYOUT (KHÔNG KHUNG VIỀN CỒNG KỀNH) */}
-      <div className="p-4 sm:p-6 lg:p-8 grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-stretch flex-1">
+      {/* 2. RESPONSIVE WEB GRID LAYOUT */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch flex-1">
         {/* LEFT COLUMN: BOAT RACE STAGE (lg:col-span-5) */}
-        <div className="lg:col-span-5 flex flex-col justify-between space-y-4 bg-white dark:bg-[#1a1b1e] rounded-3xl p-6 sm:p-8">
+        <div className="lg:col-span-5 flex flex-col justify-between space-y-4 bg-white dark:bg-[#1a1b1e] rounded-2xl p-4 sm:p-5 border border-slate-100 dark:border-white/5 shadow-2xs">
           {/* Header info */}
           <div className="flex items-center justify-between text-xs sm:text-sm font-bold text-slate-500 dark:text-slate-400">
             <span className="flex items-center gap-1.5 text-blue-600 dark:text-blue-400">
