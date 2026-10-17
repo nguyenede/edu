@@ -915,7 +915,7 @@ export default function ResultsPage() {
                   <div>
                     <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
                       <Award size={16} className="text-amber-500" />
-                      Danh sách học sinh trong lớp {classStats.studentLeaderboard.length}
+                      Danh sách lớp
                     </h3>
                   </div>
 
