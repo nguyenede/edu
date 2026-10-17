@@ -788,7 +788,7 @@ export default function AiChatView({ initialSessionId }: { initialSessionId?: st
           value=""
           disabled
           readOnly
-          placeholder="Tính năng đang phát triển..."
+          placeholder="Tính năng đang phát triển"
           className="w-full text-xs md:text-sm bg-transparent text-slate-400 dark:text-slate-500 placeholder-slate-400 dark:placeholder-slate-500 border-0 outline-none ring-0 focus:outline-none focus:ring-0 focus:border-0 resize-none overflow-hidden cursor-not-allowed py-2 leading-normal select-none"
           style={{ minHeight: '24px' }}
         />

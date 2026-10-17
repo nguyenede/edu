@@ -578,7 +578,7 @@ function DocumentDynamicViewPageContent() {
       >
         <div className="p-16 text-center space-y-3">
           <Loader2 size={36} className="animate-spin text-google-blue mx-auto" />
-          <p className="text-xs text-slate-500 font-medium">Đang tải và chuẩn bị nội dung đề thi...</p>
+          <p className="text-xs text-slate-500 font-medium">Đang tải và chuẩn bị nội dung đề thi</p>
         </div>
       </AppShell>
     );
@@ -724,7 +724,7 @@ function DocumentDynamicViewPageContent() {
             onNavigateFile={(id) => router.push(`/documents/${id}`)}
           />
           <span
-            className="text-slate-900 dark:text-white font-normal truncate min-w-0 flex-1"
+            className="text-slate-900 dark:text-white font-normal shrink-0 whitespace-nowrap"
             title={displayTitle}
           >
             {displayTitle}
@@ -1081,7 +1081,7 @@ export default function DocumentDynamicViewPage() {
       fallback={
         <div className="p-16 text-center space-y-3">
           <Loader2 size={36} className="animate-spin text-google-blue mx-auto" />
-          <p className="text-xs text-slate-500 font-medium">Đang tải và chuẩn bị nội dung đề thi...</p>
+          <p className="text-xs text-slate-500 font-medium">Đang tải và chuẩn bị nội dung đề thi</p>
         </div>
       }
     >

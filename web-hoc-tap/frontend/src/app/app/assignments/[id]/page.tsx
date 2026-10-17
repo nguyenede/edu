@@ -1124,7 +1124,7 @@ export default function AssignmentDetailPage() {
                         Nội dung bài làm tự luận của bạn
                       </label>
                       <textarea
-                        placeholder="Nhập chi tiết lời giải, bài văn hoặc câu trả lời tại đây..."
+                        placeholder="Nhập chi tiết lời giải, bài văn hoặc câu trả lời tại đây"
                         className="w-full px-3 py-2.5 bg-white dark:bg-[#1a1b1d] text-slate-900 dark:text-slate-100 rounded-lg border border-slate-200 dark:border-slate-700 text-xs focus:ring-1 focus:ring-blue-500 min-h-[160px]"
                         value={essayContent}
                         onChange={(e) => setEssayContent(e.target.value)}
@@ -1270,7 +1270,7 @@ export default function AssignmentDetailPage() {
                       Lời phê và Nhận xét
                     </label>
                     <textarea
-                      placeholder="Nhập nhận xét gửi đến học sinh..."
+                      placeholder="Nhập nhận xét gửi đến học sinh"
                       className="w-full px-3 py-2 bg-white dark:bg-[#1a1b1d] border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-lg text-xs focus:ring-1 focus:ring-blue-500 min-h-[70px]"
                       value={gradeFeedback}
                       onChange={(e) => setGradeFeedback(e.target.value)}

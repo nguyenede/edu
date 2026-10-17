@@ -3,6 +3,45 @@
   "folders": [],
   "files": [
     {
+      "id": "file_1792240104929_lfql",
+      "name": "Đề thi trắc nghiệm.json",
+      "parentId": null,
+      "fileType": "json",
+      "mimeType": "application/json",
+      "size": 410,
+      "storageKey": "exams/file_1792240104929_lfql.json",
+      "filePath": "../storage/exams/file_1792240104929_lfql.json",
+      "storageType": "local",
+      "createdAt": "2026-10-17T12:28:24.965Z",
+      "updatedAt": "2026-10-17T12:28:24.965Z"
+    },
+    {
+      "id": "file_1792240099285_wm51",
+      "name": "Đề thi trắc nghiệm.json",
+      "parentId": null,
+      "fileType": "json",
+      "mimeType": "application/json",
+      "size": 410,
+      "storageKey": "exams/file_1792240099285_wm51.json",
+      "filePath": "../storage/exams/file_1792240099285_wm51.json",
+      "storageType": "local",
+      "createdAt": "2026-10-17T12:28:19.370Z",
+      "updatedAt": "2026-10-17T12:28:19.370Z"
+    },
+    {
+      "id": "file_1792240099256_ubhx",
+      "name": "Đề thi trắc nghiệm.json",
+      "parentId": null,
+      "fileType": "json",
+      "mimeType": "application/json",
+      "size": 410,
+      "storageKey": "exams/file_1792240099256_ubhx.json",
+      "filePath": "../storage/exams/file_1792240099256_ubhx.json",
+      "storageType": "local",
+      "createdAt": "2026-10-17T12:28:19.274Z",
+      "updatedAt": "2026-10-17T12:28:19.274Z"
+    },
+    {
       "id": "file_1792240055512_vtmr",
       "name": "Đề thi trắc nghiệm.json",
       "parentId": null,
@@ -52,7 +91,7 @@
       "filePath": "../storage/exams/file_1791677047535_uj389.json",
       "storageType": "local",
       "createdAt": "2026-10-11T00:04:07.535Z",
-      "updatedAt": "2026-10-17T12:25:12.879Z"
+      "updatedAt": "2026-10-17T12:28:57.314Z"
     },
     {
       "id": "demvc7f5y9c7p4",
@@ -65,7 +104,7 @@
       "filePath": "../storage/exams/demvc7f5y9c7p4.json",
       "storageType": "local",
       "createdAt": "2026-10-17T09:38:41.510Z",
-      "updatedAt": "2026-10-17T12:25:12.873Z"
+      "updatedAt": "2026-10-17T12:28:57.300Z"
     },
     {
       "id": "demvbuu9rg1or6",
@@ -78,7 +117,7 @@
       "filePath": "../storage/exams/demvbuu9rg1or6.json",
       "storageType": "local",
       "createdAt": "2026-10-17T03:46:31.279Z",
-      "updatedAt": "2026-10-17T12:25:12.861Z"
+      "updatedAt": "2026-10-17T12:28:57.299Z"
     },
     {
       "id": "demv7pyrj1r83b",
@@ -91,7 +130,7 @@
       "filePath": "../storage/exams/demv7pyrj1r83b.json",
       "storageType": "local",
       "createdAt": "2026-10-14T06:18:58.149Z",
-      "updatedAt": "2026-10-17T12:25:12.828Z"
+      "updatedAt": "2026-10-17T12:28:57.279Z"
     },
     {
       "id": "demvb2he3u4nv4",
@@ -104,7 +143,7 @@
       "filePath": "../storage/exams/demvb2he3u4nv4.json",
       "storageType": "local",
       "createdAt": "2026-10-16T14:32:41.133Z",
-      "updatedAt": "2026-10-17T12:25:12.841Z"
+      "updatedAt": "2026-10-17T12:28:57.282Z"
     },
     {
       "id": "c1c8140c6dc1423ca3d159fbee266d04",
@@ -117,7 +156,7 @@
       "filePath": "../storage/exams/c1c8140c6dc1423ca3d159fbee266d04.json",
       "storageType": "local",
       "createdAt": "2026-10-10T09:54:39.303Z",
-      "updatedAt": "2026-10-17T12:25:12.826Z"
+      "updatedAt": "2026-10-17T12:28:57.278Z"
     },
     {
       "id": "c12a3ed12c8343ce9dd643b9182feeb8",
@@ -130,7 +169,7 @@
       "filePath": "../storage/exams/c12a3ed12c8343ce9dd643b9182feeb8.json",
       "storageType": "local",
       "createdAt": "2026-10-10T10:34:47.995Z",
-      "updatedAt": "2026-10-17T12:25:12.828Z"
+      "updatedAt": "2026-10-17T12:28:57.277Z"
     },
     {
       "id": "966c63611497438089a6ef554e17af50",
@@ -143,7 +182,7 @@
       "filePath": "../storage/exams/966c63611497438089a6ef554e17af50.json",
       "storageType": "local",
       "createdAt": "2026-10-10T09:31:59.707Z",
-      "updatedAt": "2026-10-17T12:25:12.805Z"
+      "updatedAt": "2026-10-17T12:28:57.161Z"
     },
     {
       "id": "79ae83d526654c7badd8c9f0eda26d2f",
@@ -156,7 +195,7 @@
       "filePath": "../storage/exams/79ae83d526654c7badd8c9f0eda26d2f.json",
       "storageType": "local",
       "createdAt": "2026-10-11T00:14:03.426Z",
-      "updatedAt": "2026-10-17T12:25:12.790Z"
+      "updatedAt": "2026-10-17T12:28:57.162Z"
     },
     {
       "id": "47ef0f9f8f0841019239f52c513522eb",
@@ -169,7 +208,7 @@
       "filePath": "../storage/exams/47ef0f9f8f0841019239f52c513522eb.json",
       "storageType": "local",
       "createdAt": "2026-10-10T15:15:59.205Z",
-      "updatedAt": "2026-10-17T12:25:12.775Z"
+      "updatedAt": "2026-10-17T12:28:57.132Z"
     },
     {
       "id": "1a7a44a3c02c4a6781624ffc1cd26252",
@@ -182,7 +221,7 @@
       "filePath": "../storage/exams/1a7a44a3c02c4a6781624ffc1cd26252.json",
       "storageType": "local",
       "createdAt": "2026-10-11T02:05:58.398Z",
-      "updatedAt": "2026-10-17T12:25:12.757Z"
+      "updatedAt": "2026-10-17T12:28:57.115Z"
     },
     {
       "id": "11f27f7e64f040dcbc63c0531f65331d",
@@ -195,7 +234,7 @@
       "filePath": "../storage/exams/11f27f7e64f040dcbc63c0531f65331d.json",
       "storageType": "local",
       "createdAt": "2026-10-10T15:36:26.726Z",
-      "updatedAt": "2026-10-17T12:25:12.744Z"
+      "updatedAt": "2026-10-17T12:28:57.102Z"
     },
     {
       "id": "169a05fa160543528fc62cfc189b94a6",
@@ -208,7 +247,7 @@
       "filePath": "../storage/exams/169a05fa160543528fc62cfc189b94a6.json",
       "storageType": "local",
       "createdAt": "2026-10-10T09:48:24.333Z",
-      "updatedAt": "2026-10-17T12:25:12.757Z"
+      "updatedAt": "2026-10-17T12:28:57.102Z"
     },
     {
       "id": "0cca980818e04310b8b725f7c1aab3a3",
@@ -221,8 +260,8 @@
       "filePath": "../storage/exams/0cca980818e04310b8b725f7c1aab3a3.json",
       "storageType": "local",
       "createdAt": "2026-10-11T02:08:34.899Z",
-      "updatedAt": "2026-10-17T12:25:12.744Z"
+      "updatedAt": "2026-10-17T12:28:57.102Z"
     }
   ],
-  "updatedAt": "2026-10-17T12:27:35.540Z"
+  "updatedAt": "2026-10-17T12:28:57.314Z"
 }

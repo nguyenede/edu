@@ -114,7 +114,7 @@ export default function EditBirthdayPage() {
                 Hủy
               </Button>
               <Button type="submit" disabled={saving}>
-                {saving ? 'Đang lưu...' : 'Lưu ngày sinh'}
+                {saving ? 'Đang lưu' : 'Lưu ngày sinh'}
               </Button>
             </div>
           </form>

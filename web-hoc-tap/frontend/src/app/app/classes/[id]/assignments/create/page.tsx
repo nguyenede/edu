@@ -241,7 +241,7 @@ export default function CreateAssignmentPage() {
               <textarea
                 value={newDesc}
                 onChange={(e) => setNewDesc(e.target.value)}
-                placeholder="Nhập hướng dẫn làm bài cho học sinh..."
+                placeholder="Nhập hướng dẫn làm bài cho học sinh"
                 className="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-xs focus:outline-none focus:ring-1 focus:ring-google-blue"
                 rows={3}
               />

@@ -135,7 +135,7 @@ export default function EditPasswordPage() {
                 Hủy
               </Button>
               <Button type="submit" disabled={saving}>
-                {saving ? 'Đang cập nhật...' : 'Cập nhật mật khẩu'}
+                {saving ? 'Đang cập nhật' : 'Cập nhật mật khẩu'}
               </Button>
             </div>
           </form>

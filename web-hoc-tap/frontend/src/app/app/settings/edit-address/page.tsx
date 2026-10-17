@@ -107,20 +107,20 @@ export default function EditAddressPage() {
               label="Địa chỉ nhà riêng"
               value={homeAddress}
               onChange={(e) => setHomeAddress(e.target.value)}
-              placeholder="Nhập địa chỉ nhà..."
+              placeholder="Nhập địa chỉ nhà"
             />
             <Input
               label="Địa chỉ cơ quan / nơi làm việc"
               value={workAddress}
               onChange={(e) => setWorkAddress(e.target.value)}
-              placeholder="Nhập địa chỉ làm việc..."
+              placeholder="Nhập địa chỉ làm việc"
             />
             <div className="flex justify-end gap-2 pt-4">
               <Button type="button" variant="ghost" onClick={() => router.push('/app/settings/account')}>
                 Hủy
               </Button>
               <Button type="submit" disabled={saving}>
-                {saving ? 'Đang lưu...' : 'Lưu địa chỉ'}
+                {saving ? 'Đang lưu' : 'Lưu địa chỉ'}
               </Button>
             </div>
           </form>

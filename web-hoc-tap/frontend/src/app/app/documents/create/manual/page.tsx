@@ -222,7 +222,7 @@ function ManualQuizCreateContent() {
     if (!finalTitle) {
       if (questions[0]?.content.trim()) {
         const snippet = questions[0].content.trim().slice(0, 35);
-        finalTitle = `Đề thi: ${snippet}...`;
+        finalTitle = `Đề thi: ${snippet}`;
       } else {
         finalTitle = `Đề thi trắc nghiệm (${docSubject && docSubject !== 'Không chọn' ? docSubject : 'Tổng hợp'}) - ${new Date().toLocaleDateString('vi-VN')}`;
       }
@@ -271,7 +271,7 @@ function ManualQuizCreateContent() {
           </div>
           <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-2">Quyền truy cập bị hạn chế</h2>
           <p className="text-slate-600 dark:text-slate-400 max-w-md text-sm mb-4">
-            Chỉ tài khoản giáo viên mới có quyền tạo đề thi và quản lý tài liệu. Đang chuyển hướng bạn về danh sách lớp học...
+            Chỉ tài khoản giáo viên mới có quyền tạo đề thi và quản lý tài liệu. Đang chuyển hướng bạn về danh sách lớp học
           </p>
           <Button onClick={() => router.replace('/classes')} className="bg-primary hover:bg-primary/90 text-white text-sm">
             Về trang Lớp học
@@ -371,7 +371,7 @@ function ManualQuizCreateContent() {
             <div className="md:col-span-1 space-y-1">
               <Input
                 label="Tên đề thi"
-                placeholder="Nhập tên đề thi hiển thị..."
+                placeholder="Nhập tên đề thi hiển thị"
                 value={docTitle}
                 onChange={(e) => setDocTitle(e.target.value)}
                 required
@@ -464,7 +464,7 @@ function ManualQuizCreateContent() {
                         ) : (
                           <Sparkles size={13} className="mr-1" />
                         )}
-                        {aiLoadingId === q.id ? 'SI Đang Viết...' : '✨ SI Điền Tự Động'}
+                        {aiLoadingId === q.id ? 'SI Đang Viết' : '✨ SI Điền Tự Động'}
                       </Button>
                     </div>
 
@@ -486,7 +486,7 @@ function ManualQuizCreateContent() {
                     </label>
                     <textarea
                       rows={2}
-                      placeholder={`Nhập nội dung câu hỏi thứ ${qIdx + 1} hoặc nhập từ khóa rồi nhấn nút ✨ SI Điền Tự Động...`}
+                      placeholder={`Nhập nội dung câu hỏi thứ ${qIdx + 1} hoặc nhập từ khóa rồi nhấn nút ✨ SI Điền Tự Động`}
                       value={q.content}
                       onChange={(e) => handleQuestionChange(q.id, 'content', e.target.value)}
                       className="w-full text-xs p-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-1 focus:ring-google-blue resize-none"
@@ -520,7 +520,7 @@ function ManualQuizCreateContent() {
                           </span>
                           <input
                             type="text"
-                            placeholder={`Đáp án ${String.fromCharCode(65 + optIdx)}...`}
+                            placeholder={`Đáp án ${String.fromCharCode(65 + optIdx)}`}
                             value={opt.content}
                             onChange={(e) => handleOptionChange(q.id, optIdx, e.target.value)}
                             className="w-full text-xs bg-transparent focus:outline-none"
@@ -536,7 +536,7 @@ function ManualQuizCreateContent() {
                     </label>
                     <input
                       type="text"
-                      placeholder="Nhập giải thích cho đáp án đúng..."
+                      placeholder="Nhập giải thích cho đáp án đúng"
                       value={q.explanation || ''}
                       onChange={(e) => handleQuestionChange(q.id, 'explanation', e.target.value)}
                       className="w-full text-xs p-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none"
@@ -569,7 +569,7 @@ function ManualQuizCreateContent() {
 
 export default function ManualQuizCreatePage() {
   return (
-    <Suspense fallback={<div className="p-8 text-center text-xs text-slate-500 font-medium">Đang tải biểu mẫu soạn đề...</div>}>
+    <Suspense fallback={<div className="p-8 text-center text-xs text-slate-500 font-medium">Đang tải biểu mẫu soạn đề</div>}>
       <ManualQuizCreateContent />
     </Suspense>
   );

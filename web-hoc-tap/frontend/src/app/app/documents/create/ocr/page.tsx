@@ -283,7 +283,7 @@ function OcrQuizCreateContent() {
           </div>
           <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-2">Quyền truy cập bị hạn chế</h2>
           <p className="text-slate-600 dark:text-slate-400 max-w-md text-sm mb-4">
-            Chỉ tài khoản giáo viên mới có quyền tạo đề thi và quản lý tài liệu. Đang chuyển hướng bạn về danh sách lớp học...
+            Chỉ tài khoản giáo viên mới có quyền tạo đề thi và quản lý tài liệu. Đang chuyển hướng bạn về danh sách lớp học
           </p>
           <Button onClick={() => router.replace('/classes')} className="bg-primary hover:bg-primary/90 text-white text-sm">
             Về trang Lớp học
@@ -491,7 +491,7 @@ function OcrQuizCreateContent() {
             <div className="p-6 text-center space-y-2 bg-purple-50/50 dark:bg-purple-950/20 rounded-2xl border border-purple-200/50">
               <div className="animate-spin rounded-full h-7 w-7 border-b-2 border-purple-600 mx-auto" />
               <p className="text-xs text-purple-600 dark:text-purple-400 font-semibold">
-                SI Vision đang phân tích hình ảnh và bóc tách từng câu hỏi...
+                SI Vision đang phân tích hình ảnh và bóc tách từng câu hỏi
               </p>
               <p className="text-[11px] text-slate-400">
                 100% bám sát nội dung ảnh thật, bảo toàn công thức toán học, tuyệt đối không tạo dữ liệu giả
@@ -594,7 +594,7 @@ function OcrQuizCreateContent() {
                 onClick={handleStartOcr}
                 disabled={!selectedImage || isScanning}
               >
-                <Camera size={16} className="mr-1.5" /> {isScanning ? 'SI Đang Quét...' : 'Quét OCR & Bóc Tách'}
+                <Camera size={16} className="mr-1.5" /> {isScanning ? 'SI Đang Quét' : 'Quét OCR & Bóc Tách'}
               </Button>
             </div>
           )}
@@ -606,7 +606,7 @@ function OcrQuizCreateContent() {
 
 export default function OcrQuizCreatePage() {
   return (
-    <Suspense fallback={<div className="p-8 text-center text-xs text-slate-500 font-medium">Đang tải cấu hình OCR...</div>}>
+    <Suspense fallback={<div className="p-8 text-center text-xs text-slate-500 font-medium">Đang tải cấu hình OCR</div>}>
       <OcrQuizCreateContent />
     </Suspense>
   );

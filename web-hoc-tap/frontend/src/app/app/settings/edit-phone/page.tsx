@@ -114,7 +114,7 @@ export default function EditPhonePage() {
                 Hủy
               </Button>
               <Button type="submit" disabled={saving}>
-                {saving ? 'Đang lưu...' : 'Lưu số điện thoại'}
+                {saving ? 'Đang lưu' : 'Lưu số điện thoại'}
               </Button>
             </div>
           </form>

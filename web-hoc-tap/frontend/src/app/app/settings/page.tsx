@@ -1179,7 +1179,7 @@ export default function SettingsPage(props: any) {
                             {isSubmittingPassword ? (
                               <span className="flex items-center gap-2">
                                 <Loader2 size={16} className="animate-spin" />
-                                Đang cập nhật...
+                                Đang cập nhật
                               </span>
                             ) : (
                               'Cập nhật mật khẩu'
@@ -1761,7 +1761,7 @@ export default function SettingsPage(props: any) {
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={() => showToast(`Đang khởi tạo gói sao lưu .zip (${formatStorageSize(storageData.totalUsedBytes)})...`)}
+                          onClick={() => showToast(`Đang khởi tạo gói sao lưu .zip (${formatStorageSize(storageData.totalUsedBytes)})`)}
                         >
                           <Download size={14} className="mr-1.5" />
                           Tải về
@@ -1788,7 +1788,7 @@ export default function SettingsPage(props: any) {
 
                     <div className="space-y-[2px]">
                       <button
-                        onClick={() => showToast('Đang khởi tạo bản sao dữ liệu...')}
+                        onClick={() => showToast('Đang khởi tạo bản sao dữ liệu')}
                         className="w-full flex items-center justify-between p-4 bg-slate-100/90 dark:bg-slate-800/70 border border-transparent dark:border-slate-800/60 hover:bg-slate-200/80 dark:hover:bg-slate-700/80 rounded-t-xl rounded-b-[4px] transition-colors text-left group"
                       >
                         <div className="flex items-center gap-3">

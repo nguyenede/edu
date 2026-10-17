@@ -176,7 +176,7 @@ export default function AdminPage() {
               <div className="flex-1 min-w-[220px] relative">
                 <input
                   type="text"
-                  placeholder="Tìm theo email hoặc họ tên..."
+                  placeholder="Tìm theo email hoặc họ tên"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && fetchUsers()}

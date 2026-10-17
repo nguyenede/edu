@@ -82,7 +82,7 @@ export function CustomSelect<T extends string | number>({
         }`}
       >
         <span
-          className={`truncate font-medium ${
+          className={`font-medium break-words text-left ${
             selectedOption
               ? 'text-slate-900 dark:text-slate-100'
               : 'text-slate-400'
@@ -104,7 +104,7 @@ export function CustomSelect<T extends string | number>({
       {isOpen && (
         <div
           role="listbox"
-          className="absolute z-50 left-0 right-0 mt-1 max-h-80 overflow-y-auto no-scrollbar rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#1a1b1d] shadow-lg py-1 animate-in fade-in zoom-in-95 duration-150"
+          className="absolute z-50 left-0 min-w-full w-max max-w-sm mt-1 max-h-80 overflow-y-auto no-scrollbar rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#1a1b1d] shadow-lg py-1 animate-in fade-in zoom-in-95 duration-150"
         >
           {options.map((option) => {
             const isSelected = option.value === value;
@@ -124,7 +124,7 @@ export function CustomSelect<T extends string | number>({
                     : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
                 }`}
               >
-                <span className="truncate pr-2">{option.label}</span>
+                <span className="pr-2 break-words text-left">{option.label}</span>
                 {isSelected && (
                   <Check size={14} className="text-google-blue shrink-0" />
                 )}

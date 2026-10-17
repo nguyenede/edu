@@ -80,7 +80,7 @@ export default function NotificationsPage() {
     >
       <div className="max-w-4xl space-y-4">
         {loading ? (
-          <p className="text-xs text-slate-400 py-12 text-center">Đang tải thông báo...</p>
+          <p className="text-xs text-slate-400 py-12 text-center">Đang tải thông báo</p>
         ) : notifications.length === 0 ? (
           <div className="py-16 text-center space-y-3">
             <Inbox size={40} className="mx-auto text-slate-300 dark:text-slate-700" />

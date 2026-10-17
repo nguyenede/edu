@@ -197,7 +197,7 @@ export function BreadcrumbChevron({
       {/* Windows 11 Address Bar Dropdown Menu (Acrylic Frosted Glass Blur) */}
       {isOpen && (
         <div
-          className="absolute left-0 top-full mt-1 z-50 min-w-[200px] max-w-[320px] max-h-[360px] flex flex-col bg-white/95 dark:bg-[#202020]/95 backdrop-blur-xl rounded-xl shadow-[0_8px_28px_rgba(0,0,0,0.22)] dark:shadow-[0_12px_36px_rgba(0,0,0,0.7)] border border-slate-200/80 dark:border-white/10 py-1.5 text-xs select-none overflow-hidden"
+          className="absolute left-0 top-full mt-1 z-50 min-w-[200px] max-w-[420px] max-h-[360px] flex flex-col bg-white/95 dark:bg-[#202020]/95 backdrop-blur-xl rounded-xl shadow-[0_8px_28px_rgba(0,0,0,0.22)] dark:shadow-[0_12px_36px_rgba(0,0,0,0.7)] border border-slate-200/80 dark:border-white/10 py-1.5 text-xs select-none overflow-hidden"
           onClick={(e) => e.stopPropagation()}
         >
           {menuTitle && (
@@ -238,7 +238,7 @@ export function BreadcrumbChevron({
                         <span className="w-1.5 h-1.5 rounded-full bg-slate-500 dark:bg-slate-300" />
                       </span>
                     )}
-                    <span className="truncate flex-1">{item.label || item.name}</span>
+                    <span className="break-words flex-1">{item.label || item.name}</span>
                     {item.isActive && (
                       <span className="w-1.5 h-1.5 rounded-full bg-google-blue shrink-0" />
                     )}
@@ -269,7 +269,7 @@ export function BreadcrumbChevron({
                     className="w-full text-left px-3 py-1.5 flex items-center gap-2 hover:bg-slate-200/60 dark:hover:bg-white/10 active:bg-slate-300/60 dark:active:bg-white/15 text-slate-800 dark:text-slate-200 transition-colors cursor-pointer text-xs"
                   >
                     <Folder size={14} className="text-amber-500 fill-amber-500/20 shrink-0" />
-                    <span className="truncate">{folder.name}</span>
+                    <span className="break-words flex-1">{folder.name}</span>
                   </button>
                 ))}
 
@@ -291,7 +291,7 @@ export function BreadcrumbChevron({
                       className="w-full text-left px-3 py-1.5 flex items-center gap-2 hover:bg-slate-200/60 dark:hover:bg-white/10 active:bg-slate-300/60 dark:active:bg-white/15 text-slate-700 dark:text-slate-300 transition-colors cursor-pointer text-xs"
                     >
                       <FileText size={14} className="text-blue-500 shrink-0" />
-                      <span className="truncate">{cleanDisplayName}</span>
+                      <span className="break-words flex-1">{cleanDisplayName}</span>
                     </button>
                   );
                 })}

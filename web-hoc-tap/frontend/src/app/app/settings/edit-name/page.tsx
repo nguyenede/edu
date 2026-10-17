@@ -133,7 +133,7 @@ export default function EditNamePage() {
               label="Họ và tên"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Nhập họ và tên..."
+              placeholder="Nhập họ và tên"
               required
             />
             <div className="flex justify-end gap-2 pt-4">
@@ -145,7 +145,7 @@ export default function EditNamePage() {
                 Hủy
               </Button>
               <Button type="submit" disabled={saving}>
-                {saving ? 'Đang lưu...' : 'Lưu thay đổi'}
+                {saving ? 'Đang lưu' : 'Lưu thay đổi'}
               </Button>
             </div>
           </form>

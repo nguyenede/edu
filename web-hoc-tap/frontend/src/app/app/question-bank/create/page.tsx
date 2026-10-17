@@ -159,7 +159,7 @@ export default function CreateQuestionPage() {
           </div>
           <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-2">Quyền truy cập bị hạn chế</h2>
           <p className="text-slate-600 dark:text-slate-400 max-w-md text-sm mb-4">
-            Chỉ tài khoản giáo viên mới có quyền tạo câu hỏi. Đang chuyển hướng bạn về danh sách lớp học...
+            Chỉ tài khoản giáo viên mới có quyền tạo câu hỏi. Đang chuyển hướng bạn về danh sách lớp học
           </p>
           <Button onClick={() => router.replace('/classes')} className="bg-primary hover:bg-primary/90 text-white text-sm">
             Về trang Lớp học
@@ -224,13 +224,13 @@ export default function CreateQuestionPage() {
                   className="text-amber-600 dark:text-amber-400 font-bold hover:bg-amber-50 dark:hover:bg-amber-950/40 text-[11px] h-7 px-2.5"
                 >
                   {aiLoading ? <Loader2 size={13} className="animate-spin mr-1" /> : <Sparkles size={13} className="mr-1" />}
-                  {aiLoading ? 'SI Đang Viết...' : '✨ SI Tự Điền Câu Hỏi'}
+                  {aiLoading ? 'SI Đang Viết' : '✨ SI Tự Điền Câu Hỏi'}
                 </Button>
               </div>
               <textarea
                 value={qContent}
                 onChange={(e) => setQContent(e.target.value)}
-                placeholder="Nhập nội dung câu hỏi hoặc nhập từ khóa chủ đề rồi bấm ✨ SI Tự Điền Câu Hỏi..."
+                placeholder="Nhập nội dung câu hỏi hoặc nhập từ khóa chủ đề rồi bấm ✨ SI Tự Điền Câu Hỏi"
                 className="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-xs focus:outline-none focus:ring-1 focus:ring-google-blue resize-none"
                 rows={3}
                 required
@@ -325,7 +325,7 @@ export default function CreateQuestionPage() {
               <textarea
                 value={qExplanation}
                 onChange={(e) => setQExplanation(e.target.value)}
-                placeholder="Nhập giải thích đáp án cho học sinh xem sau khi hoàn thành..."
+                placeholder="Nhập giải thích đáp án cho học sinh xem sau khi hoàn thành"
                 className="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-xs focus:outline-none focus:ring-1 focus:ring-google-blue resize-none"
                 rows={2}
               />
@@ -336,7 +336,7 @@ export default function CreateQuestionPage() {
                 Hủy
               </Button>
               <Button type="submit" disabled={loading}>
-                {loading ? 'Đang tạo...' : 'Tạo câu hỏi ngay'}
+                {loading ? 'Đang tạo' : 'Tạo câu hỏi ngay'}
               </Button>
             </div>
           </form>

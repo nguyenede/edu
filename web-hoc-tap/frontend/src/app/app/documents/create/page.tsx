@@ -476,7 +476,7 @@ function DocumentCreateContent() {
           </div>
           <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-2">Quyền truy cập bị hạn chế</h2>
           <p className="text-slate-600 dark:text-slate-400 max-w-md text-sm mb-4">
-            Chỉ tài khoản giáo viên mới có quyền tạo đề thi và quản lý tài liệu. Đang chuyển hướng bạn về danh sách lớp học...
+            Chỉ tài khoản giáo viên mới có quyền tạo đề thi và quản lý tài liệu. Đang chuyển hướng bạn về danh sách lớp học
           </p>
           <Button onClick={() => router.replace('/classes')} className="bg-primary hover:bg-primary/90 text-white text-sm">
             Về trang Lớp học
@@ -656,7 +656,7 @@ function DocumentCreateContent() {
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-google-blue mx-auto" />
                 <p className="text-sm text-google-blue dark:text-blue-300 font-bold flex items-center justify-center gap-2">
                   <Sparkles size={18} className="text-google-blue" />
-                  Đang nhận diện đề thi từ {selectedFile?.name}...
+                  Đang nhận diện đề thi từ {selectedFile?.name}
                 </p>
                 <p className="text-xs text-slate-500">
                   Hệ thống đang trích xuất câu hỏi, phương án A/B/C/D, đáp án đúng và lời giải chi tiết
@@ -910,7 +910,7 @@ function DocumentCreateContent() {
                     <AutoGrowingTextarea
                       value={q.content}
                       onChange={(val) => handleUpdateParsedQuestionContent(qIdx, val)}
-                      placeholder="Nhập nội dung câu hỏi..."
+                      placeholder="Nhập nội dung câu hỏi"
                       className="p-3 bg-white dark:bg-slate-900/80 border-0 rounded-xl text-slate-900 dark:text-slate-100 text-xs font-medium focus:outline-none focus:ring-1 focus:ring-google-blue/30 leading-relaxed shadow-none"
                     />
                   </div>
@@ -949,7 +949,7 @@ function DocumentCreateContent() {
                                 value={opt.content}
                                 onClick={(e) => e.stopPropagation()}
                                 onChange={(e) => handleUpdateParsedOptionContent(qIdx, optIdx, e.target.value)}
-                                placeholder={`Phương án ${letter}...`}
+                                placeholder={`Phương án ${letter}`}
                                 className={`flex-1 text-xs font-medium bg-transparent border-0 focus:outline-none ${
                                   opt.isCorrect
                                     ? 'text-emerald-950 dark:text-emerald-100 font-semibold'
@@ -997,7 +997,7 @@ function DocumentCreateContent() {
                     <AutoGrowingTextarea
                       value={q.explanation || ''}
                       onChange={(val) => handleUpdateParsedExplanation(qIdx, val)}
-                      placeholder="Nhập hướng dẫn giải hoặc lời giải chi tiết (không bắt buộc)..."
+                      placeholder="Nhập hướng dẫn giải hoặc lời giải chi tiết (không bắt buộc)"
                       className="p-2.5 bg-amber-50/30 dark:bg-amber-950/20 border-0 rounded-xl text-slate-800 dark:text-slate-200 text-xs font-normal focus:outline-none focus:ring-1 focus:ring-amber-500/30 leading-relaxed shadow-none"
                     />
                   </div>
@@ -1019,7 +1019,7 @@ function DocumentCreateContent() {
                   className="font-bold text-xs text-google-blue hover:bg-blue-50/60 dark:hover:bg-blue-950/40"
                 >
                   <Save size={14} className="mr-1" />
-                  {isSavingChanges ? 'Đang lưu...' : 'Lưu thay đổi'}
+                  {isSavingChanges ? 'Đang lưu' : 'Lưu thay đổi'}
                 </Button>
                 <Button
                   size="sm"
@@ -1043,7 +1043,7 @@ function DocumentCreateContent() {
 
 export default function DocumentCreatePage() {
   return (
-    <Suspense fallback={<div className="p-8 text-center text-xs text-slate-500 font-medium">Đang tải biểu mẫu tạo đề...</div>}>
+    <Suspense fallback={<div className="p-8 text-center text-xs text-slate-500 font-medium">Đang tải biểu mẫu tạo đề</div>}>
       <DocumentCreateContent />
     </Suspense>
   );

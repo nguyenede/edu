@@ -711,7 +711,7 @@ function BlooketPlayContent() {
                       type="text"
                       value={studentName}
                       onChange={(e) => setStudentName(e.target.value)}
-                      placeholder="Nhập họ và tên..."
+                      placeholder="Nhập họ và tên"
                       className="rounded-2xl text-sm"
                     />
                   </div>
@@ -1213,7 +1213,7 @@ function BlooketPlayContent() {
                     rows={6}
                     value={selectedAnswers[currentQ.id] || ''}
                     onChange={(e) => handleSelectOption(currentQ.id, e.target.value)}
-                    placeholder="Gõ lời giải / câu trả lời của bạn vào đây..."
+                    placeholder="Gõ lời giải / câu trả lời của bạn vào đây"
                     className="w-full p-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-base focus:outline-none focus:ring-2 focus:ring-google-blue"
                   />
                 </div>

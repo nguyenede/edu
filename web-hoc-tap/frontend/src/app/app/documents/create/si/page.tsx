@@ -153,7 +153,7 @@ function AiQuizCreateContent() {
           </div>
           <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-2">Quyền truy cập bị hạn chế</h2>
           <p className="text-slate-600 dark:text-slate-400 max-w-md text-sm mb-4">
-            Chỉ tài khoản giáo viên mới có quyền tạo đề thi và quản lý tài liệu. Đang chuyển hướng bạn về danh sách lớp học...
+            Chỉ tài khoản giáo viên mới có quyền tạo đề thi và quản lý tài liệu. Đang chuyển hướng bạn về danh sách lớp học
           </p>
           <Button onClick={() => router.replace('/classes')} className="bg-primary hover:bg-primary/90 text-white text-sm">
             Về trang Lớp học
@@ -368,7 +368,7 @@ function AiQuizCreateContent() {
             <div className="p-6 text-center space-y-2 bg-amber-50/50 dark:bg-amber-950/20 rounded-2xl border border-amber-200/50">
               <div className="animate-spin rounded-full h-7 w-7 border-b-2 border-amber-500 mx-auto" />
               <p className="text-xs text-amber-600 dark:text-amber-400 font-semibold">
-                SI đang suy luận nội dung và khởi tạo đề thi trắc nghiệm...
+                SI đang suy luận nội dung và khởi tạo đề thi trắc nghiệm
               </p>
               <p className="text-[11px] text-slate-400">
                 {docSubject || docGrade
@@ -387,7 +387,7 @@ function AiQuizCreateContent() {
               onClick={handleGenerate}
               disabled={isGenerating}
             >
-              <Sparkles size={16} className="mr-1.5" /> {isGenerating ? 'SI Đang Xử Lý...' : 'Tạo Đề Thi Bằng SI'}
+              <Sparkles size={16} className="mr-1.5" /> {isGenerating ? 'SI Đang Xử Lý' : 'Tạo Đề Thi Bằng SI'}
             </Button>
           </div>
         </div>
@@ -398,7 +398,7 @@ function AiQuizCreateContent() {
 
 export default function AiQuizCreatePage() {
   return (
-    <Suspense fallback={<div className="p-8 text-center text-xs text-slate-500 font-medium">Đang tải cấu hình SI...</div>}>
+    <Suspense fallback={<div className="p-8 text-center text-xs text-slate-500 font-medium">Đang tải cấu hình SI</div>}>
       <AiQuizCreateContent />
     </Suspense>
   );

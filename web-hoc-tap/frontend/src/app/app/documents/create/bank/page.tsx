@@ -136,7 +136,7 @@ function BankQuizCreateContent() {
           </div>
           <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-2">Quyền truy cập bị hạn chế</h2>
           <p className="text-slate-600 dark:text-slate-400 max-w-md text-sm mb-4">
-            Chỉ tài khoản giáo viên mới có quyền tạo đề thi và quản lý tài liệu. Đang chuyển hướng bạn về danh sách lớp học...
+            Chỉ tài khoản giáo viên mới có quyền tạo đề thi và quản lý tài liệu. Đang chuyển hướng bạn về danh sách lớp học
           </p>
           <Button onClick={() => router.replace('/classes')} className="bg-primary hover:bg-primary/90 text-white text-sm">
             Về trang Lớp học
@@ -347,7 +347,7 @@ function BankQuizCreateContent() {
             <div className="p-6 text-center space-y-2 bg-emerald-50/50 dark:bg-emerald-950/20 rounded-2xl border border-emerald-200/50">
               <div className="animate-spin rounded-full h-7 w-7 border-b-2 border-emerald-500 mx-auto" />
               <p className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold">
-                SI đang trích xuất và khởi tạo bộ đề thi chuẩn kiến thức...
+                SI đang trích xuất và khởi tạo bộ đề thi chuẩn kiến thức
               </p>
             </div>
           )}
@@ -361,7 +361,7 @@ function BankQuizCreateContent() {
               disabled={isLoading}
               className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold"
             >
-              <Sparkles size={16} className="mr-1.5" /> {isLoading ? 'SI Đang Xử Lý...' : 'Trích Xuất Câu Hỏi & Tạo Đề'}
+              <Sparkles size={16} className="mr-1.5" /> {isLoading ? 'SI Đang Xử Lý' : 'Trích Xuất Câu Hỏi & Tạo Đề'}
             </Button>
           </div>
         </div>
@@ -372,7 +372,7 @@ function BankQuizCreateContent() {
 
 export default function BankQuizCreatePage() {
   return (
-    <Suspense fallback={<div className="p-8 text-center text-xs text-slate-500 font-medium">Đang tải đề thi mẫu...</div>}>
+    <Suspense fallback={<div className="p-8 text-center text-xs text-slate-500 font-medium">Đang tải đề thi mẫu</div>}>
       <BankQuizCreateContent />
     </Suspense>
   );

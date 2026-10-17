@@ -479,7 +479,7 @@ export const GameConfigModal: React.FC<GameConfigModalProps> = ({
                     rows={2}
                     value={newQuestionText}
                     onChange={(e) => setNewQuestionText(e.target.value)}
-                    placeholder="Nhập nội dung câu hỏi..."
+                    placeholder="Nhập nội dung câu hỏi"
                     className="w-full px-3 py-2 rounded-xl bg-white dark:bg-[#18191a] text-xs text-slate-800 dark:text-zinc-100 focus:outline-hidden"
                   />
                   <div className="space-y-2">

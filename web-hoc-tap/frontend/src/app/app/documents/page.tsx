@@ -1672,9 +1672,7 @@ function DocumentsPageContent() {
                     );
                   }}
                   onDrop={(e) => handleDropOnTarget(e, crumb.id)}
-                  className={`cursor-pointer font-normal ${
-                    isLast ? 'truncate min-w-0' : 'shrink-0 whitespace-nowrap'
-                  } ${
+                  className={`cursor-pointer font-normal shrink-0 whitespace-nowrap ${
                     isDropTarget
                       ? 'text-google-blue underline'
                       : 'text-slate-900 dark:text-white'
@@ -2034,7 +2032,7 @@ function DocumentsPageContent() {
                         ))}
                         {fileItem.parsedQuiz.questions.length > 2 && (
                           <p className="text-[5px] text-slate-400 italic text-center">
-                            ... và {fileItem.parsedQuiz.questions.length - 2} câu hỏi khác ...
+                            và {fileItem.parsedQuiz.questions.length - 2} câu hỏi khác
                           </p>
                         )}
                       </div>
@@ -2304,7 +2302,7 @@ function DocumentsPageContent() {
           <Input
             value={renameValue}
             onChange={(e) => setRenameValue(e.target.value)}
-            placeholder="Nhập tên..."
+            placeholder="Nhập tên"
             required
             autoFocus
           />
@@ -2329,7 +2327,7 @@ function DocumentsPageContent() {
         <form onSubmit={handleCreateFolder} className="space-y-4">
           <Input
             label="Tên thư mục"
-            placeholder="Ví dụ: Đề thi thử Toán 12, Đề Kiểm Tra Tiếng Anh..."
+            placeholder="Ví dụ: Đề thi thử Toán 12, Đề kiểm tra Tiếng Anh"
             value={newFolderName}
             onChange={(e) => setNewFolderName(e.target.value)}
             required
@@ -2380,7 +2378,7 @@ function DocumentsPageContent() {
           {selectedFile && (
             <Input
               label="Tên đề thi"
-              placeholder="Nhập tiêu đề đề thi..."
+              placeholder="Nhập tiêu đề đề thi"
               value={uploadTitle}
               onChange={(e) => setUploadTitle(e.target.value)}
             />
@@ -2389,7 +2387,7 @@ function DocumentsPageContent() {
           {isParsing && (
             <div className="p-4 bg-google-blue/10 rounded-2xl text-center text-xs text-google-blue font-semibold flex items-center justify-center gap-2">
               <Sparkles size={16} className="animate-spin" />
-              Đang phân tích cấu trúc đề thi từ file...
+              Đang phân tích cấu trúc đề thi từ file
             </div>
           )}
 
@@ -2420,7 +2418,7 @@ function DocumentsPageContent() {
                   </div>
                 ))}
                 {parsedPreview.questions.length > 3 && (
-                  <p className="text-[10px] text-slate-500 italic text-center">... và {parsedPreview.questions.length - 3} câu hỏi khác</p>
+                  <p className="text-[10px] text-slate-500 italic text-center">và {parsedPreview.questions.length - 3} câu hỏi khác</p>
                 )}
               </div>
             </div>
@@ -2506,7 +2504,7 @@ function DocumentsPageContent() {
 
 export default function DocumentsPage() {
   return (
-    <Suspense fallback={<div className="p-8 text-center text-xs text-slate-500 font-medium">Đang tải tài liệu...</div>}>
+    <Suspense fallback={<div className="p-8 text-center text-xs text-slate-500 font-medium">Đang tải tài liệu</div>}>
       <DocumentsPageContent />
     </Suspense>
   );

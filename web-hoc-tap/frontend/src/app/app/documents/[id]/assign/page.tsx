@@ -534,7 +534,7 @@ function AssignPageContent() {
             <button
               type="button"
               onClick={() => router.push(`/documents/${encodeURIComponent(fileId)}`)}
-              className="cursor-pointer text-slate-900 dark:text-white font-normal truncate min-w-0 max-w-[180px] sm:max-w-[320px] text-left shrink-0"
+              className="cursor-pointer text-slate-900 dark:text-white font-normal text-left shrink-0 whitespace-nowrap"
               title={displayTitle}
             >
               {displayTitle}
@@ -548,7 +548,7 @@ function AssignPageContent() {
       >
         <div className="p-16 text-center space-y-3">
           <Loader2 size={36} className="animate-spin text-google-blue mx-auto" />
-          <p className="text-xs text-slate-500 font-medium">Đang tải thông tin tài liệu...</p>
+          <p className="text-xs text-slate-500 font-medium">Đang tải thông tin tài liệu</p>
         </div>
       </AppShell>
     );
@@ -663,7 +663,7 @@ function AssignPageContent() {
           <button
             type="button"
             onClick={() => router.push(`/documents/${encodeURIComponent(fileId)}`)}
-            className="cursor-pointer text-slate-900 dark:text-white font-normal truncate min-w-0 max-w-[180px] sm:max-w-[320px] text-left shrink-0"
+            className="cursor-pointer text-slate-900 dark:text-white font-normal text-left shrink-0 whitespace-nowrap"
             title={displayTitle}
           >
             {displayTitle}
@@ -719,7 +719,7 @@ function AssignPageContent() {
                         />
                       ) : (
                         <div className="w-36 h-36 flex items-center justify-center text-xs text-slate-400">
-                          Đang tạo mã QR...
+                          Đang tạo mã QR
                         </div>
                       )}
                     </div>
@@ -978,7 +978,7 @@ function AssignPageContent() {
                       value={minSubmitMinutes}
                       onChange={(val) => setMinSubmitMinutes(Number(val))}
                       options={[
-                        { value: 0, label: 'Không yêu cầu (Nộp bất kỳ lúc nào)' },
+                        { value: 0, label: 'Không yêu cầu' },
                         { value: 5, label: 'Sau tối thiểu 5 phút' },
                         { value: 10, label: 'Sau tối thiểu 10 phút' },
                         { value: 15, label: 'Sau tối thiểu 15 phút' },
@@ -1228,7 +1228,7 @@ function AssignPageContent() {
                     <FileText size={20} className="text-white" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 truncate-tight" title={displayTitle}>
+                    <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 break-words" title={displayTitle}>
                       {displayTitle}
                     </h3>
                     <p className="text-xs text-slate-400 mt-0.5">
@@ -1250,7 +1250,7 @@ function AssignPageContent() {
                   </div>
                   <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
                     <span>Hình thức giao</span>
-                    <strong className="text-slate-900 dark:text-slate-100 truncate-tight max-w-[170px] text-right">
+                    <strong className="text-slate-900 dark:text-slate-100 break-words text-right">
                       {assignMode === 'public' ? 'Tự do (Mã PIN / QR)' : (classes.find(c => c.id === selectedClassId)?.name || 'Chưa chọn lớp')}
                     </strong>
                   </div>
@@ -1278,7 +1278,7 @@ function AssignPageContent() {
                     className="w-full py-2.5 rounded-xl bg-google-blue hover:bg-blue-600 active:bg-blue-700 text-white font-semibold text-sm flex items-center justify-center transition-colors cursor-pointer select-none disabled:opacity-50 disabled:cursor-not-allowed shadow-xs"
                     title="Xác nhận giao bài tập"
                   >
-                    <span>{creating ? 'Đang giao...' : 'Giao bài'}</span>
+                    <span>{creating ? 'Đang giao' : 'Giao bài'}</span>
                   </button>
 
                   <Button
@@ -1328,7 +1328,7 @@ export default function DocumentAssignPage() {
                 onClick={() => {
                   if (typeof window !== 'undefined') window.location.href = `/documents/${encodeURIComponent(fileId)}`;
                 }}
-                className="cursor-pointer text-slate-900 dark:text-white font-normal truncate min-w-0 max-w-[180px] sm:max-w-[320px] text-left shrink-0"
+                className="cursor-pointer text-slate-900 dark:text-white font-normal text-left shrink-0 whitespace-nowrap"
                 title={displayTitle}
               >
                 {displayTitle}
@@ -1342,7 +1342,7 @@ export default function DocumentAssignPage() {
         >
           <div className="p-16 text-center space-y-3">
             <Loader2 size={36} className="animate-spin text-google-blue mx-auto" />
-            <p className="text-xs text-slate-500 font-medium">Đang tải...</p>
+            <p className="text-xs text-slate-500 font-medium">Đang tải</p>
           </div>
         </AppShell>
       }

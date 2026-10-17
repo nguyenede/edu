@@ -813,7 +813,7 @@ export default function ClassDetailPage() {
                   <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                   <input
                     type="text"
-                    placeholder="Tìm theo tên, mã HS..."
+                    placeholder="Tìm theo tên, mã HS"
                     value={studentSearch}
                     onChange={(e) => setStudentSearch(e.target.value)}
                     className="w-full pl-8 pr-3 py-1.5 text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#1a1b1d] text-slate-800 dark:text-slate-200 focus:outline-none"
@@ -1219,7 +1219,7 @@ export default function ClassDetailPage() {
         <form onSubmit={handleCreateAssignment} className="space-y-4 pt-1">
           <Input
             label="Tiêu đề bài tập"
-            placeholder="Ví dụ: Ôn tập chương 1..."
+            placeholder="Ví dụ: Ôn tập chương 1"
             value={newTitle}
             onChange={(e) => setNewTitle(e.target.value)}
             required
@@ -1232,7 +1232,7 @@ export default function ClassDetailPage() {
             </label>
             <textarea
               rows={3}
-              placeholder="Hướng dẫn cho học sinh..."
+              placeholder="Hướng dẫn cho học sinh"
               value={newDesc}
               onChange={(e) => setNewDesc(e.target.value)}
               className="w-full px-3 py-2 text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#1a1b1d] focus:outline-none focus:ring-1 focus:ring-blue-500 resize-none"

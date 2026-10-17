@@ -73,7 +73,7 @@ export default function ImportQuestionPage() {
           </div>
           <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-2">Quyền truy cập bị hạn chế</h2>
           <p className="text-slate-600 dark:text-slate-400 max-w-md text-sm mb-4">
-            Chỉ tài khoản giáo viên mới có quyền nhập câu hỏi. Đang chuyển hướng bạn về danh sách lớp học...
+            Chỉ tài khoản giáo viên mới có quyền nhập câu hỏi. Đang chuyển hướng bạn về danh sách lớp học
           </p>
           <Button onClick={() => router.replace('/classes')} className="bg-primary hover:bg-primary/90 text-white text-sm">
             Về trang Lớp học
@@ -143,7 +143,7 @@ export default function ImportQuestionPage() {
                 Hủy
               </Button>
               <Button type="submit" disabled={loading}>
-                {loading ? 'Đang xử lý...' : 'Xác nhận Import'}
+                {loading ? 'Đang xử lý' : 'Xác nhận Import'}
               </Button>
             </div>
           </form>

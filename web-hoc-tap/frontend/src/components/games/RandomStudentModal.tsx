@@ -179,7 +179,7 @@ export const RandomStudentModal: React.FC<RandomStudentModalProps> = ({
               value={namesText}
               onChange={(e) => setNamesText(e.target.value)}
               className="w-full text-sm p-3 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Nhập tên học sinh..."
+              placeholder="Nhập tên học sinh"
             />
           </div>
         )}
@@ -187,7 +187,7 @@ export const RandomStudentModal: React.FC<RandomStudentModalProps> = ({
         {/* Display Box */}
         <div className="py-8 px-6 bg-slate-50 dark:bg-white/5 rounded-3xl border border-slate-200/80 dark:border-white/10 flex flex-col items-center justify-center min-h-[160px] sm:min-h-[180px] text-center">
           <span className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">
-            {isSpinning ? 'Đang quay ngẫu nhiên...' : selectedStudent ? 'Học sinh được chọn' : 'Sẵn sàng'}
+            {isSpinning ? 'Đang quay ngẫu nhiên' : selectedStudent ? 'Học sinh được chọn' : 'Sẵn sàng'}
           </span>
           <div
             className={`font-black tracking-tight transition-transform ${

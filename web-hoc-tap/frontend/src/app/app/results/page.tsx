@@ -497,7 +497,7 @@ export default function ResultsPage() {
         {loading ? (
           <div className="py-20 text-center space-y-3">
             <div className="inline-block w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-            <p className="text-xs font-semibold text-slate-500">Đang tải dữ liệu báo cáo...</p>
+            <p className="text-xs font-semibold text-slate-500">Đang tải dữ liệu báo cáo</p>
           </div>
         ) : isTeacher ? (
           /* ================= TEACHER VIEW ================= */
@@ -549,7 +549,7 @@ export default function ResultsPage() {
                       <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                       <input
                         type="text"
-                        placeholder="Tìm lớp học hoặc mã lớp..."
+                        placeholder="Tìm lớp học hoặc mã lớp"
                         value={classSearch}
                         onChange={(e) => setClassSearch(e.target.value)}
                         className="pl-8 pr-3 py-1.5 bg-slate-100/70 dark:bg-slate-800/70 text-slate-900 dark:text-slate-100 rounded-lg text-xs font-medium outline-none w-[220px]"
@@ -925,7 +925,7 @@ export default function ResultsPage() {
                         <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
                         <input
                           type="text"
-                          placeholder="Tìm học sinh..."
+                          placeholder="Tìm học sinh"
                           value={studentSearch}
                           onChange={(e) => setStudentSearch(e.target.value)}
                           className="pl-8 pr-3 py-1 bg-slate-100/70 dark:bg-slate-800/70 text-slate-900 dark:text-slate-100 rounded-lg text-xs font-medium outline-none w-[180px]"
