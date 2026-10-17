@@ -817,23 +817,11 @@ export default function ResultsPage() {
 
               {/* 3. FRAMELESS ASSIGNMENTS PERFORMANCE TABLE */}
               <div className="space-y-4 pt-2">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                  <div>
-                    <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
-                      <FileText size={16} className="text-blue-600 dark:text-blue-400" />
-                      Danh sách bài tập đã giao {classStats.assignmentMetrics.length}
-                    </h3>
-                  </div>
-                  {classStats.assignmentMetrics.length > 0 && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => router.push('/app/documents')}
-                      className="text-xs font-bold text-blue-600 dark:text-blue-400"
-                    >
-                      + Giao thêm bài tập
-                    </Button>
-                  )}
+                <div className="flex items-center justify-between gap-2">
+                  <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                    <FileText size={16} className="text-blue-600 dark:text-blue-400" />
+                    Danh sách bài tập đã giao {classStats.assignmentMetrics.length}
+                  </h3>
                 </div>
 
                 {classStats.assignmentMetrics.length === 0 ? (
