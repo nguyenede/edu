@@ -270,7 +270,7 @@ export const AppShell: React.FC<AppShellProps> = ({
       <div
         id="main-scroll"
         suppressHydrationWarning
-        className={`absolute inset-0 pt-16 overflow-hidden ${
+        className={`absolute inset-0 pt-16 overflow-hidden transition-[padding-left] duration-200 ease-in-out ${
           sidebarCollapsed ? 'md:pl-[64px]' : 'md:pl-[220px]'
         }`}
       >

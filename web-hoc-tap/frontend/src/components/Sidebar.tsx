@@ -127,9 +127,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     )}
                   </div>
                   <span
-                    className={`truncate text-left whitespace-nowrap overflow-hidden pr-2 text-sm font-medium ${
-                      sidebarCollapsed ? 'opacity-0 w-0 pointer-events-none' : 'opacity-100'
-                    } transition-opacity duration-150`}
+                    className={`truncate text-left whitespace-nowrap overflow-hidden text-sm font-medium transition-[opacity,max-width] duration-200 ease-in-out ${
+                      sidebarCollapsed ? 'opacity-0 max-w-0 pr-0 pointer-events-none' : 'opacity-100 max-w-[160px] pr-2'
+                    }`}
                   >
                     {item.label}
                   </span>
