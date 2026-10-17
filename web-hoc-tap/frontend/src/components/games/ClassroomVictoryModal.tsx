@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Trophy, Sparkles, RotateCcw, ArrowLeft, Award, Crown } from 'lucide-react';
 import { ClassroomTeam } from './ClassroomTeacherHeader';
 import { gameAudio } from '@/lib/gameSound';
@@ -20,13 +21,19 @@ export const ClassroomVictoryModal: React.FC<ClassroomVictoryModalProps> = ({
   onRestart,
   onBack,
 }) => {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   useEffect(() => {
     if (isOpen) {
       gameAudio.playVictory();
     }
   }, [isOpen]);
 
-  if (!isOpen) return null;
+  if (!isOpen || !mounted) return null;
 
   // Sort teams by score descending
   const sortedTeams = [...teams].sort((a, b) => b.score - a.score);
@@ -37,8 +44,8 @@ export const ClassroomVictoryModal: React.FC<ClassroomVictoryModalProps> = ({
   const isTie =
     sortedTeams.length > 1 && sortedTeams[0].score === sortedTeams[1].score && !winnerTeamId;
 
-  return (
-    <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in-0 duration-200">
+  return createPortal(
+    <div className="fixed inset-0 z-[9999] bg-black/70 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in-0 duration-200">
       <div className="bg-white dark:bg-[#1a1b1e] rounded-3xl max-w-lg w-full p-6 sm:p-9 shadow-2xl border-2 border-amber-400/40 dark:border-amber-500/30 text-center animate-in zoom-in-95 duration-200 flex flex-col items-center relative overflow-hidden">
         {/* Top Glow Ambient Aura */}
         <div className="absolute -top-16 left-1/2 -translate-x-1/2 w-48 h-48 bg-amber-400/20 rounded-full blur-3xl pointer-events-none" />
@@ -131,6 +138,7 @@ export const ClassroomVictoryModal: React.FC<ClassroomVictoryModalProps> = ({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };

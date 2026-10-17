@@ -507,7 +507,7 @@ export default function GamesHubPage() {
   if (playingLesson) {
     const meta = getCategoryMeta(playingLesson.gameType);
     return (
-      <div className="fixed inset-0 z-50 w-screen h-screen overflow-hidden bg-slate-100/90 dark:bg-[#111215] flex flex-col p-3 sm:p-4 select-none">
+      <div className="fixed inset-0 z-50 w-full h-full overflow-hidden bg-slate-100 dark:bg-[#111215] flex flex-col p-3 sm:p-4 select-none">
         <div className="w-full h-full flex-1 flex flex-col min-h-0">
           {playingLesson.gameType === 'tug_of_war' && (
             <TugOfWarGame

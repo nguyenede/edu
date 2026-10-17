@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import {
   Settings,
   ListChecks,
@@ -98,6 +99,12 @@ export const GameConfigModal: React.FC<GameConfigModalProps> = ({
   initialStep = 1,
   isFullPage = false,
 }) => {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   // Wizard steps: 1 = Chọn đề thi, 2 = Chọn lọc câu hỏi, 3 = Luật chơi & Bắt đầu
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(initialStep);
 
@@ -185,12 +192,12 @@ export const GameConfigModal: React.FC<GameConfigModalProps> = ({
 
   const selectedCount = questions.filter((q) => q.selected !== false).length;
 
-  return (
+  const modalContent = (
     <div
       className={
         isFullPage
           ? 'w-full max-w-4xl mx-auto space-y-6 pb-20 select-none animate-fadeIn'
-          : 'fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/50 backdrop-blur-xs animate-fadeIn select-none'
+          : 'fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-5 bg-black/50 backdrop-blur-xs animate-fadeIn select-none'
       }
     >
       <div
@@ -929,5 +936,11 @@ export const GameConfigModal: React.FC<GameConfigModalProps> = ({
       </div>
     </div>
   );
+
+  if (!isFullPage && mounted && typeof document !== 'undefined') {
+    return createPortal(modalContent, document.body);
+  }
+
+  return modalContent;
 };
 

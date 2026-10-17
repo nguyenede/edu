@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { X, Sparkles, Shuffle, Users, Award, RotateCcw } from 'lucide-react';
 import { gameAudio } from '@/lib/gameSound';
 
@@ -15,6 +16,7 @@ export const RandomStudentModal: React.FC<RandomStudentModalProps> = ({
   onClose,
   onStudentSelected,
 }) => {
+  const [mounted, setMounted] = useState(false);
   const [mode, setMode] = useState<'number' | 'name'>('number');
   const [totalStudents, setTotalStudents] = useState<number>(40);
   const [namesText, setNamesText] = useState<string>(
@@ -25,6 +27,10 @@ export const RandomStudentModal: React.FC<RandomStudentModalProps> = ({
   const [displayNumber, setDisplayNumber] = useState<number | string>('?');
 
   useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
     if (isOpen) {
       setSelectedStudent(null);
       setDisplayNumber('?');
@@ -32,7 +38,7 @@ export const RandomStudentModal: React.FC<RandomStudentModalProps> = ({
     }
   }, [isOpen]);
 
-  if (!isOpen) return null;
+  if (!isOpen || !mounted) return null;
 
   const handleSpin = () => {
     if (isSpinning) return;
@@ -91,8 +97,8 @@ export const RandomStudentModal: React.FC<RandomStudentModalProps> = ({
     onClose();
   };
 
-  return (
-    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in-0 duration-150 select-none">
+  return createPortal(
+    <div className="fixed inset-0 z-[9999] bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in-0 duration-150 select-none">
       <div className="bg-white dark:bg-[#1c1d21] rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-slate-200 dark:border-white/10 flex flex-col space-y-6 animate-in zoom-in-95 duration-150">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -219,6 +225,7 @@ export const RandomStudentModal: React.FC<RandomStudentModalProps> = ({
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };

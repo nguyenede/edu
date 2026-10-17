@@ -221,7 +221,7 @@ export const FruitSlashGame: React.FC<FruitSlashGameProps> = ({
   ];
 
   return (
-    <div className="w-full h-full flex-1 flex flex-col space-y-3 sm:space-y-4 transition-all min-h-0">
+    <div className="w-full h-full flex-1 flex flex-col space-y-3 sm:space-y-4 min-h-0">
       {/* 1. TEACHER CLASSROOM HEADER */}
       <ClassroomTeacherHeader
         title={examTitle}
