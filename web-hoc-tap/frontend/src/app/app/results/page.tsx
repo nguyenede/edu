@@ -6,6 +6,7 @@ import { useAuthStore } from '@/store/useAuthStore';
 import { AppShell } from '@/components/AppShell';
 import { BreadcrumbChevron } from '@/components/BreadcrumbChevron';
 import { Button } from '@/components/Button';
+import { CustomSelect } from '@/components/Select';
 import {
   BarChart3,
   Award,
@@ -932,17 +933,19 @@ export default function ResultsPage() {
                         />
                       </div>
 
-                      <select
+                      <CustomSelect
                         value={scoreFilter}
-                        onChange={(e) => setScoreFilter(e.target.value as any)}
-                        className="px-2 py-1 bg-transparent text-slate-900 dark:text-slate-100 text-xs font-semibold outline-none"
-                      >
-                        <option value="all">Tất cả học lực</option>
-                        <option value="excellent">Xuất sắc (≥ 9.0)</option>
-                        <option value="good">Giỏi (8.0 - 8.9)</option>
-                        <option value="average">Khá (6.5 - 7.9)</option>
-                        <option value="needs_attention">Cần cố gắng (&lt; 6.5)</option>
-                      </select>
+                        onChange={(val) => setScoreFilter(val as any)}
+                        options={[
+                          { value: 'all', label: 'Tất cả học lực' },
+                          { value: 'excellent', label: 'Xuất sắc (≥ 9.0)' },
+                          { value: 'good', label: 'Giỏi (8.0 - 8.9)' },
+                          { value: 'average', label: 'Khá (6.5 - 7.9)' },
+                          { value: 'needs_attention', label: 'Cần cố gắng (< 6.5)' },
+                        ]}
+                        size="sm"
+                        className="w-auto min-w-[150px]"
+                      />
                     </div>
                   )}
                 </div>

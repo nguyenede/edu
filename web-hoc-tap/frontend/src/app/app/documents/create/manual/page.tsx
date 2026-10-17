@@ -6,6 +6,7 @@ import { AppShell } from '@/components/AppShell';
 import { BreadcrumbChevron } from '@/components/BreadcrumbChevron';
 import { Button } from '@/components/Button';
 import { Input } from '@/components/Input';
+import { CustomSelect } from '@/components/Select';
 import {
   PenTool,
   Plus,
@@ -382,48 +383,52 @@ function ManualQuizCreateContent() {
               <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
                 Môn học
               </label>
-              <select
+              <CustomSelect
                 value={docSubject}
-                onChange={(e) => setDocSubject(e.target.value)}
-                className="w-full text-xs p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-1 focus:ring-google-blue"
-              >
-                <option value="">Không chọn</option>
-                <option value="Toán">Toán</option>
-                <option value="Tiếng Anh">Tiếng Anh</option>
-                <option value="Ngữ văn">Ngữ văn</option>
-                <option value="Vật lý">Vật lý</option>
-                <option value="Hóa học">Hóa học</option>
-                <option value="Sinh học">Sinh học</option>
-                <option value="Lịch sử">Lịch sử</option>
-                <option value="Địa lý">Địa lý</option>
-                <option value="Giáo dục công dân">GDCD / KT&PL</option>
-                <option value="Tin học">Tin học</option>
-              </select>
+                onChange={(val) => setDocSubject(String(val))}
+                options={[
+                  { value: '', label: 'Không chọn' },
+                  { value: 'Toán', label: 'Toán' },
+                  { value: 'Tiếng Anh', label: 'Tiếng Anh' },
+                  { value: 'Ngữ văn', label: 'Ngữ văn' },
+                  { value: 'Vật lý', label: 'Vật lý' },
+                  { value: 'Hóa học', label: 'Hóa học' },
+                  { value: 'Sinh học', label: 'Sinh học' },
+                  { value: 'Lịch sử', label: 'Lịch sử' },
+                  { value: 'Địa lý', label: 'Địa lý' },
+                  { value: 'Giáo dục công dân', label: 'GDCD / KT&PL' },
+                  { value: 'Tin học', label: 'Tin học' },
+                ]}
+                placeholder="Không chọn"
+                size="sm"
+              />
             </div>
 
             <div className="space-y-1">
               <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
                 Khối lớp
               </label>
-              <select
+              <CustomSelect
                 value={docGrade}
-                onChange={(e) => setDocGrade(e.target.value)}
-                className="w-full text-xs p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-1 focus:ring-google-blue"
-              >
-                <option value="">Không chọn</option>
-                <option value="12">Lớp 12</option>
-                <option value="11">Lớp 11</option>
-                <option value="10">Lớp 10</option>
-                <option value="9">Lớp 9</option>
-                <option value="8">Lớp 8</option>
-                <option value="7">Lớp 7</option>
-                <option value="6">Lớp 6</option>
-                <option value="5">Lớp 5</option>
-                <option value="4">Lớp 4</option>
-                <option value="3">Lớp 3</option>
-                <option value="2">Lớp 2</option>
-                <option value="1">Lớp 1</option>
-              </select>
+                onChange={(val) => setDocGrade(String(val))}
+                options={[
+                  { value: '', label: 'Không chọn' },
+                  { value: '12', label: 'Lớp 12' },
+                  { value: '11', label: 'Lớp 11' },
+                  { value: '10', label: 'Lớp 10' },
+                  { value: '9', label: 'Lớp 9' },
+                  { value: '8', label: 'Lớp 8' },
+                  { value: '7', label: 'Lớp 7' },
+                  { value: '6', label: 'Lớp 6' },
+                  { value: '5', label: 'Lớp 5' },
+                  { value: '4', label: 'Lớp 4' },
+                  { value: '3', label: 'Lớp 3' },
+                  { value: '2', label: 'Lớp 2' },
+                  { value: '1', label: 'Lớp 1' },
+                ]}
+                placeholder="Không chọn"
+                size="sm"
+              />
             </div>
           </div>
 

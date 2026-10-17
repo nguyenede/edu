@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import { CustomSelect } from '@/components/Select';
 import {
   Settings,
   ListChecks,
@@ -734,17 +735,18 @@ export const GameConfigModal: React.FC<GameConfigModalProps> = ({
                     <Clock size={14} className="text-amber-500" />
                     <span>Thời gian thi đấu</span>
                   </div>
-                  <select
+                  <CustomSelect
                     value={config.timeLimit}
-                    onChange={(e) => updateConfig('timeLimit', Number(e.target.value))}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-white/5 border-0 text-xs text-slate-800 dark:text-zinc-200 cursor-pointer focus:outline-hidden focus:ring-2 focus:ring-google-blue/30"
-                  >
-                    <option value={30}>30 giây (Rất nhanh)</option>
-                    <option value={60}>60 giây (Tiêu chuẩn)</option>
-                    <option value={90}>90 giây</option>
-                    <option value={120}>120 giây (2 phút)</option>
-                    <option value={0}>Không giới hạn thời gian</option>
-                  </select>
+                    onChange={(val) => updateConfig('timeLimit', Number(val))}
+                    options={[
+                      { value: 30, label: '30 giây (Rất nhanh)' },
+                      { value: 60, label: '60 giây (Tiêu chuẩn)' },
+                      { value: 90, label: '90 giây' },
+                      { value: 120, label: '120 giây (2 phút)' },
+                      { value: 0, label: 'Không giới hạn thời gian' },
+                    ]}
+                    size="sm"
+                  />
                 </div>
 
                 {/* Điểm chênh lệch thắng */}
@@ -753,16 +755,17 @@ export const GameConfigModal: React.FC<GameConfigModalProps> = ({
                     <Sparkles size={14} className="text-emerald-500" />
                     <span>Mốc điểm thắng</span>
                   </div>
-                  <select
+                  <CustomSelect
                     value={config.winDifference}
-                    onChange={(e) => updateConfig('winDifference', Number(e.target.value))}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-white/5 border-0 text-xs text-slate-800 dark:text-zinc-200 cursor-pointer focus:outline-hidden focus:ring-2 focus:ring-google-blue/30"
-                  >
-                    <option value={3}>Chênh lệch 3 câu</option>
-                    <option value={5}>Chênh lệch 5 câu</option>
-                    <option value={10}>Chênh lệch 10 câu</option>
-                    <option value={999}>Chơi hết bộ câu hỏi</option>
-                  </select>
+                    onChange={(val) => updateConfig('winDifference', Number(val))}
+                    options={[
+                      { value: 3, label: 'Chênh lệch 3 câu' },
+                      { value: 5, label: 'Chênh lệch 5 câu' },
+                      { value: 10, label: 'Chênh lệch 10 câu' },
+                      { value: 999, label: 'Chơi hết bộ câu hỏi' },
+                    ]}
+                    size="sm"
+                  />
                 </div>
 
                 {/* Thời gian đóng băng khi sai */}
@@ -771,16 +774,17 @@ export const GameConfigModal: React.FC<GameConfigModalProps> = ({
                     <ShieldAlert size={14} className="text-rose-500" />
                     <span>Đóng băng khi sai</span>
                   </div>
-                  <select
+                  <CustomSelect
                     value={config.freezeTime}
-                    onChange={(e) => updateConfig('freezeTime', Number(e.target.value))}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-white/5 border-0 text-xs text-slate-800 dark:text-zinc-200 cursor-pointer focus:outline-hidden focus:ring-2 focus:ring-google-blue/30"
-                  >
-                    <option value={0}>Không đóng băng (0s)</option>
-                    <option value={2}>2 giây</option>
-                    <option value={3}>3 giây (Tiêu chuẩn)</option>
-                    <option value={5}>5 giây (Phạt nặng)</option>
-                  </select>
+                    onChange={(val) => updateConfig('freezeTime', Number(val))}
+                    options={[
+                      { value: 0, label: 'Không đóng băng (0s)' },
+                      { value: 2, label: '2 giây' },
+                      { value: 3, label: '3 giây (Tiêu chuẩn)' },
+                      { value: 5, label: '5 giây (Phạt nặng)' },
+                    ]}
+                    size="sm"
+                  />
                 </div>
               </div>
 

@@ -7,6 +7,7 @@ import { AppShell } from '@/components/AppShell';
 import { Button } from '@/components/Button';
 import { Input } from '@/components/Input';
 import { Modal } from '@/components/Modal';
+import { CustomSelect } from '@/components/Select';
 import {
   GraduationCap,
   Users,
@@ -390,17 +391,15 @@ export default function ClassesPage() {
             <label className="text-xs font-medium text-slate-700 dark:text-slate-300">
               Năm học
             </label>
-            <select
+            <CustomSelect
               value={schoolYearInput}
-              onChange={(e) => setSchoolYearInput(e.target.value)}
-              className="w-full px-3 py-2 text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#1a1b1d] text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500"
-            >
-              {SCHOOL_YEAR_OPTIONS.map((yr) => (
-                <option key={yr} value={yr}>
-                  {yr}
-                </option>
-              ))}
-            </select>
+              onChange={(val) => setSchoolYearInput(String(val))}
+              options={SCHOOL_YEAR_OPTIONS.map((yr) => ({
+                value: yr,
+                label: yr,
+              }))}
+              size="sm"
+            />
           </div>
 
           <div className="flex items-center justify-end gap-2 pt-3">
@@ -526,17 +525,15 @@ export default function ClassesPage() {
             <label className="text-xs font-medium text-slate-700 dark:text-slate-300">
               Chọn năm học mới mục tiêu
             </label>
-            <select
+            <CustomSelect
               value={targetYear}
-              onChange={(e) => setTargetYear(e.target.value)}
-              className="w-full px-3 py-2 text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#1a1b1d]"
-            >
-              {SCHOOL_YEAR_OPTIONS.map((y) => (
-                <option key={y} value={y}>
-                  {y}
-                </option>
-              ))}
-            </select>
+              onChange={(val) => setTargetYear(String(val))}
+              options={SCHOOL_YEAR_OPTIONS.map((y) => ({
+                value: y,
+                label: y,
+              }))}
+              size="sm"
+            />
           </div>
 
           <div className="space-y-1.5">

@@ -9,6 +9,7 @@ import { Input } from '@/components/Input';
 import { Badge } from '@/components/Badge';
 import { Modal } from '@/components/Modal';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
+import { CustomSelect } from '@/components/Select';
 import {
   FileText,
   Users,
@@ -1094,14 +1095,15 @@ export default function ClassDetailPage() {
             />
             <div className="space-y-1.5">
               <label className="text-xs font-medium text-slate-700 dark:text-slate-300">Giới tính</label>
-              <select
+              <CustomSelect
                 value={studentForm.gender}
-                onChange={(e) => setStudentForm({ ...studentForm, gender: e.target.value })}
-                className="w-full px-3 py-2 text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#1a1b1d]"
-              >
-                <option value="Nam">Nam</option>
-                <option value="Nữ">Nữ</option>
-              </select>
+                onChange={(val) => setStudentForm({ ...studentForm, gender: String(val) })}
+                options={[
+                  { value: 'Nam', label: 'Nam' },
+                  { value: 'Nữ', label: 'Nữ' },
+                ]}
+                size="sm"
+              />
             </div>
           </div>
 
@@ -1243,10 +1245,10 @@ export default function ClassDetailPage() {
             <label className="text-xs font-medium text-slate-700 dark:text-slate-300">
               Đính kèm đề thi từ Kho tài liệu (Tùy chọn)
             </label>
-            <select
+            <CustomSelect
               value={linkedDocumentFileId}
-              onChange={(e) => {
-                const docId = e.target.value;
+              onChange={(val) => {
+                const docId = String(val);
                 setLinkedDocumentFileId(docId);
                 if (docId && !newTitle.trim()) {
                   const matched = documentFiles.find((d) => d.id === docId);
@@ -1255,15 +1257,16 @@ export default function ClassDetailPage() {
                   }
                 }
               }}
-              className="w-full px-3 py-2 text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#1a1b1d] focus:outline-none focus:ring-1 focus:ring-blue-500"
-            >
-              <option value="">-- Tự nhập / Không đính kèm đề trắc nghiệm --</option>
-              {documentFiles.map((doc) => (
-                <option key={doc.id} value={doc.id}>
-                  {doc.parsedQuiz?.title || doc.name} ({doc.parsedQuiz?.questions?.length || 0} câu)
-                </option>
-              ))}
-            </select>
+              options={[
+                { value: '', label: '-- Tự nhập / Không đính kèm đề trắc nghiệm --' },
+                ...documentFiles.map((doc) => ({
+                  value: doc.id,
+                  label: `${doc.parsedQuiz?.title || doc.name} (${doc.parsedQuiz?.questions?.length || 0} câu)`,
+                })),
+              ]}
+              placeholder="-- Tự nhập / Không đính kèm đề trắc nghiệm --"
+              size="sm"
+            />
             <p className="text-[11px] text-slate-400">
               Hệ thống sẽ tự động chấm điểm bài làm của học sinh khi đính kèm đề trắc nghiệm.
             </p>

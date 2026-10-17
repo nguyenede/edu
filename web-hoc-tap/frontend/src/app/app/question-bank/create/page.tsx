@@ -7,6 +7,7 @@ import { BreadcrumbChevron } from '@/components/BreadcrumbChevron';
 import { useAuthStore } from '@/store/useAuthStore';
 import { Button } from '@/components/Button';
 import { Input } from '@/components/Input';
+import { CustomSelect } from '@/components/Select';
 import { ArrowLeft, BookOpen, Check, Plus, Trash2, Sparkles, Loader2, ChevronRight, PlusCircle, FileUp, Lock } from 'lucide-react';
 
 export default function CreateQuestionPage() {
@@ -240,15 +241,16 @@ export default function CreateQuestionPage() {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="space-y-1">
                 <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Mức độ khó</label>
-                <select
+                <CustomSelect
                   value={qDifficulty}
-                  onChange={(e) => setQDifficulty(e.target.value)}
-                  className="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-xs focus:outline-none focus:ring-1 focus:ring-google-blue"
-                >
-                  <option value="EASY">Dễ (Nhận biết)</option>
-                  <option value="MEDIUM">Trung bình (Thông hiểu)</option>
-                  <option value="HARD">Khó (Vận dụng cao)</option>
-                </select>
+                  onChange={(val) => setQDifficulty(String(val))}
+                  options={[
+                    { value: 'EASY', label: 'Dễ (Nhận biết)' },
+                    { value: 'MEDIUM', label: 'Trung bình (Thông hiểu)' },
+                    { value: 'HARD', label: 'Khó (Vận dụng cao)' },
+                  ]}
+                  size="sm"
+                />
               </div>
 
               <Input

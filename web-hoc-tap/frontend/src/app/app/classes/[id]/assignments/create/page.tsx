@@ -11,6 +11,7 @@ import { listDocumentFiles } from '@/lib/documentsApi';
 import { createClassAssignment, fetchClasses, getLocalClasses } from '@/lib/classesApi';
 import { BreadcrumbChevron, BreadcrumbDropdownItem } from '@/components/BreadcrumbChevron';
 import DateTimePicker from '@/components/DateTimePicker';
+import { CustomSelect } from '@/components/Select';
 
 export default function CreateAssignmentPage() {
   const { id: classId } = useParams();
@@ -274,36 +275,38 @@ export default function CreateAssignmentPage() {
                 <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
                   Thời gian làm bài (Phút)
                 </label>
-                <select
+                <CustomSelect
                   value={durationMinutes}
-                  onChange={(e) => setDurationMinutes(Number(e.target.value))}
-                  className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-xs focus:outline-none focus:ring-1 focus:ring-google-blue"
-                >
-                  <option value={0}>Không giới hạn thời gian</option>
-                  <option value={15}>15 phút</option>
-                  <option value={30}>30 phút</option>
-                  <option value={45}>45 phút (Mặc định)</option>
-                  <option value={60}>60 phút</option>
-                  <option value={90}>90 phút</option>
-                </select>
+                  onChange={(val) => setDurationMinutes(Number(val))}
+                  options={[
+                    { value: 0, label: 'Không giới hạn thời gian' },
+                    { value: 15, label: '15 phút' },
+                    { value: 30, label: '30 phút' },
+                    { value: 45, label: '45 phút (Mặc định)' },
+                    { value: 60, label: '60 phút' },
+                    { value: 90, label: '90 phút' },
+                  ]}
+                  size="sm"
+                />
               </div>
 
               <div className="space-y-1">
                 <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
                   Thời gian nộp bài tối thiểu
                 </label>
-                <select
+                <CustomSelect
                   value={minSubmitMinutes}
-                  onChange={(e) => setMinSubmitMinutes(Number(e.target.value))}
-                  className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-xs focus:outline-none focus:ring-1 focus:ring-google-blue"
-                >
-                  <option value={0}>Không yêu cầu (Nộp bất kỳ lúc nào)</option>
-                  <option value={5}>Sau tối thiểu 5 phút</option>
-                  <option value={10}>Sau tối thiểu 10 phút</option>
-                  <option value={15}>Sau tối thiểu 15 phút</option>
-                  <option value={20}>Sau tối thiểu 20 phút</option>
-                  <option value={30}>Sau tối thiểu 30 phút</option>
-                </select>
+                  onChange={(val) => setMinSubmitMinutes(Number(val))}
+                  options={[
+                    { value: 0, label: 'Không yêu cầu (Nộp bất kỳ lúc nào)' },
+                    { value: 5, label: 'Sau tối thiểu 5 phút' },
+                    { value: 10, label: 'Sau tối thiểu 10 phút' },
+                    { value: 15, label: 'Sau tối thiểu 15 phút' },
+                    { value: 20, label: 'Sau tối thiểu 20 phút' },
+                    { value: 30, label: 'Sau tối thiểu 30 phút' },
+                  ]}
+                  size="sm"
+                />
               </div>
             </div>
 
@@ -311,18 +314,19 @@ export default function CreateAssignmentPage() {
               <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
                 Giao đề từ Kho tài liệu / Đề thi SI (Tùy chọn)
               </label>
-              <select
+              <CustomSelect
                 value={linkedDocumentFileId}
-                onChange={(e) => setLinkedDocumentFileId(e.target.value)}
-                className="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-xs focus:outline-none focus:ring-1 focus:ring-google-blue"
-              >
-                <option value="">-- Không đính kèm đề thi --</option>
-                {documentFiles.map((doc) => (
-                  <option key={doc.id} value={doc.id}>
-                    {doc.parsedQuiz?.title || doc.name} ({doc.parsedQuiz?.questions?.length || 0} câu)
-                  </option>
-                ))}
-              </select>
+                onChange={(val) => setLinkedDocumentFileId(String(val))}
+                options={[
+                  { value: '', label: '-- Không đính kèm đề thi --' },
+                  ...documentFiles.map((doc) => ({
+                    value: doc.id,
+                    label: `${doc.parsedQuiz?.title || doc.name} (${doc.parsedQuiz?.questions?.length || 0} câu)`,
+                  })),
+                ]}
+                placeholder="-- Không đính kèm đề thi --"
+                size="sm"
+              />
               <p className="text-[11px] text-slate-500">
                 Giao đề trắc nghiệm tạo bằng SI hoặc tải lên từ Kho tài liệu.
               </p>

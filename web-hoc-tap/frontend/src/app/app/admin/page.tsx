@@ -8,6 +8,7 @@ import { Button } from '@/components/Button';
 import { Input } from '@/components/Input';
 import { Badge } from '@/components/Badge';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
+import { CustomSelect } from '@/components/Select';
 import {
   Shield,
   Users,
@@ -185,16 +186,18 @@ export default function AdminPage() {
                 <Search size={14} className="absolute left-2.5 top-2 text-slate-400" />
               </div>
 
-              <select
+              <CustomSelect
                 value={roleFilter}
-                onChange={(e) => setRoleFilter(e.target.value)}
-                className="px-3 py-1.5 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 rounded-lg text-xs font-semibold focus:ring-1 focus:ring-blue-500"
-              >
-                <option value="">Tất cả vai trò</option>
-                <option value="TEACHER">Giáo viên</option>
-                <option value="STUDENT">Học sinh</option>
-                <option value="ADMIN">Quản trị viên</option>
-              </select>
+                onChange={(val) => setRoleFilter(String(val))}
+                options={[
+                  { value: '', label: 'Tất cả vai trò' },
+                  { value: 'TEACHER', label: 'Giáo viên' },
+                  { value: 'STUDENT', label: 'Học sinh' },
+                  { value: 'ADMIN', label: 'Quản trị viên' },
+                ]}
+                className="w-auto min-w-[140px]"
+                size="sm"
+              />
 
               <Button size="sm" variant="secondary" onClick={fetchUsers}>
                 Tìm kiếm

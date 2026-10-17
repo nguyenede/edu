@@ -6,6 +6,7 @@ import { AppShell } from '@/components/AppShell';
 import { BreadcrumbChevron } from '@/components/BreadcrumbChevron';
 import { Button } from '@/components/Button';
 import { Input } from '@/components/Input';
+import { CustomSelect } from '@/components/Select';
 import { Check, ChevronDown, Users, PlusCircle, LogIn } from 'lucide-react';
 
 import { createClass } from '@/lib/classesApi';
@@ -111,23 +112,15 @@ export default function CreateClassPage() {
               <label className="text-xs font-medium text-slate-700 dark:text-slate-300">
                 Năm học
               </label>
-              <div className="relative">
-                <select
-                  value={schoolYear}
-                  onChange={(e) => setSchoolYear(e.target.value)}
-                  className="w-full appearance-none px-3.5 py-2.5 text-sm rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#1a1b1d] text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500/50 pr-10"
-                >
-                  {SCHOOL_YEAR_OPTIONS.map((yr) => (
-                    <option key={yr} value={yr}>
-                      {yr}
-                    </option>
-                  ))}
-                </select>
-                <ChevronDown
-                  size={16}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
-                />
-              </div>
+              <CustomSelect
+                value={schoolYear}
+                onChange={(val) => setSchoolYear(String(val))}
+                options={SCHOOL_YEAR_OPTIONS.map((yr) => ({
+                  value: yr,
+                  label: yr,
+                }))}
+                size="md"
+              />
             </div>
 
             <div className="flex justify-end gap-2 pt-4">

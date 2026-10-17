@@ -3,6 +3,7 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { AppShell } from '@/components/AppShell';
+import { CustomSelect } from '@/components/Select';
 import { BreadcrumbChevron } from '@/components/BreadcrumbChevron';
 import { Button } from '@/components/Button';
 import { BookOpen, Check, Layers, Sparkles, ChevronRight, AlertCircle, FileUp, Camera, PenTool, Lock } from 'lucide-react';
@@ -252,48 +253,52 @@ function BankQuizCreateContent() {
                 <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
                   Chọn môn học
                 </label>
-                <select
+                <CustomSelect
                   value={selectedSubject}
-                  onChange={(e) => setSelectedSubject(e.target.value)}
-                  className="w-full text-xs p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl font-medium focus:ring-1 focus:ring-emerald-500"
-                >
-                  <option value="">Không chọn</option>
-                  <option value="Toán">Toán</option>
-                  <option value="Tiếng Anh">Tiếng Anh</option>
-                  <option value="Ngữ văn">Ngữ văn</option>
-                  <option value="Vật lý">Vật lý</option>
-                  <option value="Hóa học">Hóa học</option>
-                  <option value="Sinh học">Sinh học</option>
-                  <option value="Lịch sử">Lịch sử</option>
-                  <option value="Địa lý">Địa lý</option>
-                  <option value="Giáo dục công dân">GDCD / KT&PL</option>
-                  <option value="Tin học">Tin học</option>
-                </select>
+                  onChange={(val) => setSelectedSubject(String(val))}
+                  options={[
+                    { value: '', label: 'Không chọn' },
+                    { value: 'Toán', label: 'Toán' },
+                    { value: 'Tiếng Anh', label: 'Tiếng Anh' },
+                    { value: 'Ngữ văn', label: 'Ngữ văn' },
+                    { value: 'Vật lý', label: 'Vật lý' },
+                    { value: 'Hóa học', label: 'Hóa học' },
+                    { value: 'Sinh học', label: 'Sinh học' },
+                    { value: 'Lịch sử', label: 'Lịch sử' },
+                    { value: 'Địa lý', label: 'Địa lý' },
+                    { value: 'Giáo dục công dân', label: 'GDCD / KT&PL' },
+                    { value: 'Tin học', label: 'Tin học' },
+                  ]}
+                  placeholder="Không chọn"
+                  size="sm"
+                />
               </div>
 
               <div className="space-y-1">
                 <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
                   Chọn khối lớp
                 </label>
-                <select
+                <CustomSelect
                   value={selectedGrade}
-                  onChange={(e) => setSelectedGrade(e.target.value)}
-                  className="w-full text-xs p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl font-medium focus:ring-1 focus:ring-emerald-500"
-                >
-                  <option value="">Không chọn</option>
-                  <option value="12">Khối 12</option>
-                  <option value="11">Khối 11</option>
-                  <option value="10">Khối 10</option>
-                  <option value="9">Khối 9</option>
-                  <option value="8">Khối 8</option>
-                  <option value="7">Khối 7</option>
-                  <option value="6">Khối 6</option>
-                  <option value="5">Khối 5</option>
-                  <option value="4">Khối 4</option>
-                  <option value="3">Khối 3</option>
-                  <option value="2">Khối 2</option>
-                  <option value="1">Khối 1</option>
-                </select>
+                  onChange={(val) => setSelectedGrade(String(val))}
+                  options={[
+                    { value: '', label: 'Không chọn' },
+                    { value: '12', label: 'Khối 12' },
+                    { value: '11', label: 'Khối 11' },
+                    { value: '10', label: 'Khối 10' },
+                    { value: '9', label: 'Khối 9' },
+                    { value: '8', label: 'Khối 8' },
+                    { value: '7', label: 'Khối 7' },
+                    { value: '6', label: 'Khối 6' },
+                    { value: '5', label: 'Khối 5' },
+                    { value: '4', label: 'Khối 4' },
+                    { value: '3', label: 'Khối 3' },
+                    { value: '2', label: 'Khối 2' },
+                    { value: '1', label: 'Khối 1' },
+                  ]}
+                  placeholder="Không chọn"
+                  size="sm"
+                />
               </div>
             </div>
 
