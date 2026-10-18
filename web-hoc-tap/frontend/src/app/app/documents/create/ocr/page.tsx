@@ -51,7 +51,7 @@ function OcrQuizCreateContent() {
       if (effName) sessionStorage.setItem('app_active_folder_name', effName);
 
       if (window.location.search) {
-        window.history.replaceState(null, '', '/app/documents/create/ocr');
+        window.history.replaceState(window.history.state, '', '/app/documents/create/ocr');
       }
     }
   }, [rawFolderId, rawFolderName]);

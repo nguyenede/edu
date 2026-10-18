@@ -108,7 +108,7 @@ function DocumentsPageContent() {
     if (fId) {
       setCurrentFolderId(fId);
       if (typeof window !== 'undefined' && window.location.search) {
-        window.history.replaceState(null, '', '/documents');
+        window.history.replaceState(window.history.state, '', '/app/documents');
       }
     }
   }, [searchParams]);

@@ -40,7 +40,7 @@ function BankQuizCreateContent() {
       if (effName) sessionStorage.setItem('app_active_folder_name', effName);
 
       if (window.location.search) {
-        window.history.replaceState(null, '', '/app/documents/create/bank');
+        window.history.replaceState(window.history.state, '', '/app/documents/create/bank');
       }
     }
   }, [rawFolderId, rawFolderName]);

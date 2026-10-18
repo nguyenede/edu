@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
 import { AppShell } from '@/components/AppShell';
 import { Button } from '@/components/Button';
@@ -77,7 +77,7 @@ export interface CustomGameLesson {
 
 const STORAGE_KEY = 'app_custom_games_v2';
 
-export default function GamesHubPage() {
+function GamesHubContent() {
   const router = useRouter();
   const [exams, setExams] = useState<RealExamDocument[]>([]);
   const [selectedExamId, setSelectedExamId] = useState<string>('');
@@ -984,5 +984,13 @@ export default function GamesHubPage() {
         initialMode={randomPickerInitialMode}
       />
     </AppShell>
+  );
+}
+
+export default function GamesHubPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-google-bg dark:bg-[#131314]" />}>
+      <GamesHubContent />
+    </Suspense>
   );
 }

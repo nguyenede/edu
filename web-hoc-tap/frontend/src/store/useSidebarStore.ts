@@ -4,21 +4,23 @@ interface SidebarState {
   sidebarCollapsed: boolean;
   setSidebarCollapsed: (collapsed: boolean) => void;
   toggleSidebar: () => void;
+  initialize: () => void;
 }
 
-const getInitialSidebarCollapsed = (): boolean => {
-  if (typeof window === 'undefined') return false;
-  try {
-    const saved = localStorage.getItem('sidebar_collapsed');
-    if (saved !== null) return saved === 'true';
-    return window.innerWidth < 768;
-  } catch {
-    return false;
-  }
-};
-
 export const useSidebarStore = create<SidebarState>((set) => ({
-  sidebarCollapsed: getInitialSidebarCollapsed(),
+  sidebarCollapsed: false,
+  initialize: () => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem('sidebar_collapsed');
+        if (saved !== null) {
+          set({ sidebarCollapsed: saved === 'true' });
+        } else if (window.innerWidth < 768) {
+          set({ sidebarCollapsed: true });
+        }
+      } catch (e) {}
+    }
+  },
   setSidebarCollapsed: (collapsed: boolean) => {
     if (typeof window !== 'undefined') {
       try {

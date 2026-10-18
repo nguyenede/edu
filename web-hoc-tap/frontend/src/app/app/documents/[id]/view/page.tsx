@@ -338,7 +338,7 @@ function DocumentDynamicViewPageContent() {
         window.location.pathname.endsWith('/view') ||
         window.location.pathname.startsWith('/app/')
       ) {
-        window.history.replaceState(null, '', cleanUrl);
+        window.history.replaceState(window.history.state, '', cleanUrl);
       }
     }
   }, [fileId]);

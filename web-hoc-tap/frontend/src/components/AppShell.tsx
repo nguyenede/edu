@@ -44,13 +44,19 @@ export const AppShell: React.FC<AppShellProps> = ({
   const router = useRouter();
   const pathname = usePathname();
   const { user, logout } = useAuthStore();
-  const effectiveUser = user || (typeof window !== 'undefined' ? getStoredUser() : null);
+  const [mounted, setMounted] = useState(false);
+  const effectiveUser = user || (mounted && typeof window !== 'undefined' ? getStoredUser() : null);
 
   const { sidebarCollapsed, setSidebarCollapsed, toggleSidebar } = useSidebarStore();
   const [searchQuery, setSearchQuery] = useState('');
   const [isNewMenuOpen, setIsNewMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const mainViewportRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    setMounted(true);
+    useSidebarStore.getState().initialize();
+  }, []);
 
   const handleViewportScroll = (e: React.UIEvent<HTMLElement>) => {
     const scrolled = e.currentTarget.scrollTop > 2;
@@ -145,6 +151,7 @@ export const AppShell: React.FC<AppShellProps> = ({
             aria-label="Toggle Navigation"
             aria-controls="app-sidebar"
             aria-expanded={!sidebarCollapsed}
+            suppressHydrationWarning
           >
             <Menu size={21} />
           </button>
