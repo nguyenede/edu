@@ -570,15 +570,9 @@ function BlooketPlayContent() {
         <main className="max-w-md w-full mx-auto px-4 py-8 my-auto">
           <div className="bg-white dark:bg-[#1e1f20] rounded-3xl p-6 sm:p-8 border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-6 text-center">
             <div className="space-y-1.5">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-blue-50 dark:bg-blue-950/60 text-google-blue">
-                <Sparkles size={13} /> Phòng thi trực tuyến
-              </span>
               <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
                 Vào làm bài tập
               </h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                Nhập mã PIN 6 số hoặc quét mã QR do giáo viên cung cấp
-              </p>
             </div>
 
             {lobbyError && (
@@ -589,46 +583,31 @@ function BlooketPlayContent() {
             )}
 
             <div className="space-y-4 text-left">
-              {/* PIN INPUT */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                  Mã PIN (6 chữ số)
-                </label>
-                <div className="relative">
-                  <input
-                    type="text"
-                    maxLength={6}
-                    value={pinInput}
-                    onChange={(e) => {
-                      const val = e.target.value.replace(/\D/g, '');
-                      setPinInput(val);
-                      if (val.length === 6) handleLookupPin(val);
-                    }}
-                    placeholder="VD: 829143"
-                    className="w-full px-4 py-3 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-center font-mono text-2xl font-bold tracking-widest text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-google-blue"
-                  />
-                  {loadingHw && (
-                    <div className="absolute right-3.5 top-3.5">
-                      <Loader2 size={20} className="animate-spin text-google-blue" />
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* THÔNG TIN BÀI TẬP (GỌN GÀNG, TỐI GIẢN) */}
-              {homework && (
-                <div className="p-3.5 bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800 rounded-2xl space-y-1 text-left animate-in fade-in">
-                  <div className="font-bold text-sm text-slate-900 dark:text-slate-100 truncate">
-                    {homework.title}
+              {/* PIN INPUT - Chỉ hiển thị khi chưa có thông tin bài tập */}
+              {!homework && (
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                    Mã PIN
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      maxLength={6}
+                      value={pinInput}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/\D/g, '');
+                        setPinInput(val);
+                        if (val.length === 6) handleLookupPin(val);
+                      }}
+                      placeholder="VD: 829143"
+                      className="w-full px-4 py-3 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-center font-mono text-2xl font-bold tracking-widest text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-google-blue"
+                    />
+                    {loadingHw && (
+                      <div className="absolute right-3.5 top-3.5">
+                        <Loader2 size={20} className="animate-spin text-google-blue" />
+                      </div>
+                    )}
                   </div>
-                  {homework.classId && homework.classId !== 'public' && classCheckStatus === 'allowed' && (
-                    <div className="text-xs text-slate-500 dark:text-slate-400">
-                      Học sinh: <strong className="text-slate-800 dark:text-slate-200">{user?.name || studentName}</strong>
-                      {homework.className && (
-                        <span> &bull; Lớp: <strong className="text-slate-800 dark:text-slate-200">{homework.className}</strong></span>
-                      )}
-                    </div>
-                  )}
                 </div>
               )}
 
@@ -733,11 +712,6 @@ function BlooketPlayContent() {
             </div>
           </div>
         </main>
-
-        {/* Footer */}
-        <footer className="text-center text-xs text-slate-400 py-3">
-          HocRealtime &bull; Hệ thống làm bài trực tuyến chuẩn GDPT
-        </footer>
       </div>
     );
   }
