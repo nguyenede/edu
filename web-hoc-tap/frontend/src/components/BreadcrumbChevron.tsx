@@ -201,7 +201,7 @@ export function BreadcrumbChevron({
           onClick={(e) => e.stopPropagation()}
         >
           {menuTitle && (
-            <div className="px-3 py-1 text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider select-none border-b border-slate-200/50 dark:border-white/10 mb-0.5">
+            <div className="px-3 pt-1.5 pb-1 text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider select-none mb-0.5">
               {menuTitle}
             </div>
           )}
