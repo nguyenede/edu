@@ -844,7 +844,6 @@ function BlooketPlayContent() {
   // -------------------------------------------------------------
   if (phase === 'completed') {
     const totalQ = questions.length || 1;
-    const accuracy = Math.round((resultCorrectCount / totalQ) * 100);
 
     return (
       <div className="min-h-screen bg-google-bg dark:bg-[#131314] text-slate-900 dark:text-slate-100 flex flex-col justify-between font-sans">
@@ -896,16 +895,10 @@ function BlooketPlayContent() {
               </div>
             </div>
 
-            {/* Details Grid */}
-            <div className="grid grid-cols-2 gap-3 text-xs">
-              <div className="p-3 bg-slate-50 dark:bg-slate-900/60 rounded-xl border border-slate-200/60 dark:border-slate-800">
-                <span className="text-slate-400 block">Số câu đúng</span>
-                <strong className="text-emerald-600 text-sm">{resultCorrectCount} / {totalQ} câu</strong>
-              </div>
-              <div className="p-3 bg-slate-50 dark:bg-slate-900/60 rounded-xl border border-slate-200/60 dark:border-slate-800">
-                <span className="text-slate-400 block">Độ chính xác</span>
-                <strong className="text-slate-800 dark:text-slate-200 text-sm">{accuracy}%</strong>
-              </div>
+            {/* Details */}
+            <div className="p-3.5 bg-slate-50 dark:bg-slate-900/60 rounded-2xl border border-slate-200/60 dark:border-slate-800 text-xs">
+              <span className="text-slate-400 block mb-0.5">Số câu đúng</span>
+              <strong className="text-emerald-600 text-base">{resultCorrectCount} / {totalQ} câu</strong>
             </div>
 
 
