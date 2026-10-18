@@ -574,9 +574,6 @@ function BlooketPlayContent() {
             {homework ? (
               <div className="space-y-4">
                 <div className="space-y-1.5">
-                  <span className="text-[11px] font-bold text-google-blue dark:text-blue-400 uppercase tracking-wider block">
-                    Bài kiểm tra trực tuyến
-                  </span>
                   <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100 break-words leading-snug">
                     {homework.title}
                   </h1>
