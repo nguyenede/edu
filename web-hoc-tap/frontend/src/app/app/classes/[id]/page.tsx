@@ -915,15 +915,25 @@ export default function ClassDetailPage() {
                   <table className="w-full text-left text-xs">
                     <thead className="bg-slate-50/70 dark:bg-slate-900/40 text-slate-600 dark:text-slate-300 font-semibold">
                       <tr>
-                        <th className="py-2.5 px-3 w-12 text-center">STT</th>
-                        <th className="py-2.5 px-3 min-w-[140px]">{isTeacher ? 'Học sinh' : 'Tên bạn'}</th>
-                        {assignments.map((asg) => (
-                          <th key={asg.id} className="py-2.5 px-3 text-center min-w-[100px]">
-                            <div className="truncate-tight max-w-[120px] mx-auto" title={asg.title}>{asg.title}</div>
-                            <span className="text-[10px] text-slate-400 font-normal"> - {asg.maxScore}đ</span>
-                          </th>
-                        ))}
-                        <th className="py-2.5 px-3 text-center font-bold text-blue-600">ĐTB</th>
+                        <th className="py-2.5 px-3 w-12 text-center align-middle">STT</th>
+                        <th className="py-2.5 px-3 min-w-[140px] align-middle">{isTeacher ? 'Học sinh' : 'Tên bạn'}</th>
+                        {assignments.map((asg) => {
+                          const cleanTitle = (asg.title || '').replace(/^bài tập\s*[:\-–—]?\s*/i, '').trim() || asg.title;
+                          return (
+                            <th key={asg.id} className="py-2.5 px-3 text-center min-w-[140px] sm:min-w-[160px] max-w-[200px] align-top">
+                              <div
+                                className="font-semibold text-slate-700 dark:text-slate-200 line-clamp-2 leading-snug mx-auto"
+                                title={asg.title}
+                              >
+                                {cleanTitle}
+                              </div>
+                              <span className="block text-[10px] text-slate-400 dark:text-slate-400 font-normal mt-0.5">
+                                Thang {asg.maxScore || 10}
+                              </span>
+                            </th>
+                          );
+                        })}
+                        <th className="py-2.5 px-3 text-center font-bold text-blue-600 align-middle">ĐTB</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -945,9 +955,18 @@ export default function ClassDetailPage() {
                           });
 
                           if (sub && sub.score !== null && sub.score !== undefined) {
-                            scores.push(Number(sub.score));
+                            const numScore = Number(sub.score);
+                            scores.push(numScore);
+                            const max = asg.maxScore || 10;
+                            const ratio = numScore / max;
+                            const scoreColor = ratio >= 0.8
+                              ? 'text-emerald-600 dark:text-emerald-400'
+                              : ratio >= 0.5
+                              ? 'text-slate-700 dark:text-slate-300'
+                              : 'text-rose-600 dark:text-rose-400';
+
                             return (
-                              <td key={asg.id} className="py-2.5 px-3 text-center font-semibold text-emerald-600 dark:text-emerald-400">
+                              <td key={asg.id} className={`py-2.5 px-3 text-center font-semibold ${scoreColor}`}>
                                 {sub.score}
                               </td>
                             );
