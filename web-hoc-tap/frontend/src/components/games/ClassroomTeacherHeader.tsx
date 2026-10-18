@@ -6,7 +6,6 @@ import {
   VolumeX,
   Maximize2,
   Minimize2,
-  RotateCcw,
   Gamepad2,
   Sparkles,
   Shuffle,
@@ -227,16 +226,6 @@ export const ClassroomTeacherHeader: React.FC<ClassroomTeacherHeaderProps> = ({
           title={isFullscreen ? 'Thu nhỏ cửa sổ' : 'Toàn màn hình trình chiếu TV'}
         >
           {isFullscreen ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
-        </button>
-
-        {/* Restart */}
-        <button
-          type="button"
-          onClick={onRestart}
-          className="p-2 sm:p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-700 dark:text-zinc-300 transition-colors cursor-pointer"
-          title="Chơi lại từ đầu"
-        >
-          <RotateCcw size={16} />
         </button>
       </div>
     </div>
