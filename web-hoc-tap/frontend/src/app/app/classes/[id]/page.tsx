@@ -1012,23 +1012,14 @@ export default function ClassDetailPage() {
         maxWidth="md"
       >
         <div className="space-y-4 pt-1 text-center">
-          {/* Mã tham gia lớp học box - Đã chuyển lên đầu & bấm để sao chép như giao bài tập */}
-          <div
-            onClick={handleCopyCode}
-            className="p-3.5 rounded-2xl bg-blue-50/90 dark:bg-blue-950/40 border border-blue-200/70 dark:border-blue-900/60 text-center cursor-pointer hover:bg-blue-100/70 dark:hover:bg-blue-900/40 transition-colors select-none"
-            title="Bấm để sao chép mã lớp"
-          >
+          {/* Mã tham gia lớp học box */}
+          <div className="p-3.5 rounded-2xl bg-blue-50/90 dark:bg-blue-950/40 border border-blue-200/70 dark:border-blue-900/60 text-center select-none">
             <span className="text-[10px] text-blue-600 dark:text-blue-400 font-bold uppercase tracking-wider block">
               Mã tham gia lớp học
             </span>
             <div className="text-3xl sm:text-4xl font-mono font-black text-blue-700 dark:text-blue-300 tracking-widest mt-0.5">
               {clazz?.code}
             </div>
-            {copiedCode && (
-              <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 mt-1 inline-block animate-pulse">
-                ✓ Đã sao chép mã lớp
-              </span>
-            )}
           </div>
 
           {qrDataUrl ? (
