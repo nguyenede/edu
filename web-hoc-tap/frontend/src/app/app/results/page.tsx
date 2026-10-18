@@ -841,7 +841,7 @@ export default function ResultsPage() {
                     <table className="w-full text-left text-xs border-collapse">
                       <thead>
                         <tr className="text-slate-400 text-[11px] font-bold uppercase tracking-wider">
-                          <th className="py-2.5 px-2">Tên bài tập / Đề kiểm tra</th>
+                          <th className="py-2.5 px-2">Bài tập</th>
                           <th className="py-2.5 px-2 text-center">Thang điểm</th>
                           <th className="py-2.5 px-2 text-center">Đã nộp</th>
                           <th className="py-2.5 px-2 text-center">Tiến độ nộp</th>
