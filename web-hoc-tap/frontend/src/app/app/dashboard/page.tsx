@@ -147,7 +147,7 @@ export default function DashboardPage() {
               </Button>
               <Button
                 size="sm"
-                onClick={() => setIsCreateClassOpen(true)}
+                onClick={() => router.push('/app/classes?create=true')}
                 className="gap-1.5 flex-1 sm:flex-none"
               >
                 <Plus size={15} /> Tạo lớp học mới
@@ -239,7 +239,7 @@ export default function DashboardPage() {
               <Button
                 size="sm"
                 onClick={() =>
-                  isTeacherUser ? setIsCreateClassOpen(true) : setIsJoinClassOpen(true)
+                  isTeacherUser ? router.push('/app/classes?create=true') : setIsJoinClassOpen(true)
                 }
               >
                 {isTeacherUser ? 'Tạo lớp đầu tiên' : 'Tham gia lớp ngay'}

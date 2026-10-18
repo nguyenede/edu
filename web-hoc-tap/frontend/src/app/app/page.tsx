@@ -130,7 +130,7 @@ export default function DashboardPage() {
             <Button
               size="sm"
               variant="compose"
-              onClick={() => setIsCreateClassOpen(true)}
+              onClick={() => router.push('/app/classes?create=true')}
               className="gap-2"
             >
               <FolderPlus size={16} className="text-google-blue" />

@@ -113,6 +113,19 @@ export default function ClassesPage() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  // Auto-open create class modal if navigated from dashboard or external link
+  useEffect(() => {
+    try {
+      if (typeof window !== 'undefined') {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('create') === 'true' || params.get('new') === 'true') {
+          setIsCreateModalOpen(true);
+          window.history.replaceState(null, '', '/app/classes');
+        }
+      }
+    } catch (_) {}
+  }, []);
+
   const showToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 2500);
