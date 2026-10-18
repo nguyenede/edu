@@ -921,10 +921,6 @@ function BlooketPlayContent() {
             </div>
           </div>
         </main>
-
-        <footer className="text-center text-xs text-slate-400 py-3">
-          HocRealtime &bull; Đã lưu kết quả bài nộp an toàn
-        </footer>
       </div>
     );
   }
