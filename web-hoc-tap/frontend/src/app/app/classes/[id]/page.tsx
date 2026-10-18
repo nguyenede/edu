@@ -1044,9 +1044,6 @@ export default function ClassDetailPage() {
           {/* Link box */}
           <div className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/70 dark:border-white/10">
             <div className="text-left truncate mr-2">
-              <span className="text-[10px] text-slate-400 font-semibold uppercase block">
-                Đường dẫn tham gia
-              </span>
               <div className="text-xs text-slate-600 dark:text-zinc-300 font-medium truncate">
                 {typeof window !== 'undefined' ? `${window.location.origin}/app/classes/join?code=${clazz?.code}` : ''}
               </div>
