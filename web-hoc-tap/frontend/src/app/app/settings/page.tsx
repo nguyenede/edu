@@ -1020,14 +1020,11 @@ export default function SettingsPage(props: any) {
 
                   {/* Phần Thay đổi mật khẩu gộp chung trong Bảo mật */}
                   <section className="space-y-4 pt-2">
-                    <div className="space-y-0.5">
+                    <div>
                       <h3 className="text-base font-bold tracking-tight text-slate-900 dark:text-slate-100 flex items-center gap-2">
                         <Key size={18} className="text-google-blue" />
                         Thay đổi mật khẩu
                       </h3>
-                      <p className="text-xs text-slate-500 dark:text-slate-400">
-                        Tạo mật khẩu mới mạnh để bảo vệ tài khoản giáo viên khỏi truy cập trái phép
-                      </p>
                     </div>
 
                     <div className="p-6 bg-slate-100/90 dark:bg-slate-800/70 border border-transparent dark:border-slate-800/60 rounded-2xl space-y-5">
