@@ -910,73 +910,16 @@ function BlooketPlayContent() {
 
 
             {/* Actions */}
-            <div className="flex items-center gap-3 pt-2">
-              {homework?.showAnswersAfterSubmit && (
-                <Button
-                  variant="outline"
-                  onClick={() => setShowReview(!showReview)}
-                  className="flex-1 rounded-2xl text-xs gap-1.5"
-                >
-                  <Eye size={15} /> {showReview ? 'Ẩn đáp án' : 'Xem lại đáp án'}
-                </Button>
-              )}
+            <div className="pt-2">
               <Button
                 variant="primary"
                 onClick={() => router.push('/app/documents')}
-                className="flex-1 rounded-2xl text-xs gap-1.5 bg-google-blue hover:bg-[#1557b0] text-white"
+                className="w-full py-3.5 rounded-2xl text-xs gap-1.5 bg-google-blue hover:bg-[#1557b0] text-white font-bold"
               >
                 <Home size={15} /> Về trang chủ
               </Button>
             </div>
           </div>
-
-          {/* Answer Review Section */}
-          {showReview && (
-            <div className="mt-6 space-y-4">
-              <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
-                Chi tiết bài làm từng câu
-              </h3>
-              {questions.map((q, idx) => {
-                const userAns = selectedAnswers[q.id];
-                const correctOpt = (q.options || []).find((o: any) => o.isCorrect);
-                const isCorrect = userAns && correctOpt && (typeof correctOpt === 'string' ? correctOpt : correctOpt.content) === userAns;
-
-                const cleanContent = (q.content || '').replace(/^Câu\s*\d+\s*[:.]\s*/i, '');
-                return (
-                  <div
-                    key={q.id || idx}
-                    className="p-5 bg-white dark:bg-[#1e1f20] rounded-2xl border border-slate-200/80 dark:border-slate-800 space-y-3 text-xs"
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="text-sm font-medium text-slate-800 dark:text-slate-200 leading-relaxed flex-1">
-                        <span className="font-bold text-google-blue dark:text-blue-400 mr-1.5 whitespace-nowrap">
-                          Câu {idx + 1}:
-                        </span>
-                        <PlayMathRenderer text={cleanContent} />
-                      </div>
-                      <span className={`text-xs font-bold shrink-0 ${isCorrect ? 'text-emerald-600' : 'text-red-500'}`}>
-                        {isCorrect ? '✓ Đúng' : '✕ Sai'}
-                      </span>
-                    </div>
-                    <div className="p-2.5 bg-slate-50 dark:bg-slate-900 rounded-xl space-y-1">
-                      <div>
-                        <span className="text-slate-400">Bạn chọn: </span>
-                        <strong>{userAns || 'Chưa chọn'}</strong>
-                      </div>
-                      {correctOpt && (
-                        <div>
-                          <span className="text-emerald-600">Đáp án đúng: </span>
-                          <strong className="text-emerald-600">
-                            {typeof correctOpt === 'string' ? correctOpt : correctOpt.content}
-                          </strong>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
         </main>
 
         <footer className="text-center text-xs text-slate-400 py-3">

@@ -260,7 +260,7 @@ function AssignPageContent() {
   const [customMinSubmit, setCustomMinSubmit] = useState<string>('');
   const [shuffleQuestions, setShuffleQuestions] = useState(true);
   const [shuffleOptions, setShuffleOptions] = useState(false);
-  const [showAnswersAfterSubmit, setShowAnswersAfterSubmit] = useState(true);
+  const [showAnswersAfterSubmit, setShowAnswersAfterSubmit] = useState(false);
 
   // Anti-cheating State (NÚT BẬT / TẮT & CẤU HÌNH CHI TIẾT)
   const [antiCheating, setAntiCheating] = useState(false);
