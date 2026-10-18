@@ -24,6 +24,7 @@ export interface ClassroomTeam {
 }
 
 export const GAME_NAV_ITEMS = [
+  { id: 'random_picker', title: 'Gọi tên ngẫu nhiên' },
   { id: 'tug_of_war', title: 'Kéo co kiến thức' },
   { id: 'boat_race', title: 'Đua thuyền kiến thức' },
   { id: 'lucky_wheel', title: 'Vòng quay may mắn' },
@@ -60,6 +61,7 @@ interface ClassroomTeacherHeaderProps {
   onBack: () => void;
   onRestart: () => void;
   onOpenSettings?: () => void;
+  customToolbarRight?: React.ReactNode;
 }
 
 export const ClassroomTeacherHeader: React.FC<ClassroomTeacherHeaderProps> = ({
@@ -79,6 +81,7 @@ export const ClassroomTeacherHeader: React.FC<ClassroomTeacherHeaderProps> = ({
   onToggleFullscreen,
   onBack,
   onRestart,
+  customToolbarRight,
 }) => {
   return (
     <div className="w-full bg-white dark:bg-[#1a1b1e] rounded-2xl px-3.5 sm:px-5 py-2.5 flex items-center justify-between gap-3 select-none transition-colors border border-slate-100 dark:border-white/5 shadow-2xs relative z-20">
@@ -176,6 +179,8 @@ export const ClassroomTeacherHeader: React.FC<ClassroomTeacherHeaderProps> = ({
 
       {/* 3. RIGHT: TEACHER TOOLBAR (CALL STUDENT, QUESTION LIST, FONT, SOUND, FULLSCREEN) */}
       <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
+        {customToolbarRight}
+
         {/* Random Student Picker */}
         {onOpenStudentPicker && (
           <button

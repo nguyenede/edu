@@ -22,9 +22,11 @@ import {
   DEFAULT_GAME_CONFIG,
 } from '@/components/games/GameConfigModal';
 import {
-  RandomPickerModal,
+  RandomPickerGame,
+  RANDOM_MODES,
   RandomPickerSubMode,
-} from '@/components/games/RandomPickerModal';
+  DEFAULT_STUDENTS,
+} from '@/components/games/RandomPickerGame';
 import {
   normalizeGameQuestion,
   DEFAULT_CLASSROOM_TRIAL_QUESTIONS,
@@ -41,6 +43,8 @@ import {
   Layers,
   CheckCircle2,
   ChevronRight,
+  Users,
+  X,
 } from 'lucide-react';
 
 interface RealExamDocument {
@@ -98,9 +102,39 @@ function GamesHubContent() {
   const [gameConfig, setGameConfig] = useState<GameSettingsConfig>(DEFAULT_GAME_CONFIG);
   const [customQuestions, setCustomQuestions] = useState<GameQuestion[]>([]);
 
-  // Random Picker modal state (Vòng quay, Đua vịt, Đua bi, Bắt vịt 3D, Gọi tên bằng ảnh, Ghép cặp bằng ảnh, Ống kính may mắn)
-  const [isRandomPickerOpen, setIsRandomPickerOpen] = useState(false);
-  const [randomPickerInitialMode, setRandomPickerInitialMode] = useState<RandomPickerSubMode>('wheel');
+  // Roster state for Random Picker game
+  const [rosterStudents, setRosterStudents] = useState<string[]>(DEFAULT_STUDENTS);
+  const [isRosterModalOpen, setIsRosterModalOpen] = useState(false);
+  const [rosterInput, setRosterInput] = useState<string>(DEFAULT_STUDENTS.join(', '));
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const stored = localStorage.getItem('random_picker_students');
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setRosterStudents(parsed);
+            setRosterInput(parsed.join(', '));
+            return;
+          }
+        }
+      } catch (e) {}
+    }
+  }, []);
+
+  const handleSaveRosterFromPage = (newList: string[]) => {
+    const cleaned = newList.map((s) => s.trim()).filter(Boolean);
+    const finalStudents = cleaned.length > 0 ? cleaned : DEFAULT_STUDENTS;
+    setRosterStudents(finalStudents);
+    setRosterInput(finalStudents.join(', '));
+    setIsRosterModalOpen(false);
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('random_picker_students', JSON.stringify(finalStudents));
+      } catch (e) {}
+    }
+  };
 
   // Load saved lessons from localStorage
   useEffect(() => {
@@ -529,6 +563,15 @@ function GamesHubContent() {
     return (
       <div className="fixed inset-0 z-50 w-full h-full overflow-hidden bg-slate-100 dark:bg-[#111215] flex flex-col p-3 sm:p-4 select-none">
         <div className="w-full h-full flex-1 flex flex-col min-h-0">
+          {playingLesson.gameType === 'random_picker' && (
+            <RandomPickerGame
+              title={playingLesson.title}
+              initialMode={(playingLesson.config as any)?.subMode || 'wheel'}
+              onBack={() => setPlayingLesson(null)}
+              onSwitchGame={handleSwitchGameInPlay}
+              onBackToHub={handleBackToHub}
+            />
+          )}
           {playingLesson.gameType === 'tug_of_war' && (
             <TugOfWarGame
               examTitle={playingLesson.title}
@@ -712,7 +755,16 @@ function GamesHubContent() {
         )
       }
       action={
-        activeCategory && !isConfigModalOpen ? (
+        activeCategory === 'random_picker' ? (
+          <Button
+            size="sm"
+            onClick={() => setIsRosterModalOpen(true)}
+            className="rounded-xl text-xs gap-1.5 bg-purple-600 hover:bg-purple-700 text-white"
+          >
+            <Users size={15} />
+            <span>Danh sách học sinh ({rosterStudents.length})</span>
+          </Button>
+        ) : activeCategory && !isConfigModalOpen ? (
           <Button
             size="sm"
             onClick={handleOpenCreateModal}
@@ -765,6 +817,75 @@ function GamesHubContent() {
               setPlayingLesson(newLesson);
             }}
           />
+        ) : activeCategory === 'random_picker' ? (
+          /* LEVEL 2: GỌI TÊN NGẪU NHIÊN 7 SUB-MODES WORKSPACE (Đồng bộ chuẩn giao diện KiyoEdu) */
+          <div className="space-y-4">
+            <div className="flex items-center justify-between pb-1">
+              <div>
+                <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">
+                  Chọn chế độ gọi tên ngẫu nhiên
+                </h2>
+                <p className="text-xs text-slate-500 dark:text-zinc-400 mt-0.5">
+                  7 chế độ hoạt náo sôi động với danh sách {rosterStudents.length} học sinh sẵn sàng
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {RANDOM_MODES.map((mode) => (
+                <div
+                  key={mode.id}
+                  className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-[#1a1b1e] border border-slate-200/80 dark:border-white/10 hover:border-google-blue dark:hover:border-google-blue/60 transition-all duration-150 flex flex-col justify-between shadow-2xs hover:shadow-md group"
+                >
+                  <div>
+                    <div className="flex items-center justify-between gap-2 mb-3">
+                      <div className="w-10 h-10 rounded-xl bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400 flex items-center justify-center text-xl">
+                        {mode.icon}
+                      </div>
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-950/80 dark:text-blue-300">
+                        {mode.badge}
+                      </span>
+                    </div>
+
+                    <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-zinc-100 group-hover:text-google-blue transition-colors">
+                      {mode.title}
+                    </h3>
+                    <p className="text-[11px] font-medium text-slate-500 dark:text-zinc-400 mt-0.5">
+                      {mode.subtitle}
+                    </p>
+                    <p className="text-xs text-slate-600 dark:text-zinc-300 mt-2 leading-relaxed line-clamp-2">
+                      {mode.desc}
+                    </p>
+                  </div>
+
+                  <div className="mt-4 flex items-center justify-end">
+                    <button
+                      onClick={() =>
+                        setPlayingLesson({
+                          id: `lesson_random_${mode.id}`,
+                          gameType: 'random_picker',
+                          title: mode.title,
+                          examId: 'students_roster',
+                          examTitle: `${mode.title} (${rosterStudents.length} học sinh)`,
+                          config: {
+                            ...DEFAULT_GAME_CONFIG,
+                            title: mode.title,
+                            subMode: mode.id,
+                          } as any,
+                          questions: [],
+                          createdAt: Date.now(),
+                        })
+                      }
+                      className="px-5 py-2 rounded-xl bg-google-blue hover:bg-blue-600 text-white text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs active:scale-95"
+                    >
+                      <Play size={13} className="fill-white" />
+                      <span>Chơi ngay</span>
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         ) : activeCategory ? (
           /* LEVEL 2: "[TÊN GAME] CỦA TÔI ({N})" WORKSPACE VIEW (Đồng bộ chuẩn giao diện KiyoEdu) */
           <div className="space-y-4">
@@ -880,12 +1001,7 @@ function GamesHubContent() {
                 <div
                   key={game.id}
                   onClick={() => {
-                    if (game.id === 'random_picker') {
-                      setRandomPickerInitialMode('wheel');
-                      setIsRandomPickerOpen(true);
-                    } else {
-                      setActiveCategory(game.id);
-                    }
+                    setActiveCategory(game.id);
                   }}
                   className="group rounded-2xl p-4 sm:p-5 bg-white dark:bg-[#1a1b1e] border border-slate-200/80 dark:border-white/10 hover:border-google-blue/50 dark:hover:border-google-blue/50 transition-all duration-150 select-none flex flex-col justify-between shadow-2xs hover:shadow-md cursor-pointer active:scale-[0.99]"
                 >
@@ -918,12 +1034,7 @@ function GamesHubContent() {
                       type="button"
                       onClick={(e) => {
                         e.stopPropagation();
-                        if (game.id === 'random_picker') {
-                          setRandomPickerInitialMode('wheel');
-                          setIsRandomPickerOpen(true);
-                        } else {
-                          setActiveCategory(game.id);
-                        }
+                        setActiveCategory(game.id);
                       }}
                       className="w-full py-2 px-3 rounded-xl bg-slate-100 dark:bg-white/5 hover:bg-google-blue hover:text-white dark:hover:bg-google-blue text-slate-700 dark:text-zinc-200 text-xs font-semibold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs group-hover:bg-google-blue group-hover:text-white"
                     >
@@ -977,12 +1088,72 @@ function GamesHubContent() {
         />
       )}
 
-      {/* Random Picker Modal (7 chế độ gọi tên ngẫu nhiên: Vòng quay, Đua vịt, Đua bi, Bắt vịt 3D, Gọi tên bằng ảnh, Ghép cặp bằng ảnh, Ống kính may mắn) */}
-      <RandomPickerModal
-        isOpen={isRandomPickerOpen}
-        onClose={() => setIsRandomPickerOpen(false)}
-        initialMode={randomPickerInitialMode}
-      />
+      {/* Roster Management Modal */}
+      {isRosterModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150">
+          <div className="w-full max-w-lg rounded-2xl bg-white dark:bg-[#1e1f20] border border-slate-200 dark:border-white/10 shadow-2xl overflow-hidden flex flex-col max-h-[85vh]">
+            <div className="px-5 py-4 border-b border-slate-200 dark:border-white/10 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Users size={18} className="text-google-blue" />
+                <h3 className="font-bold text-slate-900 dark:text-white text-base">
+                  Danh sách học sinh ({rosterStudents.length})
+                </h3>
+              </div>
+              <button
+                onClick={() => setIsRosterModalOpen(false)}
+                className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-white cursor-pointer"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="p-5 space-y-4 overflow-y-auto">
+              <p className="text-xs text-slate-500 dark:text-zinc-400">
+                Nhập danh sách học sinh của bạn, phân tách bằng dấu phẩy hoặc mỗi bạn một dòng:
+              </p>
+
+              <textarea
+                rows={8}
+                value={rosterInput}
+                onChange={(e) => setRosterInput(e.target.value)}
+                placeholder="Nguyễn Văn A, Trần Thị B, Lê Văn C..."
+                className="w-full p-3 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-black/20 text-slate-900 dark:text-white text-xs sm:text-sm focus:outline-google-blue resize-none"
+              />
+
+              <div className="flex items-center justify-between">
+                <button
+                  type="button"
+                  onClick={() => setRosterInput(DEFAULT_STUDENTS.join(', '))}
+                  className="text-xs font-semibold text-google-blue hover:underline cursor-pointer"
+                >
+                  Sử dụng danh sách mẫu (16 học sinh)
+                </button>
+              </div>
+            </div>
+
+            <div className="px-5 py-3.5 bg-slate-50 dark:bg-[#18191b] border-t border-slate-200 dark:border-white/10 flex items-center justify-end gap-2">
+              <button
+                onClick={() => setIsRosterModalOpen(false)}
+                className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-zinc-300 hover:bg-slate-200 dark:hover:bg-white/10 cursor-pointer"
+              >
+                Hủy
+              </button>
+              <button
+                onClick={() => {
+                  const items = rosterInput
+                    .split(/[\n,]+/)
+                    .map((s) => s.trim())
+                    .filter(Boolean);
+                  handleSaveRosterFromPage(items);
+                }}
+                className="px-5 py-2 rounded-xl bg-google-blue hover:bg-blue-600 text-white text-xs font-bold transition-all cursor-pointer shadow-xs"
+              >
+                Lưu danh sách
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </AppShell>
   );
 }
