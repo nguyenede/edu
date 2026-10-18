@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef, Suspense } from 'react';
+import React, { useState, useEffect, useMemo, useRef, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/Button';
 import { Input } from '@/components/Input';
@@ -24,7 +24,8 @@ import {
   Loader2,
   ArrowLeft,
   Check,
-  Sparkles,
+  FileText,
+  User,
   Lock,
   LogIn,
   UserCheck,
@@ -84,6 +85,7 @@ function BlooketPlayContent() {
   const [pinInput, setPinInput] = useState(initialPin);
   const [studentName, setStudentName] = useState('');
   const [homework, setHomework] = useState<HomeworkItem | null>(null);
+  const questionsCount = homework?.quizData?.questions?.length || 0;
   const [loadingHw, setLoadingHw] = useState(false);
   const [lobbyError, setLobbyError] = useState('');
 
@@ -569,11 +571,74 @@ function BlooketPlayContent() {
         {/* Lobby Center Card */}
         <main className="max-w-md w-full mx-auto px-4 py-8 my-auto">
           <div className="bg-white dark:bg-[#1e1f20] rounded-3xl p-6 sm:p-8 border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-6 text-center">
-            <div className="space-y-1.5">
-              <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
-                Vào làm bài tập
-              </h2>
-            </div>
+            {homework ? (
+              <div className="space-y-4">
+                <div className="space-y-1.5">
+                  <span className="text-[11px] font-bold text-google-blue dark:text-blue-400 uppercase tracking-wider block">
+                    Bài kiểm tra trực tuyến
+                  </span>
+                  <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100 break-words leading-snug">
+                    {homework.title}
+                  </h1>
+                </div>
+
+                {/* Huy hiệu thông số: số câu, thời gian, lớp học, chống gian lận */}
+                <div className="flex flex-wrap items-center justify-center gap-2 pt-1">
+                  {questionsCount > 0 && (
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                      <FileText size={13} className="text-blue-500" />
+                      {questionsCount} câu hỏi
+                    </span>
+                  )}
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                    <Clock size={13} className="text-amber-500" />
+                    {homework.durationMinutes > 0 ? `${homework.durationMinutes} phút` : 'Tự do thời gian'}
+                  </span>
+                  {homework.className && (
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                      <GraduationCap size={13} className="text-emerald-500" />
+                      {homework.className}
+                    </span>
+                  )}
+                  {homework.antiCheating && (
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300">
+                      <ShieldCheck size={13} className="text-purple-500" />
+                      Chống gian lận
+                    </span>
+                  )}
+                </div>
+
+                {/* Thông tin thí sinh tham gia */}
+                {studentName && (
+                  <div className="p-3.5 bg-blue-50/70 dark:bg-blue-950/30 border border-blue-200/60 dark:border-blue-900/40 rounded-2xl flex items-center justify-between text-left">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className="w-8 h-8 rounded-full bg-google-blue text-white flex items-center justify-center font-bold text-xs shrink-0">
+                        {studentName.trim().charAt(0).toUpperCase()}
+                      </div>
+                      <div className="min-w-0">
+                        <span className="text-[10px] text-blue-600 dark:text-blue-400 font-bold uppercase tracking-wider block">
+                          Thí sinh tham gia
+                        </span>
+                        <span className="font-semibold text-xs sm:text-sm text-slate-900 dark:text-slate-100 truncate block">
+                          {studentName}
+                        </span>
+                      </div>
+                    </div>
+                    {homework.className && (
+                      <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 shrink-0">
+                        {homework.className}
+                      </span>
+                    )}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="space-y-1.5">
+                <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
+                  Vào làm bài tập
+                </h2>
+              </div>
+            )}
 
             {lobbyError && (
               <div className="p-3 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900/60 rounded-2xl text-xs text-red-600 dark:text-red-400 flex items-center gap-2 text-left">
@@ -673,7 +738,7 @@ function BlooketPlayContent() {
                     </Button>
                   </div>
                 ) : (
-                  /* 3. ĐÃ XÁC THỰC THÀNH CÔNG VÀO LỚP -> CHỈ HIỂN THỊ NÚT BẤM (CÙNG MÀU XANH DƯƠNG, KHÔNG ĐỔI MÀU) */
+                  /* 3. ĐÃ XÁC THỰC THÀNH CÔNG VÀO LỚP */
                   <Button
                     variant="primary"
                     onClick={handleStartExamFlow}
@@ -686,18 +751,20 @@ function BlooketPlayContent() {
               ) : (
                 /* BÀI TẬP TỰ DO: BẤT CỨ AI CŨNG VÀO ĐƯỢC */
                 <>
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                      Họ và tên của bạn
-                    </label>
-                    <Input
-                      type="text"
-                      value={studentName}
-                      onChange={(e) => setStudentName(e.target.value)}
-                      placeholder="Nhập họ và tên"
-                      className="rounded-2xl text-sm"
-                    />
-                  </div>
+                  {!studentName && (
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                        Họ và tên của bạn
+                      </label>
+                      <Input
+                        type="text"
+                        value={studentName}
+                        onChange={(e) => setStudentName(e.target.value)}
+                        placeholder="Nhập họ và tên"
+                        className="rounded-2xl text-sm"
+                      />
+                    </div>
+                  )}
 
                   <Button
                     variant="primary"
