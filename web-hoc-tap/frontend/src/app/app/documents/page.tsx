@@ -104,7 +104,7 @@ function DocumentsPageContent() {
   const [currentFolderId, setCurrentFolderId] = useState<string | null>(null);
 
   useEffect(() => {
-    const fId = searchParams.get('folderId');
+    const fId = searchParams && typeof searchParams.get === 'function' ? searchParams.get('folderId') : null;
     if (fId) {
       setCurrentFolderId(fId);
       if (typeof window !== 'undefined' && window.location.search) {

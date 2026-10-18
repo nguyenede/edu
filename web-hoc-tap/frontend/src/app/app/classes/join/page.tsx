@@ -14,7 +14,7 @@ function JoinClassContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { token } = useAuthStore();
-  const codeParam = searchParams.get('code') || '';
+  const codeParam = (searchParams && typeof searchParams.get === 'function' ? searchParams.get('code') : null) || '';
   const [joinCode, setJoinCode] = useState(codeParam.replace(/\D/g, ''));
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);

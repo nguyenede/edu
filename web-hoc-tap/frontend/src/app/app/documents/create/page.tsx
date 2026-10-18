@@ -113,8 +113,8 @@ function normalizeGradeLabel(g?: string): string {
 function DocumentCreateContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const rawFolderId = searchParams.get('folderId');
-  const rawFolderName = searchParams.get('folderName');
+  const rawFolderId = searchParams && typeof searchParams.get === 'function' ? searchParams.get('folderId') : null;
+  const rawFolderName = searchParams && typeof searchParams.get === 'function' ? searchParams.get('folderName') : null;
 
   const [folderId, setFolderId] = useState<string | null>(null);
   const [folderName, setFolderName] = useState<string | null>(null);

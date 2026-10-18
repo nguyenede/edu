@@ -29,7 +29,9 @@ function RegisterFormContent() {
   const [loading, setLoading] = useState(false);
 
   const getDestinationUrl = (targetEmail?: string | null): string => {
-    const explicitRedirect = searchParams?.get('redirect') || searchParams?.get('next');
+    const explicitRedirect = searchParams && typeof searchParams.get === 'function'
+      ? (searchParams.get('redirect') || searchParams.get('next'))
+      : null;
     if (explicitRedirect && explicitRedirect !== '/dashboard' && explicitRedirect !== '/app/dashboard') {
       return explicitRedirect;
     }
@@ -236,7 +238,11 @@ function RegisterFormContent() {
           <div className="text-center text-xs text-slate-500 pt-3 border-t border-slate-100 dark:border-slate-800">
             Đã có tài khoản?{' '}
             <Link
-              href={searchParams?.get('redirect') ? `/login?redirect=${encodeURIComponent(searchParams.get('redirect')!)}` : '/login'}
+              href={
+                searchParams && typeof searchParams.get === 'function' && searchParams.get('redirect')
+                  ? `/login?redirect=${encodeURIComponent(searchParams.get('redirect')!)}`
+                  : '/login'
+              }
               className="font-bold text-google-blue hover:underline"
             >
               Đăng nhập ngay

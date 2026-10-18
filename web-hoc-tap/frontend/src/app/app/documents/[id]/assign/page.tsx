@@ -245,7 +245,7 @@ function AssignPageContent() {
 
   // Config States
   const [title, setTitle] = useState('');
-  const queryClassId = searchParams?.get('classId') || searchParams?.get('assignClassId') || 'public';
+  const queryClassId = (searchParams && typeof searchParams.get === 'function' ? (searchParams.get('classId') || searchParams.get('assignClassId')) : null) || 'public';
   const [assignMode, setAssignMode] = useState<'public' | 'class'>(
     queryClassId && queryClassId !== 'public' ? 'class' : 'public'
   );

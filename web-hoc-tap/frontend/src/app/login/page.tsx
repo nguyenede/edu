@@ -28,7 +28,9 @@ function LoginFormContent() {
 
   const getDestinationUrl = (targetEmail?: string | null): string => {
     // 1. Nếu có tham số redirect/next được chỉ định rõ (khác dashboard), ưu tiên trang đó
-    const explicitRedirect = searchParams?.get('redirect') || searchParams?.get('next');
+    const explicitRedirect = searchParams && typeof searchParams.get === 'function'
+      ? (searchParams.get('redirect') || searchParams.get('next'))
+      : null;
     if (explicitRedirect && explicitRedirect !== '/dashboard' && explicitRedirect !== '/app/dashboard') {
       return explicitRedirect;
     }
@@ -262,7 +264,11 @@ function LoginFormContent() {
           <div className="text-center text-xs text-slate-500 pt-3">
             Chưa có tài khoản?{' '}
             <Link
-              href={searchParams?.get('redirect') ? `/register?redirect=${encodeURIComponent(searchParams.get('redirect')!)}` : '/register'}
+              href={
+                searchParams && typeof searchParams.get === 'function' && searchParams.get('redirect')
+                  ? `/register?redirect=${encodeURIComponent(searchParams.get('redirect')!)}`
+                  : '/register'
+              }
               className="font-bold text-google-blue hover:underline"
             >
               Đăng ký tài khoản mới

@@ -8,7 +8,7 @@ function DocumentLegacyViewContent() {
   const searchParams = useSearchParams();
 
   useEffect(() => {
-    const id = searchParams.get('id') || '6a8980105b9083ecaeffdfaa52bd5c46';
+    const id = (searchParams && typeof searchParams.get === 'function' ? searchParams.get('id') : null) || '6a8980105b9083ecaeffdfaa52bd5c46';
     router.replace(`/app/documents/${encodeURIComponent(id)}`);
   }, [router, searchParams]);
 

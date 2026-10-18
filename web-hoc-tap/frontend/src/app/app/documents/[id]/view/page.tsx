@@ -284,8 +284,8 @@ function DocumentDynamicViewPageContent() {
   }, [user, isTeacher, router]);
 
   const fileId = (params?.id as string) || '';
-  const searchFolderId = searchParams?.get('folderId') || null;
-  const searchFolderName = searchParams?.get('folderName') || null;
+  const searchFolderId = searchParams && typeof searchParams.get === 'function' ? searchParams.get('folderId') : null;
+  const searchFolderName = searchParams && typeof searchParams.get === 'function' ? searchParams.get('folderName') : null;
 
   const [fileItem, setFileItem] = useState<DocumentFileItem | null>(() => {
     if (typeof window !== 'undefined' && fileId) {

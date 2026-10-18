@@ -46,7 +46,13 @@ export default function GlobalError({
 
           <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
             <button
-              onClick={() => reset()}
+              onClick={() => {
+                try {
+                  reset();
+                } catch {
+                  window.location.reload();
+                }
+              }}
               style={{ padding: '10px 20px', backgroundColor: '#1a73e8', color: '#ffffff', border: 'none', borderRadius: '999px', fontSize: '13px', fontWeight: '700', cursor: 'pointer', boxShadow: '0 4px 6px -1px rgba(26, 115, 232, 0.2)' }}
             >
               Thử lại ngay

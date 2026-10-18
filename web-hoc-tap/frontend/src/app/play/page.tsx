@@ -71,7 +71,7 @@ function PlayMathRenderer({ text }: { text: string }) {
 function BlooketPlayContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const initialPin = searchParams?.get('pin') || '';
+  const queryPin = (searchParams && typeof searchParams.get === 'function' ? searchParams.get('pin') : null) || '';
 
   // Phases: 'lobby' | 'anti_cheat_prompt' | 'playing' | 'completed'
   const [phase, setPhase] = useState<'lobby' | 'anti_cheat_prompt' | 'playing' | 'completed'>('lobby');
@@ -81,7 +81,7 @@ function BlooketPlayContent() {
   const [classCheckStatus, setClassCheckStatus] = useState<'idle' | 'checking' | 'allowed' | 'not_logged_in' | 'not_in_class'>('idle');
 
   // Lobby States
-  const [pinInput, setPinInput] = useState(initialPin);
+  const [pinInput, setPinInput] = useState(queryPin);
   const [studentName, setStudentName] = useState('');
   const [homework, setHomework] = useState<HomeworkItem | null>(null);
   const questionsCount = homework?.quizData?.questions?.length || 0;
@@ -126,12 +126,20 @@ function BlooketPlayContent() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const isSubmittingRef = useRef(false);
 
-  // Auto-load PIN if provided in query
+  // Auto-load PIN if provided in query or window location
   useEffect(() => {
-    if (initialPin && initialPin.trim().length > 0) {
-      handleLookupPin(initialPin.trim());
+    try {
+      const fromQuery = searchParams && typeof searchParams.get === 'function' ? searchParams.get('pin') : null;
+      const fromWindow = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('pin') : null;
+      const resolvedPin = (fromQuery || fromWindow || '').trim();
+      if (resolvedPin) {
+        setPinInput((prev) => prev || resolvedPin);
+        handleLookupPin(resolvedPin);
+      }
+    } catch (err) {
+      console.warn('Error reading PIN parameter:', err);
     }
-  }, [initialPin]);
+  }, [searchParams]);
 
   // Kiểm tra quyền truy cập lớp học khi bài tập được tải
   useEffect(() => {

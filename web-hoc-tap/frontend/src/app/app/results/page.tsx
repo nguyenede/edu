@@ -67,7 +67,7 @@ export default function ResultsPage() {
       return;
     }
 
-    const queryClassId = searchParams?.get('classId');
+    const queryClassId = searchParams && typeof searchParams.get === 'function' ? searchParams.get('classId') : null;
     if (queryClassId) {
       setSelectedClassId(queryClassId);
     }
