@@ -22,6 +22,11 @@ import {
   DEFAULT_GAME_CONFIG,
 } from '@/components/games/GameConfigModal';
 import {
+  RandomPickerModal,
+  RandomPickerSubMode,
+} from '@/components/games/RandomPickerModal';
+import { RandomPickerCardIcon } from '@/components/games/RandomPickerCardIcon';
+import {
   normalizeGameQuestion,
   DEFAULT_CLASSROOM_TRIAL_QUESTIONS,
 } from '@/lib/gameQuestionHelper';
@@ -92,6 +97,10 @@ export default function GamesHubPage() {
   const [editingLessonId, setEditingLessonId] = useState<string | null>(null);
   const [gameConfig, setGameConfig] = useState<GameSettingsConfig>(DEFAULT_GAME_CONFIG);
   const [customQuestions, setCustomQuestions] = useState<GameQuestion[]>([]);
+
+  // Random Picker modal state (Vòng quay, Đua vịt, Đua bi, Bắt vịt 3D, Gọi tên bằng ảnh, Ghép cặp bằng ảnh, Ống kính may mắn)
+  const [isRandomPickerOpen, setIsRandomPickerOpen] = useState(false);
+  const [randomPickerInitialMode, setRandomPickerInitialMode] = useState<RandomPickerSubMode>('wheel');
 
   // Load saved lessons from localStorage
   useEffect(() => {
@@ -851,9 +860,95 @@ export default function GamesHubPage() {
             )}
           </div>
         ) : (
-          /* LEVEL 1: OVERALL 8 GAMES CATALOG HUB */
-          <div className="space-y-4">
+          /* LEVEL 1: OVERALL GAMES CATALOG HUB */
+          <div className="space-y-5">
+            {/* FEATURED CARD: "Gọi Tên Ngẫu Nhiên" (Khớp 100% hình ảnh) */}
+            <div
+              className="relative rounded-3xl p-5 sm:p-6 transition-all duration-300 shadow-md hover:shadow-lg select-none flex flex-col justify-between overflow-hidden"
+              style={{
+                background:
+                  'linear-gradient(135deg, #fffbeb, #fff1f2) padding-box, linear-gradient(120deg, #f59e0b, #ec4899, #8b5cf6, #0ea5e9, #f59e0b) border-box',
+                border: '3px solid transparent',
+                boxShadow:
+                  '0 8px 26px rgba(236, 72, 153, 0.2), 0 0 0 4px rgba(245, 158, 11, 0.08)',
+              }}
+            >
+              {/* Ribbon góc trái: "★ NỔI BẬT" */}
+              <span className="absolute top-3 left-4 z-10 px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-wider text-white bg-gradient-to-r from-amber-500 to-pink-500 shadow-sm">
+                ★ NỔI BẬT
+              </span>
 
+              {/* Badge góc phải: "MỚI" */}
+              <span className="absolute top-3 right-4 z-10 px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-wider text-white bg-gradient-to-r from-red-500 to-orange-500 shadow-sm animate-pulse">
+                MỚI
+              </span>
+
+              {/* Tiêu đề căn giữa: "Gọi Tên Ngẫu Nhiên" */}
+              <div className="text-center pt-2 sm:pt-1 mb-3">
+                <h2
+                  className="text-xl sm:text-2xl font-black tracking-tight"
+                  style={{
+                    background: 'linear-gradient(90deg, #ea580c, #db2777, #7c3aed)',
+                    WebkitBackgroundClip: 'text',
+                    color: 'transparent',
+                  }}
+                >
+                  Gọi Tên Ngẫu Nhiên
+                </h2>
+              </div>
+
+              {/* Thân card: Cột trái (Icon + Nút Bắt đầu) & Cột phải (Danh sách phân tách bởi dấu chấm) */}
+              <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6 mt-1">
+                {/* Cột trái */}
+                <div className="flex flex-col items-center gap-2.5 shrink-0">
+                  <RandomPickerCardIcon size={84} />
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setRandomPickerInitialMode('wheel');
+                      setIsRandomPickerOpen(true);
+                    }}
+                    className="px-5 py-1.5 rounded-xl text-xs font-bold text-white shadow-md shadow-purple-600/30 hover:scale-105 active:scale-95 transition-all cursor-pointer"
+                    style={{
+                      background: 'linear-gradient(135deg, #667eea, #764ba2)',
+                    }}
+                  >
+                    Bắt đầu
+                  </button>
+                </div>
+
+                {/* Cột phải: Danh sách phân tách dấu chấm tròn • với 5 màu chuẩn */}
+                <div className="flex-1 text-center sm:text-left pt-1.5">
+                  <div className="flex flex-wrap items-center justify-center sm:justify-start gap-x-2 gap-y-2 leading-relaxed text-xs sm:text-sm">
+                    {[
+                      { title: 'Vòng quay', mode: 'wheel' as const, color: '#ea580c' },
+                      { title: 'Đua vịt', mode: 'duck' as const, color: '#0891b2' },
+                      { title: 'Đua bi (Đường đua ngẫu nhiên)', mode: 'marble' as const, color: '#7c3aed' },
+                      { title: 'Bắt vịt 3D', mode: 'blind_duck' as const, color: '#db2777' },
+                      { title: 'Gọi tên bằng ảnh', mode: 'photo_call' as const, color: '#16a34a' },
+                      { title: 'Ghép cặp bằng ảnh', mode: 'photo_pair' as const, color: '#ea580c' },
+                      { title: 'Ống kính may mắn', mode: 'lucky_lens' as const, color: '#0891b2' },
+                    ].map((item, idx) => (
+                      <React.Fragment key={item.title}>
+                        {idx > 0 && <span className="text-slate-300 font-normal select-none">•</span>}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setRandomPickerInitialMode(item.mode);
+                            setIsRandomPickerOpen(true);
+                          }}
+                          className="font-extrabold hover:underline cursor-pointer bg-transparent border-none p-0 inline"
+                          style={{ color: item.color }}
+                        >
+                          {item.title}
+                        </button>
+                      </React.Fragment>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {GAME_LIST.map((game) => {
@@ -948,6 +1043,13 @@ export default function GamesHubPage() {
           }}
         />
       )}
+
+      {/* Random Picker Modal (7 chế độ gọi tên ngẫu nhiên: Vòng quay, Đua vịt, Đua bi, Bắt vịt 3D, Gọi tên bằng ảnh, Ghép cặp bằng ảnh, Ống kính may mắn) */}
+      <RandomPickerModal
+        isOpen={isRandomPickerOpen}
+        onClose={() => setIsRandomPickerOpen(false)}
+        initialMode={randomPickerInitialMode}
+      />
     </AppShell>
   );
 }
