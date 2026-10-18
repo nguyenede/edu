@@ -1086,7 +1086,7 @@ function DocumentsPageContent() {
         try {
           await renameDocumentFile(token, renameItem.id, renameValue.trim());
         } catch (err: any) {
-          setSyncError(err.message || 'Không thể đổi tên tệp');
+          setSyncError(err.message || 'Không thể đổi tên tài liệu');
         }
       }
       setFiles((prev) =>
@@ -2296,7 +2296,7 @@ function DocumentsPageContent() {
       <Modal
         isOpen={!!renameItem}
         onClose={() => setRenameItem(null)}
-        title={renameItem?.type === 'folder' ? 'Đổi tên thư mục' : 'Đổi tên tệp đề thi'}
+        title={renameItem?.type === 'folder' ? 'Đổi tên thư mục' : 'Đổi tên tài liệu'}
       >
         <form onSubmit={handleSaveRename} className="space-y-4">
           <Input
@@ -2311,7 +2311,7 @@ function DocumentsPageContent() {
               Hủy
             </Button>
             <Button size="sm" type="submit">
-              Lưu thay đổi
+              Lưu
             </Button>
           </div>
         </form>
