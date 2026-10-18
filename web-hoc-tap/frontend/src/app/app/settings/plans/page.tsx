@@ -50,19 +50,22 @@ export default function PlansPage() {
       }
     }
 
-    // Tự động cuộn xuống dưới cùng của trang bảng giá / nâng cấp gói
-    const scrollToBottom = () => {
+    // Tự động cuộn xuống phần thông tin các gói dịch vụ mà không bị che mất tiêu đề
+    const scrollToPackage = () => {
+      const packageEl = document.getElementById('package');
       const viewport = document.getElementById('app-main-viewport');
-      if (viewport) {
-        viewport.scrollTo({ top: viewport.scrollHeight, behavior: 'smooth' });
+      if (packageEl && viewport) {
+        const targetScrollTop = Math.max(0, packageEl.offsetTop - 24);
+        viewport.scrollTo({ top: targetScrollTop, behavior: 'smooth' });
+      } else if (packageEl) {
+        packageEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
-      window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
     };
 
     // Cuộn ngay và sau khi các thẻ thành phần được mount / tải ảnh xong
-    scrollToBottom();
-    const t1 = setTimeout(scrollToBottom, 150);
-    const t2 = setTimeout(scrollToBottom, 450);
+    scrollToPackage();
+    const t1 = setTimeout(scrollToPackage, 150);
+    const t2 = setTimeout(scrollToPackage, 450);
 
     return () => {
       clearTimeout(t1);
@@ -143,7 +146,7 @@ export default function PlansPage() {
         </div>
       )}
 
-      <div className="max-w-5xl mx-auto space-y-8 sm:space-y-10 pt-2 sm:pt-4 pb-16">
+      <div className="max-w-5xl mx-auto space-y-8 sm:space-y-10 pt-2 sm:pt-4 pb-32 sm:pb-48">
 
         {/* TOP SECTION: ỦNG HỘ NHÀ PHÁT TRIỂN & VIETQR CARD TO HƠN */}
         <section className="space-y-6">
@@ -223,9 +226,9 @@ export default function PlansPage() {
         </section>
 
         {/* BOTTOM SECTION: THÔNG TIN CÁC GÓI DỊCH VỤ */}
-        <section id="package" className="space-y-6 pt-10 md:pt-12 scroll-mt-4">
-          <div className="flex flex-col items-center justify-center gap-2">
-            <span className="inline-flex items-center px-3.5 py-1 bg-red-50 dark:bg-red-950/50 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-900/60 rounded-full text-xs font-semibold shadow-2xs">
+        <section id="package" className="space-y-6 pt-12 md:pt-16 scroll-mt-20">
+          <div className="flex flex-col items-center justify-center gap-2.5 pt-3">
+            <span className="inline-flex items-center px-4 py-1.5 bg-red-50 dark:bg-red-950/50 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-900/60 rounded-full text-xs font-semibold shadow-2xs">
               Tính năng này đang được phát triển
             </span>
             <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100 text-center">
