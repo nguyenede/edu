@@ -556,7 +556,8 @@ export default function AiChatView({ initialSessionId }: { initialSessionId?: st
     activeSessionIdRef.current = currentSessionId;
     setActiveSessionId(currentSessionId);
     if (typeof window !== 'undefined') {
-      window.history.pushState(null, '', `/app/si/c/${currentSessionId}`);
+      const currentState = (window.history.state && typeof window.history.state === 'object') ? window.history.state : {};
+      window.history.pushState(currentState, '', `/app/si/c/${currentSessionId}`);
     }
     persistSessionMessages(currentSessionId, newMessages, textToSend);
 

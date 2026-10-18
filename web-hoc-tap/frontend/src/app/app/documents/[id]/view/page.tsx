@@ -1,6 +1,8 @@
 'use client';
 
 import React, { useState, useEffect, Component, ErrorInfo, ReactNode, Suspense } from 'react';
+import { createPortal } from 'react-dom';
+import dynamic from 'next/dynamic';
 import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import { AppShell } from '@/components/AppShell';
 import { BreadcrumbChevron } from '@/components/BreadcrumbChevron';
@@ -53,6 +55,14 @@ class MathErrorBoundary extends Component<{ fallback: ReactNode; children: React
   }
 }
 
+function cleanOptionContent(raw: any): string {
+  if (raw === null || raw === undefined) return '';
+  const text = typeof raw === 'string' ? raw : typeof raw === 'number' ? String(raw) : raw?.content ? String(raw.content) : '';
+  if (!text) return '';
+  // Strip redundant leading option letter e.g. "A. Byte" or "B) Bit" to prevent double "A. A. Byte"
+  return text.replace(/^[A-Da-d][\.\)\:\-\s]\s*/, '').trim();
+}
+
 function formatMathString(raw: any): string {
   if (raw === null || raw === undefined) return '';
   const text = typeof raw === 'string' ? raw : typeof raw === 'number' ? String(raw) : raw?.content ? String(raw.content) : '';
@@ -65,6 +75,150 @@ function formatMathString(raw: any): string {
   formatted = cleanLeakedOleGarbage(formatted);
   return formatted;
 }
+
+const PRINT_PORTAL_STYLES = `
+  @media screen {
+    #kiyo-exam-print-portal {
+      display: none !important;
+      visibility: hidden !important;
+      position: absolute !important;
+      left: -99999px !important;
+      top: -99999px !important;
+      width: 0 !important;
+      height: 0 !important;
+      overflow: hidden !important;
+      pointer-events: none !important;
+      opacity: 0 !important;
+      z-index: -9999 !important;
+    }
+  }
+
+  @page {
+    size: A4 portrait;
+    margin: 15mm 15mm 15mm 15mm;
+  }
+
+  @media print {
+    /* 1. Global Document Reset */
+    html, html.dark, body, html.dark body {
+      background: #ffffff !important;
+      background-color: #ffffff !important;
+      color: #000000 !important;
+      font-size: 12pt !important;
+      line-height: 1.45 !important;
+      font-family: 'Times New Roman', 'Liberation Serif', Times, serif, Arial, sans-serif !important;
+      height: auto !important;
+      min-height: auto !important;
+      overflow: visible !important;
+      width: 100% !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+
+    /* 2. Hide EVERYTHING on the page except our dedicated print portal */
+    body > *:not(#kiyo-exam-print-portal) {
+      display: none !important;
+      visibility: hidden !important;
+      height: 0 !important;
+      max-height: 0 !important;
+      overflow: hidden !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      border: none !important;
+    }
+
+    /* 3. Dedicated Print Portal Styling */
+    #kiyo-exam-print-portal {
+      display: block !important;
+      visibility: visible !important;
+      position: static !important;
+      width: 100% !important;
+      max-width: 100% !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      background: #ffffff !important;
+      color: #000000 !important;
+      font-family: 'Times New Roman', 'Liberation Serif', Times, serif, Arial, sans-serif !important;
+      font-size: 12pt !important;
+      line-height: 1.45 !important;
+      overflow: visible !important;
+      height: auto !important;
+      opacity: 1 !important;
+    }
+
+    #kiyo-exam-print-portal,
+    #kiyo-exam-print-portal * {
+      color: #000000 !important;
+      text-shadow: none !important;
+      box-shadow: none !important;
+      border-color: #000000 !important;
+    }
+
+    /* KaTeX Math formulas */
+    #kiyo-exam-print-portal .katex-mathml {
+      display: none !important;
+    }
+
+    #kiyo-exam-print-portal .katex-html {
+      display: inline-block !important;
+      color: #000000 !important;
+      vertical-align: middle !important;
+    }
+
+    #kiyo-exam-print-portal .katex {
+      color: #000000 !important;
+      font-size: 1.1em !important;
+      text-rendering: auto !important;
+      line-height: normal !important;
+    }
+
+    #kiyo-exam-print-portal .katex-display {
+      margin: 0.4em 0 !important;
+    }
+
+    /* Question images */
+    #kiyo-exam-print-portal img {
+      max-width: 100% !important;
+      max-height: 240px !important;
+      display: block !important;
+      margin: 6px auto !important;
+      object-fit: contain !important;
+      border: none !important;
+      box-shadow: none !important;
+    }
+
+    /* Markdown tables */
+    #kiyo-exam-print-portal table {
+      border-collapse: collapse !important;
+      width: 100% !important;
+      margin: 6px 0 !important;
+    }
+
+    #kiyo-exam-print-portal th,
+    #kiyo-exam-print-portal td {
+      border: 1px solid #000000 !important;
+      padding: 4px 8px !important;
+      color: #000000 !important;
+      background: transparent !important;
+    }
+
+    /* Page break controls */
+    .print-question-item {
+      break-inside: avoid !important;
+      page-break-inside: avoid !important;
+      margin-bottom: 0.75rem !important;
+    }
+
+    .print-header-block,
+    .print-footer-block,
+    .print-answer-key-block {
+      break-inside: avoid !important;
+      page-break-inside: avoid !important;
+    }
+  }
+`;
 
 function MathRenderer({ text, className = '' }: { text: any; className?: string }) {
   if (text === null || text === undefined) return null;
@@ -287,47 +441,15 @@ function DocumentDynamicViewPageContent() {
   const searchFolderId = searchParams && typeof searchParams.get === 'function' ? searchParams.get('folderId') : null;
   const searchFolderName = searchParams && typeof searchParams.get === 'function' ? searchParams.get('folderName') : null;
 
-  const [fileItem, setFileItem] = useState<DocumentFileItem | null>(() => {
-    if (typeof window !== 'undefined' && fileId) {
-      try {
-        const savedFiles = localStorage.getItem('app_documents_files');
-        const customFiles = localStorage.getItem('custom_uploaded_files');
-        const list1 = savedFiles ? JSON.parse(savedFiles) : [];
-        const list2 = customFiles ? JSON.parse(customFiles) : [];
-        const all = [...(Array.isArray(list1) ? list1 : []), ...(Array.isArray(list2) ? list2 : [])];
-        const found = all.find((f: any) => f && matchDocId(f.id, fileId));
-        if (found) return found;
-      } catch {}
-    }
-    return null;
-  });
-  const [folders, setFolders] = useState<DocumentFolderItem[]>(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const savedFolders = localStorage.getItem('app_documents_folders');
-        if (savedFolders) {
-          const parsed = JSON.parse(savedFolders);
-          if (Array.isArray(parsed)) return parsed;
-        }
-      } catch {}
-    }
-    return [];
-  });
-  const [isLoading, setIsLoading] = useState<boolean>(() => {
-    if (typeof window !== 'undefined' && fileId) {
-      try {
-        const savedFiles = localStorage.getItem('app_documents_files');
-        const customFiles = localStorage.getItem('custom_uploaded_files');
-        const list1 = savedFiles ? JSON.parse(savedFiles) : [];
-        const list2 = customFiles ? JSON.parse(customFiles) : [];
-        const all = [...(Array.isArray(list1) ? list1 : []), ...(Array.isArray(list2) ? list2 : [])];
-        const found = all.find((f: any) => f && matchDocId(f.id, fileId));
-        if (found) return false;
-      } catch {}
-    }
-    return true;
-  });
+  const [fileItem, setFileItem] = useState<DocumentFileItem | null>(null);
+  const [folders, setFolders] = useState<DocumentFolderItem[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const [showAnswers, setShowAnswers] = useState(true);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Auto clean up address bar: remove redundant query params (?folderId=...&folderName=...), /view suffix, and /app/ prefix
   useEffect(() => {
@@ -338,7 +460,8 @@ function DocumentDynamicViewPageContent() {
         window.location.pathname.endsWith('/view') ||
         window.location.pathname.startsWith('/app/')
       ) {
-        window.history.replaceState(window.history.state, '', cleanUrl);
+        const currentState = (window.history.state && typeof window.history.state === 'object') ? window.history.state : {};
+        window.history.replaceState(currentState, '', cleanUrl);
       }
     }
   }, [fileId]);
@@ -553,7 +676,9 @@ function DocumentDynamicViewPageContent() {
 
   const handlePrint = () => {
     if (typeof window !== 'undefined') {
-      window.print();
+      setTimeout(() => {
+        window.print();
+      }, 50);
     }
   };
 
@@ -675,7 +800,8 @@ function DocumentDynamicViewPageContent() {
   const displayTitle = (fileItem.name || 'Đề thi trắc nghiệm').replace(/\.[^/.]+$/, '');
 
   return (
-    <AppShell
+    <>
+      <AppShell
       title={
         <div className="flex items-center gap-1.5 flex-nowrap min-w-0">
           <button
@@ -738,10 +864,10 @@ function DocumentDynamicViewPageContent() {
             size="sm"
             onClick={handlePrint}
             title="In đề thi"
-            className="rounded-xl text-xs gap-1.5 hidden md:inline-flex"
+            className="rounded-xl text-xs gap-1.5 inline-flex"
           >
             <Printer size={14} />
-            In đề
+            <span>In đề</span>
           </Button>
 
           <Button
@@ -917,7 +1043,7 @@ function DocumentDynamicViewPageContent() {
                             >
                               {letter}.
                             </strong>
-                            <MathRenderer text={opt.content} />
+                            <MathRenderer text={cleanOptionContent(opt.content)} />
                           </span>
                           {isCorrect && (
                             <CheckCircle2 size={18} className="text-emerald-500 shrink-0 ml-2" />
@@ -949,112 +1075,94 @@ function DocumentDynamicViewPageContent() {
         </div>
       </div>
 
-      {/* 2. DEDICATED FORMAL VIETNAMESE EXAM PAPER (.DOCX / A4 PRINT LAYOUT) */}
-      <div id="print-exam-paper" className="hidden print:block text-black bg-white leading-relaxed text-[13pt]">
-        <style dangerouslySetInnerHTML={{ __html: `
-          @page {
-            size: A4 portrait;
-            margin: 0mm !important;
-          }
-          @media print {
-            html, body {
-              height: auto !important;
-              overflow: visible !important;
-              background: #ffffff !important;
-              color: #000000 !important;
-              font-family: Arial, "Segoe UI", Roboto, "Helvetica Neue", Helvetica, sans-serif !important;
-              font-size: 13pt !important;
-              letter-spacing: normal !important;
-              word-spacing: normal !important;
-              margin: 0 !important;
-              padding: 0 !important;
-            }
-            header, aside, #sidebar, .print-screen-view, .print\\:hidden, [role="navigation"], h1, nav {
-              display: none !important;
-            }
-            #main-scroll, #app-main-viewport, #main-scroll > div, #main-scroll > div > div {
-              position: static !important;
-              overflow: visible !important;
-              padding: 0 !important;
-              margin: 0 !important;
-              height: auto !important;
-              width: 100% !important;
-              background: #ffffff !important;
-              box-shadow: none !important;
-              border: none !important;
-            }
-            #print-exam-paper {
-              display: block !important;
-              width: 100% !important;
-              color: #000000 !important;
-              background: #ffffff !important;
-              font-family: Arial, "Segoe UI", Roboto, "Helvetica Neue", Helvetica, sans-serif !important;
-              padding: 20mm 15mm 20mm 20mm !important;
-              box-sizing: border-box !important;
-            }
-            .print-break-avoid {
-              break-inside: avoid !important;
-              page-break-inside: avoid !important;
-            }
-          }
-        `}} />
+    </AppShell>
+
+    {/* DEDICATED PRINT PORTAL DIRECTLY ON document.body (100% immune to AppShell layout / overflow / height bugs) */}
+    {mounted && typeof document !== 'undefined' && createPortal(
+      <div id="kiyo-exam-print-portal" aria-hidden="true">
+        <style dangerouslySetInnerHTML={{ __html: PRINT_PORTAL_STYLES }} />
 
         {/* Formal Header: School / Ministry info + Official Exam Title */}
-        <div className="flex justify-between items-start pb-2 mb-3">
-          <div className="w-[45%] text-center">
-            <p className="font-bold text-[11pt] uppercase tracking-wide">SỞ GD&ĐT ................................</p>
-            <p className="font-bold text-[11pt] uppercase tracking-wide">TRƯỜNG THPT ........................</p>
-            {questions.length > 5 && (
-              <p className="italic text-[10pt] mt-0.5">(Đề thi gồm {Math.ceil(questions.length / 5)} trang)</p>
-            )}
+        <div className="print-header-block mb-3">
+          <div className="flex justify-between items-start pb-2">
+            <div className="w-[45%] text-center">
+              <p className="font-bold text-[11pt] uppercase tracking-wide leading-tight">SỞ GD&ĐT ................................</p>
+              <p className="font-bold text-[11pt] uppercase tracking-wide leading-tight mt-1">TRƯỜNG THPT ........................</p>
+              {questions.length > 3 && (
+                <p className="italic text-[10pt] mt-1 text-slate-700">
+                  (Đề thi gồm {Math.max(1, Math.ceil(questions.length / 5))} trang)
+                </p>
+              )}
+            </div>
+
+            <div className="w-[52%] text-center">
+              <p className="font-bold text-[12pt] uppercase tracking-wide leading-tight">
+                {displayTitle}
+              </p>
+              <p className="font-semibold text-[11pt] mt-1">NĂM HỌC 2025 - 2026</p>
+              <p className="italic text-[10pt] mt-1 text-slate-700">
+                Thời gian làm bài: {fileItem.parsedQuiz?.durationMinutes || 45} phút (không kể phát đề)
+              </p>
+            </div>
           </div>
 
-          <div className="w-[50%] text-center">
-            <p className="font-bold text-[12pt] uppercase tracking-wide">
-              {displayTitle}
-            </p>
-            <p className="font-semibold text-[11pt] mt-0.5">NĂM HỌC 2025 - 2026</p>
-            <p className="italic text-[10pt] mt-0.5">Thời gian làm bài: {fileItem.parsedQuiz?.durationMinutes || 45} phút - không kể phát đề</p>
+          {/* Student Info line & Exam Code */}
+          <div className="flex justify-between items-center text-[11pt] pt-2 pb-2 mt-2 border-t border-b border-black">
+            <div className="flex-1 flex flex-wrap gap-x-4 gap-y-1">
+              <span>Họ và tên thí sinh: ................................................................</span>
+              <span>Lớp: ....................</span>
+              <span>SBD: ....................</span>
+            </div>
+            <div className="font-bold text-[11pt] shrink-0 border border-black px-2.5 py-0.5 ml-2">
+              MÃ ĐỀ: 101
+            </div>
           </div>
         </div>
 
-        {/* Candidate / Student Info line & Exam Code */}
-        <div className="flex justify-between items-center text-[11pt] pb-2 mb-4">
-          <div className="flex-1">
-            Họ và tên thí sinh: ................................................................ Lớp: ....................
-          </div>
-          <div className="font-bold text-[11pt] shrink-0">
-            MÃ ĐỀ: 101
-          </div>
-        </div>
-
-        {/* List of Questions in Formal Docx Style */}
-        <div className="space-y-3 text-[12pt]">
+        {/* List of Questions in Formal Exam Style */}
+        <div className="space-y-3.5 text-[12pt] leading-normal">
           {questions.map((q, idx) => {
             const rawLabel = (q as any).rawLabel || `Câu ${idx + 1}`;
             const hasOptions = q.options && q.options.length > 0;
+            const cleanedContent = (q.content || '').replace(
+              /^(?:(?:Câu|câu|CÂU|Question|QUESTION|Bài\s*tập|BÀI\s*TẬP|Bài|BÀI|CH|Ví\s*dụ|VÍ\s*DỤ|Luyện\s*tập|Vận\s*dụng|Dạng)\s*(?:\d+|[IVXLCDM]+)[\s:.-]*|(?:\d+)[\.\)]\s+)/i,
+              ''
+            );
+
+            // Compute smart option column layout
+            const maxOptLen = hasOptions
+              ? Math.max(...q.options.map((opt) => cleanOptionContent(opt.content).length))
+              : 0;
+
+            let colClass = "grid grid-cols-4 gap-x-4 gap-y-1 mt-1 pl-3";
+            if (maxOptLen > 40) {
+              colClass = "space-y-1 mt-1 pl-3";
+            } else if (maxOptLen > 18) {
+              colClass = "grid grid-cols-2 gap-x-6 gap-y-1 mt-1 pl-3";
+            }
 
             return (
-              <div key={q.id || idx} className="print-break-avoid mb-3">
+              <div key={q.id || idx} className="print-question-item break-inside-avoid mb-3">
                 <p className="leading-snug text-justify whitespace-pre-wrap">
                   <span className="font-bold">{rawLabel}: </span>
-                  <MathRenderer
-                    text={(q.content || '').replace(
-                      /^(?:(?:Câu|câu|CÂU|Question|QUESTION|Bài\s*tập|BÀI\s*TẬP|Bài|BÀI|CH|Ví\s*dụ|VÍ\s*DỤ|Luyện\s*tập|Vận\s*dụng|Dạng)\s*(?:\d+|[IVXLCDM]+)[\s:.-]*|(?:\d+)[\.\)]\s+)/i,
-                      ''
-                    )}
-                  />
+                  <MathRenderer text={cleanedContent} />
                 </p>
 
-                {/* 4 options in clean aligned row or 2-column grid */}
                 {hasOptions && (
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-1 mt-1 pl-4">
+                  <div className={colClass}>
                     {q.options.map((opt, optIdx) => {
                       const letter = String.fromCharCode(65 + optIdx);
+                      const isCorrect = showAnswers && opt.isCorrect;
+                      const cleanedOptText = cleanOptionContent(opt.content);
+
                       return (
-                        <div key={optIdx} className="leading-snug flex items-center">
-                          <span className="font-bold mr-1">{letter}. </span>
-                          <MathRenderer text={opt.content} />
+                        <div key={optIdx} className="leading-normal flex items-start">
+                          <span className={`mr-1 shrink-0 ${isCorrect ? 'font-bold underline' : 'font-bold'}`}>
+                            {letter}.
+                          </span>
+                          <div className={`flex-1 ${isCorrect ? 'font-bold' : ''}`}>
+                            <MathRenderer text={cleanedOptText} />
+                          </div>
                         </div>
                       );
                     })}
@@ -1065,27 +1173,55 @@ function DocumentDynamicViewPageContent() {
           })}
         </div>
 
-        {/* End marker */}
-        <div className="text-center text-[11pt] italic mt-6 pt-3 print-break-avoid">
+        {/* End of Exam Marker */}
+        <div className="print-footer-block text-center text-[11pt] italic mt-6 pt-3 break-inside-avoid">
           <p className="font-bold tracking-widest uppercase">--------- HẾT ---------</p>
-          <p className="text-[10pt] mt-0.5">Thí sinh không được sử dụng tài liệu. Cán bộ coi thi không giải thích gì thêm</p>
+          <p className="text-[10pt] mt-1 text-slate-700">
+            Thí sinh không được sử dụng tài liệu. Cán bộ coi thi không giải thích gì thêm.
+          </p>
         </div>
-      </div>
-    </AppShell>
+
+        {/* Optional Answer Key Matrix for Teacher */}
+        {showAnswers && questions.length > 0 && (
+          <div className="print-answer-key-block mt-8 pt-4 border-t-2 border-dashed border-black break-inside-avoid">
+            <div className="text-center font-bold text-[12pt] uppercase mb-2">
+              BẢNG ĐÁP ÁN (DÀNH CHO GIÁO VIÊN)
+            </div>
+            <div className="grid grid-cols-5 sm:grid-cols-10 gap-1.5 text-center text-[11pt]">
+              {questions.map((q, idx) => {
+                const correctOptIdx = q.options?.findIndex((o) => o.isCorrect);
+                const correctLetter =
+                  correctOptIdx !== -1 && correctOptIdx !== undefined
+                    ? String.fromCharCode(65 + correctOptIdx)
+                    : ((q as any).answer || '-');
+                return (
+                  <div key={idx} className="border border-black py-1 px-1 bg-slate-50 font-medium">
+                    <span className="text-[10pt] font-normal text-slate-600 block">{idx + 1}</span>
+                    <span className="font-bold text-[12pt] text-black">{correctLetter}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+      </div>,
+      document.body
+    )}
+  </>
   );
 }
 
-export default function DocumentDynamicViewPage() {
-  return (
-    <Suspense
-      fallback={
-        <div className="p-16 text-center space-y-3">
-          <Loader2 size={36} className="animate-spin text-google-blue mx-auto" />
-          <p className="text-xs text-slate-500 font-medium">Đang tải và chuẩn bị nội dung đề thi</p>
-        </div>
-      }
-    >
-      <DocumentDynamicViewPageContent />
-    </Suspense>
-  );
-}
+const DocumentDynamicViewPage = dynamic(
+  () => Promise.resolve(DocumentDynamicViewPageContent),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="p-16 text-center space-y-3">
+        <Loader2 size={36} className="animate-spin text-google-blue mx-auto" />
+        <p className="text-xs text-slate-500 font-medium">Đang tải và chuẩn bị nội dung đề thi</p>
+      </div>
+    ),
+  }
+);
+
+export default DocumentDynamicViewPage;

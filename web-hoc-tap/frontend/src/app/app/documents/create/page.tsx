@@ -131,7 +131,8 @@ function DocumentCreateContent() {
       if (effName) sessionStorage.setItem('app_active_folder_name', effName);
 
       if (window.location.search) {
-        window.history.replaceState(window.history.state, '', '/app/documents/create');
+        const currentState = (window.history.state && typeof window.history.state === 'object') ? window.history.state : {};
+        window.history.replaceState(currentState, '', '/app/documents/create');
       }
     }
   }, [rawFolderId, rawFolderName]);
@@ -775,7 +776,7 @@ function DocumentCreateContent() {
                 <ChevronRight size={18} className="text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-200 transition-colors" />
               </button>
 
-              {/* DÒNG 2: TẠO ĐỀ THI BẰNG AI */}
+              {/* DÒNG 2: TẠO ĐỀ TRẮC NGHIỆM BẰNG SI */}
               <button
                 type="button"
                 onClick={() => router.push('/app/documents/create/si' + targetQuery)}
@@ -787,7 +788,7 @@ function DocumentCreateContent() {
                   </div>
                   <div>
                     <span className="text-sm font-bold text-slate-900 dark:text-white block">
-                      Tạo đề thi bằng SI
+                      Tạo đề trắc nghiệm bằng SI
                     </span>
                     <span className="text-xs text-slate-400 block font-normal">
                       Tự động tạo câu hỏi trắc nghiệm từ từ khóa hoặc chủ đề
@@ -797,29 +798,7 @@ function DocumentCreateContent() {
                 <ChevronRight size={18} className="text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-200 transition-colors" />
               </button>
 
-              {/* DÒNG 3: NHẬP TỪ NGÂN HÀNG CÂU HỎI */}
-              <button
-                type="button"
-                onClick={() => router.push('/app/documents/create/bank' + targetQuery)}
-                className="w-full p-4 bg-slate-50/70 dark:bg-slate-900/60 hover:bg-slate-100/80 dark:hover:bg-slate-800/80 rounded-2xl transition-all text-left flex items-center justify-between group cursor-pointer"
-              >
-                <div className="flex items-center gap-3.5">
-                  <div className="w-11 h-11 rounded-xl bg-emerald-100 dark:bg-emerald-950 text-google-green flex items-center justify-center shrink-0">
-                    <BookOpen size={20} />
-                  </div>
-                  <div>
-                    <span className="text-sm font-bold text-slate-900 dark:text-white block">
-                      Nhập từ Ngân hàng câu hỏi
-                    </span>
-                    <span className="text-xs text-slate-400 block font-normal">
-                      Trích xuất câu hỏi từ kho tài liệu và đề thi có sẵn
-                    </span>
-                  </div>
-                </div>
-                <ChevronRight size={18} className="text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-200 transition-colors" />
-              </button>
-
-              {/* DÒNG 4: QUÉT ĐỀ THI TỪ ẢNH CHỤP (OCR) */}
+              {/* DÒNG 3: QUÉT ĐỀ THI TỪ ẢNH CHỤP (OCR) */}
               <button
                 type="button"
                 onClick={() => router.push('/app/documents/create/ocr' + targetQuery)}
@@ -835,6 +814,36 @@ function DocumentCreateContent() {
                     </span>
                     <span className="text-xs text-slate-400 block font-normal">
                       Nhận diện câu hỏi từ hình ảnh đề thi in giấy
+                    </span>
+                  </div>
+                </div>
+                <ChevronRight size={18} className="text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-200 transition-colors" />
+              </button>
+
+              {/* DÒNG 4: NHẬP TỪ NGÂN HÀNG CÂU HỎI (DƯỚI CÙNG & MÀU GỐC XANH LÁ) */}
+              <button
+                type="button"
+                onClick={() => {
+                  setToastMessage('Tính năng "Nhập từ Ngân hàng câu hỏi" chưa được phát triển!');
+                  setTimeout(() => setToastMessage(null), 3500);
+                }}
+                className="w-full p-4 bg-slate-50/70 dark:bg-slate-900/60 hover:bg-slate-100/80 dark:hover:bg-slate-800/80 rounded-2xl transition-all text-left flex items-center justify-between group cursor-pointer"
+              >
+                <div className="flex items-center gap-3.5">
+                  <div className="w-11 h-11 rounded-xl bg-emerald-100 dark:bg-emerald-950 text-google-green flex items-center justify-center shrink-0">
+                    <BookOpen size={20} />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-bold text-slate-900 dark:text-white block">
+                        Nhập từ Ngân hàng câu hỏi
+                      </span>
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300 border border-amber-300/40">
+                        Chưa phát triển
+                      </span>
+                    </div>
+                    <span className="text-xs text-slate-400 block font-normal">
+                      Trích xuất câu hỏi từ kho tài liệu và đề thi có sẵn
                     </span>
                   </div>
                 </div>

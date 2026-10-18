@@ -25,14 +25,6 @@ export interface ClassroomTeam {
 
 export const GAME_NAV_ITEMS = [
   { id: 'random_picker', title: 'Gọi tên ngẫu nhiên' },
-  { id: 'tug_of_war', title: 'Kéo co kiến thức' },
-  { id: 'boat_race', title: 'Đua thuyền kiến thức' },
-  { id: 'lucky_wheel', title: 'Vòng quay may mắn' },
-  { id: 'zombie', title: 'Chặn Zombie bảo vệ thành' },
-  { id: 'gold_miner', title: 'Đào vàng kiến thức' },
-  { id: 'fruit_slash', title: 'Vườn quả tri thức' },
-  { id: 'whack_a_mole', title: 'Đập chuột chũi kiến thức' },
-  { id: 'bubble_pop', title: 'Bắt bong bóng đại dương' },
 ];
 
 interface ClassroomTeacherHeaderProps {
@@ -62,6 +54,7 @@ interface ClassroomTeacherHeaderProps {
   onRestart: () => void;
   onOpenSettings?: () => void;
   customToolbarRight?: React.ReactNode;
+  subModeItems?: { id: string; label: string; icon?: React.ReactNode; isActive?: boolean; onClick?: () => void }[];
 }
 
 export const ClassroomTeacherHeader: React.FC<ClassroomTeacherHeaderProps> = ({
@@ -82,6 +75,7 @@ export const ClassroomTeacherHeader: React.FC<ClassroomTeacherHeaderProps> = ({
   onBack,
   onRestart,
   customToolbarRight,
+  subModeItems,
 }) => {
   return (
     <div className="w-full bg-white dark:bg-[#1a1b1e] rounded-2xl px-3.5 sm:px-5 py-2.5 flex items-center justify-between gap-3 select-none transition-colors border border-slate-100 dark:border-white/5 shadow-2xs relative z-20">
@@ -97,15 +91,16 @@ export const ClassroomTeacherHeader: React.FC<ClassroomTeacherHeaderProps> = ({
           Trò chơi lớp học
         </button>
 
-        {/* Mũi tên 1: Dropdown đổi trò chơi */}
+        {/* Mũi tên 1: Phân cách cấp 1 và cấp 2 */}
         <BreadcrumbChevron
-          items={GAME_NAV_ITEMS.map((g) => ({
+          isStatic={GAME_NAV_ITEMS.length <= 1}
+          items={GAME_NAV_ITEMS.length > 1 ? GAME_NAV_ITEMS.map((g) => ({
             id: g.id,
             label: g.title,
             icon: getGameCustomIcon(g.id, 18),
             isActive: (gameShortName || '') === g.title || (gameShortName || '').includes(g.title),
             onClick: onSwitchGame ? () => onSwitchGame(g.id) : undefined,
-          }))}
+          })) : undefined}
           fallbackToStaticChevron={true}
         />
 
@@ -120,7 +115,11 @@ export const ClassroomTeacherHeader: React.FC<ClassroomTeacherHeaderProps> = ({
             >
               {gameShortName}
             </button>
-            <BreadcrumbChevron isStatic={true} />
+            <BreadcrumbChevron
+              isStatic={!subModeItems || subModeItems.length === 0}
+              items={subModeItems}
+              fallbackToStaticChevron={true}
+            />
             <span
               className="text-slate-900 dark:text-white font-normal truncate max-w-[160px] sm:max-w-xs md:max-w-sm lg:max-w-md xl:max-w-lg"
               title={title}
@@ -138,44 +137,64 @@ export const ClassroomTeacherHeader: React.FC<ClassroomTeacherHeaderProps> = ({
         )}
       </div>
 
-      {/* 2. CENTER: TEAM SCORES WITH QUICK (+1 / -1) CONTROLS */}
-      <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-        {teams.map((team, idx) => {
-          const isActive = activeTeamId === team.id;
-          const isBlue = idx === 0;
+      {/* 2. CENTER: SUB-MODE SWITCHER TABS (Đua vịt, Vòng quay, Đua bi, ...) OR TEAMS */}
+      {teams && teams.length > 0 ? (
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+          {teams.map((team, idx) => {
+            const isActive = activeTeamId === team.id;
+            const isBlue = idx === 0;
 
-          return (
-            <div
-              key={team.id}
-              onClick={() => onSelectActiveTeam && onSelectActiveTeam(team.id)}
-              className={`flex items-center gap-2 px-3 sm:px-4 py-1.5 rounded-xl transition-all cursor-pointer select-none ${
-                isActive
-                  ? isBlue
-                    ? 'bg-blue-100/90 dark:bg-blue-900/50 text-blue-900 dark:text-blue-100'
-                    : 'bg-rose-100/90 dark:bg-rose-900/50 text-rose-900 dark:text-rose-100'
-                  : 'bg-slate-100/70 dark:bg-white/5 opacity-80 hover:opacity-100'
-              }`}
-              title={`Bấm để chuyển lượt sang ${team.name}`}
-            >
-              <span
-                className={`w-3 h-3 rounded-full ${
-                  isBlue ? 'bg-blue-600' : 'bg-rose-600'
-                } ${isActive ? 'animate-pulse' : ''}`}
-              />
-              <span className="text-xs sm:text-sm font-bold text-slate-800 dark:text-zinc-100 max-w-[90px] sm:max-w-[130px] truncate">
-                {team.name}
-              </span>
-              <span
-                className={`text-xs sm:text-sm font-black px-2.5 py-0.5 rounded-lg text-white shadow-xs ${
-                  isBlue ? 'bg-blue-600' : 'bg-rose-600'
+            return (
+              <div
+                key={team.id}
+                onClick={() => onSelectActiveTeam && onSelectActiveTeam(team.id)}
+                className={`flex items-center gap-2 px-3 sm:px-4 py-1.5 rounded-xl transition-all cursor-pointer select-none ${
+                  isActive
+                    ? isBlue
+                      ? 'bg-blue-100/90 dark:bg-blue-900/50 text-blue-900 dark:text-blue-100'
+                      : 'bg-rose-100/90 dark:bg-rose-900/50 text-rose-900 dark:text-rose-100'
+                    : 'bg-slate-100/70 dark:bg-white/5 opacity-80 hover:opacity-100'
                 }`}
+                title={`Bấm để chuyển lượt sang ${team.name}`}
               >
-                {team.score}
-              </span>
-            </div>
-          );
-        })}
-      </div>
+                <span
+                  className={`w-3 h-3 rounded-full ${
+                    isBlue ? 'bg-blue-600' : 'bg-rose-600'
+                  } ${isActive ? 'animate-pulse' : ''}`}
+                />
+                <span className="text-xs sm:text-sm font-bold text-slate-800 dark:text-zinc-100 max-w-[90px] sm:max-w-[130px] truncate">
+                  {team.name}
+                </span>
+                <span
+                  className={`text-xs sm:text-sm font-black px-2.5 py-0.5 rounded-lg text-white shadow-xs ${
+                    isBlue ? 'bg-blue-600' : 'bg-rose-600'
+                  }`}
+                >
+                  {team.score}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      ) : subModeItems && subModeItems.length > 0 ? (
+        <div className="hidden md:flex items-center gap-1 p-1 bg-slate-100 dark:bg-white/5 rounded-2xl border border-slate-200/80 dark:border-white/10 shrink-0">
+          {subModeItems.map((item) => (
+            <button
+              key={item.id}
+              type="button"
+              onClick={item.onClick}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
+                item.isActive
+                  ? 'bg-google-blue text-white shadow-xs'
+                  : 'text-slate-600 dark:text-zinc-300 hover:text-slate-900 dark:hover:text-white hover:bg-white dark:hover:bg-white/10'
+              }`}
+            >
+              {item.icon}
+              <span>{item.label}</span>
+            </button>
+          ))}
+        </div>
+      ) : null}
 
       {/* 3. RIGHT: TEACHER TOOLBAR (CALL STUDENT, QUESTION LIST, FONT, SOUND, FULLSCREEN) */}
       <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">

@@ -33,7 +33,8 @@ function AiQuizCreateContent() {
       if (effName) sessionStorage.setItem('app_active_folder_name', effName);
 
       if (window.location.search) {
-        window.history.replaceState(window.history.state, '', '/app/documents/create/si');
+        const currentState = (window.history.state && typeof window.history.state === 'object') ? window.history.state : {};
+        window.history.replaceState(currentState, '', '/app/documents/create/si');
       }
     }
   }, [rawFolderId, rawFolderName]);
@@ -213,14 +214,14 @@ function AiQuizCreateContent() {
             menuTitle="Phương thức tạo đề"
             items={[
               { label: 'Tải lên Word/PDF', href: `/app/documents/create${targetQuery}`, icon: <FileUp size={14} className="text-blue-500 shrink-0" /> },
-              { label: 'Tạo đề bằng SI', href: `/app/documents/create/si${targetQuery}`, icon: <Sparkles size={14} className="text-amber-500 shrink-0" /> },
-              { label: 'Nhận diện ảnh (OCR)', href: `/app/documents/create/ocr${targetQuery}`, icon: <Camera size={14} className="text-purple-500 shrink-0" /> },
+              { label: 'Tạo đề trắc nghiệm bằng SI', href: `/app/documents/create/si${targetQuery}`, icon: <Sparkles size={14} className="text-amber-500 shrink-0" /> },
+              { label: 'Quét đề thi từ ảnh chụp (OCR)', href: `/app/documents/create/ocr${targetQuery}`, icon: <Camera size={14} className="text-purple-500 shrink-0" /> },
               { label: 'Ngân hàng câu hỏi', href: `/app/documents/create/bank${targetQuery}`, icon: <BookOpen size={14} className="text-emerald-500 shrink-0" /> },
               { label: 'Nhập thủ công', href: `/app/documents/create/manual${targetQuery}`, icon: <PenTool size={14} className="text-rose-500 shrink-0" /> },
             ]}
           />
           <span className="text-slate-900 dark:text-white font-normal truncate min-w-0 flex-1">
-            Tạo đề bằng SI
+            Tạo đề trắc nghiệm bằng SI
           </span>
         </div>
       }
@@ -239,7 +240,7 @@ function AiQuizCreateContent() {
             <Wand2 size={24} className="text-amber-500 shrink-0" />
             <div>
               <h2 className="text-sm font-bold text-slate-900 dark:text-white">
-                Trình tạo câu hỏi trắc nghiệm tự động 100% bằng SI
+                Tạo đề trắc nghiệm bằng SI
               </h2>
               <p className="text-xs text-slate-500">
                 Nhập chủ đề bài học, SI sẽ trực tiếp suy luận và sinh ra các câu hỏi trắc nghiệm kèm đáp án chuẩn xác
@@ -396,7 +397,7 @@ function AiQuizCreateContent() {
               onClick={handleGenerate}
               disabled={isGenerating}
             >
-              <Sparkles size={16} className="mr-1.5" /> {isGenerating ? 'SI Đang Xử Lý' : 'Tạo Đề Thi Bằng SI'}
+              <Sparkles size={16} className="mr-1.5" /> {isGenerating ? 'SI Đang Xử Lý' : 'Tạo Đề Trắc Nghiệm Bằng SI'}
             </Button>
           </div>
         </div>

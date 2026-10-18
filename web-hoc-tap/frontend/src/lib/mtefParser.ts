@@ -27,7 +27,7 @@ const MTEF_SYMBOL_MAP: Record<number, string> = {
   0x21d4: '\\Leftrightarrow ',
   0x00d7: '\\times ',
   0x00f7: '\\div ',
-  0x221a: '\\sqrt{}',
+  0x221a: '√ ',
   0x2248: '\\approx ',
   0x2261: '\\equiv ',
   0x223c: '\\sim ',

@@ -30,6 +30,28 @@ export class DocxPreprocessor {
     // Chuyển ký tự đồng dạng và xóa zero-width characters (TVCN_CHAR)
     result = replaceHomoglyphs(result);
 
+    // 1. Sửa lỗi đảo ngược phân số / ngắt dòng giữa tử và mẫu:
+    result = result.replace(/([a-zA-Z0-9_\(\)]+)\s*\n\s*[-—]{2,}\s*\n\s*([a-zA-Z0-9_\(\)]+)/g, '\\frac{$1}{$2}');
+    result = result.replace(/([a-zA-Z0-9_\(\)\\]+)\s*\n\s*\/\s*([a-zA-Z0-9_\(\)\\]+)/g, '\\frac{$1}{$2}');
+    result = result.replace(/([a-zA-Z0-9_\(\)\\]+)\s*\/\s*\n\s*([a-zA-Z0-9_\(\)\\]+)/g, '\\frac{$1}{$2}');
+
+    // 2. Khôi phục căn bậc hai từ ký tự Unicode \u221A / √
+    result = result.replace(/(?:\\u221A|√)\s*\(([^)]+)\)/g, '\\sqrt{$1}');
+    result = result.replace(/(?:\\u221A|√)\s*\{([^}]+)\}/g, '\\sqrt{$1}');
+    result = result.replace(/(?:\\u221A|√)\s*([a-zA-Z0-9]+)/g, '\\sqrt{$1}');
+
+    // 3. Sửa lỗi ngắt dòng ở số mũ, chỉ số dưới: nối liền vào biến liền trước
+    result = result.replace(/([a-zA-Z0-9_\)])\s*\n\s*(\^|\_)\{?([a-zA-Z0-9+\-*\/=]+)\}?/g, '$1$2{$3}');
+    result = result.replace(/([a-zA-Z0-9_\)])\s*(\^|\_)\s*\n\s*\{?([a-zA-Z0-9+\-*\/=]+)\}?/g, '$1$2{$3}');
+    result = result.replace(/([a-zA-Z0-9_\)])\s*\n\s*([²³¹⁰⁴⁵⁶⁷⁸⁹⁺⁻⁼⁽⁾₀₁₂₃₄₅₆₇₈₉₊₋₌₍₎]+)/g, '$1$2');
+    result = result.replace(/\b([A-Z][a-z]?)\s*\n\s*(\d)\b(?!\s*[\.\:])/g, '$1_$2');
+
+    // 4. Giữ nguyên cấu trúc hệ phương trình thành phần trong cùng một khối
+    result = result.replace(/(?:^|\n)\s*\{\s*\n\s*([^\n]+=[^\n]+)\s*\n\s*([^\n]+=[^\n]+(?:\s*\n\s*[^\n]+=[^\n]+)*)/g, (_, eq1, rest) => {
+      const eqs = [eq1.trim(), ...rest.split('\n').map((l: string) => l.trim()).filter(Boolean)];
+      return `\n\\begin{cases} ${eqs.join(' \\\\ ')} \\end{cases}\n`;
+    });
+
     return result;
   }
 
@@ -153,8 +175,8 @@ export class DocxPreprocessor {
       return ` [!m:${latex}] `;
     });
 
-    // 6. Xử lý ảnh nhúng qua <a:blip r:embed="rId..."/>
-    docXml = docXml.replace(/<a:blip\b[^>]*r:embed="([^"]+)"[^>]*>/g, (match, rId) => {
+    // 6. Xử lý ảnh nhúng qua <a:blip r:embed="rId..."/> hoặc <v:imagedata r:id="..."/>
+    docXml = docXml.replace(/<(?:a:blip|v:imagedata)\b[^>]*(?:r:embed|r:id)="([^"]+)"[^>]*>/g, (match, rId) => {
       const imgUri = images.get(rId);
       if (imgUri) {
         return ` [!img:${imgUri}] `;
@@ -222,8 +244,19 @@ export class DocxPreprocessor {
           const colorMatch = rXml.match(/<w:color\b[^>]*w:val="([0-9a-fA-F]{6})"/i);
           const color = colorMatch ? colorMatch[1].toUpperCase() : null;
 
+          const isSuperscript = /<w:vertAlign\b[^>]*w:val="superscript"/i.test(rXml);
+          const isSubscript = /<w:vertAlign\b[^>]*w:val="subscript"/i.test(rXml);
+
           const tMatches = Array.from(rXml.matchAll(/<w:t\b[^>]*>([\s\S]*?)<\/w:t>/g)).map((m: RegExpMatchArray) => m[1]);
           let runText = tMatches.join('');
+
+          if (runText) {
+            if (isSuperscript) {
+              runText = `^{${runText.trim()}}`;
+            } else if (isSubscript) {
+              runText = `_{${runText.trim()}}`;
+            }
+          }
 
           const placeholders = Array.from(rXml.matchAll(/(\[!m:[^\]]+\]|\[!img:[^\]]+\]|\[!\*[\s\S]*?\*!\])/g)).map((m: RegExpMatchArray) => m[1]);
           if (placeholders.length > 0) {

@@ -100,7 +100,7 @@ export const AZOTA_PATTERNS = {
 
   // 9. Placeholders đa phương tiện & công thức
   MATH_PLACEHOLDER: /\[!m:([^\]]+)\]/g,
-  IMAGE_PLACEHOLDER: /\[img:([^\]]+)\]/g,
+  IMAGE_PLACEHOLDER: /(?:\[!img:([^\]]+)\]|\[img:([^\]]+)\]|!\[.*?\]\(([^)]+)\)|\[IMAGE_URL\])/gi,
   TABLE_BLOCK: /\[\*\s*([\s\S]+?)\s*\*\]/g
 };
 

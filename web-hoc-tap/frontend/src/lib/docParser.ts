@@ -19,6 +19,8 @@ export interface ParsedQuestion {
   explanation?: string;
   type?: QuestionType;
   answer?: string;
+  images?: string[];
+  originalIndex?: number;
 }
 
 export interface ParsedQuiz {
@@ -186,9 +188,11 @@ export function parseExamContent(inputContent: string, titleHint: string = 'Đ�
   const questions: ParsedQuestion[] = [];
   let currentQuestion: {
     id: string;
+    originalIndex: number;
     content: string;
     options: ExtractedOptionItem[];
     points: number;
+    images: string[];
   } | null = null;
   const answerKeyMap: Record<number, string> = {};
 
@@ -222,10 +226,12 @@ export function parseExamContent(inputContent: string, titleHint: string = 'Đ�
       if (currentQuestion) {
         questions.push({
           id: currentQuestion.id,
+          originalIndex: currentQuestion.originalIndex,
           content: currentQuestion.content,
           points: currentQuestion.points,
           options: processQuestionOptions(currentQuestion.options),
-          type: currentQuestion.options.length >= 2 ? 'multiple_choice' : 'essay',
+          type: currentQuestion.options.length >= 2 ? 'multiple_choice' : 'short_answer',
+          images: currentQuestion.images.length > 0 ? currentQuestion.images : undefined,
         });
       }
 
@@ -235,11 +241,25 @@ export function parseExamContent(inputContent: string, titleHint: string = 'Đ�
 
       currentQuestion = {
         id: `q_${Date.now()}_${qIndex}`,
+        originalIndex: qNum,
         content: qContent,
         options: [],
         points: 1.0,
+        images: [],
       };
       continue;
+    }
+
+    // Trích xuất hình ảnh nếu có trong dòng
+    if (currentQuestion) {
+      const imgRegex = /(?:\[!(?:img|image):([^\]]+)\]|\[(?:img|image):([^\]]+)\]|!\[[^\]]*\]\(([^)]+)\)|<img\b[^>]*src=["']([^"']+)["'])/gi;
+      let imMatch: RegExpExecArray | null;
+      while ((imMatch = imgRegex.exec(lineHtml)) !== null) {
+        const src = (imMatch[1] || imMatch[2] || imMatch[3] || imMatch[4]).trim();
+        if (src && !currentQuestion.images.includes(src)) {
+          currentQuestion.images.push(src);
+        }
+      }
     }
 
     // Try extracting options from the lineHtml (single or multiple A. B. C. D. per line)
@@ -271,19 +291,21 @@ export function parseExamContent(inputContent: string, titleHint: string = 'Đ�
   if (currentQuestion) {
     questions.push({
       id: currentQuestion.id,
+      originalIndex: currentQuestion.originalIndex,
       content: cleanLeakedOleGarbage(currentQuestion.content),
       points: currentQuestion.points,
       options: processQuestionOptions(currentQuestion.options).map((opt) => ({
         ...opt,
         content: cleanLeakedOleGarbage(opt.content),
       })),
-      type: currentQuestion.options.length >= 2 ? 'multiple_choice' : 'essay',
+      type: currentQuestion.options.length >= 2 ? 'multiple_choice' : 'short_answer',
+      images: currentQuestion.images.length > 0 ? currentQuestion.images : undefined,
     });
   }
 
   // Apply Answer Key Mapping if explicit Answer Key exists at bottom
   questions.forEach((q, idx) => {
-    const qNum = idx + 1;
+    const qNum = q.originalIndex || (idx + 1);
     const keyTargetLetter = answerKeyMap[qNum];
 
     if (keyTargetLetter) {
@@ -317,6 +339,7 @@ export async function parseDocxFile(file: File): Promise<ParsedQuiz> {
         description: `Đề thi bóc tách từ file với ${res.questions.length} câu hỏi`,
         questions: res.questions.map((q, idx) => ({
           id: q.id || `q_${idx + 1}`,
+          originalIndex: q.originalIndex || (idx + 1),
           rawLabel: q.rawLabel,
           content: q.content,
           options: q.options || [],
@@ -324,6 +347,7 @@ export async function parseDocxFile(file: File): Promise<ParsedQuiz> {
           explanation: q.explanation,
           type: q.type,
           answer: q.answer,
+          images: q.images,
         })),
       };
     }

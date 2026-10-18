@@ -11,23 +11,37 @@ import {
   Users,
   Award,
   Sparkles,
-  RotateCcw
+  RotateCcw,
+  Maximize2,
+  Minimize2,
+  Dices,
 } from 'lucide-react';
 import { gameAudio } from '@/lib/gameSound';
+import { DuckRaceGame } from './DuckRaceGame';
+import { RosterConfigModal } from './RosterConfigModal';
+import {
+  DuckRaceIcon,
+  MarbleRaceIcon,
+  LuckyWheelIcon,
+  BlindDuckIcon,
+  PhotoPairIcon,
+  LuckyLensIcon,
+} from './GameCustomIcons';
 
 export type RandomPickerSubMode =
   | 'wheel'
   | 'duck'
   | 'marble'
   | 'blind_duck'
-  | 'photo_call'
   | 'photo_pair'
   | 'lucky_lens';
 
-interface RandomPickerModalProps {
+export interface RandomPickerModalProps {
   isOpen: boolean;
   onClose: () => void;
   initialMode?: RandomPickerSubMode;
+  students?: string[];
+  onSaveStudents?: (newStudents: string[]) => void;
 }
 
 const DEFAULT_STUDENTS = [
@@ -52,29 +66,31 @@ const DEFAULT_STUDENTS = [
 export const RANDOM_MODES: {
   id: RandomPickerSubMode;
   title: string;
-  icon: string;
+  icon: React.ReactNode;
   desc: string;
   color: string;
 }[] = [
-  { id: 'wheel', title: 'Vòng quay', icon: '🎡', desc: 'Vòng quay nhiều màu sắc may mắn gọi tên ngẫu nhiên', color: '#ea580c' },
-  { id: 'duck', title: 'Đua vịt', icon: '🦆', desc: 'Đàn vịt bơi đua tốc độ về đích để chọn bạn chiến thắng', color: '#0891b2' },
-  { id: 'marble', title: 'Đua bi', icon: '🔮', desc: 'Đường đua bi ngẫu nhiên qua các chướng ngại vật', color: '#7c3aed' },
-  { id: 'blind_duck', title: 'Bắt vịt 3D', icon: '🙈', desc: 'Bắt chú vịt bồng bềnh dưới hồ nước', color: '#db2777' },
-  { id: 'photo_call', title: 'Gọi tên bằng ảnh', icon: '🖼️', desc: 'Thẻ tên học sinh bay lướt và dừng lại ngẫu nhiên', color: '#16a34a' },
-  { id: 'photo_pair', title: 'Ghép cặp bằng ảnh', icon: '👥', desc: 'Tự động ghép đôi cả lớp thành từng cặp học tập', color: '#ea580c' },
-  { id: 'lucky_lens', title: 'Ống kính may mắn', icon: '📷', desc: 'Kính ngắm camera quét và khóa mục tiêu bạn học sinh', color: '#0891b2' },
+  { id: 'wheel', title: 'Vòng quay', icon: <LuckyWheelIcon size={18} />, desc: 'Vòng quay nhiều màu sắc may mắn gọi tên ngẫu nhiên', color: '#ea580c' },
+  { id: 'duck', title: 'Đua vịt', icon: <DuckRaceIcon size={18} />, desc: 'Đàn vịt bơi đua tốc độ về đích để chọn bạn chiến thắng', color: '#0891b2' },
+  { id: 'marble', title: 'Đua bi', icon: <MarbleRaceIcon size={18} />, desc: 'Đường đua bi ngẫu nhiên qua các chướng ngại vật', color: '#7c3aed' },
+  { id: 'blind_duck', title: 'Bắt vịt 3D', icon: <BlindDuckIcon size={18} />, desc: 'Bắt chú vịt bồng bềnh dưới hồ nước', color: '#db2777' },
+  { id: 'photo_pair', title: 'Ghép cặp bằng ảnh', icon: <PhotoPairIcon size={18} />, desc: 'Tự động ghép đôi cả lớp thành từng cặp học tập', color: '#ea580c' },
+  { id: 'lucky_lens', title: 'Ống kính may mắn', icon: <LuckyLensIcon size={18} />, desc: 'Kính ngắm camera quét và khóa mục tiêu bạn học sinh', color: '#0891b2' },
 ];
 
 export const RandomPickerModal: React.FC<RandomPickerModalProps> = ({
   isOpen,
   onClose,
   initialMode = 'wheel',
+  students,
+  onSaveStudents,
 }) => {
   const [mounted, setMounted] = useState(false);
   const [activeMode, setActiveMode] = useState<RandomPickerSubMode>(initialMode);
-  const [studentList, setStudentList] = useState<string[]>(DEFAULT_STUDENTS);
-  const [studentInput, setStudentInput] = useState<string>(DEFAULT_STUDENTS.join(', '));
+  const [studentList, setStudentList] = useState<string[]>(students && students.length > 0 ? students : DEFAULT_STUDENTS);
+  const [studentInput, setStudentInput] = useState<string>((students && students.length > 0 ? students : DEFAULT_STUDENTS).join(', '));
   const [isEditRosterOpen, setIsEditRosterOpen] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   // Gameplay state
   const [isRunning, setIsRunning] = useState(false);
@@ -91,8 +107,22 @@ export const RandomPickerModal: React.FC<RandomPickerModalProps> = ({
 
   useEffect(() => {
     setMounted(true);
+    if (students && students.length > 0) {
+      setStudentList(students);
+      setStudentInput(students.join(', '));
+      return;
+    }
     if (typeof window !== 'undefined') {
       try {
+        const stored = localStorage.getItem('random_picker_students');
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setStudentList(parsed);
+            setStudentInput(parsed.join(', '));
+            return;
+          }
+        }
         const rawClass =
           sessionStorage.getItem('current_active_class') ||
           localStorage.getItem('current_active_class');
@@ -110,7 +140,7 @@ export const RandomPickerModal: React.FC<RandomPickerModalProps> = ({
         }
       } catch (_) {}
     }
-  }, []);
+  }, [students]);
 
   useEffect(() => {
     setActiveMode(initialMode);
@@ -129,15 +159,19 @@ export const RandomPickerModal: React.FC<RandomPickerModalProps> = ({
 
   const currentStudents = studentList.length > 0 ? studentList : DEFAULT_STUDENTS;
 
-  const handleApplyRoster = () => {
-    const list = studentInput
-      .split(/[,\n]/)
-      .map((s) => s.trim())
-      .filter((s) => s.length > 0);
-    if (list.length > 0) {
-      setStudentList(list);
-    }
+  const handleSaveRoster = (list: string[]) => {
+    const finalItems = list.length > 0 ? list : DEFAULT_STUDENTS;
+    setStudentList(finalItems);
+    setStudentInput(finalItems.join(', '));
     setIsEditRosterOpen(false);
+    if (onSaveStudents) {
+      onSaveStudents(finalItems);
+    }
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('random_picker_students', JSON.stringify(finalItems));
+      } catch (e) {}
+    }
   };
 
   // Launch Random Action
@@ -189,37 +223,6 @@ export const RandomPickerModal: React.FC<RandomPickerModalProps> = ({
     }
 
     if (activeMode === 'duck') {
-      const racers = currentStudents.slice(0, 6);
-      setDuckPositions(racers.map(() => 0));
-      const startTime = Date.now();
-      const raceDuration = 3200;
-
-      const raceTimer = setInterval(() => {
-        const elapsed = Date.now() - startTime;
-        const progress = Math.min(1, elapsed / raceDuration);
-
-        setDuckPositions(() =>
-          racers.map(() => {
-            const speedFactor = 0.65 + Math.random() * 0.7;
-            return Math.min(92, progress * 90 * speedFactor);
-          })
-        );
-
-        if (soundEnabled) gameAudio.playTick();
-
-        if (elapsed >= raceDuration) {
-          clearInterval(raceTimer);
-          const winningIdx = Math.floor(Math.random() * racers.length);
-          const winningDuck = racers[winningIdx];
-          setDuckPositions((prev) =>
-            racers.map((_, i) => (i === winningIdx ? 95 : Math.min(90, (prev[i] || 0) + 5)))
-          );
-          setWinner(winningDuck);
-          setDisplayCandidate(winningDuck);
-          setIsRunning(false);
-          if (soundEnabled) gameAudio.playVictory();
-        }
-      }, 140);
       return;
     }
 
@@ -246,12 +249,14 @@ export const RandomPickerModal: React.FC<RandomPickerModalProps> = ({
   };
 
   return createPortal(
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/75 backdrop-blur-md animate-fadeIn select-none">
-      <div className="relative w-full max-w-4xl max-h-[92vh] bg-gradient-to-b from-[#2e1065] via-[#1e1b4b] to-[#0f172a] text-white rounded-3xl shadow-2xl border border-purple-500/30 flex flex-col overflow-hidden">
+    <div className={`fixed inset-0 z-50 flex items-center justify-center ${isFullscreen ? 'p-0' : 'p-3 sm:p-5'} bg-black/75 backdrop-blur-md animate-fadeIn select-none`}>
+      <div className={`relative w-full ${isFullscreen ? 'h-full max-w-none max-h-none rounded-none' : 'max-w-4xl max-h-[92vh] rounded-3xl'} bg-gradient-to-b from-[#2e1065] via-[#1e1b4b] to-[#0f172a] text-white shadow-2xl border border-purple-500/30 flex flex-col overflow-hidden`}>
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-3.5 border-b border-white/10 bg-white/5">
           <div className="flex items-center gap-2.5">
-            <span className="text-2xl">🎲</span>
+            <div className="w-8 h-8 rounded-xl bg-amber-400/20 text-amber-300 flex items-center justify-center">
+              <Dices size={20} />
+            </div>
             <div>
               <h2 className="text-base sm:text-lg font-black tracking-tight text-amber-300">
                 Gọi Tên Ngẫu Nhiên
@@ -276,6 +281,13 @@ export const RandomPickerModal: React.FC<RandomPickerModalProps> = ({
             >
               <Users size={14} />
               <span>Danh sách lớp</span>
+            </button>
+            <button
+              onClick={() => setIsFullscreen(!isFullscreen)}
+              className="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-purple-200 transition-colors cursor-pointer"
+              title={isFullscreen ? 'Thu nhỏ' : 'Toàn màn hình'}
+            >
+              {isFullscreen ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
             </button>
             <button
               onClick={onClose}
@@ -312,36 +324,7 @@ export const RandomPickerModal: React.FC<RandomPickerModalProps> = ({
 
         {/* Main Interactive Stage */}
         <div className="flex-1 overflow-y-auto p-4 sm:p-6 flex flex-col items-center justify-center min-h-[360px]">
-          {isEditRosterOpen ? (
-            /* Edit Roster Panel */
-            <div className="w-full max-w-lg bg-white/10 p-5 rounded-2xl border border-white/10 space-y-3">
-              <h3 className="text-sm font-bold text-amber-300 flex items-center gap-1.5">
-                <Users size={16} />
-                <span>Nhập danh sách học sinh (cách nhau bởi dấu phẩy hoặc xuống dòng)</span>
-              </h3>
-              <textarea
-                value={studentInput}
-                onChange={(e) => setStudentInput(e.target.value)}
-                rows={5}
-                className="w-full p-3 rounded-xl bg-black/40 border border-white/20 text-xs text-white focus:outline-none focus:border-amber-400 font-sans"
-                placeholder="Nhập tên học sinh..."
-              />
-              <div className="flex justify-end gap-2">
-                <button
-                  onClick={() => setIsEditRosterOpen(false)}
-                  className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-xs font-semibold cursor-pointer"
-                >
-                  Đóng
-                </button>
-                <button
-                  onClick={handleApplyRoster}
-                  className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold cursor-pointer"
-                >
-                  Lưu danh sách ({studentInput.split(/[,\n]/).filter((s) => s.trim().length > 0).length} bạn)
-                </button>
-              </div>
-            </div>
-          ) : activeMode === 'wheel' ? (
+          {activeMode === 'wheel' ? (
             /* WHEEL MODE */
             <div className="flex flex-col items-center justify-center">
               <div className="relative w-64 h-64 sm:w-72 sm:h-72 my-2">
@@ -357,16 +340,23 @@ export const RandomPickerModal: React.FC<RandomPickerModalProps> = ({
                   }}
                 >
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="w-16 h-16 rounded-full bg-white shadow-md flex items-center justify-center text-slate-900 font-bold text-xs border-2 border-slate-300">
-                      🎡
+                    <div className="w-16 h-16 rounded-full bg-white shadow-md flex items-center justify-center text-slate-900 font-bold border-2 border-slate-300">
+                      <LuckyWheelIcon size={28} />
                     </div>
                   </div>
                 </div>
               </div>
 
               <div className="mt-3 text-center">
-                <div className="text-xs uppercase tracking-widest text-purple-300 font-semibold mb-1">
-                  {winner ? '🎉 Học sinh được chọn' : 'Đang quay...'}
+                <div className="text-xs uppercase tracking-widest text-purple-300 font-semibold mb-1 flex items-center justify-center gap-1">
+                  {winner ? (
+                    <>
+                      <Sparkles size={14} className="text-amber-300" />
+                      <span>Học sinh được chọn</span>
+                    </>
+                  ) : (
+                    <span>Đang quay...</span>
+                  )}
                 </div>
                 <div
                   className={`text-2xl sm:text-3xl font-black ${
@@ -379,56 +369,32 @@ export const RandomPickerModal: React.FC<RandomPickerModalProps> = ({
             </div>
           ) : activeMode === 'duck' ? (
             /* DUCK RACE MODE */
-            <div className="w-full max-w-xl space-y-2.5">
-              <div className="text-center mb-2">
-                <span className="text-xs font-bold uppercase tracking-wider text-cyan-300">
-                  {winner ? `🏆 Vịt về đích đầu tiên: ${winner}` : 'Đua vịt tốc độ'}
-                </span>
-              </div>
-              {currentStudents.slice(0, 6).map((student, idx) => {
-                const pos = duckPositions[idx] || 0;
-                const isDuckWinner = winner === student;
-                return (
-                  <div
-                    key={student}
-                    className="relative p-2 rounded-xl bg-blue-950/60 border border-cyan-500/30 overflow-hidden flex items-center"
-                  >
-                    <div className="absolute inset-0 bg-gradient-to-r from-blue-900/40 via-cyan-900/30 to-blue-900/40 pointer-events-none" />
-
-                    <div
-                      className="relative z-10 transition-all ease-out flex items-center gap-1.5"
-                      style={{
-                        transform: `translateX(${pos * 3.6}px)`,
-                        transitionDuration: '0.2s',
-                      }}
-                    >
-                      <span className="text-2xl filter drop-shadow">🦆</span>
-                      <span
-                        className={`text-xs font-bold px-2 py-0.5 rounded-md ${
-                          isDuckWinner
-                            ? 'bg-amber-400 text-slate-900 font-black'
-                            : 'bg-black/50 text-white'
-                        }`}
-                      >
-                        {student}
-                      </span>
-                    </div>
-
-                    <div className="absolute right-3 top-0 bottom-0 w-2 border-r-2 border-dashed border-red-500 flex items-center justify-center">
-                      <span className="text-[10px] text-red-400 font-bold -mr-4">ĐÍCH</span>
-                    </div>
-                  </div>
-                );
-              })}
+            <div className="w-full h-[460px] rounded-2xl overflow-hidden shadow-2xl flex flex-col">
+              <DuckRaceGame
+                students={currentStudents}
+                soundEnabled={soundEnabled}
+                onToggleSound={() => setSoundEnabled((v) => !v)}
+                onSelectWinner={(chosen) => {
+                  setWinner(chosen);
+                  setDisplayCandidate(chosen);
+                  setIsRunning(false);
+                }}
+                onRemoveStudent={(removed) => {
+                  setStudentList((prev) => prev.filter((s) => s !== removed));
+                }}
+              />
             </div>
           ) : activeMode === 'photo_pair' ? (
             /* PHOTO PAIRS MODE */
             <div className="w-full max-w-xl">
               <div className="text-center mb-4">
-                <h3 className="text-sm font-bold text-amber-300">
-                  {pairsResult.length > 0
-                    ? '✨ Kết quả ghép cặp cả lớp'
-                    : 'Bấm Bắt đầu để tự động ghép cặp đôi'}
+                <h3 className="text-sm font-bold text-amber-300 flex items-center justify-center gap-1.5">
+                  <Sparkles size={15} />
+                  <span>
+                    {pairsResult.length > 0
+                      ? 'Kết quả ghép cặp cả lớp'
+                      : 'Bấm Bắt đầu để tự động ghép cặp đôi'}
+                  </span>
                 </h3>
               </div>
               {pairsResult.length > 0 ? (
@@ -439,7 +405,7 @@ export const RandomPickerModal: React.FC<RandomPickerModalProps> = ({
                       className="p-3 rounded-xl bg-white/10 border border-purple-400/30 flex items-center justify-between gap-2"
                     >
                       <span className="text-xs font-bold text-cyan-300 truncate">{a}</span>
-                      <span className="text-xs text-amber-400 font-black">🤝</span>
+                      <Users size={14} className="text-amber-400 shrink-0" />
                       <span className="text-xs font-bold text-purple-300 truncate">{b}</span>
                     </div>
                   ))}
@@ -451,21 +417,27 @@ export const RandomPickerModal: React.FC<RandomPickerModalProps> = ({
               )}
             </div>
           ) : (
-            /* LUCKY LENS / MARBLE / BLIND DUCK / PHOTO CALL */
+            /* LUCKY LENS / MARBLE / BLIND DUCK */
             <div className="flex flex-col items-center justify-center text-center space-y-4">
               <div className="relative w-44 h-44 rounded-full border-4 border-amber-400/80 bg-gradient-to-br from-purple-800 to-indigo-950 shadow-2xl flex items-center justify-center overflow-hidden">
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-amber-400/20 via-transparent to-transparent animate-pulse" />
-                <div className="text-5xl filter drop-shadow-md">
-                  {activeMode === 'marble' && '🔮'}
-                  {activeMode === 'blind_duck' && '🦆'}
-                  {activeMode === 'photo_call' && '🖼️'}
-                  {activeMode === 'lucky_lens' && '📷'}
+                <div className="flex items-center justify-center">
+                  {activeMode === 'marble' && <MarbleRaceIcon size={56} />}
+                  {activeMode === 'blind_duck' && <BlindDuckIcon size={56} />}
+                  {activeMode === 'lucky_lens' && <LuckyLensIcon size={56} />}
                 </div>
               </div>
 
               <div>
-                <span className="text-xs uppercase font-bold text-purple-300 tracking-widest block mb-1">
-                  {winner ? '🎉 Bạn được gọi là:' : 'Đang tìm kiếm...'}
+                <span className="text-xs uppercase font-bold text-purple-300 tracking-widest flex items-center justify-center gap-1 mb-1">
+                  {winner ? (
+                    <>
+                      <Sparkles size={14} className="text-amber-300" />
+                      <span>Bạn được gọi là:</span>
+                    </>
+                  ) : (
+                    <span>Đang tìm kiếm...</span>
+                  )}
                 </span>
                 <span
                   className={`text-3xl sm:text-4xl font-black ${
@@ -480,34 +452,45 @@ export const RandomPickerModal: React.FC<RandomPickerModalProps> = ({
         </div>
 
         {/* Footer Action Button */}
-        <div className="p-4 bg-white/5 border-t border-white/10 flex items-center justify-between">
-          <div className="text-xs text-purple-300/80">
-            {RANDOM_MODES.find((m) => m.id === activeMode)?.desc}
-          </div>
+        {activeMode !== 'duck' && (
+          <div className="p-4 bg-white/5 border-t border-white/10 flex items-center justify-between">
+            <div className="text-xs text-purple-300/80">
+              {RANDOM_MODES.find((m) => m.id === activeMode)?.desc}
+            </div>
 
-          <div className="flex items-center gap-2">
-            <button
-              onClick={handleStart}
-              disabled={isRunning}
-              className="px-6 py-2.5 rounded-2xl bg-gradient-to-r from-amber-400 via-orange-500 to-pink-500 hover:from-amber-300 hover:to-pink-400 text-slate-950 font-black text-sm transition-all shadow-lg shadow-orange-500/30 flex items-center gap-2 cursor-pointer disabled:opacity-50 active:scale-95"
-            >
-              {isRunning ? (
-                <>
-                  <Shuffle className="animate-spin" size={16} />
-                  <span>Đang chọn...</span>
-                </>
-              ) : (
-                <>
-                  <Play size={16} className="fill-slate-950" />
-                  <span>
-                    {activeMode === 'photo_pair' ? 'Ghép cặp ngẫu nhiên' : 'Bắt đầu gọi tên'}
-                  </span>
-                </>
-              )}
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleStart}
+                disabled={isRunning}
+                className="px-6 py-2.5 rounded-2xl bg-gradient-to-r from-amber-400 via-orange-500 to-pink-500 hover:from-amber-300 hover:to-pink-400 text-slate-950 font-black text-sm transition-all shadow-lg shadow-orange-500/30 flex items-center gap-2 cursor-pointer disabled:opacity-50 active:scale-95"
+              >
+                {isRunning ? (
+                  <>
+                    <Shuffle className="animate-spin" size={16} />
+                    <span>Đang chọn...</span>
+                  </>
+                ) : (
+                  <>
+                    <Play size={16} className="fill-slate-950" />
+                    <span>
+                      {activeMode === 'photo_pair' ? 'Ghép cặp ngẫu nhiên' : 'Bắt đầu gọi tên'}
+                    </span>
+                  </>
+                )}
+              </button>
+            </div>
           </div>
-        </div>
+        )}
       </div>
+
+      {/* Roster Configuration Modal (Excel/File upload & Number Generator) */}
+      <RosterConfigModal
+        isOpen={isEditRosterOpen}
+        onClose={() => setIsEditRosterOpen(false)}
+        students={currentStudents}
+        onSave={handleSaveRoster}
+        title="Danh sách học sinh"
+      />
     </div>,
     document.body
   );

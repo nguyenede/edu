@@ -78,8 +78,9 @@ export function sanitizeLatexFractions(str: string): string {
         const denMatch = extractBalancedBraces(str, denPos);
         if (denMatch) {
           // BẢO TOÀN TUYỆT ĐỐI: numMatch.content là TỬ SỐ, denMatch.content là MẪU SỐ
-          const num = sanitizeLatexFractions(numMatch.content.trim());
-          const den = sanitizeLatexFractions(denMatch.content.trim());
+          // Không được tự ý xuống dòng giữa tử và mẫu
+          const num = sanitizeLatexFractions(numMatch.content.replace(/\n+/g, ' ').trim());
+          const den = sanitizeLatexFractions(denMatch.content.replace(/\n+/g, ' ').trim());
           res += isDfrac ? `\\dfrac{${num}}{${den}}` : `\\frac{${num}}{${den}}`;
           i = denMatch.endIndex + 1;
           continue;
@@ -89,12 +90,14 @@ export function sanitizeLatexFractions(str: string): string {
     res += str[i];
     i++;
   }
-  return res;
+  return res.replace(/\\(?:d?frac)\s*\{([^{}]+)\}\s*\n+\s*\{([^{}]+)\}/g, '\\frac{$1}{$2}');
 }
 
 /**
  * 2. Chuẩn hóa công thức toán học & phân số
  * - Chuyển đổi các phân thức (A)/(B) hoặc N/M sang \frac{A}{B} (Tử số A ở trên, mẫu số B ở dưới)
+ * - Khôi phục căn bậc hai từ ký tự Unicode \u221A / √
+ * - Sửa lỗi ngắt dòng ở số mũ, chỉ số dưới và hệ phương trình
  * - Bao bọc công thức toán LaTeX vào $...$ riêng rẽ, không bao bọc cả câu tiếng Việt làm KaTeX vỡ font
  */
 export function normalizeMathFormulas(text: string): string {
@@ -108,11 +111,33 @@ export function normalizeMathFormulas(text: string): string {
     (_, num, den) => `\\frac{${num.trim()}}{${den.trim()}}`
   );
 
+  // 1b. Sửa lỗi ngắt dòng ở phân số (A \n / \n B hoặc A \n --- \n B)
+  str = str.replace(/([a-zA-Z0-9_\(\)]+)\s*\n\s*[-—]{2,}\s*\n\s*([a-zA-Z0-9_\(\)]+)/g, '\\frac{$1}{$2}');
+  str = str.replace(/([a-zA-Z0-9_\(\)\\]+)\s*\n\s*\/\s*([a-zA-Z0-9_\(\)\\]+)/g, '\\frac{$1}{$2}');
+  str = str.replace(/([a-zA-Z0-9_\(\)\\]+)\s*\/\s*\n\s*([a-zA-Z0-9_\(\)\\]+)/g, '\\frac{$1}{$2}');
+
   // 2. Chuyển đổi phân số dạng số nguyên 1/3, 2/5 (không phải ngày tháng hoặc đường dẫn)
   str = str.replace(
     /(?<![a-zA-Z0-9_\/.\\])(\d+)\s*\/\s*(\d+)(?![a-zA-Z0-9_\/.\\])/g,
     (_, num, den) => `\\frac{${num.trim()}}{${den.trim()}}`
   );
+
+  // 2b. Khôi phục căn bậc hai từ ký tự Unicode \u221A / √
+  str = str.replace(/(?:\\u221A|√)\s*\(([^)]+)\)/g, '\\sqrt{$1}');
+  str = str.replace(/(?:\\u221A|√)\s*\{([^}]+)\}/g, '\\sqrt{$1}');
+  str = str.replace(/(?:\\u221A|√)\s*([a-zA-Z0-9]+)/g, '\\sqrt{$1}');
+
+  // 2c. Sửa lỗi ngắt dòng ở số mũ, chỉ số dưới (nối liền vào biến liền trước)
+  str = str.replace(/([a-zA-Z0-9_\)])\s*\n\s*(\^|\_)\{?([a-zA-Z0-9+\-*\/=]+)\}?/g, '$1$2{$3}');
+  str = str.replace(/([a-zA-Z0-9_\)])\s*(\^|\_)\s*\n\s*\{?([a-zA-Z0-9+\-*\/=]+)\}?/g, '$1$2{$3}');
+  str = str.replace(/([a-zA-Z0-9_\)])\s*\n\s*([²³¹⁰⁴⁵⁶⁷⁸⁹⁺⁻⁼⁽⁾₀₁₂₃₄₅₆₇₈₉₊₋₌₍₎]+)/g, '$1$2');
+  str = str.replace(/\b([A-Z][a-z]?)\s*\n\s*(\d)\b(?!\s*[\.\:])/g, '$1_$2');
+
+  // 2d. Giữ nguyên cấu trúc hệ phương trình thành phần trong cùng một khối
+  str = str.replace(/(?:^|\n)\s*\{\s*\n\s*([^\n]+=[^\n]+)\s*\n\s*([^\n]+=[^\n]+(?:\s*\n\s*[^\n]+=[^\n]+)*)/g, (_, eq1, rest) => {
+    const eqs = [eq1.trim(), ...rest.split('\n').map((l: string) => l.trim()).filter(Boolean)];
+    return `\n\\begin{cases} ${eqs.join(' \\\\ ')} \\end{cases}\n`;
+  });
 
   // 3. Chuẩn hóa cú pháp các phân số \frac và \dfrac
   str = sanitizeLatexFractions(str);

@@ -391,18 +391,228 @@ export const RandomPickerIcon: React.FC<GameIconProps> = ({ size = 20, className
 );
 
 /**
- * Hàm tiện ích lấy đúng component icon tự thiết kế theo mã trò chơi (gameId)
+ * 10. Đua vịt tốc độ (Duck Race)
+ * Chú vịt vàng tốc độ lướt trên vệt sóng nước xanh biếc
+ */
+export const DuckRaceIcon: React.FC<GameIconProps> = ({ size = 18, className = '' }) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className={`shrink-0 ${className}`}
+  >
+    {/* Vệt sóng nước tốc độ */}
+    <path
+      d="M2 18.5C4.5 17.5 7 19.5 9.5 18.5C12 17.5 14.5 19.5 17 18.5C19 17.7 20.8 19 22.5 18.5"
+      stroke="#0284C7"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+    />
+    <path
+      d="M1 21C3.5 20 6 22 8.5 21C11 20 13.5 22 16 21C18 20.2 20 21.5 22 21"
+      stroke="#38BDF8"
+      strokeWidth="1.2"
+      strokeLinecap="round"
+    />
+    {/* Thân chú vịt vàng */}
+    <ellipse cx="11.5" cy="14" rx="6" ry="4" fill="#FBBF24" stroke="#D97706" strokeWidth="0.8" />
+    {/* Đuôi vịt cong vút */}
+    <path d="M5.5 13.5L3 10.5C4.5 11 6 12 7 13" fill="#F59E0B" />
+    {/* Đầu vịt */}
+    <circle cx="15.5" cy="9.5" r="3.2" fill="#FBBF24" stroke="#D97706" strokeWidth="0.8" />
+    {/* Mắt vịt lanh lợi */}
+    <circle cx="16.5" cy="8.8" r="0.75" fill="#1E293B" />
+    <circle cx="16.7" cy="8.6" r="0.25" fill="#FFFFFF" />
+    {/* Mỏ vịt cam tươi lướt gió */}
+    <path
+      d="M18.2 9.2L22 9.8L18.4 11.2C18.1 10.6 18.1 9.8 18.2 9.2Z"
+      fill="#F97316"
+      stroke="#EA580C"
+      strokeWidth="0.5"
+    />
+    {/* Cánh vịt */}
+    <path
+      d="M9 13.5C10 11.5 13 12 14.5 14C13 15 10.5 15.2 9 13.5Z"
+      fill="#F59E0B"
+      stroke="#D97706"
+      strokeWidth="0.6"
+    />
+  </svg>
+);
+
+/**
+ * 11. Đua bi tốc độ (Marble Race)
+ * Viên bi 3D bóng bẩy lăn trên đường đua xoắn ốc
+ */
+export const MarbleRaceIcon: React.FC<GameIconProps> = ({ size = 18, className = '' }) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className={`shrink-0 ${className}`}
+  >
+    {/* Đường ray uốn lượn */}
+    <path
+      d="M3 19C7 19 8 13 13 13C17 13 18 7 22 7"
+      stroke="#A855F7"
+      strokeWidth="2.4"
+      strokeLinecap="round"
+    />
+    <path
+      d="M3 19C7 19 8 13 13 13C17 13 18 7 22 7"
+      stroke="#E9D5FF"
+      strokeWidth="1"
+      strokeDasharray="2 3"
+      strokeLinecap="round"
+    />
+    {/* Viên bi tím chính (3D glossy marble) */}
+    <circle cx="13" cy="9.5" r="4.2" fill="url(#marbleGradCustom)" stroke="#7C3AED" strokeWidth="0.8" />
+    {/* Điểm phản quang ánh sáng trên bi */}
+    <ellipse cx="11.8" cy="8" rx="1.4" ry="0.8" transform="rotate(-30 11.8 8)" fill="#FFFFFF" opacity="0.8" />
+    {/* Viên bi nhỏ đuổi theo */}
+    <circle cx="6.5" cy="16.5" r="2.8" fill="#38BDF8" stroke="#0284C7" strokeWidth="0.6" />
+    <circle cx="5.8" cy="15.5" r="0.8" fill="#FFFFFF" opacity="0.85" />
+    {/* Định nghĩa gradient đổ bóng 3D */}
+    <defs>
+      <radialGradient id="marbleGradCustom" cx="35%" cy="30%" r="70%">
+        <stop offset="0%" stopColor="#C084FC" />
+        <stop offset="50%" stopColor="#8B5CF6" />
+        <stop offset="100%" stopColor="#581C87" />
+      </radialGradient>
+    </defs>
+  </svg>
+);
+
+/**
+ * 12. Bắt vịt 3D (Blind Duck Pond)
+ * Hồ nước trong xanh với lá sen/súng và chú vịt bồng bềnh
+ */
+export const BlindDuckIcon: React.FC<GameIconProps> = ({ size = 18, className = '' }) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className={`shrink-0 ${className}`}
+  >
+    {/* Lá sen/súng xanh biếc bên dưới */}
+    <ellipse cx="9" cy="17" rx="7" ry="3.5" fill="#10B981" stroke="#059669" strokeWidth="0.8" />
+    <path d="M9 17L5 15.5" stroke="#047857" strokeWidth="0.8" />
+    <path d="M9 17L12 19" stroke="#047857" strokeWidth="0.8" />
+    {/* Hoa súng hồng nhỏ trên lá */}
+    <circle cx="4" cy="16.5" r="1.5" fill="#F472B6" />
+    <circle cx="4" cy="16.5" r="0.6" fill="#FDE047" />
+    {/* Chú vịt vàng 3D nổi trên nước */}
+    <ellipse cx="14" cy="12.5" rx="5" ry="3.5" fill="#FBBF24" stroke="#D97706" strokeWidth="0.8" />
+    <circle cx="17" cy="8.5" r="2.8" fill="#FBBF24" stroke="#D97706" strokeWidth="0.8" />
+    <circle cx="17.8" cy="7.8" r="0.65" fill="#0F172A" />
+    <circle cx="18" cy="7.6" r="0.2" fill="#FFFFFF" />
+    <path d="M19.2 8.5L22.5 9L19.4 10.2Z" fill="#F97316" />
+    {/* Gợn sóng nước hồ trong veo */}
+    <path
+      d="M1 20C4 19 8 21 12 20C16 19 20 21 23 20"
+      stroke="#38BDF8"
+      strokeWidth="1.2"
+      strokeLinecap="round"
+    />
+  </svg>
+);
+
+/**
+ * 13. Ghép cặp bằng ảnh (Photo Pair / Team Grouping)
+ * Cặp đôi học sinh hợp tác kèm huy hiệu liên kết
+ */
+export const PhotoPairIcon: React.FC<GameIconProps> = ({ size = 18, className = '' }) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className={`shrink-0 ${className}`}
+  >
+    {/* Nhân vật trái (màu cam tươi) */}
+    <circle cx="8" cy="8" r="3.2" fill="#FB923C" stroke="#EA580C" strokeWidth="0.8" />
+    <path
+      d="M3.5 18C3.5 14.5 5.5 12.5 8 12.5C10.5 12.5 12.5 14.5 12.5 18"
+      stroke="#EA580C"
+      strokeWidth="1.6"
+      strokeLinecap="round"
+      fill="#FED7AA"
+    />
+    {/* Nhân vật phải (màu xanh dương) */}
+    <circle cx="16" cy="8" r="3.2" fill="#60A5FA" stroke="#2563EB" strokeWidth="0.8" />
+    <path
+      d="M11.5 18C11.5 14.5 13.5 12.5 16 12.5C18.5 12.5 20.5 14.5 20.5 18"
+      stroke="#2563EB"
+      strokeWidth="1.6"
+      strokeLinecap="round"
+      fill="#BFDBFE"
+    />
+    {/* Nút liên kết bắt tay / sao đồng đội ở giữa */}
+    <circle cx="12" cy="15" r="2.2" fill="#F59E0B" stroke="#B45309" strokeWidth="0.8" />
+    <path d="M12 13.8L12.6 14.8L13.8 15L12.8 15.8L13.1 16.9L12 16.3L10.9 16.9L11.2 15.8L10.2 15L11.4 14.8L12 13.8Z" fill="#FFFFFF" />
+  </svg>
+);
+
+/**
+ * 14. Ống kính may mắn (Lucky Lens / Camera Radar)
+ * Ống kính công nghệ cao đa lớp với tâm ngắm viền chéo
+ */
+export const LuckyLensIcon: React.FC<GameIconProps> = ({ size = 18, className = '' }) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className={`shrink-0 ${className}`}
+  >
+    {/* Thân ống kính tròn công nghệ cao */}
+    <circle cx="12" cy="12" r="9" fill="#042F2E" stroke="#0D9488" strokeWidth="1.5" />
+    <circle cx="12" cy="12" r="6.5" fill="#134E4A" stroke="#14B8A6" strokeWidth="1" />
+    {/* Tâm thấu kính radar đa sắc */}
+    <circle cx="12" cy="12" r="3.8" fill="#2DD4BF" stroke="#5EEAD4" strokeWidth="0.8" />
+    <circle cx="12" cy="12" r="1.6" fill="#CCFBF1" />
+    {/* Vạch ngắm 4 góc (Crosshairs) */}
+    <path d="M12 2V5M12 19V22M2 12H5M19 12H22" stroke="#2DD4BF" strokeWidth="1.5" strokeLinecap="round" />
+    {/* Góc ngắm camera viewfinder */}
+    <path d="M6 8H8M6 8V10" stroke="#FDE047" strokeWidth="1.2" strokeLinecap="round" />
+    <path d="M18 8H16M18 8V10" stroke="#FDE047" strokeWidth="1.2" strokeLinecap="round" />
+    <path d="M6 16H8M6 16V14" stroke="#FDE047" strokeWidth="1.2" strokeLinecap="round" />
+    <path d="M18 16H16M18 16V14" stroke="#FDE047" strokeWidth="1.2" strokeLinecap="round" />
+  </svg>
+);
+
+/**
+ * Hàm tiện ích lấy đúng component icon tự thiết kế theo mã trò chơi (gameId) hoặc subMode
  */
 export function getGameCustomIcon(gameId: string, size = 18, className = ''): React.ReactNode {
   switch (gameId) {
     case 'random_picker':
       return <RandomPickerIcon size={size} className={className} />;
+    case 'duck':
+      return <DuckRaceIcon size={size} className={className} />;
+    case 'marble':
+      return <MarbleRaceIcon size={size} className={className} />;
+    case 'wheel':
+    case 'lucky_wheel':
+      return <LuckyWheelIcon size={size} className={className} />;
+    case 'blind_duck':
+      return <BlindDuckIcon size={size} className={className} />;
+    case 'photo_pair':
+      return <PhotoPairIcon size={size} className={className} />;
+    case 'lucky_lens':
+      return <LuckyLensIcon size={size} className={className} />;
     case 'tug_of_war':
       return <TugOfWarIcon size={size} className={className} />;
     case 'boat_race':
       return <BoatRaceIcon size={size} className={className} />;
-    case 'lucky_wheel':
-      return <LuckyWheelIcon size={size} className={className} />;
     case 'zombie':
       return <ZombieDefenseIcon size={size} className={className} />;
     case 'gold_miner':
@@ -414,6 +624,6 @@ export function getGameCustomIcon(gameId: string, size = 18, className = ''): Re
     case 'bubble_pop':
       return <BubblePopIcon size={size} className={className} />;
     default:
-      return <TugOfWarIcon size={size} className={className} />;
+      return <RandomPickerIcon size={size} className={className} />;
   }
 }

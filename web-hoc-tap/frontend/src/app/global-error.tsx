@@ -47,21 +47,19 @@ export default function GlobalError({
           <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
             <button
               onClick={() => {
-                try {
-                  reset();
-                } catch {
-                  window.location.reload();
-                }
+                window.location.reload();
               }}
               style={{ padding: '10px 20px', backgroundColor: '#1a73e8', color: '#ffffff', border: 'none', borderRadius: '999px', fontSize: '13px', fontWeight: '700', cursor: 'pointer', boxShadow: '0 4px 6px -1px rgba(26, 115, 232, 0.2)' }}
             >
-              Thử lại ngay
+              Tải lại trang (F5)
             </button>
             <button
-              onClick={() => window.location.href = '/'}
+              onClick={() => {
+                window.location.href = '/app/games';
+              }}
               style={{ padding: '10px 20px', backgroundColor: '#f1f5f9', color: '#334155', border: '1px solid #cbd5e1', borderRadius: '999px', fontSize: '13px', fontWeight: '600', cursor: 'pointer' }}
             >
-              Về trang chủ
+              Về danh sách trò chơi
             </button>
           </div>
         </div>

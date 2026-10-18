@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuthStore } from '@/store/useAuthStore';
 import { AppShell } from '@/components/AppShell';
@@ -38,7 +38,7 @@ import {
 } from '@/lib/classesApi';
 import * as XLSX from 'xlsx';
 
-export default function ResultsPage() {
+function ResultsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user, token } = useAuthStore();
@@ -1129,5 +1129,19 @@ export default function ResultsPage() {
         )}
       </div>
     </AppShell>
+  );
+}
+
+export default function ResultsPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-google-bg dark:bg-[#131314] flex items-center justify-center p-8 text-slate-400">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-google-blue" />
+        </div>
+      }
+    >
+      <ResultsContent />
+    </Suspense>
   );
 }

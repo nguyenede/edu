@@ -33,6 +33,7 @@ interface AppShellProps {
   title?: React.ReactNode;
   subtitle?: string;
   action?: React.ReactNode;
+  fullBleed?: boolean;
 }
 
 export const AppShell: React.FC<AppShellProps> = ({
@@ -40,6 +41,7 @@ export const AppShell: React.FC<AppShellProps> = ({
   title,
   subtitle,
   action,
+  fullBleed = false,
 }) => {
   const router = useRouter();
   const pathname = usePathname();
@@ -347,11 +349,11 @@ export const AppShell: React.FC<AppShellProps> = ({
               ref={mainViewportRef}
               onScroll={handleViewportScroll}
               className={`flex-1 w-full ${
-                pathname?.startsWith('/app/si') || pathname?.startsWith('/si') || pathname?.startsWith('/app/ai') || pathname?.startsWith('/ai')
+                fullBleed || pathname?.startsWith('/app/si') || pathname?.startsWith('/si') || pathname?.startsWith('/app/ai') || pathname?.startsWith('/ai')
                   ? 'p-0 flex flex-col overflow-hidden no-scrollbar'
                   : `overflow-y-auto overflow-x-hidden px-3 sm:px-4 pb-3.5 ${(title || action) ? 'pt-1' : 'pt-4'}`
               }`}
-              style={pathname?.startsWith('/app/si') || pathname?.startsWith('/si') || pathname?.startsWith('/app/ai') || pathname?.startsWith('/ai') ? undefined : { scrollbarGutter: 'stable' }}
+              style={fullBleed || pathname?.startsWith('/app/si') || pathname?.startsWith('/si') || pathname?.startsWith('/app/ai') || pathname?.startsWith('/ai') ? undefined : { scrollbarGutter: 'stable' }}
             >
               {children}
             </main>

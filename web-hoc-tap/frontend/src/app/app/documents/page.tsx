@@ -108,7 +108,8 @@ function DocumentsPageContent() {
     if (fId) {
       setCurrentFolderId(fId);
       if (typeof window !== 'undefined' && window.location.search) {
-        window.history.replaceState(window.history.state, '', '/app/documents');
+        const currentState = (window.history.state && typeof window.history.state === 'object') ? window.history.state : {};
+        window.history.replaceState(currentState, '', '/app/documents');
       }
     }
   }, [searchParams]);
@@ -1137,7 +1138,8 @@ function DocumentsPageContent() {
     setCurrentFolderId(fId);
     setSelectedItemId(null);
     if (typeof window !== 'undefined') {
-      window.history.pushState({ folderId: fId }, '', '/documents');
+      const currentState = (window.history.state && typeof window.history.state === 'object') ? window.history.state : {};
+      window.history.pushState({ ...currentState, folderId: fId }, '', '/app/documents');
     }
   };
 

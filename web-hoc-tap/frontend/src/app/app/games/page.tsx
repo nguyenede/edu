@@ -1,111 +1,57 @@
 'use client';
 
 import React, { useState, useEffect, Suspense } from 'react';
-import { useRouter } from 'next/navigation';
 import { AppShell } from '@/components/AppShell';
-import { Button } from '@/components/Button';
-import { BreadcrumbChevron } from '@/components/BreadcrumbChevron';
-import { idbSyncAndGetAll } from '@/lib/indexedDbStorage';
-import { TugOfWarGame } from '@/components/games/TugOfWarGame';
-import { LuckyWheelGame } from '@/components/games/LuckyWheelGame';
-import { BoatRaceGame } from '@/components/games/BoatRaceGame';
-import { ZombieDefenseGame } from '@/components/games/ZombieDefenseGame';
-import { GoldMinerGame } from '@/components/games/GoldMinerGame';
-import { FruitSlashGame } from '@/components/games/FruitSlashGame';
-import { WhackAMoleGame } from '@/components/games/WhackAMoleGame';
-import { BubblePopGame } from '@/components/games/BubblePopGame';
-import { getGameCustomIcon } from '@/components/games/GameCustomIcons';
-import {
-  GameConfigModal,
-  GameSettingsConfig,
-  GameQuestion,
-  DEFAULT_GAME_CONFIG,
-} from '@/components/games/GameConfigModal';
 import {
   RandomPickerGame,
+  DEFAULT_STUDENTS,
   RANDOM_MODES,
   RandomPickerSubMode,
-  DEFAULT_STUDENTS,
 } from '@/components/games/RandomPickerGame';
-import {
-  normalizeGameQuestion,
-  DEFAULT_CLASSROOM_TRIAL_QUESTIONS,
-} from '@/lib/gameQuestionHelper';
-import {
-  Gamepad2,
-  Trophy,
-  Settings,
-  Plus,
-  Play,
-  Trash2,
-  Edit3,
-  Clock,
-  Layers,
-  CheckCircle2,
-  ChevronRight,
-  Users,
-  X,
-} from 'lucide-react';
+import { RosterConfigModal } from '@/components/games/RosterConfigModal';
+import { getGameCustomIcon } from '@/components/games/GameCustomIcons';
+import { Users, ChevronRight, Volume2, VolumeX, Maximize2, Minimize2 } from 'lucide-react';
 
-interface RealExamDocument {
-  id: string;
-  name: string;
-  title: string;
-  questionsCount: number;
-  questions: any[];
-}
-
-export type ActiveGameMode =
-  | 'random_picker'
-  | 'tug_of_war'
-  | 'lucky_wheel'
-  | 'boat_race'
-  | 'zombie'
-  | 'gold_miner'
-  | 'fruit_slash'
-  | 'whack_a_mole'
-  | 'bubble_pop'
-  | null;
-
-export interface CustomGameLesson {
-  id: string;
-  gameType: ActiveGameMode;
-  title: string;
-  isTrial?: boolean;
-  examId: string;
-  examTitle: string;
-  config: GameSettingsConfig;
-  questions: GameQuestion[];
-  createdAt: number;
-}
-
-const STORAGE_KEY = 'app_custom_games_v2';
+const GAME_LIST = [
+  {
+    id: 'random_picker' as const,
+    title: 'Gọi tên ngẫu nhiên',
+    subtitle: 'Vòng quay, đua vịt, đua bi, bắt vịt...',
+    description:
+      'Vòng quay, đua vịt, đua bi, bắt vịt 3D, ghép cặp bằng ảnh và ống kính may mắn.',
+    badge: 'Nổi bật',
+    badgeColor: 'bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300',
+    iconBg: 'bg-rose-500/15 text-rose-600 dark:text-rose-400',
+  },
+];
 
 function GamesHubContent() {
-  const router = useRouter();
-  const [exams, setExams] = useState<RealExamDocument[]>([]);
-  const [selectedExamId, setSelectedExamId] = useState<string>('');
-  const [isLoading, setIsLoading] = useState(true);
-
-  // Selected game category workspace (e.g. 'tug_of_war' -> "Kéo co của tôi")
-  const [activeCategory, setActiveCategory] = useState<ActiveGameMode>(null);
-
-  // Currently playing game lesson
-  const [playingLesson, setPlayingLesson] = useState<CustomGameLesson | null>(null);
-
-  // Saved lessons by user
-  const [savedLessons, setSavedLessons] = useState<CustomGameLesson[]>([]);
-
-  // Setting / Creation modal state
-  const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
-  const [editingLessonId, setEditingLessonId] = useState<string | null>(null);
-  const [gameConfig, setGameConfig] = useState<GameSettingsConfig>(DEFAULT_GAME_CONFIG);
-  const [customQuestions, setCustomQuestions] = useState<GameQuestion[]>([]);
-
-  // Roster state for Random Picker game
+  // Roster state for Random Picker / Duck Race games
   const [rosterStudents, setRosterStudents] = useState<string[]>(DEFAULT_STUDENTS);
   const [isRosterModalOpen, setIsRosterModalOpen] = useState(false);
-  const [rosterInput, setRosterInput] = useState<string>(DEFAULT_STUDENTS.join(', '));
+  const [isPlayingRandomPicker, setIsPlayingRandomPicker] = useState(false);
+  const [activeSubMode, setActiveSubMode] = useState<RandomPickerSubMode>('duck');
+  const [soundEnabled, setSoundEnabled] = useState(true);
+  const [isFullscreen, setIsFullscreen] = useState(true);
+
+  const handleOpenGame = () => {
+    setIsFullscreen(true);
+    setIsPlayingRandomPicker(true);
+  };
+
+  const handleToggleFullscreen = () => {
+    setIsFullscreen((prev) => !prev);
+  };
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isFullscreen) {
+        setIsFullscreen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isFullscreen]);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -115,7 +61,6 @@ function GamesHubContent() {
           const parsed = JSON.parse(stored);
           if (Array.isArray(parsed) && parsed.length > 0) {
             setRosterStudents(parsed);
-            setRosterInput(parsed.join(', '));
             return;
           }
         }
@@ -127,7 +72,6 @@ function GamesHubContent() {
     const cleaned = newList.map((s) => s.trim()).filter(Boolean);
     const finalStudents = cleaned.length > 0 ? cleaned : DEFAULT_STUDENTS;
     setRosterStudents(finalStudents);
-    setRosterInput(finalStudents.join(', '));
     setIsRosterModalOpen(false);
     if (typeof window !== 'undefined') {
       try {
@@ -136,1024 +80,316 @@ function GamesHubContent() {
     }
   };
 
-  // Load saved lessons from localStorage
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const raw = localStorage.getItem(STORAGE_KEY);
-        if (raw) {
-          const parsed = JSON.parse(raw);
-          if (Array.isArray(parsed)) {
-            setSavedLessons(parsed);
-          }
-        }
-      } catch (err) {
-        console.error('Error loading saved lessons:', err);
-      }
-    }
-  }, []);
+  // =========================================================================
+  // GIAO DIỆN TRÒ CHƠI HOẠT NÁO (ĐỒNG BỘ 100% VỚI WEB, TRẮNG RA TRẮNG ĐEN RA ĐEN)
+  // ĐÃ GÔM TẤT CẢ VÀO 1 HEADER DUY NHẤT CỦA APPSHELL - XÓA HOÀN TOÀN HEADER THỨ 2
+  // =========================================================================
+  if (isPlayingRandomPicker) {
+    if (isFullscreen) {
+      return (
+        <div className="fixed inset-0 z-[100] w-screen h-screen flex flex-col bg-white dark:bg-[#1e1f20] select-none overflow-hidden">
+          <div className="h-14 px-3 sm:px-4 flex items-center justify-between gap-3 shrink-0 bg-white dark:bg-[#1e1f20] border-0 z-10">
+            {/* Left: Breadcrumb / Title & Sub-modes */}
+            <div className="flex items-center gap-2 sm:gap-3 min-w-0 max-w-full overflow-hidden">
+              <div className="flex items-center gap-1.5 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsFullscreen(false);
+                    setIsPlayingRandomPicker(false);
+                  }}
+                  className="cursor-pointer text-slate-500 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-white font-medium shrink-0 whitespace-nowrap transition-colors text-xs sm:text-sm"
+                >
+                  Trò chơi lớp học
+                </button>
+                <ChevronRight size={14} className="text-slate-400 shrink-0" />
+                <span className="text-slate-900 dark:text-white font-bold shrink-0 whitespace-nowrap text-xs sm:text-sm">
+                  Gọi tên ngẫu nhiên
+                </span>
+              </div>
 
-  const persistLessons = (lessons: CustomGameLesson[]) => {
-    setSavedLessons(lessons);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(lessons));
-    }
-  };
+              <div className="h-4 w-px bg-slate-200 dark:bg-white/10 shrink-0 hidden sm:block" />
 
-  // 100% load ONLY real documents from IndexedDB & localStorage (Zero mock data)
-  useEffect(() => {
-    let didCancel = false;
-
-    const loadRealDocuments = async () => {
-      try {
-        const docMap = new Map<string, RealExamDocument>();
-
-        // 1. From localStorage
-        if (typeof window !== 'undefined') {
-          const raw = localStorage.getItem('app_documents_files');
-          if (raw) {
-            const parsed = JSON.parse(raw);
-            if (Array.isArray(parsed)) {
-              for (const doc of parsed) {
-                if (
-                  doc &&
-                  doc.id &&
-                  doc.parsedQuiz &&
-                  Array.isArray(doc.parsedQuiz.questions) &&
-                  doc.parsedQuiz.questions.length > 0
-                ) {
-                  const normalizedQs = doc.parsedQuiz.questions.map((q: any, qIdx: number) =>
-                    normalizeGameQuestion(q, qIdx)
+              {/* Sub-mode switcher tabs (Pills) */}
+              <div className="flex items-center gap-1 overflow-x-auto scrollbar-none py-1 min-w-0">
+                {RANDOM_MODES.map((m) => {
+                  const isActive = activeSubMode === m.id;
+                  return (
+                    <button
+                      key={m.id}
+                      type="button"
+                      onClick={() => setActiveSubMode(m.id)}
+                      className={`px-2.5 py-1 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap shrink-0 ${
+                        isActive
+                          ? 'bg-google-blue text-white shadow-xs'
+                          : 'text-slate-600 dark:text-zinc-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5'
+                      }`}
+                      title={m.desc}
+                    >
+                      <span>{m.icon}</span>
+                      <span className="hidden md:inline">{m.title}</span>
+                    </button>
                   );
-                  docMap.set(doc.id, {
-                    id: doc.id,
-                    name: doc.name || doc.parsedQuiz.title || 'Đề thi trắc nghiệm',
-                    title: doc.parsedQuiz.title || doc.name?.replace(/\.[^/.]+$/, '') || 'Đề thi',
-                    questionsCount: normalizedQs.length,
-                    questions: normalizedQs,
-                  });
-                }
-              }
-            }
-          }
-        }
-
-        // 2. From IndexedDB
-        const { documents: idbDocs } = await idbSyncAndGetAll();
-        if (didCancel) return;
-
-        for (const doc of idbDocs) {
-          if (
-            doc &&
-            doc.id &&
-            doc.parsedQuiz &&
-            Array.isArray(doc.parsedQuiz.questions) &&
-            doc.parsedQuiz.questions.length > 0
-          ) {
-            const normalizedQs = doc.parsedQuiz.questions.map((q: any, qIdx: number) =>
-              normalizeGameQuestion(q, qIdx)
-            );
-            docMap.set(doc.id, {
-              id: doc.id,
-              name: doc.name || doc.parsedQuiz.title || 'Đề thi trắc nghiệm',
-              title: doc.parsedQuiz.title || doc.name?.replace(/\.[^/.]+$/, '') || 'Đề thi',
-              questionsCount: normalizedQs.length,
-              questions: normalizedQs,
-            });
-          }
-        }
-
-        const validExams = Array.from(docMap.values());
-        setExams(validExams);
-        if (validExams.length > 0) {
-          const targetFromQuery = typeof window !== 'undefined'
-            ? new URLSearchParams(window.location.search).get('examId')
-            : null;
-          const matched = targetFromQuery ? validExams.find((e) => e.id === targetFromQuery) : null;
-          setSelectedExamId(matched ? matched.id : validExams[0].id);
-        }
-      } catch (err) {
-        console.error('Error loading documents for games:', err);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadRealDocuments();
-    return () => {
-      didCancel = true;
-    };
-  }, []);
-
-  const selectedExam = exams.find((e) => e.id === selectedExamId) || exams[0];
-
-  const GAME_LIST = [
-    {
-      id: 'random_picker' as const,
-      title: 'Gọi tên ngẫu nhiên',
-      shortName: 'Gọi tên',
-      subtitle: 'Vòng quay, đua vịt, đua bi, bắt vịt...',
-      description: 'Vòng quay, đua vịt, đua bi, bắt vịt 3D, gọi tên bằng ảnh, ghép cặp bằng ảnh và ống kính may mắn.',
-      badge: 'Nổi bật',
-      badgeColor: 'bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300',
-      iconEmoji: '🎲',
-      iconBg: 'bg-rose-500/15 text-rose-600 dark:text-rose-400',
-    },
-    {
-      id: 'tug_of_war' as const,
-      title: 'Kéo co kiến thức',
-      shortName: 'Kéo co',
-      subtitle: 'Đối kháng 2 đội Đội Xanh và Đội Đỏ',
-      description: 'Chia lớp làm 2 đội. Trả lời đúng và nhanh hơn sẽ giật sợi dây về phía mình để giành chiến thắng.',
-      badge: 'Đối kháng',
-      badgeColor: 'bg-amber-100 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300',
-      iconEmoji: '🤼‍♂️',
-      iconBg: 'bg-amber-500/15 text-amber-600 dark:text-amber-400',
-    },
-    {
-      id: 'boat_race' as const,
-      title: 'Đua thuyền kiến thức',
-      shortName: 'Đua thuyền',
-      subtitle: 'Đua tốc độ 3 thuyền trên dòng sông',
-      description: 'Mỗi câu trả lời đúng từ đề thi giúp thuyền bơi nhanh về đích. Thuyền nào cán đích trước sẽ đoạt cúp.',
-      badge: 'Tốc độ',
-      badgeColor: 'bg-cyan-100 text-cyan-700 dark:bg-cyan-950/60 dark:text-cyan-300',
-      iconEmoji: '🛶',
-      iconBg: 'bg-cyan-500/15 text-cyan-600 dark:text-cyan-400',
-    },
-    {
-      id: 'lucky_wheel' as const,
-      title: 'Vòng quay may mắn',
-      shortName: 'Vòng quay',
-      subtitle: 'Quay ngẫu nhiên câu hỏi & gọi tên',
-      description: 'Vòng quay nhiều màu sắc quay đều với âm thanh hồi hộp. Dừng ở ô nào học sinh sẽ cùng giải đố câu đó.',
-      badge: 'Vui nhộn',
-      badgeColor: 'bg-purple-100 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300',
-      iconEmoji: '🎡',
-      iconBg: 'bg-purple-500/15 text-purple-600 dark:text-purple-400',
-    },
-    {
-      id: 'zombie' as const,
-      title: 'Chặn Zombie bảo vệ thành',
-      shortName: 'Chặn Zombie',
-      subtitle: 'Chiến thuật bắn hạ quái vật',
-      description: 'Lũ zombie đang tiến về cổng thành. Trả lời đúng để khai hỏa đại bác bắn hạ quái vật bảo vệ thành trì.',
-      badge: 'Phòng thủ',
-      badgeColor: 'bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300',
-      iconEmoji: '🧟‍♂️',
-      iconBg: 'bg-rose-500/15 text-rose-600 dark:text-rose-400',
-    },
-    {
-      id: 'gold_miner' as const,
-      title: 'Đào vàng kiến thức',
-      shortName: 'Đào vàng',
-      subtitle: 'Thả móc kéo vàng và kim cương',
-      description: 'Móc quay liên tục qua lại. Canh chuẩn hướng thả móc gắp thỏi vàng và giải đố câu hỏi để thu thập điểm.',
-      badge: 'Khéo léo',
-      badgeColor: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-950/60 dark:text-yellow-300',
-      iconEmoji: '⛏️',
-      iconBg: 'bg-yellow-500/15 text-yellow-600 dark:text-yellow-400',
-    },
-    {
-      id: 'fruit_slash' as const,
-      title: 'Chém hoa quả trắc nghiệm',
-      shortName: 'Chém hoa quả',
-      subtitle: 'Chém quả mang đáp án đúng bay lên',
-      description: 'Hoa quả bay lên mang các phương án A, B, C, D. Lướt chuột chém chính xác quả mang đáp án đúng.',
-      badge: 'Phản xạ',
-      badgeColor: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300',
-      iconEmoji: '🍉',
-      iconBg: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400',
-    },
-    {
-      id: 'whack_a_mole' as const,
-      title: 'Đập chuột chũi kiến thức',
-      shortName: 'Đập chuột chũi',
-      subtitle: 'Đập chú chuột mang đáp án chính xác',
-      description: 'Chuột chũi nhô lên từ các lỗ hang cầm theo bảng đáp án. Nhanh tay đập trúng chú chuột đúng trước khi thụt xuống.',
-      badge: 'Nhanh tay',
-      badgeColor: 'bg-orange-100 text-orange-700 dark:bg-orange-950/60 dark:text-orange-300',
-      iconEmoji: '🔨',
-      iconBg: 'bg-orange-500/15 text-orange-600 dark:text-orange-400',
-    },
-    {
-      id: 'bubble_pop' as const,
-      title: 'Bắt bong bóng đại dương',
-      shortName: 'Bắt bong bóng',
-      subtitle: 'Làm vỡ bong bóng chứa đáp án đúng',
-      description: 'Các chùm bong bóng nhiều màu sắc bay bồng bềnh dưới đáy biển. Chạm nổ bong bóng đúng để tích lũy điểm số.',
-      badge: 'Khám phá',
-      badgeColor: 'bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300',
-      iconEmoji: '🫧',
-      iconBg: 'bg-blue-500/15 text-blue-600 dark:text-blue-400',
-    },
-  ];
-
-  const getCategoryMeta = (mode: ActiveGameMode) => {
-    return GAME_LIST.find((g) => g.id === mode) || GAME_LIST[0];
-  };
-
-  // Filter lessons belonging to the currently active category
-  const currentCategoryLessons = React.useMemo(() => {
-    if (!activeCategory) return [];
-    return savedLessons.filter((l) => l.gameType === activeCategory);
-  }, [savedLessons, activeCategory]);
-
-  // Generate trial run card (only when real exam is available)
-  const trialLesson: CustomGameLesson | null = React.useMemo(() => {
-    if (!activeCategory) return null;
-    const meta = getCategoryMeta(activeCategory);
-    const hasRealExam =
-      selectedExam &&
-      Array.isArray(selectedExam.questions) &&
-      selectedExam.questions.length > 0;
-
-    if (!hasRealExam) return null;
-
-    const examQuestions = selectedExam.questions.map((q, idx) => normalizeGameQuestion(q, idx));
-    const examTitle = selectedExam.title;
-    const examId = selectedExam.id;
-
-    return {
-      id: `lesson_${activeCategory}_live`,
-      gameType: activeCategory,
-      title: `${meta.shortName} - Giảng dạy trên lớp`,
-      isTrial: false,
-      examId,
-      examTitle,
-      config: {
-        ...DEFAULT_GAME_CONFIG,
-        title: `${meta.shortName} - Giảng dạy trên lớp`,
-      },
-      questions: examQuestions,
-      createdAt: Date.now(),
-    };
-  }, [activeCategory, selectedExam]);
-
-  // Quick 1-click play for teachers on classroom projector
-  const handleQuickPlayTrial = (mode: ActiveGameMode) => {
-    setActiveCategory(mode);
-    const meta = getCategoryMeta(mode);
-    const hasRealExam =
-      selectedExam &&
-      Array.isArray(selectedExam.questions) &&
-      selectedExam.questions.length > 0;
-
-    if (!hasRealExam) {
-      alert('Vui lòng tạo hoặc tải lên đề thi trong mục "Kho tài liệu" trước khi bắt đầu trò chơi!');
-      router.push('/app/documents');
-      return;
-    }
-
-    const examQuestions = selectedExam.questions.map((q, idx) => normalizeGameQuestion(q, idx));
-    const examTitle = selectedExam.title;
-    const examId = selectedExam.id;
-
-    const lesson: CustomGameLesson = {
-      id: `lesson_${mode}_quick`,
-      gameType: mode,
-      title: `${meta.shortName} - Giảng dạy trên lớp`,
-      isTrial: false,
-      examId,
-      examTitle,
-      config: {
-        ...DEFAULT_GAME_CONFIG,
-        title: `${meta.shortName} - Giảng dạy trên lớp`,
-      },
-      questions: examQuestions,
-      createdAt: Date.now(),
-    };
-    setPlayingLesson(lesson);
-  };
-
-  // Open step-by-step game creation wizard
-  const handleStartGameCreation = (mode: ActiveGameMode) => {
-    if (!mode) return;
-    setActiveCategory(mode);
-    const meta = getCategoryMeta(mode);
-    setEditingLessonId(null);
-    const defaultExam = exams.length > 0 ? exams[0] : null;
-    if (!defaultExam || !Array.isArray(defaultExam.questions) || defaultExam.questions.length === 0) {
-      alert('Vui lòng tải lên hoặc tạo đề thi trong mục "Kho tài liệu" để thiết lập bài tập trò chơi!');
-      router.push('/app/documents');
-      return;
-    }
-    const examId = defaultExam.id;
-    setSelectedExamId(examId);
-    setGameConfig({
-      ...DEFAULT_GAME_CONFIG,
-      title: `${meta.shortName} - ${defaultExam.title || 'Bài tập mới'}`,
-    });
-    setCustomQuestions(
-      defaultExam.questions.map((q, idx) => normalizeGameQuestion(q, idx))
-    );
-    setIsConfigModalOpen(true);
-  };
-
-  // Open creation modal
-  const handleOpenCreateModal = () => {
-    if (!activeCategory) return;
-    handleStartGameCreation(activeCategory);
-  };
-
-  // Open edit modal
-  const handleOpenEditModal = (lesson: CustomGameLesson) => {
-    setEditingLessonId(lesson.id);
-    setGameConfig(lesson.config);
-    setCustomQuestions(lesson.questions);
-    setSelectedExamId(lesson.examId);
-    setIsConfigModalOpen(true);
-  };
-
-  // Save game configuration
-  const handleSaveLesson = () => {
-    if (!activeCategory) return;
-    const meta = getCategoryMeta(activeCategory);
-
-    if (editingLessonId) {
-      // Update
-      const updated = savedLessons.map((l) =>
-        l.id === editingLessonId
-          ? {
-              ...l,
-              title: gameConfig.title || meta.shortName,
-              examId: selectedExamId,
-              examTitle: selectedExam?.title || 'Đề thi',
-              config: gameConfig,
-              questions: customQuestions,
-            }
-          : l
-      );
-      persistLessons(updated);
-    } else {
-      // Create new
-      const newLesson: CustomGameLesson = {
-        id: `lesson_${Date.now()}`,
-        gameType: activeCategory,
-        title: gameConfig.title || `${meta.shortName} - ${selectedExam?.title || 'Bài tập mới'}`,
-        examId: selectedExamId,
-        examTitle: selectedExam?.title || 'Đề thi',
-        config: gameConfig,
-        questions: customQuestions,
-        createdAt: Date.now(),
-      };
-      persistLessons([newLesson, ...savedLessons]);
-    }
-  };
-
-  // Delete a lesson
-  const handleDeleteLesson = (id: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    const updated = savedLessons.filter((l) => l.id !== id);
-    persistLessons(updated);
-  };
-
-  // When selected exam in modal changes
-  const handleSelectExamInModal = (examId: string) => {
-    setSelectedExamId(examId);
-    const target = exams.find((e) => e.id === examId);
-    if (target) {
-      setCustomQuestions(
-        target.questions.map((q, idx) => normalizeGameQuestion(q, idx))
-      );
-    }
-  };
-
-  // Questions for currently playing lesson
-  const activeQuestions = React.useMemo(() => {
-    if (!playingLesson) return [];
-    let list = playingLesson.questions.filter((q) => q.selected !== false);
-    if (list.length === 0) list = playingLesson.questions;
-
-    list = list.map((q, idx) => normalizeGameQuestion(q, idx));
-
-    if (playingLesson.config.shuffleQuestions) {
-      list = [...list].sort(() => Math.random() - 0.5);
-    }
-    if (playingLesson.config.shuffleOptions) {
-      list = list.map((q) => ({
-        ...q,
-        options: [...q.options].sort(() => Math.random() - 0.5),
-      }));
-    }
-    return list;
-  }, [playingLesson]);
-
-  // Quay về danh mục trò chơi chính
-  const handleBackToHub = () => {
-    setPlayingLesson(null);
-    setActiveCategory(null);
-  };
-
-  // Chuyển đổi nhanh trò chơi khi đang trình chiếu
-  const handleSwitchGameInPlay = (newGameType: string) => {
-    setActiveCategory(newGameType as ActiveGameMode);
-    setPlayingLesson((prev) => {
-      if (!prev) return null;
-      return {
-        ...prev,
-        gameType: newGameType as any,
-      };
-    });
-  };
-
-  // Khi đang chơi trò chơi (giảng dạy trên lớp): Chế độ Full màn hình (Classroom Presentation Mode)
-  if (playingLesson) {
-    const meta = getCategoryMeta(playingLesson.gameType);
-    return (
-      <div className="fixed inset-0 z-50 w-full h-full overflow-hidden bg-slate-100 dark:bg-[#111215] flex flex-col p-3 sm:p-4 select-none">
-        <div className="w-full h-full flex-1 flex flex-col min-h-0">
-          {playingLesson.gameType === 'random_picker' && (
-            <RandomPickerGame
-              title={playingLesson.title}
-              initialMode={(playingLesson.config as any)?.subMode || 'wheel'}
-              onBack={() => setPlayingLesson(null)}
-              onSwitchGame={handleSwitchGameInPlay}
-              onBackToHub={handleBackToHub}
-            />
-          )}
-          {playingLesson.gameType === 'tug_of_war' && (
-            <TugOfWarGame
-              examTitle={playingLesson.title}
-              questions={activeQuestions}
-              onBack={() => setPlayingLesson(null)}
-              config={playingLesson.config}
-              onOpenSettings={() => handleOpenEditModal(playingLesson)}
-              onSwitchGame={handleSwitchGameInPlay}
-              onBackToHub={handleBackToHub}
-            />
-          )}
-          {playingLesson.gameType === 'lucky_wheel' && (
-            <LuckyWheelGame
-              examTitle={playingLesson.title}
-              questions={activeQuestions}
-              onBack={() => setPlayingLesson(null)}
-              config={playingLesson.config}
-              onOpenSettings={() => handleOpenEditModal(playingLesson)}
-              onSwitchGame={handleSwitchGameInPlay}
-              onBackToHub={handleBackToHub}
-            />
-          )}
-          {playingLesson.gameType === 'boat_race' && (
-            <BoatRaceGame
-              examTitle={playingLesson.title}
-              questions={activeQuestions}
-              onBack={() => setPlayingLesson(null)}
-              config={playingLesson.config}
-              onOpenSettings={() => handleOpenEditModal(playingLesson)}
-              onSwitchGame={handleSwitchGameInPlay}
-              onBackToHub={handleBackToHub}
-            />
-          )}
-          {playingLesson.gameType === 'zombie' && (
-            <ZombieDefenseGame
-              examTitle={playingLesson.title}
-              questions={activeQuestions}
-              onBack={() => setPlayingLesson(null)}
-              config={playingLesson.config}
-              onOpenSettings={() => handleOpenEditModal(playingLesson)}
-              onSwitchGame={handleSwitchGameInPlay}
-              onBackToHub={handleBackToHub}
-            />
-          )}
-          {playingLesson.gameType === 'gold_miner' && (
-            <GoldMinerGame
-              examTitle={playingLesson.title}
-              questions={activeQuestions}
-              onBack={() => setPlayingLesson(null)}
-              config={playingLesson.config}
-              onOpenSettings={() => handleOpenEditModal(playingLesson)}
-              onSwitchGame={handleSwitchGameInPlay}
-              onBackToHub={handleBackToHub}
-            />
-          )}
-          {playingLesson.gameType === 'fruit_slash' && (
-            <FruitSlashGame
-              examTitle={playingLesson.title}
-              questions={activeQuestions}
-              onBack={() => setPlayingLesson(null)}
-              config={playingLesson.config}
-              onOpenSettings={() => handleOpenEditModal(playingLesson)}
-              onSwitchGame={handleSwitchGameInPlay}
-              onBackToHub={handleBackToHub}
-            />
-          )}
-          {playingLesson.gameType === 'whack_a_mole' && (
-            <WhackAMoleGame
-              examTitle={playingLesson.title}
-              questions={activeQuestions}
-              onBack={() => setPlayingLesson(null)}
-              config={playingLesson.config}
-              onOpenSettings={() => handleOpenEditModal(playingLesson)}
-              onSwitchGame={handleSwitchGameInPlay}
-              onBackToHub={handleBackToHub}
-            />
-          )}
-          {playingLesson.gameType === 'bubble_pop' && (
-            <BubblePopGame
-              examTitle={playingLesson.title}
-              questions={activeQuestions}
-              onBack={() => setPlayingLesson(null)}
-              config={playingLesson.config}
-              onOpenSettings={() => handleOpenEditModal(playingLesson)}
-              onSwitchGame={handleSwitchGameInPlay}
-              onBackToHub={handleBackToHub}
-            />
-          )}
-
-          {/* Modal chỉnh sửa cấu hình nếu mở từ trong game */}
-          <GameConfigModal
-            isOpen={isConfigModalOpen}
-            onClose={() => setIsConfigModalOpen(false)}
-            gameTitle={activeCategory ? getCategoryMeta(activeCategory).title : 'Trò chơi'}
-            gameId={activeCategory || 'tug_of_war'}
-            config={gameConfig}
-            onChangeConfig={setGameConfig}
-            questions={customQuestions}
-            onChangeQuestions={setCustomQuestions}
-            availableExams={exams}
-            selectedExamId={selectedExamId}
-            onSelectExam={handleSelectExamInModal}
-            onSaveGame={handleSaveLesson}
-            initialStep={editingLessonId ? 3 : 1}
-            onStartGame={() => setIsConfigModalOpen(false)}
-          />
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <AppShell
-      title={
-        isConfigModalOpen && activeCategory ? (
-          <div className="flex items-center gap-1.5 flex-nowrap min-w-0">
-            <button
-              type="button"
-              onClick={() => {
-                setIsConfigModalOpen(false);
-                setActiveCategory(null);
-              }}
-              className="cursor-pointer text-slate-900 dark:text-white font-normal shrink-0 whitespace-nowrap"
-            >
-              Trò chơi lớp học
-            </button>
-            <BreadcrumbChevron
-              items={GAME_LIST.map((g) => ({
-                label: g.title,
-                icon: getGameCustomIcon(g.id, 18),
-                onClick: () => {
-                  setIsConfigModalOpen(false);
-                  setActiveCategory(g.id);
-                },
-              }))}
-              fallbackToStaticChevron={true}
-            />
-            <button
-              type="button"
-              onClick={() => setIsConfigModalOpen(false)}
-              className="cursor-pointer text-slate-900 dark:text-white font-normal shrink-0 whitespace-nowrap"
-              title={getCategoryMeta(activeCategory).title}
-            >
-              {getCategoryMeta(activeCategory).title}
-            </button>
-            <BreadcrumbChevron isStatic={true} />
-            <span className="text-slate-900 dark:text-white font-normal truncate min-w-0 flex-1">
-              {editingLessonId ? 'Chỉnh sửa bài chơi' : 'Tạo bài chơi mới'}
-            </span>
-          </div>
-        ) : activeCategory ? (
-          <div className="flex items-center gap-1.5 flex-nowrap min-w-0">
-            <button
-              type="button"
-              onClick={() => setActiveCategory(null)}
-              className="cursor-pointer text-slate-900 dark:text-white font-normal shrink-0 whitespace-nowrap"
-            >
-              Trò chơi lớp học
-            </button>
-            <BreadcrumbChevron
-              items={GAME_LIST.map((g) => ({
-                label: g.title,
-                icon: getGameCustomIcon(g.id, 18),
-                onClick: () => setActiveCategory(g.id),
-              }))}
-              fallbackToStaticChevron={true}
-            />
-            <span className="text-slate-900 dark:text-white font-normal truncate min-w-0 flex-1">
-              {getCategoryMeta(activeCategory).title}
-            </span>
-          </div>
-        ) : (
-          <div className="flex items-center gap-1.5 flex-nowrap min-w-0">
-            <button
-              type="button"
-              className="cursor-pointer text-slate-900 dark:text-white font-normal shrink-0 whitespace-nowrap"
-            >
-              Trò chơi lớp học
-            </button>
-          </div>
-        )
-      }
-      action={
-        activeCategory === 'random_picker' ? (
-          <Button
-            size="sm"
-            onClick={() => setIsRosterModalOpen(true)}
-            className="rounded-xl text-xs gap-1.5 bg-purple-600 hover:bg-purple-700 text-white"
-          >
-            <Users size={15} />
-            <span>Danh sách học sinh ({rosterStudents.length})</span>
-          </Button>
-        ) : activeCategory && !isConfigModalOpen ? (
-          <Button
-            size="sm"
-            onClick={handleOpenCreateModal}
-            className="rounded-xl text-xs gap-1.5"
-          >
-            <Plus size={15} />
-            <span>Tạo bài chơi mới</span>
-          </Button>
-        ) : undefined
-      }
-    >
-      <div className="space-y-4">
-        {isConfigModalOpen && activeCategory ? (
-          /* LEVEL 3: FULL PAGE GAME CREATOR / EDITOR (Chuyển sang trang riêng không dùng popup dialog) */
-          <GameConfigModal
-            isFullPage={true}
-            isOpen={true}
-            onClose={() => setIsConfigModalOpen(false)}
-            gameTitle={getCategoryMeta(activeCategory).title}
-            gameId={activeCategory}
-            config={gameConfig}
-            onChangeConfig={setGameConfig}
-            questions={customQuestions}
-            onChangeQuestions={setCustomQuestions}
-            availableExams={exams}
-            selectedExamId={selectedExamId}
-            onSelectExam={handleSelectExamInModal}
-            onSaveGame={() => {
-              handleSaveLesson();
-              setIsConfigModalOpen(false);
-            }}
-            initialStep={editingLessonId ? 3 : 1}
-            onStartGame={() => {
-              const meta = getCategoryMeta(activeCategory);
-              const newLesson: CustomGameLesson = {
-                id: editingLessonId || `lesson_${Date.now()}`,
-                gameType: activeCategory,
-                title: gameConfig.title || meta.shortName,
-                examId: selectedExamId,
-                examTitle: selectedExam?.title || 'Đề thi',
-                config: gameConfig,
-                questions: customQuestions,
-                createdAt: Date.now(),
-              };
-              const updated = editingLessonId
-                ? savedLessons.map((l) => (l.id === editingLessonId ? newLesson : l))
-                : [newLesson, ...savedLessons];
-              persistLessons(updated);
-              setIsConfigModalOpen(false);
-              setPlayingLesson(newLesson);
-            }}
-          />
-        ) : activeCategory === 'random_picker' ? (
-          /* LEVEL 2: GỌI TÊN NGẪU NHIÊN 7 SUB-MODES WORKSPACE (Đồng bộ chuẩn giao diện KiyoEdu) */
-          <div className="space-y-4">
-            <div className="flex items-center justify-between pb-1">
-              <div>
-                <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">
-                  Chọn chế độ gọi tên ngẫu nhiên
-                </h2>
-                <p className="text-xs text-slate-500 dark:text-zinc-400 mt-0.5">
-                  7 chế độ hoạt náo sôi động với danh sách {rosterStudents.length} học sinh sẵn sàng
-                </p>
+                })}
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {RANDOM_MODES.map((mode) => (
-                <div
-                  key={mode.id}
-                  className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-[#1a1b1e] border border-slate-200/80 dark:border-white/10 hover:border-google-blue dark:hover:border-google-blue/60 transition-all duration-150 flex flex-col justify-between shadow-2xs hover:shadow-md group"
-                >
-                  <div>
-                    <div className="flex items-center justify-between gap-2 mb-3">
-                      <div className="w-10 h-10 rounded-xl bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400 flex items-center justify-center text-xl">
-                        {mode.icon}
-                      </div>
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-950/80 dark:text-blue-300">
-                        {mode.badge}
-                      </span>
-                    </div>
+            {/* Right: Actions */}
+            <div className="flex items-center gap-1.5 shrink-0">
+              <button
+                type="button"
+                onClick={() => setIsRosterModalOpen(true)}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 text-slate-800 dark:text-zinc-100 border border-slate-200/80 dark:border-white/10 text-xs font-bold transition-all cursor-pointer shadow-2xs h-9"
+                title="Quản lý danh sách học sinh"
+              >
+                <Users size={15} className="text-google-blue shrink-0" />
+                <span className="font-semibold hidden sm:inline">{rosterStudents.length} học sinh</span>
+                <span className="font-semibold sm:hidden">{rosterStudents.length}</span>
+              </button>
 
-                    <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-zinc-100 group-hover:text-google-blue transition-colors">
-                      {mode.title}
-                    </h3>
-                    <p className="text-[11px] font-medium text-slate-500 dark:text-zinc-400 mt-0.5">
-                      {mode.subtitle}
-                    </p>
-                    <p className="text-xs text-slate-600 dark:text-zinc-300 mt-2 leading-relaxed line-clamp-2">
-                      {mode.desc}
-                    </p>
-                  </div>
+              <button
+                type="button"
+                onClick={() => setSoundEnabled((v) => !v)}
+                className="w-9 h-9 rounded-xl flex items-center justify-center text-slate-600 hover:text-slate-900 dark:text-zinc-300 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/10 transition-colors cursor-pointer border border-slate-200/80 dark:border-white/10 shadow-2xs"
+                title={soundEnabled ? 'Tắt âm thanh' : 'Bật âm thanh'}
+              >
+                {soundEnabled ? <Volume2 size={16} /> : <VolumeX size={16} className="text-red-500" />}
+              </button>
 
-                  <div className="mt-4 flex items-center justify-end">
-                    <button
-                      onClick={() =>
-                        setPlayingLesson({
-                          id: `lesson_random_${mode.id}`,
-                          gameType: 'random_picker',
-                          title: mode.title,
-                          examId: 'students_roster',
-                          examTitle: `${mode.title} (${rosterStudents.length} học sinh)`,
-                          config: {
-                            ...DEFAULT_GAME_CONFIG,
-                            title: mode.title,
-                            subMode: mode.id,
-                          } as any,
-                          questions: [],
-                          createdAt: Date.now(),
-                        })
-                      }
-                      className="px-5 py-2 rounded-xl bg-google-blue hover:bg-blue-600 text-white text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs active:scale-95"
-                    >
-                      <Play size={13} className="fill-white" />
-                      <span>Chơi ngay</span>
-                    </button>
-                  </div>
-                </div>
-              ))}
+              {/* Close/Minimize button */}
+              <button
+                type="button"
+                onClick={() => setIsFullscreen(false)}
+                className="w-9 h-9 rounded-xl flex items-center justify-center text-slate-600 hover:text-slate-900 dark:text-zinc-300 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/10 transition-colors cursor-pointer border border-slate-200/80 dark:border-white/10 shadow-2xs"
+                title="Thu nhỏ lại (Esc)"
+              >
+                <Minimize2 size={16} />
+              </button>
             </div>
           </div>
-        ) : activeCategory ? (
-          /* LEVEL 2: "[TÊN GAME] CỦA TÔI ({N})" WORKSPACE VIEW (Đồng bộ chuẩn giao diện KiyoEdu) */
-          <div className="space-y-4">
-            {/* Cards Grid: Trial Run + Saved Custom Lessons */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {/* 1. Trial Run Card (Bản chạy thử có sẵn) */}
-              {trialLesson && (
-                <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-[#1a1b1e] border border-slate-200/80 dark:border-white/10 hover:border-blue-400 dark:hover:border-blue-500/50 transition-all duration-150 flex flex-col justify-between shadow-2xs hover:shadow-md">
-                  <div>
-                    <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-zinc-100 mb-2">
-                      {trialLesson.title}
-                    </h3>
-                    <div className="flex items-center gap-2 mb-2.5">
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300">
-                        Bản chạy thử
-                      </span>
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-950/80 dark:text-blue-300">
-                        {trialLesson.questions.length} câu hỏi
-                      </span>
-                    </div>
-                  </div>
 
-                  <div className="mt-4 flex items-center justify-end">
-                    <button
-                      onClick={() => setPlayingLesson(trialLesson)}
-                      className="px-5 py-2 rounded-xl bg-google-blue hover:bg-blue-600 text-white text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs active:scale-95"
-                    >
-                      <Play size={13} className="fill-white" />
-                      <span>Chơi ngay</span>
-                    </button>
-                  </div>
-                </div>
-              )}
+          {/* Full-Window Game Arena */}
+          <div className="flex-1 w-full h-[calc(100vh-56px)] overflow-hidden min-h-0 relative flex flex-col">
+            <div className="w-full h-full flex-1 flex flex-col overflow-hidden min-h-0 relative">
+              <RandomPickerGame
+                title="Gọi tên ngẫu nhiên"
+                initialMode="duck"
+                activeModeProp={activeSubMode}
+                onActiveModeChange={setActiveSubMode}
+                hideHeader={true}
+                studentsProp={rosterStudents}
+                onStudentsChange={handleSaveRosterFromPage}
+                soundEnabledProp={soundEnabled}
+                onToggleSoundProp={() => setSoundEnabled((v) => !v)}
+                onBack={() => {
+                  setIsFullscreen(false);
+                  setIsPlayingRandomPicker(false);
+                }}
+                onBackToHub={() => {
+                  setIsFullscreen(false);
+                  setIsPlayingRandomPicker(false);
+                }}
+              />
+            </div>
+          </div>
 
-              {/* 2. User's Saved Lessons */}
-              {currentCategoryLessons.map((lesson) => {
-                const count = lesson.questions.filter((q) => q.selected !== false).length;
+          {/* Modal Cấu hình danh sách học sinh */}
+          <RosterConfigModal
+            isOpen={isRosterModalOpen}
+            onClose={() => setIsRosterModalOpen(false)}
+            students={rosterStudents}
+            onSave={handleSaveRosterFromPage}
+            title="Danh sách học sinh tham gia"
+          />
+        </div>
+      );
+    }
+
+    return (
+      <AppShell
+        fullBleed={true}
+        title={
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0 max-w-full overflow-hidden">
+            {/* Breadcrumb Navigation */}
+            <div className="flex items-center gap-1.5 shrink-0">
+              <button
+                type="button"
+                onClick={() => setIsPlayingRandomPicker(false)}
+                className="cursor-pointer text-slate-500 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-white font-medium shrink-0 whitespace-nowrap transition-colors text-xs sm:text-sm"
+              >
+                Trò chơi lớp học
+              </button>
+              <ChevronRight size={14} className="text-slate-400 shrink-0" />
+              <span className="text-slate-900 dark:text-white font-bold shrink-0 whitespace-nowrap text-xs sm:text-sm">
+                Gọi tên ngẫu nhiên
+              </span>
+            </div>
+
+            {/* Subtle Divider */}
+            <div className="h-4 w-px bg-slate-200 dark:bg-white/10 shrink-0 hidden sm:block" />
+
+            {/* Sub-mode switcher tabs (Pills) */}
+            <div className="flex items-center gap-1 overflow-x-auto scrollbar-none py-1 min-w-0">
+              {RANDOM_MODES.map((m) => {
+                const isActive = activeSubMode === m.id;
                 return (
-                  <div
-                    key={lesson.id}
-                    className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-[#1a1b1e] border border-slate-200/80 dark:border-white/10 hover:border-blue-400 dark:hover:border-blue-500/50 transition-all duration-150 flex flex-col justify-between shadow-2xs hover:shadow-md"
+                  <button
+                    key={m.id}
+                    type="button"
+                    onClick={() => setActiveSubMode(m.id)}
+                    className={`px-2.5 py-1 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap shrink-0 ${
+                      isActive
+                        ? 'bg-google-blue text-white shadow-xs'
+                        : 'text-slate-600 dark:text-zinc-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5'
+                    }`}
+                    title={m.desc}
                   >
-                    <div>
-                      <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-zinc-100 mb-2">
-                        {lesson.title}
-                      </h3>
-                      <div className="flex items-center gap-2 mb-2.5">
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-100 text-purple-800 dark:bg-purple-950/80 dark:text-purple-300">
-                          Đã lưu
-                        </span>
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-950/80 dark:text-blue-300">
-                          {count} câu hỏi
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="mt-4 flex items-center justify-between gap-2">
-                      <div className="flex items-center gap-1">
-                        <button
-                          onClick={() => handleOpenEditModal(lesson)}
-                          className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 hover:text-slate-900 dark:text-zinc-300 dark:hover:text-white transition-colors cursor-pointer"
-                          title="Sửa cấu hình & câu hỏi"
-                        >
-                          <Edit3 size={14} />
-                        </button>
-                        <button
-                          onClick={(e) => handleDeleteLesson(lesson.id, e)}
-                          className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 transition-colors cursor-pointer"
-                          title="Xóa bài này"
-                        >
-                          <Trash2 size={14} />
-                        </button>
-                      </div>
-
-                      <button
-                        onClick={() => setPlayingLesson(lesson)}
-                        className="px-5 py-2 rounded-xl bg-google-blue hover:bg-blue-600 text-white text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs active:scale-95"
-                      >
-                        <Play size={13} className="fill-white" />
-                        <span>Chơi ngay</span>
-                      </button>
-                    </div>
-                  </div>
+                    <span>{m.icon}</span>
+                    <span className="hidden md:inline">{m.title}</span>
+                  </button>
                 );
               })}
             </div>
-
-            {currentCategoryLessons.length === 0 && !trialLesson && (
-              <div className="py-16 text-center select-none flex flex-col items-center justify-center max-w-sm mx-auto">
-                <div className="w-14 h-14 rounded-2xl bg-blue-50 dark:bg-blue-950/40 text-google-blue flex items-center justify-center mb-3">
-                  <Gamepad2 size={28} />
-                </div>
-                <h4 className="text-sm font-bold text-slate-800 dark:text-zinc-200 mb-1">
-                  Chưa có bài chơi nào
-                </h4>
-                <p className="text-xs text-slate-500 dark:text-zinc-400 mb-4 leading-relaxed">
-                  Tạo bài chơi mới từ đề thi trong kho tài liệu để bắt đầu cùng học sinh.
-                </p>
-                <Button onClick={handleOpenCreateModal} className="rounded-xl gap-2 text-xs font-bold">
-                  <Plus size={15} />
-                  <span>Tạo bài chơi mới</span>
-                </Button>
-              </div>
-            )}
           </div>
-        ) : (
-          /* LEVEL 1: OVERALL GAMES CATALOG HUB */
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {GAME_LIST.map((game) => {
-              const savedCount = savedLessons.filter((l) => l.gameType === game.id).length;
+        }
+        action={
+          <div className="flex items-center gap-1.5 shrink-0">
+            {/* Student list configuration button */}
+            <button
+              type="button"
+              onClick={() => setIsRosterModalOpen(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 text-slate-800 dark:text-zinc-100 border border-slate-200/80 dark:border-white/10 text-xs font-bold transition-all cursor-pointer shadow-2xs h-9"
+              title="Quản lý danh sách học sinh (Nhập file Excel / Tạo danh sách số)"
+            >
+              <Users size={15} className="text-google-blue shrink-0" />
+              <span className="font-semibold hidden sm:inline">{rosterStudents.length} học sinh</span>
+              <span className="font-semibold sm:hidden">{rosterStudents.length}</span>
+            </button>
 
-              return (
-                <div
-                  key={game.id}
-                  onClick={() => {
-                    setActiveCategory(game.id);
-                  }}
-                  className="group rounded-2xl p-4 sm:p-5 bg-white dark:bg-[#1a1b1e] border border-slate-200/80 dark:border-white/10 hover:border-google-blue/50 dark:hover:border-google-blue/50 transition-all duration-150 select-none flex flex-col justify-between shadow-2xs hover:shadow-md cursor-pointer active:scale-[0.99]"
-                >
-                  <div>
-                    {/* Top Icon & Badge */}
-                    <div className="flex items-center justify-between gap-2 mb-3">
-                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${game.iconBg}`}>
-                        {getGameCustomIcon(game.id, 24)}
-                      </div>
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${game.badgeColor}`}>
-                        {game.badge}
-                      </span>
-                    </div>
+            {/* Sound toggle button */}
+            <button
+              type="button"
+              onClick={() => setSoundEnabled((v) => !v)}
+              className="w-9 h-9 rounded-xl flex items-center justify-center text-slate-600 hover:text-slate-900 dark:text-zinc-300 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/10 transition-colors cursor-pointer border border-slate-200/80 dark:border-white/10 shadow-2xs"
+              title={soundEnabled ? 'Tắt âm thanh' : 'Bật âm thanh'}
+            >
+              {soundEnabled ? <Volume2 size={16} /> : <VolumeX size={16} className="text-red-500" />}
+            </button>
 
-                    {/* Title & Description */}
-                    <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-zinc-100 group-hover:text-google-blue transition-colors">
-                      {game.title}
-                    </h3>
-                    <p className="text-[11px] font-medium text-slate-500 dark:text-zinc-400 mt-0.5">
-                      {game.subtitle}
-                    </p>
-                    <p className="text-xs text-slate-600 dark:text-zinc-300 mt-2 leading-relaxed line-clamp-2">
-                      {game.description}
-                    </p>
-                  </div>
-
-                  {/* Single Full-width Clean Action Button */}
-                  <div className="mt-4">
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setActiveCategory(game.id);
-                      }}
-                      className="w-full py-2 px-3 rounded-xl bg-slate-100 dark:bg-white/5 hover:bg-google-blue hover:text-white dark:hover:bg-google-blue text-slate-700 dark:text-zinc-200 text-xs font-semibold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs group-hover:bg-google-blue group-hover:text-white"
-                    >
-                      <span>Mở trò chơi</span>
-                      <ChevronRight size={14} />
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
+            {/* Full-window maximize button */}
+            <button
+              type="button"
+              onClick={handleToggleFullscreen}
+              className="w-9 h-9 rounded-xl flex items-center justify-center text-slate-600 hover:text-slate-900 dark:text-zinc-300 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/10 transition-colors cursor-pointer border border-slate-200/80 dark:border-white/10 shadow-2xs"
+              title="Phóng to toàn cửa sổ (Không dùng F11)"
+            >
+              <Maximize2 size={16} />
+            </button>
           </div>
-        )}
-      </div>
+        }
+      >
+        <div className="w-full flex-1 flex flex-col h-full overflow-hidden min-h-0">
+          <div className="w-full h-full flex-1 flex flex-col overflow-hidden min-h-0 relative">
+            <RandomPickerGame
+              title="Gọi tên ngẫu nhiên"
+              initialMode="duck"
+              activeModeProp={activeSubMode}
+              onActiveModeChange={setActiveSubMode}
+              hideHeader={true}
+              studentsProp={rosterStudents}
+              onStudentsChange={handleSaveRosterFromPage}
+              soundEnabledProp={soundEnabled}
+              onToggleSoundProp={() => setSoundEnabled((v) => !v)}
+              onBack={() => setIsPlayingRandomPicker(false)}
+              onBackToHub={() => setIsPlayingRandomPicker(false)}
+            />
+          </div>
+        </div>
 
-      {/* Game Settings Modal inside running game */}
-      {playingLesson && activeCategory && (
-        <GameConfigModal
-          isFullPage={false}
-          isOpen={isConfigModalOpen}
-          onClose={() => setIsConfigModalOpen(false)}
-          gameTitle={getCategoryMeta(activeCategory).title}
-          gameId={activeCategory}
-          config={gameConfig}
-          onChangeConfig={setGameConfig}
-          questions={customQuestions}
-          onChangeQuestions={setCustomQuestions}
-          availableExams={exams}
-          selectedExamId={selectedExamId}
-          onSelectExam={handleSelectExamInModal}
-          onSaveGame={handleSaveLesson}
-          initialStep={editingLessonId ? 3 : 1}
-          onStartGame={() => {
-            const meta = getCategoryMeta(activeCategory);
-            const newLesson: CustomGameLesson = {
-              id: editingLessonId || `lesson_${Date.now()}`,
-              gameType: activeCategory,
-              title: gameConfig.title || meta.shortName,
-              examId: selectedExamId,
-              examTitle: selectedExam?.title || 'Đề thi',
-              config: gameConfig,
-              questions: customQuestions,
-              createdAt: Date.now(),
-            };
-            const updated = editingLessonId
-              ? savedLessons.map((l) => (l.id === editingLessonId ? newLesson : l))
-              : [newLesson, ...savedLessons];
-            persistLessons(updated);
-            setIsConfigModalOpen(false);
-            setPlayingLesson(newLesson);
-          }}
+        {/* Modal Cấu hình danh sách học sinh (File Excel & Số thứ tự) */}
+        <RosterConfigModal
+          isOpen={isRosterModalOpen}
+          onClose={() => setIsRosterModalOpen(false)}
+          students={rosterStudents}
+          onSave={handleSaveRosterFromPage}
+          title="Danh sách học sinh tham gia"
         />
-      )}
+      </AppShell>
+    );
+  }
 
-      {/* Roster Management Modal */}
-      {isRosterModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150">
-          <div className="w-full max-w-lg rounded-2xl bg-white dark:bg-[#1e1f20] border border-slate-200 dark:border-white/10 shadow-2xl overflow-hidden flex flex-col max-h-[85vh]">
-            <div className="px-5 py-4 border-b border-slate-200 dark:border-white/10 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Users size={18} className="text-google-blue" />
-                <h3 className="font-bold text-slate-900 dark:text-white text-base">
-                  Danh sách học sinh ({rosterStudents.length})
+  // =========================================================================
+  // TRANG CHỦ DANH MỤC TRÒ CHƠI LỚP HỌC (GÔM GỌN TRÒ CHƠI VÀO 1 CARD DUY NHẤT)
+  // =========================================================================
+  return (
+    <AppShell
+      title={
+        <div className="flex items-center gap-1.5 flex-nowrap min-w-0">
+          <span className="text-slate-900 dark:text-white font-semibold shrink-0 whitespace-nowrap">
+            Trò chơi lớp học
+          </span>
+        </div>
+      }
+    >
+      <div className="space-y-4">
+        {/* Lưới trò chơi - Gôm gọn tất cả các chế độ vào card duy nhất */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {GAME_LIST.map((game) => (
+            <div
+              key={game.id}
+              onClick={handleOpenGame}
+              className="group rounded-2xl p-4 sm:p-5 bg-white dark:bg-[#1a1b1e] border border-slate-200/80 dark:border-white/10 hover:border-google-blue/50 dark:hover:border-google-blue/50 transition-all duration-150 select-none flex flex-col justify-between shadow-2xs hover:shadow-md cursor-pointer active:scale-[0.99]"
+            >
+              <div>
+                {/* Top Icon & Badge */}
+                <div className="flex items-center justify-between gap-2 mb-3">
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${game.iconBg}`}>
+                    {getGameCustomIcon(game.id, 24)}
+                  </div>
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${game.badgeColor}`}>
+                    {game.badge}
+                  </span>
+                </div>
+
+                {/* Title & Description */}
+                <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-zinc-100 group-hover:text-google-blue transition-colors">
+                  {game.title}
                 </h3>
+                <p className="text-[11px] font-medium text-slate-500 dark:text-zinc-400 mt-0.5">
+                  {game.subtitle}
+                </p>
+                <p className="text-xs text-slate-600 dark:text-zinc-300 mt-2 leading-relaxed line-clamp-2">
+                  {game.description}
+                </p>
               </div>
-              <button
-                onClick={() => setIsRosterModalOpen(false)}
-                className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-white cursor-pointer"
-              >
-                <X size={18} />
-              </button>
-            </div>
 
-            <div className="p-5 space-y-4 overflow-y-auto">
-              <p className="text-xs text-slate-500 dark:text-zinc-400">
-                Nhập danh sách học sinh của bạn, phân tách bằng dấu phẩy hoặc mỗi bạn một dòng:
-              </p>
-
-              <textarea
-                rows={8}
-                value={rosterInput}
-                onChange={(e) => setRosterInput(e.target.value)}
-                placeholder="Nguyễn Văn A, Trần Thị B, Lê Văn C..."
-                className="w-full p-3 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-black/20 text-slate-900 dark:text-white text-xs sm:text-sm focus:outline-google-blue resize-none"
-              />
-
-              <div className="flex items-center justify-between">
+              {/* Single Full-width Clean Action Button */}
+              <div className="mt-4">
                 <button
                   type="button"
-                  onClick={() => setRosterInput(DEFAULT_STUDENTS.join(', '))}
-                  className="text-xs font-semibold text-google-blue hover:underline cursor-pointer"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleOpenGame();
+                  }}
+                  className="w-full py-2 px-3 rounded-xl bg-slate-100 dark:bg-white/5 hover:bg-google-blue hover:text-white dark:hover:bg-google-blue text-slate-700 dark:text-zinc-200 text-xs font-semibold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs group-hover:bg-google-blue group-hover:text-white"
                 >
-                  Sử dụng danh sách mẫu (16 học sinh)
+                  <span>Mở trò chơi</span>
+                  <ChevronRight size={14} />
                 </button>
               </div>
             </div>
-
-            <div className="px-5 py-3.5 bg-slate-50 dark:bg-[#18191b] border-t border-slate-200 dark:border-white/10 flex items-center justify-end gap-2">
-              <button
-                onClick={() => setIsRosterModalOpen(false)}
-                className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-zinc-300 hover:bg-slate-200 dark:hover:bg-white/10 cursor-pointer"
-              >
-                Hủy
-              </button>
-              <button
-                onClick={() => {
-                  const items = rosterInput
-                    .split(/[\n,]+/)
-                    .map((s) => s.trim())
-                    .filter(Boolean);
-                  handleSaveRosterFromPage(items);
-                }}
-                className="px-5 py-2 rounded-xl bg-google-blue hover:bg-blue-600 text-white text-xs font-bold transition-all cursor-pointer shadow-xs"
-              >
-                Lưu danh sách
-              </button>
-            </div>
-          </div>
+          ))}
         </div>
-      )}
+      </div>
+
+      {/* Roster Management Modal (Hỗ trợ nhập File Excel/CSV/TXT và Đánh số thứ tự) */}
+      <RosterConfigModal
+        isOpen={isRosterModalOpen}
+        onClose={() => setIsRosterModalOpen(false)}
+        students={rosterStudents}
+        onSave={handleSaveRosterFromPage}
+        title="Danh sách học sinh tham gia"
+      />
     </AppShell>
   );
 }

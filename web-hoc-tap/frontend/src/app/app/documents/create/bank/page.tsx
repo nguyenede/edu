@@ -40,7 +40,8 @@ function BankQuizCreateContent() {
       if (effName) sessionStorage.setItem('app_active_folder_name', effName);
 
       if (window.location.search) {
-        window.history.replaceState(window.history.state, '', '/app/documents/create/bank');
+        const currentState = (window.history.state && typeof window.history.state === 'object') ? window.history.state : {};
+        window.history.replaceState(currentState, '', '/app/documents/create/bank');
       }
     }
   }, [rawFolderId, rawFolderName]);
@@ -196,8 +197,8 @@ function BankQuizCreateContent() {
             menuTitle="Phương thức tạo đề"
             items={[
               { label: 'Tải lên Word/PDF', href: `/app/documents/create${targetQuery}`, icon: <FileUp size={14} className="text-blue-500 shrink-0" /> },
-              { label: 'Tạo đề bằng SI', href: `/app/documents/create/si${targetQuery}`, icon: <Sparkles size={14} className="text-amber-500 shrink-0" /> },
-              { label: 'Nhận diện ảnh (OCR)', href: `/app/documents/create/ocr${targetQuery}`, icon: <Camera size={14} className="text-purple-500 shrink-0" /> },
+              { label: 'Tạo đề trắc nghiệm bằng SI', href: `/app/documents/create/si${targetQuery}`, icon: <Sparkles size={14} className="text-amber-500 shrink-0" /> },
+              { label: 'Quét đề thi từ ảnh chụp (OCR)', href: `/app/documents/create/ocr${targetQuery}`, icon: <Camera size={14} className="text-purple-500 shrink-0" /> },
               { label: 'Ngân hàng câu hỏi', href: `/app/documents/create/bank${targetQuery}`, icon: <BookOpen size={14} className="text-emerald-500 shrink-0" /> },
               { label: 'Nhập thủ công', href: `/app/documents/create/manual${targetQuery}`, icon: <PenTool size={14} className="text-rose-500 shrink-0" /> },
             ]}
@@ -216,159 +217,30 @@ function BankQuizCreateContent() {
         </div>
       )}
 
-      <div className="max-w-3xl mx-auto space-y-6 pt-2 pb-16">
-        <div className="space-y-6">
-          <div className="flex items-center gap-3 p-4 bg-emerald-50/70 dark:bg-emerald-950/30 rounded-2xl border border-emerald-200 dark:border-emerald-800">
-            <BookOpen size={24} className="text-google-green shrink-0" />
-            <div>
-              <h2 className="text-sm font-bold text-slate-900 dark:text-white">
-                Ngân hàng đề thi & chuyên đề chuẩn kiến thức SGK mới
-              </h2>
-              <p className="text-xs text-slate-500">
-                Chọn môn học hoặc bộ đề có sẵn, SI sẽ tự động biên soạn và trích xuất thành bộ đề hoàn chỉnh
-              </p>
-            </div>
-          </div>
+      <div className="max-w-2xl mx-auto py-16 px-4 text-center space-y-6">
+        <div className="w-20 h-20 mx-auto rounded-3xl bg-amber-100 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 flex items-center justify-center text-3xl shadow-sm border border-amber-200 dark:border-amber-800">
+          <BookOpen size={36} />
+        </div>
+        
+        <div className="space-y-2">
+          <span className="inline-block px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300 border border-amber-300/40">
+            Chưa phát triển
+          </span>
+          <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
+            Nhập từ Ngân hàng câu hỏi
+          </h2>
+          <p className="text-sm text-slate-500 dark:text-slate-400 max-w-md mx-auto">
+            Tính năng trích xuất đề thi từ kho tài liệu và ngân hàng câu hỏi dùng chung đang được đội ngũ hoàn thiện và sẽ sớm ra mắt trong bản cập nhật tới.
+          </p>
+        </div>
 
-          {errorMessage && (
-            <div className="p-3.5 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-2xl text-xs text-red-600 dark:text-red-400 flex items-center justify-between gap-3">
-              <div className="flex items-center gap-2">
-                <AlertCircle size={16} className="shrink-0" />
-                <span>{errorMessage}</span>
-              </div>
-              <button
-                type="button"
-                onClick={() => handleGenerateFromBank()}
-                disabled={isLoading}
-                className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-semibold shrink-0 cursor-pointer transition-all active:scale-95 disabled:opacity-50"
-              >
-                Thử lại ngay
-              </button>
-            </div>
-          )}
-
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div className="space-y-1">
-                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                  Chọn môn học
-                </label>
-                <CustomSelect
-                  value={selectedSubject}
-                  onChange={(val) => setSelectedSubject(String(val))}
-                  options={[
-                    { value: '', label: 'Không chọn' },
-                    { value: 'Toán', label: 'Toán' },
-                    { value: 'Tiếng Anh', label: 'Tiếng Anh' },
-                    { value: 'Ngữ văn', label: 'Ngữ văn' },
-                    { value: 'Vật lý', label: 'Vật lý' },
-                    { value: 'Hóa học', label: 'Hóa học' },
-                    { value: 'Sinh học', label: 'Sinh học' },
-                    { value: 'Lịch sử', label: 'Lịch sử' },
-                    { value: 'Địa lý', label: 'Địa lý' },
-                    { value: 'Giáo dục công dân', label: 'GDCD / KT&PL' },
-                    { value: 'Tin học', label: 'Tin học' },
-                  ]}
-                  placeholder="Không chọn"
-                  size="sm"
-                />
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                  Chọn khối lớp
-                </label>
-                <CustomSelect
-                  value={selectedGrade}
-                  onChange={(val) => setSelectedGrade(String(val))}
-                  options={[
-                    { value: '', label: 'Không chọn' },
-                    { value: '12', label: 'Khối 12' },
-                    { value: '11', label: 'Khối 11' },
-                    { value: '10', label: 'Khối 10' },
-                    { value: '9', label: 'Khối 9' },
-                    { value: '8', label: 'Khối 8' },
-                    { value: '7', label: 'Khối 7' },
-                    { value: '6', label: 'Khối 6' },
-                    { value: '5', label: 'Khối 5' },
-                    { value: '4', label: 'Khối 4' },
-                    { value: '3', label: 'Khối 3' },
-                    { value: '2', label: 'Khối 2' },
-                    { value: '1', label: 'Khối 1' },
-                  ]}
-                  placeholder="Không chọn"
-                  size="sm"
-                />
-              </div>
-            </div>
-
-            <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-3">
-              <span className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                <Layers size={16} className="text-google-blue" />
-                Bộ đề mẫu gợi ý từ Ngân hàng câu hỏi
-              </span>
-              <div className="space-y-2 text-xs">
-                {SUGGESTED_TEMPLATES.map((tmpl) => (
-                  <div
-                    key={tmpl.id}
-                    onClick={() => {
-                      setSelectedTemplateId(tmpl.id);
-                      setSelectedSubject(tmpl.subject);
-                      setSelectedGrade(tmpl.grade);
-                    }}
-                    className={`p-3 rounded-xl border transition-all cursor-pointer flex justify-between items-center ${
-                      selectedTemplateId === tmpl.id
-                        ? 'bg-emerald-50/80 dark:bg-emerald-950/40 border-emerald-400 dark:border-emerald-600 shadow-xs'
-                        : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800'
-                    }`}
-                  >
-                    <div>
-                      <span className="font-semibold text-slate-900 dark:text-white block">
-                        {tmpl.title}
-                      </span>
-                      <span className="text-[11px] text-slate-500 font-normal">
-                        Chủ đề: {tmpl.topic} • {tmpl.questions} câu
-                      </span>
-                    </div>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleGenerateFromBank(tmpl);
-                      }}
-                      disabled={isLoading}
-                      className="shrink-0 text-emerald-600 dark:text-emerald-400 font-bold hover:bg-emerald-100 dark:hover:bg-emerald-900"
-                    >
-                      <Sparkles size={14} className="mr-1" /> Dùng Đề Này
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {isLoading && (
-            <div className="p-6 text-center space-y-2 bg-emerald-50/50 dark:bg-emerald-950/20 rounded-2xl border border-emerald-200/50">
-              <div className="animate-spin rounded-full h-7 w-7 border-b-2 border-emerald-500 mx-auto" />
-              <p className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold">
-                SI đang trích xuất và khởi tạo bộ đề thi chuẩn kiến thức
-              </p>
-            </div>
-          )}
-
-          <div className="flex justify-end gap-2 pt-4">
-            <Button variant="ghost" onClick={() => router.push('/app/documents/create' + targetQuery)} disabled={isLoading}>
-              Hủy
-            </Button>
-            <Button
-              onClick={() => handleGenerateFromBank()}
-              disabled={isLoading}
-              className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold"
-            >
-              <Sparkles size={16} className="mr-1.5" /> {isLoading ? 'SI Đang Xử Lý' : 'Trích Xuất Câu Hỏi & Tạo Đề'}
-            </Button>
-          </div>
+        <div className="pt-4 flex items-center justify-center gap-3">
+          <Button
+            onClick={() => router.push('/app/documents/create' + targetQuery)}
+            className="bg-primary hover:bg-primary/90 text-white rounded-2xl px-6 py-2.5 font-bold text-sm shadow-md"
+          >
+            Quay lại trang Tạo đề thi
+          </Button>
         </div>
       </div>
     </AppShell>

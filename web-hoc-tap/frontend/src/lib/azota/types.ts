@@ -39,6 +39,7 @@ export interface AzotaQuestion {
   chapter?: string;
   subject?: string;
   grade?: string;
+  images?: string[];
 }
 
 export interface AzotaExam {

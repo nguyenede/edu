@@ -51,7 +51,8 @@ function OcrQuizCreateContent() {
       if (effName) sessionStorage.setItem('app_active_folder_name', effName);
 
       if (window.location.search) {
-        window.history.replaceState(window.history.state, '', '/app/documents/create/ocr');
+        const currentState = (window.history.state && typeof window.history.state === 'object') ? window.history.state : {};
+        window.history.replaceState(currentState, '', '/app/documents/create/ocr');
       }
     }
   }, [rawFolderId, rawFolderName]);
@@ -343,14 +344,14 @@ function OcrQuizCreateContent() {
             menuTitle="Phương thức tạo đề"
             items={[
               { label: 'Tải lên Word/PDF', href: `/app/documents/create${targetQuery}`, icon: <FileUp size={14} className="text-blue-500 shrink-0" /> },
-              { label: 'Tạo đề bằng SI', href: `/app/documents/create/si${targetQuery}`, icon: <Sparkles size={14} className="text-amber-500 shrink-0" /> },
-              { label: 'Nhận diện ảnh (OCR)', href: `/app/documents/create/ocr${targetQuery}`, icon: <Camera size={14} className="text-purple-500 shrink-0" /> },
+              { label: 'Tạo đề trắc nghiệm bằng SI', href: `/app/documents/create/si${targetQuery}`, icon: <Sparkles size={14} className="text-amber-500 shrink-0" /> },
+              { label: 'Quét đề thi từ ảnh chụp (OCR)', href: `/app/documents/create/ocr${targetQuery}`, icon: <Camera size={14} className="text-purple-500 shrink-0" /> },
               { label: 'Ngân hàng câu hỏi', href: `/app/documents/create/bank${targetQuery}`, icon: <BookOpen size={14} className="text-emerald-500 shrink-0" /> },
               { label: 'Nhập thủ công', href: `/app/documents/create/manual${targetQuery}`, icon: <PenTool size={14} className="text-rose-500 shrink-0" /> },
             ]}
           />
           <span className="text-slate-900 dark:text-white font-normal truncate min-w-0 flex-1">
-            Nhận diện từ ảnh (SI OCR)
+            Quét đề thi từ ảnh chụp (OCR)
           </span>
         </div>
       }
@@ -369,10 +370,10 @@ function OcrQuizCreateContent() {
             <Camera size={24} className="text-purple-600 shrink-0" />
             <div>
               <h2 className="text-sm font-bold text-slate-900 dark:text-white">
-                Nhận diện đề thi từ hình ảnh bằng SI Multimodal Vision
+                Quét đề thi từ ảnh chụp (OCR)
               </h2>
               <p className="text-xs text-slate-500">
-                100% dữ liệu thật từ ảnh, hỗ trợ công thức toán học LaTeX, tuyệt đối không tạo dữ liệu giả
+                Nhận diện câu hỏi từ hình ảnh đề thi in giấy
               </p>
             </div>
           </div>

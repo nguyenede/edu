@@ -28,6 +28,8 @@ export interface ParsedExamQuestion {
   points?: number;
   type?: QuestionType;
   answer?: string;
+  images?: string[];
+  originalIndex?: number;
 }
 
 export interface DeterministicExamResult {
@@ -337,69 +339,235 @@ export function convertOmmlToLatex(ommlXml: string): string {
 
   function parseNode(str: string): string {
     if (!str) return '';
+    let res = str;
 
-    // 1. Phân số: <m:f><m:num>...</m:num><m:den>...</m:den></m:f>
-    let res = str.replace(/<m:f\b[\s\S]*?<\/m:f>/g, (frac) => {
-      const numMatch = frac.match(/<m:num\b[\s\S]*?<\/m:num>/);
-      const denMatch = frac.match(/<m:den\b[\s\S]*?<\/m:den>/);
-      const num = numMatch ? numMatch[0].replace(/<\/?m:num\b[^>]*>/g, '') : '';
-      const den = denMatch ? denMatch[0].replace(/<\/?m:den\b[^>]*>/g, '') : '';
-      return `\\frac{${parseNode(num).trim()}}{${parseNode(den).trim()}}`;
-    });
+    // Lặp duyệt từ trong ra ngoài (innermost-first) để bảo toàn tuyệt đối các cấu trúc lồng nhau
+    let changed = true;
+    let loopCount = 0;
+    while (changed && loopCount < 30) {
+      changed = false;
+      loopCount++;
 
-    // 2. Căn bậc hai / Căn bậc n: <m:rad><m:deg>...</m:deg><m:e>...</m:e></m:rad>
-    res = res.replace(/<m:rad\b[\s\S]*?<\/m:rad>/g, (rad) => {
-      const degMatch = rad.match(/<m:deg\b[\s\S]*?<\/m:deg>/);
-      const eMatch = rad.match(/<m:e\b[\s\S]*?<\/m:e>/);
-      const deg = degMatch ? degMatch[0].replace(/<\/?m:deg\b[^>]*>/g, '').trim() : '';
-      const e = eMatch ? eMatch[0].replace(/<\/?m:e\b[^>]*>/g, '') : '';
-      const degText = parseNode(deg).trim();
-      const eText = parseNode(e).trim();
-      return degText ? `\\sqrt[${degText}]{${eText}}` : `\\sqrt{${eText}}`;
-    });
+      // 1. Phân số OMML: <m:f> (tử số luôn trước, mẫu số luôn sau, không ngắt dòng)
+      res = res.replace(/<m:f\b[^>]*>((?:(?!<m:f\b)[\s\S])*?)<\/m:f>/g, (_, inner) => {
+        changed = true;
+        const numMatch = inner.match(/<m:num\b[^>]*>([\s\S]*?)<\/m:num>/);
+        const denMatch = inner.match(/<m:den\b[^>]*>([\s\S]*?)<\/m:den>/);
+        const num = numMatch ? parseNode(numMatch[1]).replace(/\n+/g, ' ').trim() : '';
+        const den = denMatch ? parseNode(denMatch[1]).replace(/\n+/g, ' ').trim() : '';
+        return `\\frac{${num}}{${den}}`;
+      });
 
-    // 3. Chỉ số trên và dưới đồng thời: <m:sSubSup>
-    res = res.replace(/<m:sSubSup\b[\s\S]*?<\/m:sSubSup>/g, (node) => {
-      const eMatch = node.match(/<m:e\b[\s\S]*?<\/m:e>/);
-      const subMatch = node.match(/<m:sub\b[\s\S]*?<\/m:sub>/);
-      const supMatch = node.match(/<m:sup\b[\s\S]*?<\/m:sup>/);
-      const e = eMatch ? eMatch[0].replace(/<\/?m:e\b[^>]*>/g, '') : '';
-      const sub = subMatch ? subMatch[0].replace(/<\/?m:sub\b[^>]*>/g, '') : '';
-      const sup = supMatch ? supMatch[0].replace(/<\/?m:sup\b[^>]*>/g, '') : '';
-      return `{${parseNode(e).trim()}}_{${parseNode(sub).trim()}}^{${parseNode(sup).trim()}}`;
-    });
+      // 1b. Phân số MathML: <mfrac>
+      res = res.replace(/<mfrac\b[^>]*>((?:(?!<mfrac\b)[\s\S])*?)<\/mfrac>/g, (_, inner) => {
+        changed = true;
+        const children: string[] = [];
+        const childRegex = /<([a-zA-Z0-9]+)\b[^>]*>([\s\S]*?)<\/\1>/g;
+        let cm: RegExpExecArray | null;
+        while ((cm = childRegex.exec(inner)) !== null) {
+          children.push(cm[2]);
+        }
+        let num = '', den = '';
+        if (children.length >= 2) {
+          num = parseNode(children[0]).replace(/\n+/g, ' ').trim();
+          den = parseNode(children[1]).replace(/\n+/g, ' ').trim();
+        } else {
+          const parts = inner.split(/<\/[a-zA-Z0-9]+>\s*<[a-zA-Z0-9]+/);
+          num = parseNode(parts[0] || '').replace(/\n+/g, ' ').trim();
+          den = parseNode(parts[1] || '').replace(/\n+/g, ' ').trim();
+        }
+        return `\\frac{${num}}{${den}}`;
+      });
 
-    // 4. Lũy thừa / Số mũ: <m:sSup>
-    res = res.replace(/<m:sSup\b[\s\S]*?<\/m:sSup>/g, (node) => {
-      const eMatch = node.match(/<m:e\b[\s\S]*?<\/m:e>/);
-      const supMatch = node.match(/<m:sup\b[\s\S]*?<\/m:sup>/);
-      const e = eMatch ? eMatch[0].replace(/<\/?m:e\b[^>]*>/g, '') : '';
-      const sup = supMatch ? supMatch[0].replace(/<\/?m:sup\b[^>]*>/g, '') : '';
-      return `{${parseNode(e).trim()}}^{${parseNode(sup).trim()}}`;
-    });
+      // 2. Căn thức OMML: <m:rad>
+      res = res.replace(/<m:rad\b[^>]*>((?:(?!<m:rad\b)[\s\S])*?)<\/m:rad>/g, (_, inner) => {
+        changed = true;
+        const degMatch = inner.match(/<m:deg\b[^>]*>([\s\S]*?)<\/m:deg>/);
+        const eMatch = inner.match(/<m:e\b[^>]*>([\s\S]*?)<\/m:e>/);
+        const isDegHidden = /<m:degHide\b[^>]*m:val=["']?(?:1|on|true)["']?/i.test(inner);
+        const deg = (!isDegHidden && degMatch) ? parseNode(degMatch[1]).replace(/\n+/g, ' ').trim() : '';
+        const e = eMatch ? parseNode(eMatch[1]).replace(/\n+/g, ' ').trim() : '';
+        return deg ? `\\sqrt[${deg}]{${e}}` : `\\sqrt{${e}}`;
+      });
 
-    // 5. Chỉ số dưới: <m:sSub>
-    res = res.replace(/<m:sSub\b[\s\S]*?<\/m:sSub>/g, (node) => {
-      const eMatch = node.match(/<m:e\b[\s\S]*?<\/m:e>/);
-      const subMatch = node.match(/<m:sub\b[\s\S]*?<\/m:sub>/);
-      const e = eMatch ? eMatch[0].replace(/<\/?m:e\b[^>]*>/g, '') : '';
-      const sub = subMatch ? subMatch[0].replace(/<\/?m:sub\b[^>]*>/g, '') : '';
-      return `{${parseNode(e).trim()}}_{${parseNode(sub).trim()}}`;
-    });
+      // 2b. Căn thức MathML: <msqrt> và <mroot>
+      res = res.replace(/<msqrt\b[^>]*>((?:(?!<msqrt\b)[\s\S])*?)<\/msqrt>/g, (_, inner) => {
+        changed = true;
+        const e = parseNode(inner).replace(/\n+/g, ' ').trim();
+        return `\\sqrt{${e}}`;
+      });
+      res = res.replace(/<mroot\b[^>]*>((?:(?!<mroot\b)[\s\S])*?)<\/mroot>/g, (_, inner) => {
+        changed = true;
+        const children: string[] = [];
+        const childRegex = /<([a-zA-Z0-9]+)\b[^>]*>([\s\S]*?)<\/\1>/g;
+        let cm: RegExpExecArray | null;
+        while ((cm = childRegex.exec(inner)) !== null) children.push(cm[2]);
+        if (children.length >= 2) {
+          const base = parseNode(children[0]).replace(/\n+/g, ' ').trim();
+          const deg = parseNode(children[1]).replace(/\n+/g, ' ').trim();
+          return `\\sqrt[${deg}]{${base}}`;
+        }
+        return `\\sqrt{${parseNode(inner).trim()}}`;
+      });
 
-    // 6. Dấu ngoặc, dấu giá trị tuyệt đối: <m:d>
-    res = res.replace(/<m:d\b[\s\S]*?<\/m:d>/g, (node) => {
-      const begChrMatch = node.match(/<m:begChr\b[^>]*m:val=["']([^"']+)["']/);
-      const endChrMatch = node.match(/<m:endChr\b[^>]*m:val=["']([^"']+)["']/);
-      const beg = begChrMatch ? begChrMatch[1] : '(';
-      const end = endChrMatch ? endChrMatch[1] : ')';
-      const eMatch = node.match(/<m:e\b[\s\S]*?<\/m:e>/);
-      const e = eMatch ? eMatch[0].replace(/<\/?m:e\b[^>]*>/g, '') : '';
-      return `${beg}${parseNode(e).trim()}${end}`;
-    });
+      // 3. Chỉ số trên và dưới đồng thời: <m:sSubSup> hoặc <msubsup>
+      res = res.replace(/<m:sSubSup\b[^>]*>((?:(?!<m:sSubSup\b)[\s\S])*?)<\/m:sSubSup>/g, (_, inner) => {
+        changed = true;
+        const eMatch = inner.match(/<m:e\b[^>]*>([\s\S]*?)<\/m:e>/);
+        const subMatch = inner.match(/<m:sub\b[^>]*>([\s\S]*?)<\/m:sub>/);
+        const supMatch = inner.match(/<m:sup\b[^>]*>([\s\S]*?)<\/m:sup>/);
+        const e = eMatch ? parseNode(eMatch[1]).replace(/\n+/g, ' ').trim() : '';
+        const sub = subMatch ? parseNode(subMatch[1]).replace(/\n+/g, ' ').trim() : '';
+        const sup = supMatch ? parseNode(supMatch[1]).replace(/\n+/g, ' ').trim() : '';
+        return `{${e}}_{${sub}}^{${sup}}`;
+      });
+      res = res.replace(/<msubsup\b[^>]*>((?:(?!<msubsup\b)[\s\S])*?)<\/msubsup>/g, (_, inner) => {
+        changed = true;
+        const children: string[] = [];
+        const childRegex = /<([a-zA-Z0-9]+)\b[^>]*>([\s\S]*?)<\/\1>/g;
+        let cm: RegExpExecArray | null;
+        while ((cm = childRegex.exec(inner)) !== null) children.push(cm[2]);
+        if (children.length >= 3) {
+          const e = parseNode(children[0]).replace(/\n+/g, ' ').trim();
+          const sub = parseNode(children[1]).replace(/\n+/g, ' ').trim();
+          const sup = parseNode(children[2]).replace(/\n+/g, ' ').trim();
+          return `{${e}}_{${sub}}^{${sup}}`;
+        }
+        return inner;
+      });
 
-    // 7. Bóc tách chữ và ký hiệu trong thẻ <m:t>
-    res = res.replace(/<m:t\b[^>]*>([\s\S]*?)<\/m:t>/g, '$1');
+      // 4. Lũy thừa / Số mũ: <m:sSup> hoặc <msup>
+      res = res.replace(/<m:sSup\b[^>]*>((?:(?!<m:sSup\b)[\s\S])*?)<\/m:sSup>/g, (_, inner) => {
+        changed = true;
+        const eMatch = inner.match(/<m:e\b[^>]*>([\s\S]*?)<\/m:e>/);
+        const supMatch = inner.match(/<m:sup\b[^>]*>([\s\S]*?)<\/m:sup>/);
+        const e = eMatch ? parseNode(eMatch[1]).replace(/\n+/g, ' ').trim() : '';
+        const sup = supMatch ? parseNode(supMatch[1]).replace(/\n+/g, ' ').trim() : '';
+        return `${e}^{${sup}}`;
+      });
+      res = res.replace(/<msup\b[^>]*>((?:(?!<msup\b)[\s\S])*?)<\/msup>/g, (_, inner) => {
+        changed = true;
+        const children: string[] = [];
+        const childRegex = /<([a-zA-Z0-9]+)\b[^>]*>([\s\S]*?)<\/\1>/g;
+        let cm: RegExpExecArray | null;
+        while ((cm = childRegex.exec(inner)) !== null) children.push(cm[2]);
+        if (children.length >= 2) {
+          const e = parseNode(children[0]).replace(/\n+/g, ' ').trim();
+          const sup = parseNode(children[1]).replace(/\n+/g, ' ').trim();
+          return `${e}^{${sup}}`;
+        }
+        return inner;
+      });
+
+      // 5. Chỉ số dưới: <m:sSub> hoặc <msub>
+      res = res.replace(/<m:sSub\b[^>]*>((?:(?!<m:sSub\b)[\s\S])*?)<\/m:sSub>/g, (_, inner) => {
+        changed = true;
+        const eMatch = inner.match(/<m:e\b[^>]*>([\s\S]*?)<\/m:e>/);
+        const subMatch = inner.match(/<m:sub\b[^>]*>([\s\S]*?)<\/m:sub>/);
+        const e = eMatch ? parseNode(eMatch[1]).replace(/\n+/g, ' ').trim() : '';
+        const sub = subMatch ? parseNode(subMatch[1]).replace(/\n+/g, ' ').trim() : '';
+        return `${e}_{${sub}}`;
+      });
+      res = res.replace(/<msub\b[^>]*>((?:(?!<msub\b)[\s\S])*?)<\/msub>/g, (_, inner) => {
+        changed = true;
+        const children: string[] = [];
+        const childRegex = /<([a-zA-Z0-9]+)\b[^>]*>([\s\S]*?)<\/\1>/g;
+        let cm: RegExpExecArray | null;
+        while ((cm = childRegex.exec(inner)) !== null) children.push(cm[2]);
+        if (children.length >= 2) {
+          const e = parseNode(children[0]).replace(/\n+/g, ' ').trim();
+          const sub = parseNode(children[1]).replace(/\n+/g, ' ').trim();
+          return `${e}_{${sub}}`;
+        }
+        return inner;
+      });
+
+      // 6. Dấu ngoặc, Giá trị tuyệt đối, Hệ phương trình: <m:d> hoặc <mfenced>
+      res = res.replace(/<m:d\b[^>]*>((?:(?!<m:d\b)[\s\S])*?)<\/m:d>/g, (_, inner) => {
+        changed = true;
+        const begChrMatch = inner.match(/<m:begChr\b[^>]*m:val=["']([^"']*)["']/);
+        const endChrMatch = inner.match(/<m:endChr\b[^>]*m:val=["']([^"']*)["']/);
+        const beg = begChrMatch ? begChrMatch[1] : '(';
+        const end = endChrMatch ? endChrMatch[1] : ')';
+
+        // Hệ phương trình: ngoặc nhọn kết hợp eqArr hoặc m:m
+        const eqArrMatch = inner.match(/<(?:m:eqArr|m:m)\b[^>]*>([\s\S]*?)<\/(?:m:eqArr|m:m)>/);
+        if (eqArrMatch && (beg === '{' || !beg || beg === '')) {
+          const equations: string[] = [];
+          const eRegex = /<m:e\b[^>]*>([\s\S]*?)<\/m:e>/g;
+          let em: RegExpExecArray | null;
+          while ((em = eRegex.exec(eqArrMatch[1])) !== null) {
+            const eq = parseNode(em[1]).replace(/\n+/g, ' ').trim();
+            if (eq) equations.push(eq);
+          }
+          if (equations.length > 0) {
+            return `\\begin{cases} ${equations.join(' \\\\ ')} \\end{cases}`;
+          }
+        }
+
+        // Giá trị tuyệt đối: |...|
+        const isAbsBar = (c: string) => /^[\|\u2502\u01c0\u2223\u2758\u2016]$|&#x7c;|&#124;|\\vert/i.test(c);
+        const isAbsolute = isAbsBar(beg) && isAbsBar(end);
+
+        const eMatch = inner.match(/<m:e\b[^>]*>([\s\S]*?)<\/m:e>/);
+        const e = eMatch ? parseNode(eMatch[1]).replace(/\n+/g, ' ').trim() : '';
+
+        if (isAbsolute) {
+          return `\\left|${e}\\right|`;
+        }
+        if (beg === '{' && !end) {
+          const lines = e.split(/\n+|\\\\/).map((l) => l.trim()).filter(Boolean);
+          if (lines.length > 1) {
+            return `\\begin{cases} ${lines.join(' \\\\ ')} \\end{cases}`;
+          }
+          return `\\{${e}`;
+        }
+        return `${beg}${e}${end}`;
+      });
+
+      // 6b. Dấu ngoặc, Giá trị tuyệt đối, Hệ phương trình trong MathML: <mfenced>
+      res = res.replace(/<mfenced\b([^>]*)>((?:(?!<mfenced\b)[\s\S])*?)<\/mfenced>/g, (_, attrs, inner) => {
+        changed = true;
+        const openMatch = attrs.match(/open=["']([^"']*)["']/);
+        const closeMatch = attrs.match(/close=["']([^"']*)["']/);
+        const beg = openMatch ? openMatch[1] : '(';
+        const end = closeMatch ? closeMatch[1] : ')';
+        const parsedInner = parseNode(inner).trim();
+
+        const isAbsBar = (c: string) => /^[\|\u2502\u01c0\u2223\u2758\u2016]$|&#x7c;|&#124;|\\vert/i.test(c);
+        if (isAbsBar(beg) && isAbsBar(end)) {
+          return `\\left|${parsedInner}\\right|`;
+        }
+        if (beg === '{' && (!end || end === '')) {
+          const lines = parsedInner.split(/\n+|\\\\/).map((l) => l.trim()).filter(Boolean);
+          if (lines.length > 1) {
+            return `\\begin{cases} ${lines.join(' \\\\ ')} \\end{cases}`;
+          }
+          return `\\{${parsedInner}`;
+        }
+        return `${beg}${parsedInner}${end}`;
+      });
+
+      // 6c. Hệ phương trình MathML: <mtable>
+      res = res.replace(/<mtable\b[^>]*>((?:(?!<mtable\b)[\s\S])*?)<\/mtable>/g, (_, inner) => {
+        changed = true;
+        const rows: string[] = [];
+        const trRegex = /<mtr\b[^>]*>([\s\S]*?)<\/mtr>/g;
+        let trm: RegExpExecArray | null;
+        while ((trm = trRegex.exec(inner)) !== null) {
+          const rowText = parseNode(trm[1]).replace(/\n+/g, ' ').trim();
+          if (rowText) rows.push(rowText);
+        }
+        if (rows.length > 1) {
+          return `\\begin{cases} ${rows.join(' \\\\ ')} \\end{cases}`;
+        }
+        return parseNode(inner);
+      });
+    }
+
+    // 7. Bóc tách chữ và ký hiệu trong thẻ <m:t>, <w:t>, MathML <mi>, <mn>, <mo>
+    res = res.replace(/<[mw]:t\b[^>]*>([\s\S]*?)<\/[mw]:t>/g, '$1');
+    res = res.replace(/<m[ino]\b[^>]*>([\s\S]*?)<\/m[ino]>/g, '$1');
 
     // 8. Làm sạch thẻ XML còn sót lại
     res = res.replace(/<[^>]+>/g, '');
@@ -418,6 +586,12 @@ export function convertOmmlToLatex(ommlXml: string): string {
     .trim();
 
   if (!formula) return '';
+
+  // Khôi phục căn thức nếu còn ký tự \u221A hoặc √
+  formula = formula
+    .replace(/(?:\\u221A|√)\s*\(([^)]+)\)/g, '\\sqrt{$1}')
+    .replace(/(?:\\u221A|√)\s*\{([^}]+)\}/g, '\\sqrt{$1}')
+    .replace(/(?:\\u221A|√)\s*([a-zA-Z0-9]+)/g, '\\sqrt{$1}');
 
   // Chuẩn hóa một số ký hiệu toán học phổ biến trong văn bản tiếng Việt
   formula = formula
@@ -570,12 +744,12 @@ export function replaceOmmlInDocumentXml(
       dataUri = imageIndexMap.get(imgIdx)!;
     }
     imgIdx++;
-    if (dataUri && dataUri.length < 50000) {
+    if (dataUri) {
       const mdImg = `\n\n![Hình vẽ](${dataUri})\n\n`;
       const safeText = escapeXmlText(mdImg);
       return `<w:r><w:t xml:space="preserve"> ${safeText} </w:t></w:r>`;
     }
-    return `<w:r><w:t xml:space="preserve"> [Hình vẽ] </w:t></w:r>`;
+    return `<w:r><w:t xml:space="preserve"> [IMAGE_URL] </w:t></w:r>`;
   });
 
   // 3. Chuyển đổi đối tượng MathType OLE (<w:object>) sang LaTeX thực tế qua MTEF Parser
@@ -619,7 +793,7 @@ export function replaceOmmlInDocumentXml(
       dataUri = imageIndexMap.get(imgIdx)!;
     }
     imgIdx++;
-    if (dataUri && dataUri.length < 50000) {
+    if (dataUri) {
       const mdImg = `\n\n![Hình vẽ](${dataUri})\n\n`;
       const safeText = escapeXmlText(mdImg);
       return `<w:r><w:t xml:space="preserve"> ${safeText} </w:t></w:r>`;
@@ -668,14 +842,40 @@ export function cleanAndEnrichMathFormulas(
   let res = cleanLeakedOleGarbage(text);
 
   // 1. Xóa sạch các token nội bộ nếu còn sót lại từ OLE rỗng
-  res = res.replace(/\[!m:[^\]]*\]/gi, '');
   res = res.replace(/\bmathtype_\d+\b/gi, '');
 
-  // 2. Loại bỏ triệt để các token ảnh nội bộ nếu rỗng
+  // 2. Chuẩn hóa token ảnh nội bộ thành [IMAGE_URL] thay vì xóa bỏ
   res = res.replace(/\[img:\$img_\d+\$\]/gi, '');
-  res = res.replace(/\[img:[^\]]+\]/gi, '');
+  res = res.replace(/(?:\[!img:[^\]]+\]|\[img:[^\]]+\])/gi, ' [IMAGE_URL] ');
 
-  // 3. Chuẩn hóa các ký hiệu so sánh và toán học phổ biến sang LaTeX
+  // 3. Sửa lỗi đảo ngược phân số & ngắt dòng giữa tử và mẫu
+  res = res.replace(/\\(?:d?frac)\s*\{([^{}]+)\}\s*\{([^{}]+)\}/g, (_, num, den) => {
+    return `\\frac{${num.replace(/\n+/g, ' ').trim()}}{${den.replace(/\n+/g, ' ').trim()}}`;
+  });
+  res = res.replace(/([a-zA-Z0-9_\(\)]+)\s*\n\s*[-—]{2,}\s*\n\s*([a-zA-Z0-9_\(\)]+)/g, '\\frac{$1}{$2}');
+  res = res.replace(/([a-zA-Z0-9_\(\)\\]+)\s*\n\s*\/\s*([a-zA-Z0-9_\(\)\\]+)/g, '\\frac{$1}{$2}');
+  res = res.replace(/([a-zA-Z0-9_\(\)\\]+)\s*\/\s*\n\s*([a-zA-Z0-9_\(\)\\]+)/g, '\\frac{$1}{$2}');
+
+  // 4. Khôi phục căn bậc hai từ ký tự Unicode \u221A / √ và \sqrt rỗng
+  res = res.replace(/\\sqrt\{\}\s*(\([^)]+\)|\{[^}]+\}|[a-zA-Z0-9]+)/g, '\\sqrt{$1}');
+  res = res.replace(/\\sqrt\s+([a-zA-Z0-9]+)/g, '\\sqrt{$1}');
+  res = res.replace(/(?:\\u221A|√)\s*\(([^)]+)\)/g, '\\sqrt{$1}');
+  res = res.replace(/(?:\\u221A|√)\s*\{([^}]+)\}/g, '\\sqrt{$1}');
+  res = res.replace(/(?:\\u221A|√)\s*([a-zA-Z0-9]+)/g, '\\sqrt{$1}');
+
+  // 5. Sửa lỗi ngắt dòng ở số mũ, chỉ số dưới (nối liền vào biến liền trước)
+  res = res.replace(/([a-zA-Z0-9_\)])\s*\n\s*(\^|\_)\{?([a-zA-Z0-9+\-*\/=]+)\}?/g, '$1$2{$3}');
+  res = res.replace(/([a-zA-Z0-9_\)])\s*(\^|\_)\s*\n\s*\{?([a-zA-Z0-9+\-*\/=]+)\}?/g, '$1$2{$3}');
+  res = res.replace(/([a-zA-Z0-9_\)])\s*\n\s*([²³¹⁰⁴⁵⁶⁷⁸⁹⁺⁻⁼⁽⁾₀₁₂₃₄₅₆₇₈₉₊₋₌₍₎]+)/g, '$1$2');
+  res = res.replace(/\b([A-Z][a-z]?)\s*\n\s*(\d)\b(?!\s*[\.\:])/g, '$1_$2');
+
+  // 6. Giữ nguyên cấu trúc hệ phương trình thành phần trong cùng một khối
+  res = res.replace(/(?:^|\n)\s*\{\s*\n\s*([^\n]+=[^\n]+)\s*\n\s*([^\n]+=[^\n]+(?:\s*\n\s*[^\n]+=[^\n]+)*)/g, (_, eq1, rest) => {
+    const eqs = [eq1.trim(), ...rest.split('\n').map((l: string) => l.trim()).filter(Boolean)];
+    return `\n\\begin{cases} ${eqs.join(' \\\\ ')} \\end{cases}\n`;
+  });
+
+  // 7. Chuẩn hóa các ký hiệu so sánh và toán học phổ biến sang LaTeX
   res = res
     .replace(/(?<!\\)<=|≤/g, ' \\le ')
     .replace(/(?<!\\)>=|≥/g, ' \\ge ')
@@ -687,7 +887,7 @@ export function cleanAndEnrichMathFormulas(
     .replace(/∉/g, ' \\notin ')
     .replace(/∞/g, ' \\infty ');
 
-  // 4. Chuẩn hóa tuyệt đối: Phân số LaTeX (tử số ở trên, mẫu số ở dưới) và Unicode tiếng Việt NFC
+  // 8. Chuẩn hóa tuyệt đối: Phân số LaTeX (tử số ở trên, mẫu số ở dưới) và Unicode tiếng Việt NFC
   res = sanitizeLatexFractions(cleanVietnameseEncoding(res));
 
   return res.trim();
@@ -986,6 +1186,17 @@ export function parseExamFromStructuredText(
     const rawBlock = mainExamText.substring(curr.index + curr.headerLen, endIndex).trim();
     if (!rawBlock) continue;
 
+    // Trích xuất tất cả hình ảnh trong khối câu hỏi này
+    const blockImages: string[] = [];
+    const imgMatchRegex = /(?:\[!(?:img|image):([^\]]+)\]|\[(?:img|image):([^\]]+)\]|!\[[^\]]*\]\(([^)]+)\))/gi;
+    let im: RegExpExecArray | null;
+    while ((im = imgMatchRegex.exec(rawBlock)) !== null) {
+      const uri = (im[1] || im[2] || im[3]).trim();
+      if (uri && !blockImages.includes(uri)) {
+        blockImages.push(uri);
+      }
+    }
+
     // Lọc tiêu đề Dạng bài nếu nó nằm ở dòng đầu tiên của câu hỏi
     let processedBlock = rawBlock;
     const firstLine = (processedBlock.split('\n')[0] || '').trim();
@@ -994,6 +1205,9 @@ export function parseExamFromStructuredText(
     }
 
     if (!processedBlock) continue;
+
+    // Chuẩn hóa placeholder ảnh trong câu hỏi thành [IMAGE_URL]
+    processedBlock = processedBlock.replace(/(?:\[!(?:img|image):[^\]]+\]|\[(?:img|image):[^\]]+\]|!\[[^\]]*\]\([^)]+\))/gi, ' [IMAGE_URL] ');
 
     // 4. Bóc tách Lời giải / Hướng dẫn giải nếu có
     let explanation: string | undefined = undefined;
@@ -1096,6 +1310,7 @@ export function parseExamFromStructuredText(
 
       const qItem: ParsedExamQuestion = {
         id: `q_${curr.qNum}_${Date.now()}_${i}`,
+        originalIndex: curr.qNum,
         rawLabel: curr.sectionBanner ? `${curr.sectionBanner} - ${curr.rawLabel}` : curr.rawLabel,
         content: questionContent,
         options: formattedOptions,
@@ -1103,6 +1318,7 @@ export function parseExamFromStructuredText(
         points: 1.0,
         type: 'multiple_choice',
         answer: shortAnswer || undefined,
+        images: blockImages.length > 0 ? blockImages : undefined,
       };
 
       enrichDeepExplanation(qItem);
@@ -1177,6 +1393,7 @@ export function parseExamFromStructuredText(
                            !/(?:^|\s|\b)(?:sai|không\s*đúng)(?:\s|\b|$|\.)/i.test(checkStr);
             const subQItem: ParsedExamQuestion = {
               id: `q_${curr.qNum}_${letter}_${Date.now()}_${sIdx}`,
+              originalIndex: curr.qNum,
               rawLabel: curr.sectionBanner ? `${curr.sectionBanner} - ${curr.rawLabel} (${letter})` : `${curr.rawLabel} (${letter})`,
               content: fullSubContent,
               options: [
@@ -1186,6 +1403,7 @@ export function parseExamFromStructuredText(
               explanation: subExp ? `**Lời giải chi tiết câu ${letter}):**\n${subExp}` : undefined,
               points: 1.0,
               type: 'true_false',
+              images: blockImages.length > 0 ? blockImages : undefined,
             };
             enrichDeepExplanation(subQItem);
             parsedQuestions.push(subQItem);
@@ -1195,34 +1413,37 @@ export function parseExamFromStructuredText(
           // Nếu không có phương án trắc nghiệm A, B, C, D trong đề gốc -> Giữ nguyên là câu Tự luận
           const subQItem: ParsedExamQuestion = {
             id: `q_${curr.qNum}_${letter}_${Date.now()}_${sIdx}`,
+            originalIndex: curr.qNum,
             rawLabel: curr.sectionBanner ? `${curr.sectionBanner} - ${curr.rawLabel} (${letter})` : `${curr.rawLabel} (${letter})`,
             content: fullSubContent,
             options: [],
             explanation: subExp ? `**Lời giải:**\n${subExp}` : undefined,
             points: 1.0,
-            type: 'essay',
+            type: 'short_answer',
             answer: subExp || undefined,
+            images: blockImages.length > 0 ? blockImages : undefined,
           };
           enrichDeepExplanation(subQItem);
           parsedQuestions.push(subQItem);
         }
       } else {
-        // Câu tự luận đơn lẻ:
-        let questionContent = stripHtmlTags(questionAndOptionsBlock).replace(/^[:.-]+\s*/, '').trim() || `${curr.rawLabel || `Bài ${curr.qNum}`}`;
+        // Câu không có phương án A, B, C, D (Trả lời ngắn / Tự luận):
+        // Tuyệt đối không xóa câu hay đánh lại index! Giữ nguyên originalIndex = curr.qNum và gán type = 'short_answer'.
+        let questionContent = stripHtmlTags(questionAndOptionsBlock).replace(/^[:.-]+\s*/, '').trim() || `${curr.rawLabel || `Câu ${curr.qNum}`}`;
         questionContent = cleanAndEnrichMathFormulas(questionContent);
 
         let cleanExp = explanation ? cleanAndEnrichMathFormulas(explanation) : undefined;
-        const isShortAnswerSection = /trả\s*lời\s*ngắn|điền\s*khuyết|điền\s*từ|phần\s*iii/i.test(curr.sectionBanner || '');
-        const type: QuestionType = (shortAnswer || isShortAnswerSection) ? 'fill_blank' : 'essay';
         const qItem: ParsedExamQuestion = {
           id: `q_${curr.qNum}_${Date.now()}_${i}`,
+          originalIndex: curr.qNum,
           rawLabel: curr.sectionBanner ? `${curr.sectionBanner} - ${curr.rawLabel}` : curr.rawLabel,
           content: questionContent,
           options: [],
           explanation: cleanExp,
           points: 1.0,
-          type,
+          type: 'short_answer',
           answer: shortAnswer ? cleanAndEnrichMathFormulas(shortAnswer) : undefined,
+          images: blockImages.length > 0 ? blockImages : undefined,
         };
         enrichDeepExplanation(qItem);
         parsedQuestions.push(qItem);
@@ -1265,8 +1486,10 @@ export async function parseDocxFileStructure(file: File): Promise<DeterministicE
       const zip = await JSZip.loadAsync(arrayBuffer);
       const oleLatexMap = new Map<string, string>();
       const oleIndexMap = new Map<number, string>();
+      const imageRelMap = new Map<string, string>();
+      const imageIndexMap = new Map<number, string>();
 
-      // Đọc bảng quan hệ trong word/_rels/document.xml.rels để liên kết rId -> oleObject.bin
+      // Đọc bảng quan hệ trong word/_rels/document.xml.rels để liên kết rId -> oleObject.bin và hình ảnh
       const relsEntry = zip.file('word/_rels/document.xml.rels');
       if (relsEntry) {
         const relsXml = await relsEntry.async('text');
@@ -1292,6 +1515,17 @@ export async function parseDocxFileStructure(file: File): Promise<DeterministicE
               }
             }
           }
+
+          // 2. Hình ảnh (media)
+          if (/media\/|image/i.test(target)) {
+            const zipPath = target.startsWith('word/') ? target : `word/${target}`;
+            const imgF = zip.file(zipPath) || zip.file(target);
+            if (imgF) {
+              const mime = getMimeTypeFromPath(zipPath);
+              const base64 = await imgF.async('base64');
+              imageRelMap.set(rId, `data:${mime};base64,${base64}`);
+            }
+          }
         }
       }
 
@@ -1311,6 +1545,22 @@ export async function parseDocxFileStructure(file: File): Promise<DeterministicE
           if (latex) {
             oleIndexMap.set(bi + 1, latex);
           }
+        }
+      }
+
+      // Đọc các file media image theo thứ tự số để dự phòng imageIndexMap
+      const mediaEntries = Object.keys(zip.files).filter((k) => /media\/image\d+\./i.test(k));
+      mediaEntries.sort((a, b) => {
+        const numA = parseInt(a.match(/\d+/)?.[0] || '0', 10);
+        const numB = parseInt(b.match(/\d+/)?.[0] || '0', 10);
+        return numA - numB;
+      });
+      for (let mi = 0; mi < mediaEntries.length; mi++) {
+        const mF = zip.file(mediaEntries[mi]);
+        if (mF) {
+          const mime = getMimeTypeFromPath(mediaEntries[mi]);
+          const base64 = await mF.async('base64');
+          imageIndexMap.set(mi + 1, `data:${mime};base64,${base64}`);
         }
       }
 
@@ -1368,8 +1618,8 @@ export async function parseDocxFileStructure(file: File): Promise<DeterministicE
           return tblXml;
         });
 
-        // Chuyển đổi toàn bộ thẻ <m:oMath> và MathType OLE sang LaTeX
-        const convertedDocXml = replaceOmmlInDocumentXml(docXml, oleLatexMap, oleIndexMap);
+        // Chuyển đổi toàn bộ thẻ <m:oMath> và MathType OLE sang LaTeX, giữ nguyên hình ảnh
+        const convertedDocXml = replaceOmmlInDocumentXml(docXml, oleLatexMap, oleIndexMap, imageRelMap, imageIndexMap);
 
         // Trích xuất text sạch trực tiếp từ XML - Siêu tốc (< 2ms), KHÔNG dùng JSZip.generateAsync gây đơ lag trình duyệt
         cleanRawText = extractTextFromWordXml(convertedDocXml);
@@ -1394,7 +1644,7 @@ export async function parseDocxFileStructure(file: File): Promise<DeterministicE
       if (res && res.questions.length > 0) {
         if (answerTableMap.size > 0) {
           res.questions.forEach((q, idx) => {
-            const targetLetter = answerTableMap.get(idx + 1);
+            const targetLetter = answerTableMap.get(q.originalIndex || (idx + 1));
             if (targetLetter && q.options && q.options.length > 0) {
               q.options.forEach((opt, oIdx) => {
                 const letter = String.fromCharCode(65 + oIdx);
@@ -1414,6 +1664,17 @@ export async function parseDocxFileStructure(file: File): Promise<DeterministicE
       if (htmlRes.value) {
         const resHtml = parseExamFromStructuredText(htmlRes.value, { fileName });
         if (resHtml && resHtml.questions.length > 0) {
+          if (answerTableMap.size > 0) {
+            resHtml.questions.forEach((q, idx) => {
+              const targetLetter = answerTableMap.get(q.originalIndex || (idx + 1));
+              if (targetLetter && q.options && q.options.length > 0) {
+                q.options.forEach((opt, oIdx) => {
+                  const letter = String.fromCharCode(65 + oIdx);
+                  opt.isCorrect = letter === targetLetter;
+                });
+              }
+            });
+          }
           resHtml.parserUsed = 'docx_xml';
           return resHtml;
         }
@@ -1721,10 +1982,26 @@ export async function extractTextFromPdf(file: File): Promise<string> {
         continue;
       }
 
+      const textFragments: { x: number; y: number; text: string }[] = [];
       const btRegex = /BT[\s\S]*?ET/g;
       let btMatch: RegExpExecArray | null;
       while ((btMatch = btRegex.exec(decompressedText)) !== null) {
         const btBlock = btMatch[0];
+        let curX = 0;
+        let curY = 0;
+
+        const tmMatch = btBlock.match(/(-?\d+(?:\.\d+)?)\s+(-?\d+(?:\.\d+)?)\s+(-?\d+(?:\.\d+)?)\s+(-?\d+(?:\.\d+)?)\s+(-?\d+(?:\.\d+)?)\s+(-?\d+(?:\.\d+)?)\s+Tm/);
+        if (tmMatch) {
+          curX = parseFloat(tmMatch[5]);
+          curY = parseFloat(tmMatch[6]);
+        } else {
+          const tdMatch = btBlock.match(/(-?\d+(?:\.\d+)?)\s+(-?\d+(?:\.\d+)?)\s+Td/);
+          if (tdMatch) {
+            curX = parseFloat(tdMatch[1]);
+            curY = parseFloat(tdMatch[2]);
+          }
+        }
+
         const textInBlock: string[] = [];
 
         // 1. Array TJ: [(text) offset (text2)] TJ
@@ -1758,14 +2035,57 @@ export async function extractTextFromPdf(file: File): Promise<string> {
         }
 
         if (textInBlock.length > 0) {
-          lines.push(textInBlock.join(' '));
+          textFragments.push({ x: curX, y: curY, text: textInBlock.join(' ') });
         }
+      }
+
+      if (textFragments.some((f) => f.y !== 0)) {
+        // Sắp xếp tọa độ: Y giảm dần (từ trên xuống dưới trang, đảm bảo tử số luôn đọc trước mẫu số)
+        // và X tăng dần (từ trái sang phải trên cùng một dòng)
+        textFragments.sort((a, b) => {
+          if (Math.abs(a.y - b.y) > 3.5) {
+            return b.y - a.y;
+          }
+          return a.x - b.x;
+        });
+      }
+
+      // Ghép nối text theo dòng và nối liền inline các số mũ / chỉ số dưới
+      let curLineText = '';
+      let lastY = textFragments.length > 0 ? textFragments[0].y : 0;
+      let lastX = textFragments.length > 0 ? textFragments[0].x : 0;
+
+      for (let fi = 0; fi < textFragments.length; fi++) {
+        const frag = textFragments[fi];
+        const isSameLine = Math.abs(frag.y - lastY) <= 3.5;
+        const isSubOrSup = Math.abs(frag.y - lastY) > 3.5 && Math.abs(frag.y - lastY) <= 12 && frag.x >= lastX - 5 && frag.x <= lastX + 60;
+
+        if (isSameLine) {
+          if (curLineText.length > 0) curLineText += ' ' + frag.text;
+          else curLineText = frag.text;
+        } else if (isSubOrSup) {
+          if (frag.y > lastY) {
+            curLineText += `^{${frag.text}}`;
+          } else {
+            curLineText += `_{${frag.text}}`;
+          }
+        } else {
+          if (curLineText.trim().length > 0) {
+            lines.push(curLineText.trim());
+          }
+          curLineText = frag.text;
+        }
+        lastY = frag.y;
+        lastX = frag.x + frag.text.length * 6;
+      }
+      if (curLineText.trim().length > 0) {
+        lines.push(curLineText.trim());
       }
     }
 
     if (lines.length === 0) return '';
 
-    const fullText = lines.join('\n');
+    const fullText = cleanAndEnrichMathFormulas(lines.join('\n'));
 
     // KIỂM TRA ĐỘ TIN CẬY CỦA VĂN BẢN PDF ĐƯỢC BÓC TÁCH:
     // 1. Tuyệt đối không chấp nhận văn bản có ký tự lỗi \uFFFD (dấu hình thoi đen)
@@ -1857,12 +2177,14 @@ export async function parseExamFileStructure(file: File): Promise<DeterministicE
             durationMinutes: azotaRes.durationMinutes || 45,
             questions: azotaRes.questions.map((q) => ({
               id: q.id,
+              originalIndex: q.index,
               rawLabel: q.rawLabel,
               content: q.content,
               options: q.options.map((o) => ({ content: o.content, isCorrect: o.isCorrect })),
               explanation: q.explanation,
               type: q.type,
               answer: q.shortAnswer || (q.options.find((o) => o.isCorrect)?.letter),
+              images: q.images && q.images.length > 0 ? q.images : undefined,
             })),
             parserUsed: 'azota_compiler_engine',
           };
@@ -1905,12 +2227,14 @@ export async function parseExamFileStructure(file: File): Promise<DeterministicE
             durationMinutes: azotaRes.durationMinutes || 45,
             questions: azotaRes.questions.map((q) => ({
               id: q.id,
+              originalIndex: q.index,
               rawLabel: q.rawLabel,
               content: q.content,
               options: q.options.map((o) => ({ content: o.content, isCorrect: o.isCorrect })),
               explanation: q.explanation,
               type: q.type,
               answer: q.shortAnswer || (q.options.find((o) => o.isCorrect)?.letter),
+              images: q.images && q.images.length > 0 ? q.images : undefined,
             })),
             parserUsed: 'azota_compiler_engine',
           };
@@ -1937,12 +2261,14 @@ export async function parseExamFileStructure(file: File): Promise<DeterministicE
             durationMinutes: azotaRes.durationMinutes || 45,
             questions: azotaRes.questions.map((q) => ({
               id: q.id,
+              originalIndex: q.index,
               rawLabel: q.rawLabel,
               content: q.content,
               options: q.options.map((o) => ({ content: o.content, isCorrect: o.isCorrect })),
               explanation: q.explanation,
               type: q.type,
               answer: q.shortAnswer || (q.options.find((o) => o.isCorrect)?.letter),
+              images: q.images && q.images.length > 0 ? q.images : undefined,
             })),
             parserUsed: 'azota_compiler_engine',
           };
@@ -1985,51 +2311,26 @@ export function validateDeterministicResult(result: DeterministicExamResult | nu
     return false;
   }
 
-  let essayDowngradeCount = 0;
-  let multipleChoiceCount = 0;
-
   // Lọc và kiểm tra từng câu hỏi
   const validQuestions = result.questions.filter((q) => {
     q.content = cleanAndEnrichMathFormulas(q.content || '');
     q.content = q.content.replace(/\[!m:[^\]]*\]/gi, '').replace(/\bmathtype_\d+\b/gi, '').trim();
 
     const content = q.content.trim();
-    if (content.length < 6) return false;
+    if (content.length < 3) return false;
 
     // Loại bỏ nếu là tiêu đề phân loại Dạng bài hoặc Lý thuyết thuần túy
     if (/^(Dạng\s*\d+|[IVXLCDM]+\.|\d+\.\s*(?:Bất\s*đẳng\s*thức|Lý\s*thuyết|Khái\s*niệm|Trọng\s*tâm|Liên\s*hệ|Định\s*nghĩa|Tính\s*chất))/i.test(content)) {
       return false;
     }
 
-    // Kiểm tra dòng bị cắt vụn (mỗi dòng vài ký tự như "p s\nsau:\n; v C")
-    const lines = content.split('\n').map((l) => l.trim()).filter(Boolean);
-    if (lines.length >= 4) {
-      const veryShortLines = lines.filter((l) => l.length < 8);
-      if (veryShortLines.length / lines.length > 0.45) {
-        return false; // Nội dung bị cắt vụn dòng bất thường
-      }
-    }
-
     // Nếu là câu hỏi trắc nghiệm hoặc có phương án:
     if (q.type === 'multiple_choice' || (q.options && q.options.length > 0)) {
-      multipleChoiceCount++;
-
       if (!q.options || q.options.length < 2) {
-        // Kiểm tra xem trong thân câu hỏi có dấu hiệu phương án A. B. C. D bị dính không
-        const optionsInText = (content.match(/(?:^|\s)[A-D][.:)]/gi) || []).length;
-        if (optionsInText >= 2) {
-          essayDowngradeCount++;
-          return false;
-        }
-
-        // Nếu nội dung câu hỏi thực sự là một bài toán tự luận độc lập
-        if (content.length >= 25 && !/(?:chọn|phương án|đáp án đúng)/i.test(content)) {
-          q.type = 'essay';
-          q.options = [];
-          essayDowngradeCount++;
-          return true;
-        }
-        return false;
+        // Nếu không có đủ phương án trắc nghiệm, chuyển sang short_answer, tuyệt đối không xóa câu
+        q.type = 'short_answer';
+        q.options = [];
+        return true;
       }
 
       // Làm sạch nội dung từng phương án
@@ -2037,7 +2338,7 @@ export function validateDeterministicResult(result: DeterministicExamResult | nu
         o.content = cleanAndEnrichMathFormulas(o.content || '').replace(/\[!m:[^\]]*\]/gi, '').replace(/\bmathtype_\d+\b/gi, '').trim();
       });
 
-      // Bắt buộc tất cả các phương án phải có nội dung chữ thật, không rỗng
+      // Kiểm tra phương án rỗng
       const hasInvalidOption = q.options.some((o) => {
         const c = (o.content || '').trim();
         return (
@@ -2049,15 +2350,17 @@ export function validateDeterministicResult(result: DeterministicExamResult | nu
       });
 
       if (hasInvalidOption) {
-        essayDowngradeCount++;
-        return false;
+        q.type = 'short_answer';
+        q.options = [];
+        return true;
       }
 
       // Đảm bảo các phương án phân biệt (không bị trùng lặp nội dung)
       const uniqueContents = new Set(q.options.map((o) => o.content.trim().toLowerCase()));
       if (uniqueContents.size !== q.options.length) {
-        essayDowngradeCount++;
-        return false;
+        q.type = 'short_answer';
+        q.options = [];
+        return true;
       }
     }
 
@@ -2065,17 +2368,6 @@ export function validateDeterministicResult(result: DeterministicExamResult | nu
   });
 
   if (validQuestions.length === 0) {
-    return false;
-  }
-
-  // Nếu tỷ lệ câu hỏi bị hỏng phương án hoặc chuyển sang tự luận bất thường > 25% tổng số câu
-  if (multipleChoiceCount > 0 && essayDowngradeCount / (multipleChoiceCount + essayDowngradeCount) > 0.25) {
-    console.warn('validateDeterministicResult: Tỷ lệ câu hỏi lỗi phương án quá cao (>25%). Từ chối thuật toán để kích hoạt SI/AI.');
-    return false;
-  }
-
-  // Đảm bảo giữ lại ít nhất 60% số câu hỏi ban đầu
-  if (validQuestions.length < Math.max(2, Math.floor(result.questions.length * 0.6))) {
     return false;
   }
 

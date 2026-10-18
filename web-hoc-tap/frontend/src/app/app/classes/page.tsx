@@ -120,7 +120,8 @@ export default function ClassesPage() {
         const params = new URLSearchParams(window.location.search);
         if (params.get('create') === 'true' || params.get('new') === 'true') {
           setIsCreateModalOpen(true);
-          window.history.replaceState(window.history.state, '', '/app/classes');
+          const currentState = (window.history.state && typeof window.history.state === 'object') ? window.history.state : {};
+          window.history.replaceState(currentState, '', '/app/classes');
         }
       }
     } catch (_) {}

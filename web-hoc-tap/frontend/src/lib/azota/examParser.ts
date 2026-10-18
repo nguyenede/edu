@@ -311,15 +311,28 @@ export class ExamParser {
   ): AzotaQuestion {
     const level = extractCognitiveLevel(rawLabel || '') || extractCognitiveLevel(blockText);
 
+    // 0. Bóc tách và liên kết hình ảnh đi kèm câu hỏi
+    const images: string[] = [];
+    const imgRegex = /(?:\[!img:([^\]]+)\]|\[img:([^\]]+)\]|!\[.*?\]\((data:image\/[^)]+|https?:\/\/[^)]+)\)|\[IMAGE_URL\])/gi;
+    let im: RegExpExecArray | null;
+    while ((im = imgRegex.exec(blockText)) !== null) {
+      const src = im[1] || im[2] || im[3];
+      if (src && !images.includes(src)) {
+        images.push(src);
+      }
+    }
+    // Chuẩn hóa placeholder ảnh trong nội dung câu hỏi
+    let workingText = blockText.replace(/(?:\[!img:([^\]]+)\]|\[img:([^\]]+)\]|!\[.*?\]\((data:image\/[^)]+|https?:\/\/[^)]+)\))/gi, ' [IMAGE_URL] ');
+
     // Trích xuất lời giải nội bộ trong câu hỏi nếu có (ví dụ: "Lời giải: ...", "Hướng dẫn giải: ...")
     let inlineExplanation: string | undefined;
-    let workingText = blockText;
-    const expMatch = blockText.match(AZOTA_PATTERNS.INLINE_EXPLANATION);
+    const expMatch = workingText.match(AZOTA_PATTERNS.INLINE_EXPLANATION);
     if (expMatch && expMatch.index !== undefined) {
       inlineExplanation = this.sanitizeContent(expMatch[1]);
-      workingText = blockText.substring(0, expMatch.index).trim();
+      workingText = workingText.substring(0, expMatch.index).trim();
     }
 
+    // BƯỚC 2: Phân loại đáp án (Tách riêng biệt khỏi nhận diện câu hỏi)
     // 1. Nhận diện các phương án trắc nghiệm A, B, C, D (UPPERCASE A-H)
     // Hỗ trợ cả định dạng tiêu chuẩn A. / A) và định dạng bảng [*A: ... / [A: ...]
     const optionSplitsRegex = /(?:^|[\s\n|])(\*?[A-H])[\s]*([.)]|:)\s+/g;
@@ -375,6 +388,7 @@ export class ExamParser {
           rawLabel,
           options,
           explanation: inlineExplanation,
+          images: images.length > 0 ? images : undefined,
         };
       }
     }
@@ -416,37 +430,27 @@ export class ExamParser {
           options: [],
           subQuestions,
           explanation: inlineExplanation,
+          images: images.length > 0 ? images : undefined,
         };
       }
     }
 
-    // 3. Nếu là dạng trả lời ngắn (Short Answer)
+    // 3. Khi không có A, B, C, D: Phân loại là short_answer (hoặc essay),
+    // TUYỆT ĐỐI không xóa câu và không đánh số lại, bảo toàn số thứ tự gốc
     const answerMatch = workingText.match(/(?:(?:Đáp\s*(?:án|số)|Kết\s*quả|Trả\s*lời|ĐS|Key)[\s:.-]*([^\n]+))/i);
-    if (inheritedType === 'short_answer' || answerMatch) {
-      const shortAnswer = answerMatch ? answerMatch[1].trim() : undefined;
-      const cleanPrompt = answerMatch ? workingText.replace(answerMatch[0], '').trim() : workingText;
+    const shortAnswer = answerMatch ? answerMatch[1].trim() : undefined;
+    const cleanPrompt = answerMatch ? workingText.replace(answerMatch[0], '').trim() : workingText;
 
-      return {
-        index: qIndex,
-        content: this.sanitizeContent(cleanPrompt),
-        type: 'short_answer',
-        level,
-        rawLabel,
-        options: [],
-        shortAnswer,
-        explanation: inlineExplanation,
-      };
-    }
-
-    // 4. Mặc định là câu Tự luận (Essay)
     return {
       index: qIndex,
-      content: this.sanitizeContent(workingText),
-      type: 'essay',
+      content: this.sanitizeContent(cleanPrompt),
+      type: 'short_answer',
       level,
       rawLabel,
       options: [],
+      shortAnswer,
       explanation: inlineExplanation,
+      images: images.length > 0 ? images : undefined,
     };
   }
 
@@ -562,9 +566,34 @@ export class ExamParser {
    */
   private static sanitizeContent(content: string): string {
     if (!content) return '';
-    return content
-      .replace(/\[!m:([^\]]+)\]/g, '$$$1$$') // Chuyển placeholder math thành $...$
-      .replace(/\s{2,}/g, ' ')
-      .trim();
+    let res = content
+      .replace(/\[!m:([^\]]+)\]/g, '$$$1$$'); // Chuyển placeholder math thành $...$
+
+    // 1. Sửa lỗi đảo ngược phân số & ngắt dòng giữa tử và mẫu
+    res = res.replace(/\\(?:d?frac)\s*\{([^{}]+)\}\s*\{([^{}]+)\}/g, (_, num, den) => {
+      return `\\frac{${num.replace(/\n+/g, ' ').trim()}}{${den.replace(/\n+/g, ' ').trim()}}`;
+    });
+    res = res.replace(/([a-zA-Z0-9_\(\)]+)\s*\n\s*[-—]{2,}\s*\n\s*([a-zA-Z0-9_\(\)]+)/g, '\\frac{$1}{$2}');
+    res = res.replace(/([a-zA-Z0-9_\(\)\\]+)\s*\n\s*\/\s*([a-zA-Z0-9_\(\)\\]+)/g, '\\frac{$1}{$2}');
+    res = res.replace(/([a-zA-Z0-9_\(\)\\]+)\s*\/\s*\n\s*([a-zA-Z0-9_\(\)\\]+)/g, '\\frac{$1}{$2}');
+
+    // 2. Khôi phục căn bậc hai từ ký tự Unicode \u221A / √
+    res = res.replace(/(?:\\u221A|√)\s*\(([^)]+)\)/g, '\\sqrt{$1}');
+    res = res.replace(/(?:\\u221A|√)\s*\{([^}]+)\}/g, '\\sqrt{$1}');
+    res = res.replace(/(?:\\u221A|√)\s*([a-zA-Z0-9]+)/g, '\\sqrt{$1}');
+
+    // 3. Sửa lỗi ngắt dòng ở số mũ, chỉ số dưới
+    res = res.replace(/([a-zA-Z0-9_\)])\s*\n\s*(\^|\_)\{?([a-zA-Z0-9+\-*\/=]+)\}?/g, '$1$2{$3}');
+    res = res.replace(/([a-zA-Z0-9_\)])\s*(\^|\_)\s*\n\s*\{?([a-zA-Z0-9+\-*\/=]+)\}?/g, '$1$2{$3}');
+    res = res.replace(/([a-zA-Z0-9_\)])\s*\n\s*([²³¹⁰⁴⁵⁶⁷⁸⁹⁺⁻⁼⁽⁾₀₁₂₃₄₅₆₇₈₉₊₋₌₍₎]+)/g, '$1$2');
+    res = res.replace(/\b([A-Z][a-z]?)\s*\n\s*(\d)\b(?!\s*[\.\:])/g, '$1_$2');
+
+    // 4. Giữ nguyên cấu trúc hệ phương trình thành phần trong cùng một khối
+    res = res.replace(/(?:^|\n)\s*\{\s*\n\s*([^\n]+=[^\n]+)\s*\n\s*([^\n]+=[^\n]+(?:\s*\n\s*[^\n]+=[^\n]+)*)/g, (_, eq1, rest) => {
+      const eqs = [eq1.trim(), ...rest.split('\n').map((l: string) => l.trim()).filter(Boolean)];
+      return `\n\\begin{cases} ${eqs.join(' \\\\ ')} \\end{cases}\n`;
+    });
+
+    return res.replace(/[ \t]{2,}/g, ' ').trim();
   }
 }

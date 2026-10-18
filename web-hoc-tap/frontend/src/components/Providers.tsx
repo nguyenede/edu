@@ -28,6 +28,13 @@ export const Providers: React.FC<{ children: React.ReactNode }> = ({ children })
     // Load theme & appearance
     initializeTheme();
 
+    // Đảm bảo window.history.state luôn là object hợp lệ, tránh lỗi Next.js router "Cannot read properties of null (reading 'get')"
+    if (typeof window !== 'undefined' && (!window.history.state || typeof window.history.state !== 'object')) {
+      try {
+        window.history.replaceState({}, '', window.location.href);
+      } catch {}
+    }
+
     // Chặn các lỗi do Extension trình duyệt (như Urban VPN, Adblock...) gây ra
     // để không làm kích hoạt bảng đỏ Unhandled Runtime Error của Next.js
     const handleExtensionErrors = (event: ErrorEvent) => {
