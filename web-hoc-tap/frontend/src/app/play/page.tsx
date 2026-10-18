@@ -600,12 +600,6 @@ function BlooketPlayContent() {
                       {homework.className}
                     </span>
                   )}
-                  {homework.antiCheating && (
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300">
-                      <ShieldCheck size={13} className="text-purple-500" />
-                      Chống gian lận
-                    </span>
-                  )}
                 </div>
 
                 {/* Thông tin thí sinh tham gia */}
