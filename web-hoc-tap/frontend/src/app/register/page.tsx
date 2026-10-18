@@ -142,7 +142,7 @@ function RegisterFormContent() {
             </svg>
           </div>
           <span className="text-2xl font-extrabold tracking-tight text-slate-800 dark:text-slate-200">
-            HocRealtime
+            KiyoEdu
           </span>
         </div>
         <h2 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100">

@@ -22,7 +22,6 @@ import {
   Home,
   QrCode,
   Loader2,
-  ArrowLeft,
   Check,
   FileText,
   User,
@@ -544,23 +543,19 @@ function BlooketPlayContent() {
     return (
       <div className="min-h-screen bg-google-bg dark:bg-[#131314] text-slate-900 dark:text-slate-100 flex flex-col justify-between font-sans">
         {/* Top Navbar */}
-        <header className="h-16 px-4 sm:px-6 flex items-center justify-between border-b border-slate-200/80 dark:border-slate-800 bg-white/80 dark:bg-[#18181b]/80 backdrop-blur-md">
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => router.push('/app/documents')}
-              className="p-2 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-              title="Quay lại tài liệu"
-            >
-              <ArrowLeft size={18} />
-            </button>
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-xl bg-blue-50 dark:bg-blue-950 text-google-blue font-bold text-sm flex items-center justify-center">
-                E
-              </div>
-              <span className="font-bold text-base tracking-tight text-slate-900 dark:text-slate-100">
-                HocRealtime
-              </span>
+        <header className="h-16 px-4 sm:px-6 flex items-center justify-between bg-white/80 dark:bg-[#18181b]/80 backdrop-blur-md">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-white dark:bg-[#1e1f20] flex items-center justify-center p-1.5 shrink-0 shadow-sm border border-slate-200/70 dark:border-[#2d2f31]">
+              <svg viewBox="0 0 24 24" width="20" height="20" className="w-full h-full block" style={{ maxWidth: '20px', maxHeight: '20px' }}>
+                <path fill="#4285F4" d="M12 2L2 19.7h8.4L12 16.2l3.6 3.5H22L12 2z" />
+                <path fill="#FBBC05" d="M2 19.7h8.4L15.6 12 12 2 2 19.7z" />
+                <path fill="#34A853" d="M12 16.2l3.6 3.5H22L17.2 12 12 16.2z" />
+                <path fill="#EA4335" d="M12 2l5.2 10 4.8 7.7L12 2z" />
+              </svg>
             </div>
+            <span className="font-bold text-base sm:text-lg tracking-tight text-slate-900 dark:text-slate-100">
+              KiyoEdu
+            </span>
           </div>
 
           <div className="flex items-center gap-2">
@@ -848,10 +843,15 @@ function BlooketPlayContent() {
     return (
       <div className="min-h-screen bg-google-bg dark:bg-[#131314] text-slate-900 dark:text-slate-100 flex flex-col justify-between font-sans">
         {/* Header */}
-        <header className="h-16 px-4 sm:px-6 flex items-center justify-between border-b border-slate-200/80 dark:border-slate-800 bg-white/80 dark:bg-[#18181b]/80 backdrop-blur-md">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-xl bg-blue-50 dark:bg-blue-950 text-google-blue font-bold text-sm flex items-center justify-center">
-              E
+        <header className="h-16 px-4 sm:px-6 flex items-center justify-between bg-white/80 dark:bg-[#18181b]/80 backdrop-blur-md">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-white dark:bg-[#1e1f20] flex items-center justify-center p-1.5 shrink-0 shadow-sm border border-slate-200/70 dark:border-[#2d2f31]">
+              <svg viewBox="0 0 24 24" width="20" height="20" className="w-full h-full block" style={{ maxWidth: '20px', maxHeight: '20px' }}>
+                <path fill="#4285F4" d="M12 2L2 19.7h8.4L12 16.2l3.6 3.5H22L12 2z" />
+                <path fill="#FBBC05" d="M2 19.7h8.4L15.6 12 12 2 2 19.7z" />
+                <path fill="#34A853" d="M12 16.2l3.6 3.5H22L17.2 12 12 16.2z" />
+                <path fill="#EA4335" d="M12 2l5.2 10 4.8 7.7L12 2z" />
+              </svg>
             </div>
             <span className="font-bold text-base tracking-tight text-slate-900 dark:text-slate-100">
               Kết quả làm bài
