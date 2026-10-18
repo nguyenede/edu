@@ -359,10 +359,44 @@ export const BubblePopIcon: React.FC<GameIconProps> = ({ size = 20, className = 
 );
 
 /**
+ * 9. Gọi tên ngẫu nhiên (Random Picker)
+ * Biểu tượng vòng xoay đa sắc kèm chú vịt vàng bơi lội và xúc xắc may mắn
+ */
+export const RandomPickerIcon: React.FC<GameIconProps> = ({ size = 20, className = '' }) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className={`shrink-0 ${className}`}
+  >
+    {/* Vòng quay đa sắc ở góc trên trái */}
+    <circle cx="8.5" cy="8.5" r="5.5" fill="#FAF5FF" stroke="#A855F7" strokeWidth="1" />
+    <path d="M8.5 8.5L8.5 3A5.5 5.5 0 0 1 13.5 6L8.5 8.5Z" fill="#EC4899" />
+    <path d="M8.5 8.5L13.5 6A5.5 5.5 0 0 1 14 8.5L8.5 8.5Z" fill="#F59E0B" />
+    <path d="M8.5 8.5L14 8.5A5.5 5.5 0 0 1 11.5 13.5L8.5 8.5Z" fill="#10B981" />
+    <path d="M8.5 8.5L11.5 13.5A5.5 5.5 0 0 1 5.5 13L8.5 8.5Z" fill="#06B6D4" />
+    <path d="M8.5 8.5L5.5 13A5.5 5.5 0 0 1 3 8.5L8.5 8.5Z" fill="#8B5CF6" />
+    <path d="M8.5 8.5L3 8.5A5.5 5.5 0 0 1 8.5 3L8.5 8.5Z" fill="#EF4444" />
+    <circle cx="8.5" cy="8.5" r="1.5" fill="#FFFFFF" stroke="#6B7280" strokeWidth="0.5" />
+    {/* Chú vịt vàng dễ thương góc dưới phải */}
+    <ellipse cx="16" cy="16.5" rx="4.5" ry="3.5" fill="#FBBF24" stroke="#D97706" strokeWidth="0.8" />
+    <circle cx="17.5" cy="14" r="2.2" fill="#FBBF24" stroke="#D97706" strokeWidth="0.8" />
+    <circle cx="18.2" cy="13.5" r="0.5" fill="#1E293B" />
+    <path d="M19.5 14.2L21.5 14.8L19.5 15.5Z" fill="#F97316" />
+    {/* Gợn sóng nước xanh */}
+    <path d="M12 20.5C13.5 19.8 15 21 17 20.5C19 20 20.5 21.2 22 20.5" stroke="#38BDF8" strokeWidth="1.2" strokeLinecap="round" />
+  </svg>
+);
+
+/**
  * Hàm tiện ích lấy đúng component icon tự thiết kế theo mã trò chơi (gameId)
  */
 export function getGameCustomIcon(gameId: string, size = 18, className = ''): React.ReactNode {
   switch (gameId) {
+    case 'random_picker':
+      return <RandomPickerIcon size={size} className={className} />;
     case 'tug_of_war':
       return <TugOfWarIcon size={size} className={className} />;
     case 'boat_race':
