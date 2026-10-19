@@ -23,6 +23,59 @@ export default function RootLayout({
   return (
     <html lang="vi" className={`h-full ${inter.variable} ${inter.className}`} suppressHydrationWarning>
       <head>
+        {/* Anti-crash shield for third-party extensions like Urban VPN Proxy (prevents M_ID error) */}
+        <script
+          id="urban-vpn-config-shield"
+          data-config='{"config":{"properties":{"M_ID":"1","M_TYPE":"1"}}}'
+        />
+        <script
+          id="extension-error-shield"
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                if (typeof window === 'undefined') return;
+                function isExtensionError(detail) {
+                  if (!detail) return false;
+                  var s = String(detail);
+                  return (
+                    s.indexOf('chrome-extension://') !== -1 ||
+                    s.indexOf('moz-extension://') !== -1 ||
+                    s.indexOf('safari-web-extension://') !== -1 ||
+                    s.indexOf('M_ID') !== -1 ||
+                    s.indexOf('eppiocemhmnlbhjplcgkofciiegomcon') !== -1
+                  );
+                }
+
+                window.addEventListener('error', function(e) {
+                  var detail = (e.filename || '') + ' ' + (e.message || '') + ' ' + (e.error && e.error.stack || '');
+                  if (isExtensionError(detail)) {
+                    e.stopImmediatePropagation();
+                    e.preventDefault();
+                    return true;
+                  }
+                }, true);
+
+                window.addEventListener('unhandledrejection', function(e) {
+                  var reason = e.reason;
+                  var detail = ((reason && reason.stack) || '') + ' ' + ((reason && reason.message) || '') + ' ' + String(reason || '');
+                  if (isExtensionError(detail)) {
+                    e.stopImmediatePropagation();
+                    e.preventDefault();
+                  }
+                }, true);
+
+                var origOnError = window.onerror;
+                window.onerror = function(msg, url, line, col, err) {
+                  var detail = (msg || '') + ' ' + (url || '') + ' ' + (err && err.stack || '');
+                  if (isExtensionError(detail)) {
+                    return true;
+                  }
+                  if (origOnError) return origOnError.apply(this, arguments);
+                };
+              })();
+            `,
+          }}
+        />
         <link
           rel="stylesheet"
           href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css"
