@@ -139,11 +139,17 @@ export const DuckRaceGame = React.forwardRef<DuckRaceGameHandle, DuckRaceGamePro
     isDarkRef.current = isDark;
 
     const countdownTimerRef = useRef<NodeJS.Timeout | null>(null);
+    const finishCelebrationTimerRef = useRef<NodeJS.Timeout | null>(null);
+    const lastFrameTimeRef = useRef<number>(0);
 
-    const clearCountdownTimer = useCallback(() => {
+    const clearAllTimers = useCallback(() => {
       if (countdownTimerRef.current) {
         clearInterval(countdownTimerRef.current);
         countdownTimerRef.current = null;
+      }
+      if (finishCelebrationTimerRef.current) {
+        clearTimeout(finishCelebrationTimerRef.current);
+        finishCelebrationTimerRef.current = null;
       }
     }, []);
 
@@ -164,7 +170,7 @@ export const DuckRaceGame = React.forwardRef<DuckRaceGameHandle, DuckRaceGamePro
 
     // Initialize ducks based on student roster
     const initDucks = useCallback(() => {
-      clearCountdownTimer();
+      clearAllTimers();
       updateRaceState('idle');
       confettiRef.current = [];
 
@@ -201,7 +207,7 @@ export const DuckRaceGame = React.forwardRef<DuckRaceGameHandle, DuckRaceGamePro
       cameraXRef.current = 0;
       setRankings([]);
       setIsPodiumOpen(false);
-    }, [students, clearCountdownTimer, updateRaceState]);
+    }, [students, clearAllTimers, updateRaceState]);
 
     useEffect(() => {
       initDucks();
@@ -253,7 +259,7 @@ export const DuckRaceGame = React.forwardRef<DuckRaceGameHandle, DuckRaceGamePro
     const startRace = useCallback(() => {
       if (raceStateRef.current === 'countdown' || raceStateRef.current === 'racing' || students.length === 0) return;
 
-      clearCountdownTimer();
+      clearAllTimers();
       initDucks();
       updateRaceState('countdown');
       setCountdownNum(3);
@@ -277,8 +283,10 @@ export const DuckRaceGame = React.forwardRef<DuckRaceGameHandle, DuckRaceGamePro
             gameAudio.playAirHorn();
           }
         } else {
-          clearCountdownTimer();
-          raceStartTimeRef.current = performance.now();
+          clearAllTimers();
+          const startNow = performance.now();
+          raceStartTimeRef.current = startNow;
+          lastFrameTimeRef.current = startNow;
           updateRaceState('racing');
 
           const finishX = trackLengthRef.current - 240;
@@ -287,18 +295,21 @@ export const DuckRaceGame = React.forwardRef<DuckRaceGameHandle, DuckRaceGamePro
           const avgSpeed = totalDistance / (targetDurationSec * 60);
 
           ducksRef.current.forEach((d) => {
-            d.speed = avgSpeed * (0.88 + Math.random() * 0.24);
+            d.speed = avgSpeed * (0.92 + Math.random() * 0.16);
+            d.finished = false;
+            d.finishTime = null;
+            d.rank = null;
           });
         }
       }, 900);
-    }, [students.length, initDucks, clearCountdownTimer, updateRaceState]);
+    }, [students.length, initDucks, clearAllTimers, updateRaceState]);
 
     // RESET RACE
     const resetRace = useCallback(() => {
-      clearCountdownTimer();
+      clearAllTimers();
       updateRaceState('idle');
       initDucks();
-    }, [initDucks, clearCountdownTimer, updateRaceState]);
+    }, [initDucks, clearAllTimers, updateRaceState]);
 
     useImperativeHandle(
       ref,
@@ -331,36 +342,58 @@ export const DuckRaceGame = React.forwardRef<DuckRaceGameHandle, DuckRaceGamePro
         const isSoundOn = soundActiveRef.current;
         const isDarkTheme = isDarkRef.current;
 
-        // Update flow offset
-        riverFlowOffsetRef.current = (riverFlowOffsetRef.current + 1.8) % 80;
-
         // UPDATE RACING LOGIC
         if (currentRaceState === 'racing') {
+          if (!lastFrameTimeRef.current) {
+            lastFrameTimeRef.current = now;
+          }
+          const rawDeltaSec = (now - lastFrameTimeRef.current) / 1000;
+          lastFrameTimeRef.current = now;
+          const deltaSec = Math.max(0.001, Math.min(rawDeltaSec, 0.1));
+          const frameMultiplier = deltaSec * 60; // 1.0 at 60fps baseline
+
+          // Flow offset based on real frame time
+          riverFlowOffsetRef.current = (riverFlowOffsetRef.current + 1.8 * frameMultiplier) % 80;
+
           const elapsedSec = (now - raceStartTimeRef.current) / 1000;
           const targetDurationSec = currentRaceDuration;
           const baseAvgSpeed = (finishX - 140) / (targetDurationSec * 60);
 
-          let finishedCount = 0;
+          let currentLeadX = 140;
+          ducksRef.current.forEach((d) => {
+            if (d.x > currentLeadX) currentLeadX = d.x;
+          });
+          const overallProgress = Math.max(0, Math.min(1, (currentLeadX - 140) / (finishX - 140)));
+          const timeProgress = Math.min(1.5, elapsedSec / targetDurationSec);
+
+          // Pacing factor: if ducks are lagging behind elapsed time (e.g. browser frame lag),
+          // gently boost speed so ducks stay on schedule
+          const pacingFactor = timeProgress > overallProgress
+            ? 1 + Math.min(0.85, (timeProgress - overallProgress) * 1.6)
+            : 1.0;
+
+          // Adrenaline sprint when entering the final stretch (>75%)
+          const sprintFactor = overallProgress > 0.75 ? 1.25 : 1.0;
 
           ducksRef.current.forEach((duck) => {
             if (!duck.finished) {
-              duck.burstTimer--;
+              duck.burstTimer -= frameMultiplier;
               if (duck.burstTimer <= 0) {
-                duck.burstTimer = Math.random() * 100 + 40;
+                duck.burstTimer = Math.random() * 90 + 40;
                 const surge = Math.random();
-                if (surge > 0.72) {
-                  duck.burstMultiplier = 1.35 + Math.random() * 0.3;
-                  if (isSoundOn && Math.random() > 0.6) {
+                if (surge > 0.70) {
+                  duck.burstMultiplier = 1.35 + Math.random() * 0.35;
+                  if (isSoundOn && Math.random() > 0.65) {
                     gameAudio.playSplash();
                   }
-                } else if (surge < 0.25) {
-                  duck.burstMultiplier = 0.82;
+                } else if (surge < 0.20) {
+                  duck.burstMultiplier = 0.85;
                 } else {
-                  duck.burstMultiplier = 1.0 + (Math.random() - 0.5) * 0.2;
+                  duck.burstMultiplier = 1.0 + (Math.random() - 0.5) * 0.25;
                 }
               }
 
-              duck.quackTimer--;
+              duck.quackTimer -= frameMultiplier;
               if (duck.quackTimer <= 0) {
                 duck.quackTimer = Math.random() * 400 + 200;
                 if (isSoundOn && Math.random() > 0.7) {
@@ -368,59 +401,66 @@ export const DuckRaceGame = React.forwardRef<DuckRaceGameHandle, DuckRaceGamePro
                 }
               }
 
-              const currentTargetSpeed = baseAvgSpeed * duck.burstMultiplier;
-              duck.speed += (currentTargetSpeed - duck.speed) * 0.05;
-              duck.x += duck.speed;
+              const currentTargetSpeed = baseAvgSpeed * duck.burstMultiplier * pacingFactor * sprintFactor;
+              duck.speed += (currentTargetSpeed - duck.speed) * Math.min(1, 0.08 * frameMultiplier);
+              duck.x += duck.speed * frameMultiplier;
               duck.y = duck.baseLaneY + Math.sin(now * 0.003 + duck.bobOffset) * 8;
 
+              // Duck crosses finish line
               if (duck.x >= finishX) {
                 duck.finished = true;
-                duck.finishTime = elapsedSec;
-                const currentRanks = ducksRef.current.filter((d) => d.finished);
-                duck.rank = currentRanks.length;
+                duck.finishTime = Math.round(elapsedSec * 10) / 10;
+                const currentFinished = ducksRef.current.filter((d) => d.finished);
+                duck.rank = currentFinished.length;
 
                 if (duck.rank === 1) {
-                  triggerConfetti(canvas.width / 2, canvas.height / 3);
+                  const finishScreenX = finishX - cameraXRef.current;
+                  triggerConfetti(Math.max(100, Math.min(width - 100, finishScreenX)), height / 3);
                   if (isSoundOn) {
                     gameAudio.playCheer();
                   }
+                } else if (isSoundOn && duck.rank <= 3) {
+                  gameAudio.playSplash();
                 }
               }
             } else {
-              duck.x += 0.8;
+              // Cruising after crossing finish line
+              duck.x += 1.4 * frameMultiplier;
               duck.y = duck.baseLaneY + Math.sin(now * 0.002 + duck.bobOffset) * 4;
-              finishedCount++;
             }
           });
 
-          const topFinished = ducksRef.current.filter((d) => d.finished).sort((a, b) => (a.rank || 0) - (b.rank || 0));
+          // Check if top 3 winners have actually crossed the finish line
+          const topFinished = ducksRef.current
+            .filter((d) => d.finished)
+            .sort((a, b) => (a.rank || 0) - (b.rank || 0));
           const winnerTargetCount = Math.min(3, ducksRef.current.length);
           const hasTopWinners = topFinished.length >= winnerTargetCount;
-          const isTimeOut = elapsedSec > (targetDurationSec + 3);
 
-          if ((hasTopWinners || isTimeOut) && raceStateRef.current === 'racing') {
-            updateRaceState('finished');
-            setIsPodiumOpen(true);
+          // ONLY trigger podium when top winners have ACTUALLY crossed the finish line!
+          if (hasTopWinners && raceStateRef.current === 'racing') {
+            if (!finishCelebrationTimerRef.current) {
+              finishCelebrationTimerRef.current = setTimeout(() => {
+                updateRaceState('finished');
+                setIsPodiumOpen(true);
 
-            const sortedByProgress = [...ducksRef.current].sort((a, b) => {
-              if (a.finished && b.finished) return (a.rank || 0) - (b.rank || 0);
-              if (a.finished) return -1;
-              if (b.finished) return 1;
-              return b.x - a.x;
-            });
+                const finalResults = topFinished.slice(0, 3).map((d, idx) => ({
+                  student: d.name,
+                  time: d.finishTime || Math.round(elapsedSec * 10) / 10,
+                  rank: idx + 1,
+                  color: d.color,
+                }));
+                setRankings(finalResults);
 
-            const finalResults = sortedByProgress.slice(0, 3).map((d, idx) => ({
-              student: d.name,
-              time: d.finishTime || Math.round(elapsedSec * 10) / 10,
-              rank: idx + 1,
-              color: d.color,
-            }));
-            setRankings(finalResults);
-
-            if (finalResults[0] && onSelectWinnerRef.current) {
-              onSelectWinnerRef.current(finalResults[0].student);
+                if (finalResults[0] && onSelectWinnerRef.current) {
+                  onSelectWinnerRef.current(finalResults[0].student);
+                }
+              }, 1200);
             }
           }
+        } else {
+          lastFrameTimeRef.current = now;
+          riverFlowOffsetRef.current = (riverFlowOffsetRef.current + 1.2) % 80;
         }
 
         // UPDATE CAMERA TRACKING
@@ -914,9 +954,9 @@ export const DuckRaceGame = React.forwardRef<DuckRaceGameHandle, DuckRaceGamePro
         if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
         window.removeEventListener('resize', resizeCanvas);
         if (ro) ro.disconnect();
-        clearCountdownTimer();
+        clearAllTimers();
       };
-    }, [clearCountdownTimer]);
+    }, [clearAllTimers]);
 
     const handleRemoveWinnerAndContinue = (winnerName: string) => {
       const updated = students.filter((s) => s !== winnerName);
