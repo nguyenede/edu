@@ -212,8 +212,7 @@ const PRINT_PORTAL_STYLES = `
     }
 
     .print-header-block,
-    .print-footer-block,
-    .print-answer-key-block {
+    .print-footer-block {
       break-inside: avoid !important;
       page-break-inside: avoid !important;
     }
@@ -1180,30 +1179,6 @@ function DocumentDynamicViewPageContent() {
             Thí sinh không được sử dụng tài liệu. Cán bộ coi thi không giải thích gì thêm.
           </p>
         </div>
-
-        {/* Optional Answer Key Matrix for Teacher */}
-        {showAnswers && questions.length > 0 && (
-          <div className="print-answer-key-block mt-8 pt-4 border-t-2 border-dashed border-black break-inside-avoid">
-            <div className="text-center font-bold text-[12pt] uppercase mb-2">
-              BẢNG ĐÁP ÁN (DÀNH CHO GIÁO VIÊN)
-            </div>
-            <div className="grid grid-cols-5 sm:grid-cols-10 gap-1.5 text-center text-[11pt]">
-              {questions.map((q, idx) => {
-                const correctOptIdx = q.options?.findIndex((o) => o.isCorrect);
-                const correctLetter =
-                  correctOptIdx !== -1 && correctOptIdx !== undefined
-                    ? String.fromCharCode(65 + correctOptIdx)
-                    : ((q as any).answer || '-');
-                return (
-                  <div key={idx} className="border border-black py-1 px-1 bg-slate-50 font-medium">
-                    <span className="text-[10pt] font-normal text-slate-600 block">{idx + 1}</span>
-                    <span className="font-bold text-[12pt] text-black">{correctLetter}</span>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
       </div>,
       document.body
     )}
