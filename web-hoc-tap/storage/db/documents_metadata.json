@@ -3,264 +3,43 @@
   "folders": [],
   "files": [
     {
-      "id": "demvdwj8syixwa",
-      "name": "Đề cương ôn tập kiểm tra giữa kì I môn Toán Lớp 9 - Trường THCS Chu Văn An.json",
-      "parentId": null,
-      "fileType": "json",
-      "mimeType": "application/json",
-      "size": 32416,
-      "storageKey": "exams/demvdwj8syixwa.json",
-      "filePath": "../storage/exams/demvdwj8syixwa.json",
-      "storageType": "local",
-      "createdAt": "2026-10-18T14:09:28.410Z",
-      "updatedAt": "2026-10-18T14:31:00.718Z"
-    },
-    {
-      "id": "file_1792332511352_g58v",
+      "id": "file_1792402193135_j20x",
       "name": "Đề thi trắc nghiệm.json",
       "parentId": null,
       "fileType": "json",
       "mimeType": "application/json",
       "size": 410,
-      "storageKey": "exams/file_1792332511352_g58v.json",
-      "filePath": "../storage/exams/file_1792332511352_g58v.json",
+      "storageKey": "exams/file_1792402193135_j20x.json",
+      "filePath": "../storage/exams/file_1792402193135_j20x.json",
       "storageType": "local",
-      "createdAt": "2026-10-18T14:08:31.376Z",
-      "updatedAt": "2026-10-18T14:08:31.376Z"
+      "createdAt": "2026-10-19T09:29:53.149Z",
+      "updatedAt": "2026-10-19T09:29:53.149Z"
     },
     {
-      "id": "file_1792332511351_knym",
+      "id": "file_1792402193134_as02",
       "name": "Đề thi trắc nghiệm.json",
       "parentId": null,
       "fileType": "json",
       "mimeType": "application/json",
       "size": 410,
-      "storageKey": "exams/file_1792332511351_knym.json",
-      "filePath": "../storage/exams/file_1792332511351_knym.json",
+      "storageKey": "exams/file_1792402193134_as02.json",
+      "filePath": "../storage/exams/file_1792402193134_as02.json",
       "storageType": "local",
-      "createdAt": "2026-10-18T14:08:31.372Z",
-      "updatedAt": "2026-10-18T14:08:31.372Z"
+      "createdAt": "2026-10-19T09:29:53.146Z",
+      "updatedAt": "2026-10-19T09:29:53.146Z"
     },
     {
-      "id": "file_1792332314003_a1p3",
+      "id": "file_1792402193134_cxy9",
       "name": "Đề thi trắc nghiệm.json",
       "parentId": null,
       "fileType": "json",
       "mimeType": "application/json",
       "size": 410,
-      "storageKey": "exams/file_1792332314003_a1p3.json",
-      "filePath": "../storage/exams/file_1792332314003_a1p3.json",
+      "storageKey": "exams/file_1792402193134_cxy9.json",
+      "filePath": "../storage/exams/file_1792402193134_cxy9.json",
       "storageType": "local",
-      "createdAt": "2026-10-18T14:05:14.004Z",
-      "updatedAt": "2026-10-18T14:05:14.004Z"
-    },
-    {
-      "id": "file_1792332314003_a8um",
-      "name": "Đề thi trắc nghiệm.json",
-      "parentId": null,
-      "fileType": "json",
-      "mimeType": "application/json",
-      "size": 410,
-      "storageKey": "exams/file_1792332314003_a8um.json",
-      "filePath": "../storage/exams/file_1792332314003_a8um.json",
-      "storageType": "local",
-      "createdAt": "2026-10-18T14:05:14.004Z",
-      "updatedAt": "2026-10-18T14:05:14.004Z"
-    },
-    {
-      "id": "file_1792332314002_7wez",
-      "name": "Đề thi trắc nghiệm.json",
-      "parentId": null,
-      "fileType": "json",
-      "mimeType": "application/json",
-      "size": 410,
-      "storageKey": "exams/file_1792332314002_7wez.json",
-      "filePath": "../storage/exams/file_1792332314002_7wez.json",
-      "storageType": "local",
-      "createdAt": "2026-10-18T14:05:14.004Z",
-      "updatedAt": "2026-10-18T14:05:14.004Z"
-    },
-    {
-      "id": "file_1792332314002_cff5",
-      "name": "Đề thi trắc nghiệm.json",
-      "parentId": null,
-      "fileType": "json",
-      "mimeType": "application/json",
-      "size": 410,
-      "storageKey": "exams/file_1792332314002_cff5.json",
-      "filePath": "../storage/exams/file_1792332314002_cff5.json",
-      "storageType": "local",
-      "createdAt": "2026-10-18T14:05:14.004Z",
-      "updatedAt": "2026-10-18T14:05:14.004Z"
-    },
-    {
-      "id": "file_1792332314002_a4ld",
-      "name": "Đề thi trắc nghiệm.json",
-      "parentId": null,
-      "fileType": "json",
-      "mimeType": "application/json",
-      "size": 410,
-      "storageKey": "exams/file_1792332314002_a4ld.json",
-      "filePath": "../storage/exams/file_1792332314002_a4ld.json",
-      "storageType": "local",
-      "createdAt": "2026-10-18T14:05:14.004Z",
-      "updatedAt": "2026-10-18T14:05:14.004Z"
-    },
-    {
-      "id": "file_1792332313983_6idc",
-      "name": "Đề thi trắc nghiệm.json",
-      "parentId": null,
-      "fileType": "json",
-      "mimeType": "application/json",
-      "size": 410,
-      "storageKey": "exams/file_1792332313983_6idc.json",
-      "filePath": "../storage/exams/file_1792332313983_6idc.json",
-      "storageType": "local",
-      "createdAt": "2026-10-18T14:05:13.989Z",
-      "updatedAt": "2026-10-18T14:05:13.989Z"
-    },
-    {
-      "id": "file_1792332313961_poxb",
-      "name": "Đề thi trắc nghiệm.json",
-      "parentId": null,
-      "fileType": "json",
-      "mimeType": "application/json",
-      "size": 410,
-      "storageKey": "exams/file_1792332313961_poxb.json",
-      "filePath": "../storage/exams/file_1792332313961_poxb.json",
-      "storageType": "local",
-      "createdAt": "2026-10-18T14:05:13.976Z",
-      "updatedAt": "2026-10-18T14:05:13.976Z"
-    },
-    {
-      "id": "file_1792332313961_i1yo",
-      "name": "Đề thi trắc nghiệm.json",
-      "parentId": null,
-      "fileType": "json",
-      "mimeType": "application/json",
-      "size": 410,
-      "storageKey": "exams/file_1792332313961_i1yo.json",
-      "filePath": "../storage/exams/file_1792332313961_i1yo.json",
-      "storageType": "local",
-      "createdAt": "2026-10-18T14:05:13.975Z",
-      "updatedAt": "2026-10-18T14:05:13.975Z"
-    },
-    {
-      "id": "file_1792332313961_0de1",
-      "name": "Đề thi trắc nghiệm.json",
-      "parentId": null,
-      "fileType": "json",
-      "mimeType": "application/json",
-      "size": 410,
-      "storageKey": "exams/file_1792332313961_0de1.json",
-      "filePath": "../storage/exams/file_1792332313961_0de1.json",
-      "storageType": "local",
-      "createdAt": "2026-10-18T14:05:13.975Z",
-      "updatedAt": "2026-10-18T14:05:13.975Z"
-    },
-    {
-      "id": "file_1792332191920_lp65",
-      "name": "Đề thi trắc nghiệm.json",
-      "parentId": null,
-      "fileType": "json",
-      "mimeType": "application/json",
-      "size": 410,
-      "storageKey": "exams/file_1792332191920_lp65.json",
-      "filePath": "../storage/exams/file_1792332191920_lp65.json",
-      "storageType": "local",
-      "createdAt": "2026-10-18T14:03:11.921Z",
-      "updatedAt": "2026-10-18T14:03:11.921Z"
-    },
-    {
-      "id": "file_1792332191909_go6q",
-      "name": "Đề thi trắc nghiệm.json",
-      "parentId": null,
-      "fileType": "json",
-      "mimeType": "application/json",
-      "size": 410,
-      "storageKey": "exams/file_1792332191909_go6q.json",
-      "filePath": "../storage/exams/file_1792332191909_go6q.json",
-      "storageType": "local",
-      "createdAt": "2026-10-18T14:03:11.913Z",
-      "updatedAt": "2026-10-18T14:03:11.913Z"
-    },
-    {
-      "id": "file_1792332191909_f5c5",
-      "name": "Đề thi trắc nghiệm.json",
-      "parentId": null,
-      "fileType": "json",
-      "mimeType": "application/json",
-      "size": 410,
-      "storageKey": "exams/file_1792332191909_f5c5.json",
-      "filePath": "../storage/exams/file_1792332191909_f5c5.json",
-      "storageType": "local",
-      "createdAt": "2026-10-18T14:03:11.913Z",
-      "updatedAt": "2026-10-18T14:03:11.913Z"
-    },
-    {
-      "id": "file_1792332191890_w1h5",
-      "name": "Đề thi trắc nghiệm.json",
-      "parentId": null,
-      "fileType": "json",
-      "mimeType": "application/json",
-      "size": 410,
-      "storageKey": "exams/file_1792332191890_w1h5.json",
-      "filePath": "../storage/exams/file_1792332191890_w1h5.json",
-      "storageType": "local",
-      "createdAt": "2026-10-18T14:03:11.900Z",
-      "updatedAt": "2026-10-18T14:03:11.900Z"
-    },
-    {
-      "id": "file_1792332191890_rq9y",
-      "name": "Đề thi trắc nghiệm.json",
-      "parentId": null,
-      "fileType": "json",
-      "mimeType": "application/json",
-      "size": 410,
-      "storageKey": "exams/file_1792332191890_rq9y.json",
-      "filePath": "../storage/exams/file_1792332191890_rq9y.json",
-      "storageType": "local",
-      "createdAt": "2026-10-18T14:03:11.900Z",
-      "updatedAt": "2026-10-18T14:03:11.900Z"
-    },
-    {
-      "id": "file_1792332174168_kvob",
-      "name": "Đề thi trắc nghiệm.json",
-      "parentId": null,
-      "fileType": "json",
-      "mimeType": "application/json",
-      "size": 410,
-      "storageKey": "exams/file_1792332174168_kvob.json",
-      "filePath": "../storage/exams/file_1792332174168_kvob.json",
-      "storageType": "local",
-      "createdAt": "2026-10-18T14:02:54.179Z",
-      "updatedAt": "2026-10-18T14:02:54.179Z"
-    },
-    {
-      "id": "file_1792332174168_kp09",
-      "name": "Đề thi trắc nghiệm.json",
-      "parentId": null,
-      "fileType": "json",
-      "mimeType": "application/json",
-      "size": 410,
-      "storageKey": "exams/file_1792332174168_kp09.json",
-      "filePath": "../storage/exams/file_1792332174168_kp09.json",
-      "storageType": "local",
-      "createdAt": "2026-10-18T14:02:54.178Z",
-      "updatedAt": "2026-10-18T14:02:54.178Z"
-    },
-    {
-      "id": "file_1792332174168_trnh",
-      "name": "Đề thi trắc nghiệm.json",
-      "parentId": null,
-      "fileType": "json",
-      "mimeType": "application/json",
-      "size": 410,
-      "storageKey": "exams/file_1792332174168_trnh.json",
-      "filePath": "../storage/exams/file_1792332174168_trnh.json",
-      "storageType": "local",
-      "createdAt": "2026-10-18T14:02:54.173Z",
-      "updatedAt": "2026-10-18T14:02:54.173Z"
+      "createdAt": "2026-10-19T09:29:53.140Z",
+      "updatedAt": "2026-10-19T09:29:53.140Z"
     },
     {
       "id": "file_1791677047535_uj389",
@@ -273,7 +52,20 @@
       "filePath": "../storage/exams/file_1791677047535_uj389.json",
       "storageType": "local",
       "createdAt": "2026-10-11T00:04:07.535Z",
-      "updatedAt": "2026-10-18T14:27:31.704Z"
+      "updatedAt": "2026-10-19T09:50:55.141Z"
+    },
+    {
+      "id": "demvdwj8syixwa",
+      "name": "Đề cương ôn tập kiểm tra giữa kì I môn Toán Lớp 9 - Trường THCS Chu Văn An.json",
+      "parentId": null,
+      "fileType": "json",
+      "mimeType": "application/json",
+      "size": 32416,
+      "storageKey": "exams/demvdwj8syixwa.json",
+      "filePath": "../storage/exams/demvdwj8syixwa.json",
+      "storageType": "local",
+      "createdAt": "2026-10-18T14:09:28.410Z",
+      "updatedAt": "2026-10-19T09:50:55.122Z"
     },
     {
       "id": "demvd7zdpizhd5",
@@ -286,7 +78,7 @@
       "filePath": "../storage/exams/demvd7zdpizhd5.json",
       "storageType": "local",
       "createdAt": "2026-10-18T02:42:10.861Z",
-      "updatedAt": "2026-10-18T14:27:31.682Z"
+      "updatedAt": "2026-10-19T09:50:55.094Z"
     },
     {
       "id": "demvc7f5y9c7p4",
@@ -299,7 +91,7 @@
       "filePath": "../storage/exams/demvc7f5y9c7p4.json",
       "storageType": "local",
       "createdAt": "2026-10-17T09:38:41.510Z",
-      "updatedAt": "2026-10-18T14:27:31.682Z"
+      "updatedAt": "2026-10-19T09:50:55.094Z"
     },
     {
       "id": "demvbuu9rg1or6",
@@ -312,7 +104,7 @@
       "filePath": "../storage/exams/demvbuu9rg1or6.json",
       "storageType": "local",
       "createdAt": "2026-10-17T03:46:31.279Z",
-      "updatedAt": "2026-10-18T14:27:31.681Z"
+      "updatedAt": "2026-10-19T09:50:55.094Z"
     },
     {
       "id": "demvb2he3u4nv4",
@@ -325,7 +117,7 @@
       "filePath": "../storage/exams/demvb2he3u4nv4.json",
       "storageType": "local",
       "createdAt": "2026-10-16T14:32:41.133Z",
-      "updatedAt": "2026-10-18T14:27:31.664Z"
+      "updatedAt": "2026-10-19T09:50:55.094Z"
     },
     {
       "id": "c1c8140c6dc1423ca3d159fbee266d04",
@@ -338,20 +130,7 @@
       "filePath": "../storage/exams/c1c8140c6dc1423ca3d159fbee266d04.json",
       "storageType": "local",
       "createdAt": "2026-10-10T09:54:39.303Z",
-      "updatedAt": "2026-10-18T14:27:31.648Z"
-    },
-    {
-      "id": "c12a3ed12c8343ce9dd643b9182feeb8",
-      "name": "Giải bài toán bằng cách lập hệ phương trình.json",
-      "parentId": "folder_1791680584468_wj18r",
-      "fileType": "json",
-      "mimeType": "application/json",
-      "size": 1885,
-      "storageKey": "exams/c12a3ed12c8343ce9dd643b9182feeb8.json",
-      "filePath": "../storage/exams/c12a3ed12c8343ce9dd643b9182feeb8.json",
-      "storageType": "local",
-      "createdAt": "2026-10-10T10:34:47.995Z",
-      "updatedAt": "2026-10-18T14:27:31.612Z"
+      "updatedAt": "2026-10-19T09:50:55.045Z"
     },
     {
       "id": "966c63611497438089a6ef554e17af50",
@@ -364,20 +143,20 @@
       "filePath": "../storage/exams/966c63611497438089a6ef554e17af50.json",
       "storageType": "local",
       "createdAt": "2026-10-10T09:31:59.707Z",
-      "updatedAt": "2026-10-18T14:27:31.611Z"
+      "updatedAt": "2026-10-19T09:50:55.028Z"
     },
     {
-      "id": "79ae83d526654c7badd8c9f0eda26d2f",
-      "name": "Đề kiểm tra Giữa kỳ I - Môn Toán 12.json",
+      "id": "c12a3ed12c8343ce9dd643b9182feeb8",
+      "name": "Giải bài toán bằng cách lập hệ phương trình.json",
       "parentId": "folder_1791680584468_wj18r",
       "fileType": "json",
       "mimeType": "application/json",
-      "size": 35282,
-      "storageKey": "exams/79ae83d526654c7badd8c9f0eda26d2f.json",
-      "filePath": "../storage/exams/79ae83d526654c7badd8c9f0eda26d2f.json",
+      "size": 1885,
+      "storageKey": "exams/c12a3ed12c8343ce9dd643b9182feeb8.json",
+      "filePath": "../storage/exams/c12a3ed12c8343ce9dd643b9182feeb8.json",
       "storageType": "local",
-      "createdAt": "2026-10-11T00:14:03.426Z",
-      "updatedAt": "2026-10-18T14:27:31.599Z"
+      "createdAt": "2026-10-10T10:34:47.995Z",
+      "updatedAt": "2026-10-19T09:50:55.026Z"
     },
     {
       "id": "47ef0f9f8f0841019239f52c513522eb",
@@ -390,7 +169,7 @@
       "filePath": "../storage/exams/47ef0f9f8f0841019239f52c513522eb.json",
       "storageType": "local",
       "createdAt": "2026-10-10T15:15:59.205Z",
-      "updatedAt": "2026-10-18T14:27:31.599Z"
+      "updatedAt": "2026-10-19T09:50:55.011Z"
     },
     {
       "id": "1a7a44a3c02c4a6781624ffc1cd26252",
@@ -403,7 +182,7 @@
       "filePath": "../storage/exams/1a7a44a3c02c4a6781624ffc1cd26252.json",
       "storageType": "local",
       "createdAt": "2026-10-11T02:05:58.398Z",
-      "updatedAt": "2026-10-18T14:31:00.710Z"
+      "updatedAt": "2026-10-19T09:50:55.011Z"
     },
     {
       "id": "169a05fa160543528fc62cfc189b94a6",
@@ -416,33 +195,7 @@
       "filePath": "../storage/exams/169a05fa160543528fc62cfc189b94a6.json",
       "storageType": "local",
       "createdAt": "2026-10-10T09:48:24.333Z",
-      "updatedAt": "2026-10-18T14:31:00.721Z"
-    },
-    {
-      "id": "0cca980818e04310b8b725f7c1aab3a3",
-      "name": "Đề trắc nghiệm: Sinh học lớp 9 - Bài 2: Lai một cặp tính trạng.json",
-      "parentId": "folder_1791680584468_wj18r",
-      "fileType": "json",
-      "mimeType": "application/json",
-      "size": 62112,
-      "storageKey": "exams/0cca980818e04310b8b725f7c1aab3a3.json",
-      "filePath": "../storage/exams/0cca980818e04310b8b725f7c1aab3a3.json",
-      "storageType": "local",
-      "createdAt": "2026-10-11T02:08:34.899Z",
-      "updatedAt": "2026-10-18T14:27:31.545Z"
-    },
-    {
-      "id": "demv7pyrj1r83b",
-      "name": "Đề trắc nghiệm kiểm tra 15 phút môn Tin học lớp 9.json",
-      "parentId": null,
-      "fileType": "json",
-      "mimeType": "application/json",
-      "size": 27286,
-      "storageKey": "exams/demv7pyrj1r83b.json",
-      "filePath": "../storage/exams/demv7pyrj1r83b.json",
-      "storageType": "local",
-      "createdAt": "2026-10-14T06:18:58.149Z",
-      "updatedAt": "2026-10-18T14:27:31.649Z"
+      "updatedAt": "2026-10-19T09:50:54.973Z"
     },
     {
       "id": "11f27f7e64f040dcbc63c0531f65331d",
@@ -455,8 +208,242 @@
       "filePath": "../storage/exams/11f27f7e64f040dcbc63c0531f65331d.json",
       "storageType": "local",
       "createdAt": "2026-10-10T15:36:26.726Z",
-      "updatedAt": "2026-10-18T14:27:31.545Z"
+      "updatedAt": "2026-10-19T09:50:54.926Z"
+    },
+    {
+      "id": "demv7pyrj1r83b",
+      "name": "Đề trắc nghiệm kiểm tra 15 phút môn Tin học lớp 9.json",
+      "parentId": null,
+      "fileType": "json",
+      "mimeType": "application/json",
+      "size": 27286,
+      "storageKey": "exams/demv7pyrj1r83b.json",
+      "filePath": "../storage/exams/demv7pyrj1r83b.json",
+      "storageType": "local",
+      "createdAt": "2026-10-14T06:18:58.149Z",
+      "updatedAt": "2026-10-19T09:50:55.094Z"
+    },
+    {
+      "id": "file_1792401641375_kkjk",
+      "name": "Đề thi trắc nghiệm.json",
+      "parentId": null,
+      "fileType": "json",
+      "mimeType": "application/json",
+      "size": 410,
+      "storageKey": "exams/file_1792401641375_kkjk.json",
+      "filePath": "../storage/exams/file_1792401641375_kkjk.json",
+      "storageType": "local",
+      "createdAt": "2026-10-19T09:20:41.379Z",
+      "updatedAt": "2026-10-19T09:20:41.379Z"
+    },
+    {
+      "id": "file_1792401641375_ub9p",
+      "name": "Đề thi trắc nghiệm.json",
+      "parentId": null,
+      "fileType": "json",
+      "mimeType": "application/json",
+      "size": 410,
+      "storageKey": "exams/file_1792401641375_ub9p.json",
+      "filePath": "../storage/exams/file_1792401641375_ub9p.json",
+      "storageType": "local",
+      "createdAt": "2026-10-19T09:20:41.379Z",
+      "updatedAt": "2026-10-19T09:20:41.379Z"
+    },
+    {
+      "id": "file_1792401641375_bb23",
+      "name": "Đề thi trắc nghiệm.json",
+      "parentId": null,
+      "fileType": "json",
+      "mimeType": "application/json",
+      "size": 410,
+      "storageKey": "exams/file_1792401641375_bb23.json",
+      "filePath": "../storage/exams/file_1792401641375_bb23.json",
+      "storageType": "local",
+      "createdAt": "2026-10-19T09:20:41.379Z",
+      "updatedAt": "2026-10-19T09:20:41.379Z"
+    },
+    {
+      "id": "file_1792401641375_gi5i",
+      "name": "Đề thi trắc nghiệm.json",
+      "parentId": null,
+      "fileType": "json",
+      "mimeType": "application/json",
+      "size": 410,
+      "storageKey": "exams/file_1792401641375_gi5i.json",
+      "filePath": "../storage/exams/file_1792401641375_gi5i.json",
+      "storageType": "local",
+      "createdAt": "2026-10-19T09:20:41.379Z",
+      "updatedAt": "2026-10-19T09:20:41.379Z"
+    },
+    {
+      "id": "file_1792401641375_nq2d",
+      "name": "Đề thi trắc nghiệm.json",
+      "parentId": null,
+      "fileType": "json",
+      "mimeType": "application/json",
+      "size": 410,
+      "storageKey": "exams/file_1792401641375_nq2d.json",
+      "filePath": "../storage/exams/file_1792401641375_nq2d.json",
+      "storageType": "local",
+      "createdAt": "2026-10-19T09:20:41.379Z",
+      "updatedAt": "2026-10-19T09:20:41.379Z"
+    },
+    {
+      "id": "file_1792401641375_yb9m",
+      "name": "Đề thi trắc nghiệm.json",
+      "parentId": null,
+      "fileType": "json",
+      "mimeType": "application/json",
+      "size": 410,
+      "storageKey": "exams/file_1792401641375_yb9m.json",
+      "filePath": "../storage/exams/file_1792401641375_yb9m.json",
+      "storageType": "local",
+      "createdAt": "2026-10-19T09:20:41.379Z",
+      "updatedAt": "2026-10-19T09:20:41.379Z"
+    },
+    {
+      "id": "file_1792401641375_74ui",
+      "name": "Đề thi trắc nghiệm.json",
+      "parentId": null,
+      "fileType": "json",
+      "mimeType": "application/json",
+      "size": 410,
+      "storageKey": "exams/file_1792401641375_74ui.json",
+      "filePath": "../storage/exams/file_1792401641375_74ui.json",
+      "storageType": "local",
+      "createdAt": "2026-10-19T09:20:41.378Z",
+      "updatedAt": "2026-10-19T09:20:41.378Z"
+    },
+    {
+      "id": "file_1792401641375_y4ge",
+      "name": "Đề thi trắc nghiệm.json",
+      "parentId": null,
+      "fileType": "json",
+      "mimeType": "application/json",
+      "size": 410,
+      "storageKey": "exams/file_1792401641375_y4ge.json",
+      "filePath": "../storage/exams/file_1792401641375_y4ge.json",
+      "storageType": "local",
+      "createdAt": "2026-10-19T09:20:41.378Z",
+      "updatedAt": "2026-10-19T09:20:41.378Z"
+    },
+    {
+      "id": "file_1792401641375_933h",
+      "name": "Đề thi trắc nghiệm.json",
+      "parentId": null,
+      "fileType": "json",
+      "mimeType": "application/json",
+      "size": 410,
+      "storageKey": "exams/file_1792401641375_933h.json",
+      "filePath": "../storage/exams/file_1792401641375_933h.json",
+      "storageType": "local",
+      "createdAt": "2026-10-19T09:20:41.378Z",
+      "updatedAt": "2026-10-19T09:20:41.378Z"
+    },
+    {
+      "id": "file_1792401641375_4ubq",
+      "name": "Đề thi trắc nghiệm.json",
+      "parentId": null,
+      "fileType": "json",
+      "mimeType": "application/json",
+      "size": 410,
+      "storageKey": "exams/file_1792401641375_4ubq.json",
+      "filePath": "../storage/exams/file_1792401641375_4ubq.json",
+      "storageType": "local",
+      "createdAt": "2026-10-19T09:20:41.378Z",
+      "updatedAt": "2026-10-19T09:20:41.378Z"
+    },
+    {
+      "id": "file_1792401641336_x5gn",
+      "name": "Đề thi trắc nghiệm.json",
+      "parentId": null,
+      "fileType": "json",
+      "mimeType": "application/json",
+      "size": 410,
+      "storageKey": "exams/file_1792401641336_x5gn.json",
+      "filePath": "../storage/exams/file_1792401641336_x5gn.json",
+      "storageType": "local",
+      "createdAt": "2026-10-19T09:20:41.341Z",
+      "updatedAt": "2026-10-19T09:20:41.341Z"
+    },
+    {
+      "id": "file_1792401641336_jqao",
+      "name": "Đề thi trắc nghiệm.json",
+      "parentId": null,
+      "fileType": "json",
+      "mimeType": "application/json",
+      "size": 410,
+      "storageKey": "exams/file_1792401641336_jqao.json",
+      "filePath": "../storage/exams/file_1792401641336_jqao.json",
+      "storageType": "local",
+      "createdAt": "2026-10-19T09:20:41.341Z",
+      "updatedAt": "2026-10-19T09:20:41.341Z"
+    },
+    {
+      "id": "file_1792401641306_irjj",
+      "name": "Đề thi trắc nghiệm.json",
+      "parentId": null,
+      "fileType": "json",
+      "mimeType": "application/json",
+      "size": 410,
+      "storageKey": "exams/file_1792401641306_irjj.json",
+      "filePath": "../storage/exams/file_1792401641306_irjj.json",
+      "storageType": "local",
+      "createdAt": "2026-10-19T09:20:41.327Z",
+      "updatedAt": "2026-10-19T09:20:41.327Z"
+    },
+    {
+      "id": "file_1792401641306_gkiy",
+      "name": "Đề thi trắc nghiệm.json",
+      "parentId": null,
+      "fileType": "json",
+      "mimeType": "application/json",
+      "size": 410,
+      "storageKey": "exams/file_1792401641306_gkiy.json",
+      "filePath": "../storage/exams/file_1792401641306_gkiy.json",
+      "storageType": "local",
+      "createdAt": "2026-10-19T09:20:41.326Z",
+      "updatedAt": "2026-10-19T09:20:41.326Z"
+    },
+    {
+      "id": "file_1792401641283_oga5",
+      "name": "Đề thi trắc nghiệm.json",
+      "parentId": null,
+      "fileType": "json",
+      "mimeType": "application/json",
+      "size": 410,
+      "storageKey": "exams/file_1792401641283_oga5.json",
+      "filePath": "../storage/exams/file_1792401641283_oga5.json",
+      "storageType": "local",
+      "createdAt": "2026-10-19T09:20:41.297Z",
+      "updatedAt": "2026-10-19T09:20:41.297Z"
+    },
+    {
+      "id": "0cca980818e04310b8b725f7c1aab3a3",
+      "name": "Đề trắc nghiệm: Sinh học lớp 9 - Bài 2: Lai một cặp tính trạng.json",
+      "parentId": "folder_1791680584468_wj18r",
+      "fileType": "json",
+      "mimeType": "application/json",
+      "size": 62112,
+      "storageKey": "exams/0cca980818e04310b8b725f7c1aab3a3.json",
+      "filePath": "../storage/exams/0cca980818e04310b8b725f7c1aab3a3.json",
+      "storageType": "local",
+      "createdAt": "2026-10-11T02:08:34.899Z",
+      "updatedAt": "2026-10-19T09:50:54.926Z"
+    },
+    {
+      "id": "79ae83d526654c7badd8c9f0eda26d2f",
+      "name": "Đề kiểm tra Giữa kỳ I - Môn Toán 12.json",
+      "parentId": "folder_1791680584468_wj18r",
+      "fileType": "json",
+      "mimeType": "application/json",
+      "size": 35282,
+      "storageKey": "exams/79ae83d526654c7badd8c9f0eda26d2f.json",
+      "filePath": "../storage/exams/79ae83d526654c7badd8c9f0eda26d2f.json",
+      "storageType": "local",
+      "createdAt": "2026-10-11T00:14:03.426Z",
+      "updatedAt": "2026-10-19T09:50:55.011Z"
     }
   ],
-  "updatedAt": "2026-10-18T14:31:00.721Z"
+  "updatedAt": "2026-10-19T09:50:55.141Z"
 }
